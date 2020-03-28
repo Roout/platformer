@@ -63,25 +63,11 @@ endif()
 # add cross-platforms source files and header files 
 list(APPEND GAME_SOURCE
      Classes/AppDelegate.cpp
-     Classes/CoreElement.cpp
-     Classes/DragHelper.cpp
+     Classes/LevelScene.cpp
      )
 list(APPEND GAME_HEADER
-     Classes/AnimationBase.h
-     Classes/AnimationLayer.h
      Classes/AppDelegate.h
-     Classes/BaseDemo.h
-     Classes/BoneOffset.h
-     Classes/BoundingBox.h
-     Classes/CoreElement.h
-     Classes/DragHelper.h
-     Classes/DragonBonesEvent.h
-     Classes/HelloDragonBones.h
-     Classes/InverseKinematics.h
-     Classes/PerformanceTest.h
-     Classes/ReplaceAnimation.h
-     Classes/ReplaceSkin.h
-     Classes/ReplaceSlotDisplay.h
+     Classes/LevelScene.h
      )
 
 if(ANDROID)
