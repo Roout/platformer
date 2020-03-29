@@ -1,11 +1,13 @@
 #include "LevelScene.h"
+#include <string>
 
-cocos2d::Scene* LevelScene::createScene() {
-    return LevelScene::create();
+LevelScene::LevelScene(int id): 
+    m_id{id} 
+{
 }
 
-LevelScene* LevelScene::create() {
-    auto *pRet = new(std::nothrow) LevelScene{};
+LevelScene* LevelScene::create(int id) {
+    auto *pRet = new(std::nothrow) LevelScene{id};
     if (pRet && pRet->init()) {
         pRet->autorelease();
     }
@@ -16,19 +18,27 @@ LevelScene* LevelScene::create() {
     return pRet;
 } 
 
-// on "init" you need to initialize your instance
+
 bool LevelScene::init() {
 	if (!cocos2d::Scene::init()) {
 		return false;
 	}
 	this->scheduleUpdate();
 
-	auto visibleSize = cocos2d::Director::getInstance()->getVisibleSize();
-	cocos2d::Vec2 origin = cocos2d::Director::getInstance()->getVisibleOrigin();
+	const auto visibleSize = cocos2d::Director::getInstance()->getVisibleSize();
+	const cocos2d::Vec2 origin = cocos2d::Director::getInstance()->getVisibleOrigin();
+    
+    const auto tmxFile { cocos2d::StringUtils::format("Map/level_%d.tmx", m_id) };
+    cocos2d::FastTMXTiledMap *m_tileMap { cocos2d::FastTMXTiledMap::create(tmxFile) };
+    
+    m_tileMap->setAnchorPoint( {0.5f, 0.5f} );
+    m_tileMap->setPosition( cocos2d::Vec2{visibleSize.width, visibleSize.height } / 2.f + origin / 2.f);
+    m_tileMap->setScale(2.f); // temporary
+
+    this->addChild(m_tileMap);
 
     return true;
 }
-
 
 void LevelScene::menuCloseCallback(cocos2d::Ref* pSender) {
     //Close the cocos2d-x game scene and quit the application

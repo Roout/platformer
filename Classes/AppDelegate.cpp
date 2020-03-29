@@ -132,7 +132,8 @@ bool AppDelegate::applicationDidFinishLaunching() {
     register_all_packages();
 
     // create a scene. it's an autorelease object
-    auto scene = LevelScene::createScene();
+    constexpr auto id  { 1 };
+    auto scene = LevelScene::create(id);
 
     // run
     director->runWithScene(scene);

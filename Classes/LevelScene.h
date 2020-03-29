@@ -3,11 +3,11 @@
 
 #include "cocos2d.h"
 
+
 class LevelScene final : public cocos2d::Scene {
 public:
-    [[nodiscard]] static cocos2d::Scene* createScene();
 
-    [[nodiscard]] static LevelScene* create();
+    [[nodiscard]] static LevelScene* create(int id);
 
     [[nodiscard]] bool init() override;
     
@@ -23,7 +23,9 @@ public:
     LevelScene& operator=(const LevelScene&) = delete;
 
 private:
-	LevelScene() = default;
+	LevelScene(int id);
+
+    const int m_id { -1 }; 
 };
 
 #endif
