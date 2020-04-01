@@ -64,10 +64,15 @@ endif()
 list(APPEND GAME_SOURCE
      Classes/AppDelegate.cpp
      Classes/LevelScene.cpp
+     Classes/PhysicWorld.cpp
+     Classes/Unit.cpp
      )
 list(APPEND GAME_HEADER
      Classes/AppDelegate.h
      Classes/LevelScene.h
+     Classes/Unit.h
+     Classes/PhysicWorld.h
+     Classes/Drawable.h
      )
 
 if(ANDROID)
