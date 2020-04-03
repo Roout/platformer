@@ -4,23 +4,25 @@
 
 #include "cocos2d.h"
 
-UserInputHandler::Input::Input(WinKeyCode keyCode) {
+UserInputHandler::Input UserInputHandler::Input::Create(WinKeyCode keyCode) noexcept {
+    Input input;
     if (keyCode == WinKeyCode::KEY_LEFT_ARROW ||
         keyCode == WinKeyCode::KEY_A) 
     {
-        dx = -1;
+        input.dx = -1;
     }
     else if (keyCode == WinKeyCode::KEY_RIGHT_ARROW ||
             keyCode == WinKeyCode::KEY_D)
     {
-        dx = 1;
+        input.dx = 1;
     }
     else if (keyCode == WinKeyCode::KEY_UP_ARROW ||
             keyCode == WinKeyCode::KEY_W || 
             keyCode == WinKeyCode::KEY_SPACE)
     {
-        jump = true;
+        input.jump = true;
     }
+    return input;
 }
 
 UserInputHandler::UserInputHandler(Unit * const model, cocos2d::Node * const node ):
@@ -43,15 +45,15 @@ void UserInputHandler::OnKeyPressed(
     WinKeyCode keyCode, 
     cocos2d::Event* event
 ) {
-    const auto input = Input(keyCode);
+    m_lastInput = Input::Create(keyCode);
     auto body = m_model->GetBody();
-    if(input.jump && body->CanJump()) {
+    if(m_lastInput.jump && body->CanJump()) {
         body->Jump();
     }
-    else if( input.dx == 1) {
+    else if( m_lastInput.dx == 1) {
         body->MoveRight();
     }
-    else if( input.dx == -1) {
+    else if( m_lastInput.dx == -1) {
         body->MoveLeft();
     }
 }
@@ -60,5 +62,10 @@ void UserInputHandler::OnKeyRelease(
     WinKeyCode keyCode, 
     cocos2d::Event* event
 ) {
-    // TODO: stop if it doesn't move neither left nor right 
+    const Input released{ Input::Create(keyCode)};
+
+    if(released.dx == m_lastInput.dx) {
+        auto body = m_model->GetBody();
+        body->Stop();
+    }
 }

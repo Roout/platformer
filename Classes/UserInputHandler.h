@@ -33,7 +33,8 @@ private:
         int dx { 0 };
 
         Input() = default;
-        Input(WinKeyCode);
+        
+        static Input Create(WinKeyCode) noexcept;
     };
 
     Input m_lastInput {};
