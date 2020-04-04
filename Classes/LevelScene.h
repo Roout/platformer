@@ -1,8 +1,12 @@
 #ifndef LEVEL_SCENE_H
 #define LEVEL_SCENE_H
 
+#include <memory>
 #include "cocos2d.h"
 
+class Unit;
+class PhysicWorld;
+class UserInputHandler;
 
 class LevelScene final : public cocos2d::Scene {
 public:
@@ -24,6 +28,14 @@ public:
 
 private:
 	LevelScene(int id);
+// Order of creation: 
+// * PhysicWorld => Unit => UserInputHandler
+// Order of destruction
+// * UserInputHandler => Unit => PhysicWorld
+// It's obvious but I still would like to repeat this part here. 
+    std::unique_ptr<PhysicWorld>        m_world { nullptr };
+    std::unique_ptr<Unit>               m_unit { nullptr };
+    std::unique_ptr<UserInputHandler>   m_inputHandler { nullptr };
 
     const int m_id { -1 }; 
 };
