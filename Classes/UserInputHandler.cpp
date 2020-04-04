@@ -25,6 +25,13 @@ UserInputHandler::Input UserInputHandler::Input::Create(WinKeyCode keyCode) noex
     return input;
 }
 
+void UserInputHandler::Input::Merge(const Input& input) noexcept {
+    jump = input.jump;
+    if(input.dx) {
+        dx = input.dx;
+    }
+}  
+
 UserInputHandler::UserInputHandler(Unit * const model, cocos2d::Node * const node ):
     m_model { model }
 {
@@ -45,12 +52,12 @@ void UserInputHandler::OnKeyPressed(
     WinKeyCode keyCode, 
     cocos2d::Event* event
 ) {
-    m_lastInput = Input::Create(keyCode);
+    m_lastInput.Merge(Input::Create(keyCode));
     auto body = m_model->GetBody();
     if(m_lastInput.jump && body->CanJump()) {
         body->Jump();
     }
-    else if( m_lastInput.dx == 1) {
+    if( m_lastInput.dx == 1) {
         body->MoveRight();
     }
     else if( m_lastInput.dx == -1) {
@@ -63,9 +70,10 @@ void UserInputHandler::OnKeyRelease(
     cocos2d::Event* event
 ) {
     const Input released{ Input::Create(keyCode)};
-
-    if(released.dx == m_lastInput.dx) {
+    // bug: jump & move left/right -> release move left/right and unit still will move
+    if(released.dx && released.dx == m_lastInput.dx) {
         auto body = m_model->GetBody();
         body->Stop();
+        m_lastInput.dx = 0;
     }
 }
