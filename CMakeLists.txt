@@ -68,6 +68,7 @@ list(APPEND GAME_SOURCE
      Classes/Unit.cpp
      Classes/UnitView.cpp
      Classes/UserInputHandler.cpp
+     Classes/TileMapParser.cpp
      )
 list(APPEND GAME_HEADER
      Classes/AppDelegate.h
@@ -76,6 +77,7 @@ list(APPEND GAME_HEADER
      Classes/PhysicWorld.h
      Classes/UnitView.h
      Classes/UserInputHandler.h
+     Classes/TileMapParser.hpp
      )
 
 if(ANDROID)
