@@ -1,6 +1,6 @@
-#include "UnitView.h"
-#include "Unit.h"
-#include "PhysicWorld.h"
+#include "UnitView.hpp"
+#include "Unit.hpp"
+#include "PhysicWorld.hpp"
 
 HeroView * HeroView::create(const Unit* const model) {
     auto pRet = new (std::nothrow) HeroView(model);

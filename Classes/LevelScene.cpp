@@ -1,8 +1,8 @@
-#include "LevelScene.h"
-#include "Unit.h"
-#include "PhysicWorld.h"
-#include "UnitView.h"
-#include "UserInputHandler.h"
+#include "LevelScene.hpp"
+#include "Unit.hpp"
+#include "PhysicWorld.hpp"
+#include "UnitView.hpp"
+#include "UserInputHandler.hpp"
 #include "TileMapParser.hpp"
 
 LevelScene::LevelScene(int id): 

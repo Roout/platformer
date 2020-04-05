@@ -72,11 +72,11 @@ list(APPEND GAME_SOURCE
      )
 list(APPEND GAME_HEADER
      Classes/AppDelegate.h
-     Classes/LevelScene.h
-     Classes/Unit.h
-     Classes/PhysicWorld.h
-     Classes/UnitView.h
-     Classes/UserInputHandler.h
+     Classes/LevelScene.hpp
+     Classes/Unit.hpp
+     Classes/PhysicWorld.hpp
+     Classes/UnitView.hpp
+     Classes/UserInputHandler.hpp
      Classes/TileMapParser.hpp
      )
 

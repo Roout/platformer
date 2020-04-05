@@ -1,4 +1,4 @@
-#include "PhysicWorld.h"
+#include "PhysicWorld.hpp"
 #include <algorithm>    // std::for_each
 #include <unordered_map>
 

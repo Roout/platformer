@@ -41,7 +41,8 @@ void TileMapParser::Parse() {
 					static_cast<float>(j) 
 				});
 				if (tileGid) {
-					const auto& properties = m_tileMap->getPropertiesForGID(tileGid).asValueMap();
+					const auto tileProp { m_tileMap->getPropertiesForGID(tileGid) };
+					const auto& properties = tileProp.asValueMap();
 					const bool isCollidable {
                         properties.count("collidable") > 0 && 
                         properties.at("collidable").asBool()

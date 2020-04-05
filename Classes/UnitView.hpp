@@ -1,5 +1,5 @@
-#ifndef UNIT_VIEW_H
-#define UNIT_VIEW_H
+#ifndef UNIT_VIEW_HPP
+#define UNIT_VIEW_HPP
 
 #include "cocos2d.h"
 
@@ -19,4 +19,4 @@ private:
     const Unit * const m_model { nullptr };
 };
 
-#endif // UNIT_VIEW_H
+#endif // UNIT_VIEW_HPP

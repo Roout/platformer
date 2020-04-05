@@ -1,5 +1,5 @@
-#ifndef OWN_PHYSIC_WORLD_H
-#define OWN_PHYSIC_WORLD_H
+#ifndef OWN_PHYSIC_WORLD_HPP
+#define OWN_PHYSIC_WORLD_HPP
 
 #include "cocos/math/CCGeometry.h"  // cocos2d::Vec2, cocos2d::Size
 #include <functional>   // std::function used for callback type
@@ -215,4 +215,4 @@ void PhysicWorld::Erase(const BodyType* const body ) noexcept {
     }
 }
 
-#endif // OWN_PHYSIC_WORLD_H
+#endif // OWN_PHYSIC_WORLD_HPP

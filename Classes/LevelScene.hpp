@@ -1,5 +1,5 @@
-#ifndef LEVEL_SCENE_H
-#define LEVEL_SCENE_H
+#ifndef LEVEL_SCENE_HPP
+#define LEVEL_SCENE_HPP
 
 #include <memory>
 #include "cocos2d.h"
@@ -40,4 +40,4 @@ private:
     const int m_id { -1 }; 
 };
 
-#endif
+#endif // LEVEL_SCENE_HPP

@@ -1,5 +1,5 @@
-#ifndef UNIT_H
-#define UNIT_H
+#ifndef UNIT_HPP
+#define UNIT_HPP
 
 class KinematicBody;
 class PhysicWorld;
@@ -30,4 +30,4 @@ private:
     static constexpr float m_height { 28.f };
 };
 
-#endif // UNIT_H
+#endif // UNIT_HPP

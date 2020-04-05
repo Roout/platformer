@@ -1,6 +1,6 @@
-#include "UserInputHandler.h"
-#include "Unit.h"
-#include "PhysicWorld.h" // KinematicBody access
+#include "UserInputHandler.hpp"
+#include "Unit.hpp"
+#include "PhysicWorld.hpp" // KinematicBody access
 
 #include "cocos2d.h"
 
