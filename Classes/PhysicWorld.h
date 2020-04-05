@@ -128,7 +128,7 @@ private:
     float           m_previousJumpTime { 0.f };
 
     static constexpr float JUMP_SPEED { 120.f };
-    static constexpr float MOVE_SPEED { 120.f };
+    static constexpr float MOVE_SPEED { 110.f };
 
     static constexpr float JUMP_TIME  { 0.55f };
 };
