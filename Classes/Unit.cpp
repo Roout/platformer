@@ -5,7 +5,7 @@
 
 Unit::Unit(PhysicWorld *world, float x, float y): 
     m_physicWorld{ world },
-    m_body { m_physicWorld->Create<KinematicBody>( { x, y }, { m_width, m_height })}
+    m_body { m_physicWorld->Create<KinematicBody>( { x, y }, { m_width, m_height }, this)}
 {
     m_body->SetMask(
         CreateMask(CategoryBits::HERO),

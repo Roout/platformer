@@ -69,6 +69,7 @@ list(APPEND GAME_SOURCE
      Classes/UnitView.cpp
      Classes/UserInputHandler.cpp
      Classes/TileMapParser.cpp
+     Classes/Weapon.cpp
      )
 list(APPEND GAME_HEADER
      Classes/AppDelegate.h
@@ -78,6 +79,8 @@ list(APPEND GAME_HEADER
      Classes/UnitView.hpp
      Classes/UserInputHandler.hpp
      Classes/TileMapParser.hpp
+     Classes/Weapon.hpp
+     Classes/Core.hpp
      )
 
 if(ANDROID)

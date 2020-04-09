@@ -1,4 +1,5 @@
 #include "PhysicWorld.hpp"
+#include "Core.hpp"
 #include <algorithm>    // std::for_each
 #include <unordered_map>
 
@@ -8,6 +9,47 @@ void PhysicWorld::Step(const float dt, size_t iterations) {
         this->Step(step);
     }
 }
+
+
+/**
+ * This function invokes the callback of the collider with index 'id'
+ * from the 'container'.
+ * 
+ * @param[in] callerIndex
+ *      This is an index of the entity from the 'callerContainer' 
+ *      which is one of the colliders. It provide the callback on creation.
+ * 
+ * @param[in] const reference to callerContainer
+ *      This is a container that keeps track of the kinematic bodies
+ *      from the PhysicWorld class.
+ * 
+ * @param[in] argIndex
+ *      This is an index of the entity from the 'argContainer' 
+ *      which is another collider. It used as parametr for the callback.
+ * 
+ * @param[in] reference to callerContainer
+ *      This is a container that keeps track of either kinematic either static bodies
+ *      from the PhysicWorld class. Used to access the entity passed as parametr to callback.
+ */
+template <
+    class Container1, 
+    class Container2
+>  
+inline void InvokeCallback (
+    const size_t callerIndex, 
+    const Container1& callerContainer,
+    const size_t argIndex, 
+    Container2& argContainer
+) noexcept {
+    const auto& [caller, callback] = callerContainer[callerIndex];
+    // TODO add check whether the body actually has any model, 
+    // i.e. the static boundary tile body doesn't need  any model.
+    // And add this @note into the function description
+    if( callback && caller.HasModel() ) {
+        auto & body = argContainer[argIndex].first;
+        body.InvokeCallback(*callback);
+    }
+};
 
 void PhysicWorld::Step(const float dt) {
     std::vector<std::pair<size_t, size_t>> kinematicColliders;
@@ -68,27 +110,19 @@ void PhysicWorld::Step(const float dt) {
 
     // handle all callbacks,
 	// e.g. visual effects, sound effects, state changing etc
-
-    const auto InvokeCallback = [](const size_t id, const auto& container) {
-        const auto& callback = container[id].second;
-        if(callback) {
-            std::invoke(*callback);
-        }
-    };
-
     std::unordered_map<size_t, size_t> invoked;
     invoked.reserve(kinematicColliders.size());
     for(const auto [lhs, rhs]: kinematicColliders) {
         // if we haven't invoke callbacks for these kinematic objects
         if( auto it = invoked.find(rhs); it == invoked.cend()) {
-            InvokeCallback(lhs, m_kinematicBodies);
-            InvokeCallback(rhs, m_kinematicBodies);
-            // exclude reverse pair from calling callbacks
+            InvokeCallback(lhs, m_kinematicBodies, rhs, m_kinematicBodies);
+            InvokeCallback(rhs, m_kinematicBodies, lhs, m_kinematicBodies);
+            // exclude reversed pair from repeating callbacks again
             invoked.insert(it, { rhs, lhs } );
         }
     }
-    for(const auto [lhs,rhs]: staticColliders) {
-        InvokeCallback(lhs, m_kinematicBodies);
-        InvokeCallback(rhs, m_staticBodies);
+    for(const auto [lhs, rhs]: staticColliders) {
+        InvokeCallback(lhs, m_kinematicBodies, rhs, m_staticBodies);
+        InvokeCallback(rhs, m_staticBodies, lhs, m_kinematicBodies);
     }
 }

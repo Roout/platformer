@@ -6,11 +6,16 @@
 #include <vector>
 #include <utility>      // std::pair 
 #include <optional> 
-#include <algorithm>    // std::find_if, std::swap
+#include <algorithm>    // std::find_if
+#include <utility>      // std::swap
 #include <cassert>
 #include <type_traits>  // std::is_same_v
 #include <cmath>        // std::fabs
 
+/**
+ * Underlying type of bitmask used to represent 
+ * entity's category.
+ */
 using MaskType = uint16_t;
 
 enum class CategoryBits: MaskType {
@@ -24,14 +29,38 @@ constexpr MaskType CreateMask(Args ... bits) noexcept {
     return (static_cast<MaskType>(bits) | ...);
 } 
 
+namespace core {
+    /**
+     * Forward declaration of the base class of all entities in this game.
+     * Provide a set of the methods which are used on collision, e.g. LoseHealth().
+     */
+    class Entity;
+}
+
 class StaticBody {
 public:
+    /**
+     * @note 
+     *      Copy & Move constructors and assignment are breaking logic: 
+     *      there will be several bodies of the only one model. 
+     */
+    StaticBody(StaticBody&&) = default;
+    StaticBody(const StaticBody&) = default;
 
-    StaticBody(const cocos2d::Vec2& position, const cocos2d::Size& size) :
-        m_shape{position, size}
+    StaticBody& operator=(const StaticBody&) = default;
+    StaticBody& operator=(StaticBody&&)  = default;
+
+    virtual ~StaticBody() = default;
+public:
+
+    StaticBody (
+        const cocos2d::Vec2& position, 
+        const cocos2d::Size& size,
+        core::Entity * const model
+    ) :
+        m_shape{ position, size },
+        m_model{ model }
     {}
-
-    virtual ~StaticBody() = default; 
 
     [[nodiscard]] bool CanInteract(const StaticBody* const other ) const noexcept {
         return  (m_categoryBits & other->m_collideWithBits) != 0 &&
@@ -50,10 +79,28 @@ public:
     [[nodiscard]] const cocos2d::Rect& GetShape() const noexcept {
         return m_shape;
     }
+
+    // [[nodiscard]] core::Entity* GetModel() const noexcept {
+    //     return m_model;
+    // }
+
+    [[nodiscard]] bool HasModel() const noexcept {
+        return m_model != nullptr;
+    }
+
+    template<class Callable>
+    void InvokeCallback(Callable&& callback) noexcept {
+        std::invoke(callback, m_model);
+    }
 protected:
     MaskType        m_categoryBits { 0 };       // I am a ... .
     MaskType        m_collideWithBits { 0 };    // I collide with a ... .
     cocos2d::Rect   m_shape {};
+    /**
+     * Define the view pointer of the model this body belong to.
+     * Used by callback on collision.
+     */
+    core::Entity * m_model { nullptr }; 
 };
 
 class KinematicBody final : 
@@ -135,7 +182,10 @@ private:
 
 class PhysicWorld final {
 public:
-    using OnCollision = std::function<void()>;
+    /**
+     * todo describe this function
+     */
+    using OnCollision = std::function<void(core::Entity *)>;
     
     void Step(const float dt, size_t iterations);
 
@@ -143,6 +193,7 @@ public:
     [[nodiscard]] BodyType * Create(
         const cocos2d::Vec2& position,
         const cocos2d::Size& size,
+        core::Entity * const model = nullptr, 
         OnCollision * callback = nullptr
     );
 
@@ -167,6 +218,7 @@ template<class BodyType>
 BodyType * PhysicWorld::Create(
     const cocos2d::Vec2& position,
     const cocos2d::Size& size,
+    core::Entity * const model, 
     PhysicWorld::OnCollision * callback
 ) {
     static_assert(
@@ -177,13 +229,13 @@ BodyType * PhysicWorld::Create(
 
     if constexpr (std::is_same_v<BodyType, StaticBody>) {
         return &(m_staticBodies.emplace_back( 
-            BodyType{ position, size }, // body  
+            BodyType{ position, size, model }, // body  
             ( callback ? std::make_optional(*callback): std::nullopt ) 
         ).first);
     }
     else {
         return &(m_kinematicBodies.emplace_back( 
-            BodyType{ position, size }, // body  
+            BodyType{ position, size, model }, // body  
             ( callback ? std::make_optional(*callback): std::nullopt ) 
         ).first);
     }
@@ -197,13 +249,15 @@ void PhysicWorld::Erase(const BodyType* const body ) noexcept {
             "wrong body type" 
     );
 
-    const auto Remove = [body](auto& container) {
-        auto it = std::find_if(container.begin(), container.end(), [body](const auto& cPair){
+    auto Remove = [body](std::vector<MyPair<BodyType>>& container) {
+        auto it = std::find_if(container.begin(), container.end(), [body](const MyPair<BodyType>& cPair){
             return (body == &cPair.first);
         });
         assert(it != container.end());
         // Order doesn't matter so I can just swap and pop element
-        std::swap(*it, container.back());
+        const auto backIt = --container.end();
+        // discard element pointed by iterator 'it'
+        *it = *backIt;
         container.pop_back();
     };
 
