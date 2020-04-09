@@ -20,7 +20,7 @@ void PhysicWorld::Step(const float dt, size_t iterations) {
  *      which is one of the colliders. It provide the callback on creation.
  * 
  * @param[in] const reference to callerContainer
- *      This is a container that keeps track of the kinematic bodies
+ *      This is a container that keeps track of the either kinematic either static bodies
  *      from the PhysicWorld class.
  * 
  * @param[in] argIndex
@@ -42,11 +42,8 @@ inline void InvokeCallback (
     Container2& argContainer
 ) noexcept {
     const auto& [caller, callback] = callerContainer[callerIndex];
-    // TODO add check whether the body actually has any model, 
-    // i.e. the static boundary tile body doesn't need  any model.
-    // And add this @note into the function description
-    if( callback && caller.HasModel() ) {
-        auto & body = argContainer[argIndex].first;
+    auto & body = argContainer[argIndex].first;
+    if( callback && body.HasModel() ) {
         body.InvokeCallback(*callback);
     }
 };

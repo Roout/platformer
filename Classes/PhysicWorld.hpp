@@ -32,7 +32,8 @@ constexpr MaskType CreateMask(Args ... bits) noexcept {
 namespace core {
     /**
      * Forward declaration of the base class of all entities in this game.
-     * Provide a set of the methods which are used on collision, e.g. LoseHealth().
+     * Provide a set of the methods which are used on collision, e.g. 
+     * recieving the damage.
      */
     class Entity;
 }
@@ -80,14 +81,26 @@ public:
         return m_shape;
     }
 
-    // [[nodiscard]] core::Entity* GetModel() const noexcept {
-    //     return m_model;
-    // }
-
     [[nodiscard]] bool HasModel() const noexcept {
         return m_model != nullptr;
     }
 
+    /**
+     * This method invokes 'callback' function passing 
+     * this entity's model to it as a parametr. 
+     * 
+     * Created to avoid giving access to private data member 'm_model'.
+     * 
+     * @param[in] callback
+     *      The callback function passed via universal reference.
+     *      It must be convertiable to std::function<void(core::Entity*)>. 
+     *  
+     * @note
+     *      Callback function must have check for a valid 
+     *      model pointer (not nullptr). 
+     *      Possible side effect: change of the state of the 
+     *      model pointed by 'm_model' pointer.   
+     */
     template<class Callable>
     void InvokeCallback(Callable&& callback) noexcept {
         std::invoke(callback, m_model);
@@ -175,15 +188,16 @@ private:
     float           m_previousJumpTime { 0.f };
 
     static constexpr float JUMP_SPEED { 120.f };
-    static constexpr float MOVE_SPEED { 110.f };
-
     static constexpr float JUMP_TIME  { 0.55f };
+    static constexpr float MOVE_SPEED { 110.f };
 };
 
 class PhysicWorld final {
 public:
     /**
-     * todo describe this function
+     * Callback function type. 
+     * Define what the callback owner will do with entity (passed to callback as parametr)
+     * when the collision occur.
      */
     using OnCollision = std::function<void(core::Entity *)>;
     
@@ -194,7 +208,7 @@ public:
         const cocos2d::Vec2& position,
         const cocos2d::Size& size,
         core::Entity * const model = nullptr, 
-        OnCollision * callback = nullptr
+        std::optional<OnCollision> callback = std::nullopt
     );
 
     template<class BodyType> 
@@ -219,7 +233,7 @@ BodyType * PhysicWorld::Create(
     const cocos2d::Vec2& position,
     const cocos2d::Size& size,
     core::Entity * const model, 
-    PhysicWorld::OnCollision * callback
+    std::optional<OnCollision> callback
 ) {
     static_assert(
             std::is_same_v<BodyType, StaticBody> || 
@@ -230,13 +244,13 @@ BodyType * PhysicWorld::Create(
     if constexpr (std::is_same_v<BodyType, StaticBody>) {
         return &(m_staticBodies.emplace_back( 
             BodyType{ position, size, model }, // body  
-            ( callback ? std::make_optional(*callback): std::nullopt ) 
+            callback 
         ).first);
     }
     else {
         return &(m_kinematicBodies.emplace_back( 
             BodyType{ position, size, model }, // body  
-            ( callback ? std::make_optional(*callback): std::nullopt ) 
+            callback 
         ).first);
     }
 }
