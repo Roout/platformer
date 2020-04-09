@@ -44,7 +44,7 @@ public:
     }
 
 private:
-    // banch of just observer pointers.
+    // banch of observer pointers.
     PhysicWorld * const     m_physicWorld { nullptr };
     KinematicBody * const   m_body { nullptr };
 
