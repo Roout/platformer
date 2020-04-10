@@ -1,7 +1,7 @@
 #ifndef OWN_PHYSIC_WORLD_HPP
 #define OWN_PHYSIC_WORLD_HPP
 
-#include "cocos/math/CCGeometry.h"  // cocos2d::Vec2, cocos2d::Size
+#include "math/CCGeometry.h"  // cocos2d::Vec2, cocos2d::Size
 #include <functional>   // std::function used for callback type
 #include <vector>
 #include <utility>      // std::pair 
@@ -9,7 +9,8 @@
 #include <algorithm>    // std::find_if
 #include <utility>      // std::swap
 #include <cassert>
-#include <type_traits>  // std::is_same_v
+#include <memory>       // std::unique_ptr
+#include <type_traits>  // std::is_same_v, std::enable_if
 #include <cmath>        // std::fabs
 
 /**
@@ -48,8 +49,8 @@ public:
     StaticBody(StaticBody&&) = default;
     StaticBody(const StaticBody&) = default;
 
-    StaticBody& operator=(const StaticBody&) = default;
-    StaticBody& operator=(StaticBody&&)  = default;
+    StaticBody& operator= (const StaticBody&) = default;
+    StaticBody& operator= (StaticBody&&)  = default;
 
     virtual ~StaticBody() = default;
 public:
@@ -59,20 +60,20 @@ public:
         const cocos2d::Size& size,
         core::Entity * const model
     ) :
-        m_shape{ position, size },
-        m_model{ model }
+        m_shape { position, size },
+        m_model { model }
     {}
 
-    [[nodiscard]] bool CanInteract(const StaticBody* const other ) const noexcept {
+    [[nodiscard]] bool CanInteract( const StaticBody* const other ) const noexcept {
         return  (m_categoryBits & other->m_collideWithBits) != 0 &&
                 (m_collideWithBits & other->m_categoryBits) != 0;
     }
 
-    [[nodiscard]] bool Collide(const StaticBody *const body) const noexcept {
+    [[nodiscard]] bool Collide( const StaticBody *const body ) const noexcept {
         return m_shape.intersectsRect(body->m_shape);
     }
 
-    void SetMask(MaskType categoryBits, MaskType collideMask) noexcept {
+    void SetMask( MaskType categoryBits, MaskType collideMask ) noexcept {
         m_categoryBits = categoryBits;
         m_collideWithBits = collideMask;
     }
@@ -105,6 +106,7 @@ public:
     void InvokeCallback(Callable&& callback) noexcept {
         std::invoke(callback, m_model);
     }
+
 protected:
     MaskType        m_categoryBits { 0 };       // I am a ... .
     MaskType        m_collideWithBits { 0 };    // I collide with a ... .
@@ -126,13 +128,14 @@ public:
         m_previousPosition.x = m_shape.origin.x;
         m_shape.origin.x += m_velocity.x * MOVE_SPEED * dt;
     }
+
     void MoveY(float dt) noexcept {
         m_previousPosition.y = m_shape.origin.y;
         m_shape.origin.y += m_velocity.y * dt * JUMP_SPEED;
 
         m_previousJumpTime = m_jumpTime;
 
-        if( m_jumpTime > 0.f ){ 
+        if( m_jumpTime > 0.f ) { 
             // jumping
             m_jumpTime -= dt;
         }
@@ -145,26 +148,30 @@ public:
     void RestoreX() noexcept {
         m_shape.origin.x = m_previousPosition.x;
     }
+
     void RestoreY() noexcept {
         m_jumpTime = m_previousJumpTime;
         m_shape.origin.y = m_previousPosition.y;
     }
-
-    
+ 
     void StartFall() noexcept {
         m_velocity.y = -1.f;
         m_jumpTime = 0.f;
     }
+
     void Jump() noexcept {
         m_velocity.y = 1.f;
         m_jumpTime = JUMP_TIME;
     }
+
     void MoveLeft() noexcept {
         m_velocity.x = -1.f;
     }
+
     void MoveRight() noexcept {
         m_velocity.x = 1.f;
     }
+
     void Stop() noexcept {
         m_velocity.x = 0.f;
     }
@@ -172,6 +179,7 @@ public:
     [[nodiscard]] bool IsFallingDown() const noexcept {
         return m_velocity.y < 0.f;
     }
+
     [[nodiscard]] bool CanJump() const noexcept {
         static constexpr auto error { 0.00001f };
         return (
@@ -228,6 +236,7 @@ private:
 /////////////////////////////
 // TEMPLATE IMPLEMENTATION //
 /////////////////////////////
+
 template<class BodyType> 
 BodyType * PhysicWorld::Create(
     const cocos2d::Vec2& position,
@@ -264,12 +273,12 @@ void PhysicWorld::Erase(const BodyType* const body ) noexcept {
     );
 
     auto Remove = [body](std::vector<MyPair<BodyType>>& container) {
-        auto it = std::find_if(container.begin(), container.end(), [body](const MyPair<BodyType>& cPair){
+        auto it = std::find_if(container.begin(), container.end(), [body](const MyPair<BodyType>& cPair) {
             return (body == &cPair.first);
         });
         assert(it != container.end());
         // Order doesn't matter so I can just swap and pop element
-        const auto backIt = --container.end();
+        const auto backIt = --container.сend();
         // discard element pointed by iterator 'it'
         *it = *backIt;
         container.pop_back();
@@ -282,5 +291,94 @@ void PhysicWorld::Erase(const BodyType* const body ) noexcept {
         Remove(m_kinematicBodies);
     }
 }
+
+/**
+ * This namespace keep all stuff that somehow connected with 
+ * memory management. 
+ */
+namespace factory 
+{   
+    template<class Ty>
+    struct body_deleter final {
+        using body_type = Ty;
+
+        body_deleter(PhysicWorld * const world) : 
+            m_world { world } 
+        { // default ctor
+        }
+        
+        body_deleter() = default;
+
+        /**
+         * This function erases already registered body 
+         * from the physic world 'm_world'.
+         */
+        void operator() ( body_type * const body) noexcept {
+            m_world->Erase(body);
+        }
+
+    private:
+        PhysicWorld * const m_world { nullptr };
+    };
+
+    /**
+     * This is a template of the functional object's class that allows to
+     * create and register physcal bodies comfortably at one place. Also 
+     * class user doesn't need to care about object destruction.
+     */
+    template<
+        class Ty, 
+        class = std::enable_if<
+            std::is_same_v<Ty, StaticBody> || 
+            std::is_same_v<Ty, KinematicBody>
+        >
+    >
+    struct body_creator final {
+        using body_type = Ty;
+        using body_ptr  = std::unique_ptr<body_type, body_deleter<body_type>>;
+
+        body_creator(PhysicWorld * const world) : 
+            m_world { world } 
+        { // default ctor
+        }
+        
+        body_creator() = default;
+        
+        /**
+         * This is template function that creates and register in physical world
+         * the physcial body.
+         * 
+         * @return
+         *      std::unique_ptr to created physcal body of 'body_type' with deleter as 
+         *      part of pointer type.
+         */
+        template<class ... Args>
+        [[nodiscard]] body_ptr operator() (Args&& ... args) noexcept {
+            return { 
+                m_world->Create<body_type>(std::forward<Args>(args)...), 
+                body_deleter<body_type>{ m_world } 
+            };
+        }
+
+    private:
+
+        PhysicWorld * const m_world { nullptr };
+    };
+
+}
+
+/**
+ * Handy alias used outside this code section. 
+ * Hide from user factory::body_deleter<> and 
+ * verbose pointer declaration.   
+ */
+template<
+    class Ty, 
+    class = std::enable_if<
+        std::is_same_v<Ty, StaticBody> || 
+        std::is_same_v<Ty, KinematicBody>
+    >
+>
+using BodyPointer = std::unique_ptr<Ty, factory::body_deleter<Ty>>;
 
 #endif // OWN_PHYSIC_WORLD_HPP
