@@ -2,51 +2,37 @@
 #define UNIT_HPP
 
 #include "Core.hpp"
-
-class KinematicBody;
-class PhysicWorld;
-
-namespace cocos2d {
-    class DrawNode; 
-}
+#include "PhysicWorld.hpp"
 
 class Unit final : public core::Entity { 
 public:
     enum class State {
         idle,
+        move,
+        jump,
         melee_attack
     };
     
-    Unit(PhysicWorld *world, float x, float y);
+    Unit(PhysicWorld * const world, float x, float y);
 
-    ~Unit();
+    ~Unit() = default;
 
     [[nodiscard]] KinematicBody * GetBody() noexcept {
-        return m_body;
+        return m_body.get();
     }
 
     [[nodiscard]] const KinematicBody * GetBody() const noexcept {
-        return m_body;
+        return m_body.get();
     }
 
     /**
      * This function initiate a melee attack. 
      */
-    void MeleeAttack() noexcept {
-        // create rectangle/circle shape (!not physic body) using weapon attack range
-        // detect collision and identify attack targets:
-        //     go through all enemies around
-        //         check for intersection with their shape
-        //         if intersection occure
-        //             add enemy to affected targets
-        // foreach affected target
-        //     unit->apply_weapon_affect(target) // deal damage
-    }
+    void MeleeAttack() noexcept;
 
 private:
-    // banch of observer pointers.
-    PhysicWorld * const     m_physicWorld { nullptr };
-    KinematicBody * const   m_body { nullptr };
+
+    BodyPointer<KinematicBody> m_body;
 
     State m_state { State::idle };
 
