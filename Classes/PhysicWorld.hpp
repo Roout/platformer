@@ -124,14 +124,55 @@ class KinematicBody final :
 public:
     using StaticBody::StaticBody;
 
+    // Methods used by models (unit, projectile, etc)
+
+    void SetXAxisSpeed(float speed) noexcept {
+        m_speed = speed;
+    }    
+
+    // Methods used by controllers (* input handler)
+
+    void Jump() noexcept {
+        m_direction.y = 1.f;
+        m_jumpTime = JUMP_TIME;
+    }
+
+    void MoveLeft() noexcept {
+        m_direction.x = -1.f;
+    }
+
+    void MoveRight() noexcept {
+        m_direction.x = 1.f;
+    }
+
+    void Stop() noexcept {
+        m_direction.x = 0.f;
+    }
+
+    [[nodiscard]] bool IsFallingDown() const noexcept {
+        return m_direction.y < 0.f;
+    }
+
+    [[nodiscard]] bool CanJump() const noexcept {
+        static constexpr auto error { 0.00001f };
+        return (
+            m_jumpTime <= 0.f && // not in jump state
+            std::fabs(m_previousPosition.y - m_shape.origin.y) <= error // wasn't moved along Y-axis last iteration
+        );
+    }
+
+    // Methods used by PhysicWorld in movement&collision implementation.
+private:
+    friend class PhysicWorld;
+    
     void MoveX(float dt) noexcept {
         m_previousPosition.x = m_shape.origin.x;
-        m_shape.origin.x += m_velocity.x * MOVE_SPEED * dt;
+        m_shape.origin.x += m_direction.x * m_speed * dt;
     }
 
     void MoveY(float dt) noexcept {
         m_previousPosition.y = m_shape.origin.y;
-        m_shape.origin.y += m_velocity.y * dt * JUMP_SPEED;
+        m_shape.origin.y += m_direction.y * dt * JUMP_SPEED;
 
         m_previousJumpTime = m_jumpTime;
 
@@ -141,7 +182,7 @@ public:
         }
         if( m_jumpTime <= 0.f ) {
             // the jump time limit is over, now fall down 
-            m_velocity.y = -1.f;
+            m_direction.y = -1.f;
         }
     }
     
@@ -155,42 +196,27 @@ public:
     }
  
     void StartFall() noexcept {
-        m_velocity.y = -1.f;
+        m_direction.y = -1.f;
         m_jumpTime = 0.f;
     }
 
-    void Jump() noexcept {
-        m_velocity.y = 1.f;
-        m_jumpTime = JUMP_TIME;
-    }
-
-    void MoveLeft() noexcept {
-        m_velocity.x = -1.f;
-    }
-
-    void MoveRight() noexcept {
-        m_velocity.x = 1.f;
-    }
-
-    void Stop() noexcept {
-        m_velocity.x = 0.f;
-    }
-
-    [[nodiscard]] bool IsFallingDown() const noexcept {
-        return m_velocity.y < 0.f;
-    }
-
-    [[nodiscard]] bool CanJump() const noexcept {
-        static constexpr auto error { 0.00001f };
-        return (
-            m_jumpTime <= 0.f && // not in jump state
-            std::fabs(m_previousPosition.y - m_shape.origin.y) <= error // wasn't moved along Y-axis last iteration
-        );
-    }
-    
-private:
-    cocos2d::Vec2   m_velocity { 0.f, -1.f };
-    // current position is defined by StaticBody::m_shape.origin as left-bottom corner
+    // Properties
+ private:   
+    /**
+     * This is x-axis speed of the body. 
+     */
+    float           m_speed { MOVE_SPEED };
+    /**
+     * Define movement direction of the body. 
+     */
+    cocos2d::Vec2   m_direction { 0.f, -1.f };
+    /**
+     * Save previous position of the body after movement. 
+     * 
+     * @note
+     *      Current position is defined by StaticBody::m_shape.origin 
+     *      as left-bottom corner.
+     */
     cocos2d::Vec2   m_previousPosition { 0.f, 0.f };
     float           m_jumpTime { 0.f }; 
     float           m_previousJumpTime { 0.f };
