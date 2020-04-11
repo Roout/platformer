@@ -278,7 +278,7 @@ void PhysicWorld::Erase(const BodyType* const body ) noexcept {
         });
         assert(it != container.end());
         // Order doesn't matter so I can just swap and pop element
-        const auto backIt = --container.сend();
+        const auto backIt = --container.cend();
         // discard element pointed by iterator 'it'
         *it = *backIt;
         container.pop_back();
