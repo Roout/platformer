@@ -3,12 +3,16 @@
 
 #include "Core.hpp"
 #include "PhysicWorld.hpp"
+#include "Weapon.hpp"
+#include <memory>
 
 class Unit final : public core::Entity { 
 public:
     enum class State {
-        idle,
-        move,
+        idle_left,
+        idle_right,
+        move_left,
+        move_right,
         jump,
         melee_attack
     };
@@ -25,6 +29,8 @@ public:
         return m_body.get();
     }
 
+    void RecieveDamage(int damage) noexcept override;
+
     /**
      * This function initiate a melee attack. 
      */
@@ -32,9 +38,15 @@ public:
 
 private:
 
-    BodyPointer<KinematicBody> m_body;
+    PhysicWorld * const m_world { nullptr };
 
-    State m_state { State::idle };
+    BodyPointer<KinematicBody> m_body { nullptr };
+
+    int m_health { 100 };
+
+    std::unique_ptr<Weapon> m_weapon { nullptr };
+
+    State m_state { State::idle_right };
 
     static constexpr float m_width { 16.f };
     static constexpr float m_height { 28.f };
