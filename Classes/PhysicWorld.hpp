@@ -130,6 +130,14 @@ public:
         m_speed = speed;
     }    
 
+    void SetDirection(const cocos2d::Vec2& direction) noexcept {
+        m_direction = direction;
+    }
+
+    cocos2d::Vec2 GetDirection() const noexcept {
+        return m_direction;
+    }
+
     // Methods used by controllers (* input handler)
 
     void Jump() noexcept {
