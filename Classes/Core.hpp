@@ -10,7 +10,12 @@ namespace core {
     public:
         virtual ~Entity() = default; 
 
-        // virtual void RecieveDamage(int) noexcept = 0;
+        /**
+         * This method functionality depends on implementation.
+         * It either substract some health either do nothing.
+         * Used in callbacks on collision.
+         */
+        virtual void RecieveDamage(int) noexcept {};
     };
 }
 
