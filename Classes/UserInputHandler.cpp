@@ -16,17 +16,24 @@ UserInputHandler::Input UserInputHandler::Input::Create(WinKeyCode keyCode) noex
     {
         input.dx = 1;
     }
-    else if (keyCode == WinKeyCode::KEY_UP_ARROW ||
+    
+    if (keyCode == WinKeyCode::KEY_UP_ARROW ||
             keyCode == WinKeyCode::KEY_W || 
             keyCode == WinKeyCode::KEY_SPACE)
     {
         input.jump = true;
     }
+    
+    if( keyCode == WinKeyCode::KEY_F ) {
+        input.attack = true;
+    }
+    
     return input;
 }
 
 void UserInputHandler::Input::Merge(const Input& input) noexcept {
     jump = input.jump;
+    attack = input.attack;
     if(input.dx) {
         dx = input.dx;
     }
@@ -54,14 +61,20 @@ void UserInputHandler::OnKeyPressed(
 ) {
     m_lastInput.Merge(Input::Create(keyCode));
     auto body = m_model->GetBody();
+    
     if(m_lastInput.jump && body->CanJump()) {
         body->Jump();
     }
+
     if( m_lastInput.dx == 1) {
         body->MoveRight();
     }
     else if( m_lastInput.dx == -1) {
         body->MoveLeft();
+    }
+
+    if( m_lastInput.attack) {
+        m_model->MeleeAttack();
     }
 }
 
@@ -70,10 +83,12 @@ void UserInputHandler::OnKeyRelease(
     cocos2d::Event* event
 ) {
     const Input released{ Input::Create(keyCode)};
-    // bug: jump & move left/right -> release move left/right and unit still will move
     if(released.dx && released.dx == m_lastInput.dx) {
         auto body = m_model->GetBody();
         body->Stop();
         m_lastInput.dx = 0;
+    }
+    if(released.attack) {
+        m_lastInput.attack = false;
     }
 }

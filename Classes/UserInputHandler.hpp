@@ -36,6 +36,7 @@ private:
     */
     struct Input final {
         bool jump { false };
+        bool attack { false };
         int dx { 0 };
 
         Input() = default;
