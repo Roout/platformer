@@ -19,14 +19,14 @@ public:
     
     Unit(PhysicWorld * const world, float x, float y);
 
-    ~Unit() = default;
+    ~Unit();
 
     [[nodiscard]] KinematicBody * GetBody() noexcept {
-        return m_body.get();
+        return &m_body;
     }
 
     [[nodiscard]] const KinematicBody * GetBody() const noexcept {
-        return m_body.get();
+        return &m_body;
     }
 
     void RecieveDamage(int damage) noexcept override;
@@ -36,11 +36,13 @@ public:
      */
     void MeleeAttack() noexcept;
 
+    void UpdateWeapon(const float dt) noexcept;
+    
 private:
 
     PhysicWorld * const m_world { nullptr };
 
-    BodyPointer<KinematicBody> m_body { nullptr };
+    KinematicBody m_body;
 
     int m_health { 100 };
 

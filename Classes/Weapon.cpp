@@ -1,5 +1,6 @@
 #include "Weapon.hpp"
 #include <type_traits> // std::invoke
+#include "cocos2d.h"
 
 void Sword::Attack(
     PhysicWorld * const world,
@@ -20,6 +21,8 @@ void Sword::Attack(
     // 2. Must deduct health
     auto callback = [damage = this->GetDamage()](core::Entity* const rhs) {
         rhs->RecieveDamage(damage);
+        cocos2d::log("Sword projectile collide with some entity and expect to deal: %d damage.", damage);
+
     };
     auto proj = std::make_unique<Projectile>(world, position, size , direction, speed, callback);
     m_projectiles.emplace_back(std::move(proj));
@@ -42,7 +45,7 @@ void Sword::UpdateProjectiles(const float dt) noexcept {
     }
 
     m_projectiles.erase(
-        std::remove_if(m_projectiles.begin(), m_projectiles.end(),[](const auto& projectile) {
+        std::remove_if(m_projectiles.begin(), m_projectiles.end(), [](const auto& projectile) {
             return !projectile->IsExist();
         }),
         m_projectiles.end()
@@ -58,18 +61,28 @@ Projectile::Projectile (
     const float xAxisSpeed,
     PhysicWorld::OnCollision weaponCallback
 ) :
-    m_body { 
-        factory::body_creator<KinematicBody>(world) ( 
-            position, size, this, [this, &weaponCallback](core::Entity* entity) {
-                // do the job known to sword
-                std::invoke(weaponCallback, entity);
-                // do the job known to this projectile:
-                // end it's lifetime after collision!
-                this->Collapse();
-            }
-        )
-    }
+    m_world { world }, 
+    m_body { position, size, this },
+    m_lifeTime { 1.f }
 {
-    m_body->SetDirection(direction);
-    m_body->SetXAxisSpeed(xAxisSpeed);
+    m_world->Add( &m_body, [this, &weaponCallback](core::Entity* entity) {
+        // do the job known to sword
+        std::invoke(weaponCallback, entity);
+        // do the job known to this projectile:
+        // end it's lifetime after collision!
+        this->Collapse();
+    });
+    
+    m_body.SetDirection( { direction.x, 0.f });
+    m_body.SetXAxisSpeed(xAxisSpeed);
+    m_body.SetMask(
+        CreateMask(CategoryBits::PROJECTILE),
+        CreateMask(CategoryBits::ENEMY, CategoryBits::BOUNDARY) 
+    );
+    cocos2d::log("Projectile was created with body");
+}
+
+Projectile::~Projectile() {
+    m_world->Erase(&m_body);
+    cocos2d::log("Projectile was destroyed");
 }

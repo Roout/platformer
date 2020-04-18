@@ -26,7 +26,7 @@ public:
     Weapon(int damage, int range, float reloadTime):
         m_damage{damage},
         m_range{range},
-        m_reload{reloadTime}
+        m_maxReloadTime{reloadTime}
     {
     }
 
@@ -160,6 +160,8 @@ public:
         PhysicWorld::OnCollision weaponCallback
     );
 
+    ~Projectile();
+
     /**
      * This function update projectile state by keeping track 
      * of it's lifetime.
@@ -200,6 +202,8 @@ private:
 
     // Properties
 private:
+    
+    PhysicWorld * const m_world { nullptr };
 
     /**
      * Keep track of projectile lifetime. When 'm_lifeTime' <= 0.f
@@ -211,7 +215,7 @@ private:
      * Define an area where the attack can reach and do something, e.g. deal some damage. 
      * Exist until it collide with something or the projectile lifetime ends.
      */
-    BodyPointer<KinematicBody> m_body { nullptr };
+    KinematicBody m_body;
 };
 
 
