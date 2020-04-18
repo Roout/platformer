@@ -41,10 +41,10 @@ inline void InvokeCallback (
     const size_t argIndex, 
     Container2& argContainer
 ) noexcept {
-    const auto& [caller, callback] = callerContainer[callerIndex];
+    const auto& callback = callerContainer[callerIndex].second;
     auto & body = argContainer[argIndex].first;
-    if( callback && body.HasModel() ) {
-        body.InvokeCallback(*callback);
+    if( callback && body->HasModel() ) {
+        body->InvokeCallback(*callback);
     }
 };
 
@@ -60,13 +60,13 @@ void PhysicWorld::Step(const float dt) {
     for( auto& [kBody, optCallback]: m_kinematicBodies ) {
 		bool hasCollide { false };
         const auto FindCollisions = 
-            [lhsBodyIndex = kBodyIndex, &lhs = kBody, &hasCollide](
+            [lhsBodyIndex = kBodyIndex, lhs = kBody, &hasCollide](
                     const auto& bodies, 
                     auto& colliders
             ) {
             size_t rhsBodyIndex { 0 };
             for(const auto& [rhs, opt]: bodies) {
-                if(&rhs != &lhs && rhs.CanInteract(&lhs) && rhs.Collide(&lhs)) {
+                if(rhs != lhs && rhs->CanInteract(lhs) && rhs->Collide(lhs)) {
                     colliders.emplace_back(lhsBodyIndex, rhsBodyIndex);
                     hasCollide = true;
                 }
@@ -75,18 +75,18 @@ void PhysicWorld::Step(const float dt) {
         };
 
         // handle X-movement
-		kBody.MoveX(dt);
+		kBody->MoveX(dt);
 		// collisions with static entities
         FindCollisions(m_staticBodies, staticColliders);
         // collisions with kinematic entities
         FindCollisions(m_kinematicBodies, kinematicColliders);
         if (hasCollide) {
-			kBody.RestoreX(); // restore position before collision
+			kBody->RestoreX(); // restore position before collision
         }
 
 		// handle Y-movement
         hasCollide = false;
-		kBody.MoveY(dt);
+		kBody->MoveY(dt);
 		// collisions with static entities
 		FindCollisions(m_staticBodies, staticColliders);
 		// collisions with kinematic entities
@@ -96,9 +96,9 @@ void PhysicWorld::Step(const float dt) {
                 - is jumping up and colide => is going to fall down
                 - is falling down and collide => is going to stand on the ground
             */
-			kBody.RestoreY();
-			if(!kBody.IsFallingDown()) {
-                kBody.StartFall();
+			kBody->RestoreY();
+			if(!kBody->IsFallingDown()) {
+                kBody->StartFall();
             }
 		}
         // update body index
