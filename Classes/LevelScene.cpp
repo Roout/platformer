@@ -6,7 +6,7 @@
 #include "TileMapParser.hpp"
 
 LevelScene::LevelScene(int id): 
-    m_id{id} 
+    m_id{ id } 
 {
 }
 
@@ -49,11 +49,18 @@ bool LevelScene::init() {
     const auto playerPosition { parser.Acquire<ParsedType::HERO_POSITION>() };
     const auto obstacles { parser.Acquire<ParsedType::STATIC_BODIES>()}; 
 
+    // TODO: FIX THIS ERROR!
+    m_boundary.reserve(10000);
+
     for(const auto& shape : obstacles ) {
-        auto body = m_world->Create<StaticBody>(shape.origin, shape.size);
-        body->SetMask(
+        m_boundary.emplace_back(shape.origin, shape.size, nullptr);
+        m_world->Add(&m_boundary.back(), [](core::Entity* const entity) {
+            static int x { 0 };
+            cocos2d::log("Boundary collide with some entity: %d", x++);
+        });
+        m_boundary.back().SetMask(
             CreateMask(CategoryBits::BOUNDARY),
-            CreateMask(CategoryBits::ENEMY,CategoryBits::HERO) 
+            CreateMask(CategoryBits::ENEMY, CategoryBits::HERO, CategoryBits::PROJECTILE) 
         );
     }
 
@@ -77,5 +84,9 @@ void LevelScene::menuCloseCallback(cocos2d::Ref* pSender) {
 }
 
 void LevelScene::update(float dt) {
+    static unsigned int x { 0 };
+    cocos2d::log("Update: %0.4f, %d", dt, x++);
+
+    m_unit->UpdateWeapon(dt);
     m_world->Step(dt, 1);
 }

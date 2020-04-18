@@ -2,10 +2,11 @@
 #define LEVEL_SCENE_HPP
 
 #include <memory>
+#include <vector>
+#include "PhysicWorld.hpp"
 #include "cocos2d.h"
 
 class Unit;
-class PhysicWorld;
 class UserInputHandler;
 
 class LevelScene final : public cocos2d::Scene {
@@ -36,6 +37,9 @@ private:
     std::unique_ptr<PhysicWorld>        m_world { nullptr };
     std::unique_ptr<Unit>               m_unit { nullptr };
     std::unique_ptr<UserInputHandler>   m_inputHandler { nullptr };
+
+    std::vector<StaticBody> m_boundary;
+
 
     const int m_id { -1 }; 
 };
