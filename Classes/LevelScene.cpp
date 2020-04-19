@@ -34,7 +34,7 @@ bool LevelScene::init() {
     
     const auto tmxFile { cocos2d::StringUtils::format("Map/level_%d.tmx", m_id) };
     cocos2d::FastTMXTiledMap *tileMap { cocos2d::FastTMXTiledMap::create(tmxFile) };
-    
+    tileMap->setName("Map");
     // tileMap->setAnchorPoint( {0.5f, 0.5f} );
     // tileMap->setPosition( cocos2d::Vec2{visibleSize.width, visibleSize.height } / 2.f + origin / 2.f);
     // tileMap->setScale(2.f); // temporary

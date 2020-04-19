@@ -7,6 +7,8 @@
 #include <vector>
 #include <memory>
 
+class ProjectileView;
+
 /**
  * Weapon defines attack damage, attack range and attack speed
  * that unit may have. 
@@ -181,6 +183,14 @@ public:
         return m_lifeTime > 0.f;
     }
 
+    [[nodiscard]] KinematicBody * GetBody() noexcept {
+        return &m_body;
+    }
+
+    [[nodiscard]] const KinematicBody * GetBody() const noexcept {
+        return &m_body;
+    }
+
     /**
      * This compare operator overload usefull for sorting projectiles by lifeTime.
      * @return
@@ -216,6 +226,13 @@ private:
      * Exist until it collide with something or the projectile lifetime ends.
      */
     KinematicBody m_body;
+
+    /**
+     * The view of the projectile.
+     * @note
+     *      Declare after the physic body.
+     */
+    ProjectileView *m_view { nullptr };
 };
 
 
@@ -229,7 +246,6 @@ public:
      * 
      * @param[in] world
      *      Pointer to PhysicWorld where a projectile created by the weapon will be managed.
-     *      Used only by factory function for creating projectile body.
      * 
      * @param[in] position
      *      A left-bottom corner of the created projectile.

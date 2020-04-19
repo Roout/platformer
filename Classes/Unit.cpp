@@ -29,10 +29,13 @@ void Unit::MeleeAttack() noexcept {
     if( m_weapon->CanAttack() ) {
         const auto direction = m_body.GetDirection();
         auto position = m_body.GetShape().origin;
-        if(m_state == State::idle_right) {
+        if(direction.x >= 0.f) {
             position.x += m_width;
         }
-        
+        else if(direction.x < 0.f) {
+            position.x -= m_width;
+        }
+
         static int x { 0 };
         cocos2d::log(" >>> unit attack with sword: %d", ++x );
 
