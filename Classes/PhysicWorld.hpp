@@ -326,9 +326,9 @@ private:
     float           m_jumpTime { 0.f }; 
     float           m_previousJumpTime { 0.f };
 
-    static constexpr float JUMP_SPEED { 120.f };
+    static constexpr float JUMP_SPEED { 600.f };
     static constexpr float JUMP_TIME  { 0.55f };
-    static constexpr float MOVE_SPEED { 110.f };
+    static constexpr float MOVE_SPEED { 550.f };
 };
 
 #endif // OWN_PHYSIC_WORLD_HPP

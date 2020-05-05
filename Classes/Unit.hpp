@@ -50,8 +50,8 @@ private:
 
     State m_state { State::idle_right };
 
-    static constexpr float m_width { 16.f };
-    static constexpr float m_height { 28.f };
+    static constexpr float m_width { 80.f };
+    static constexpr float m_height { 146.f };
 };
 
 #endif // UNIT_HPP
