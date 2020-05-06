@@ -77,6 +77,7 @@ list(APPEND GAME_HEADER
      Classes/LevelScene.hpp
      Classes/Unit.hpp
      Classes/PhysicWorld.hpp
+     Classes/PhysicBody.hpp
      Classes/UnitView.hpp
      Classes/UserInputHandler.hpp
      Classes/TileMapParser.hpp
