@@ -28,6 +28,9 @@ public:
      * Callback function type. 
      * Define what the callback owner will do with entity (passed to callback as parametr)
      * when the collision occur.
+     * 
+     * @note
+     *      For reference, the Box2d has onContactBegin, onContactEnd, etc. 
      */
     using OnCollision = std::function<void(core::Entity *)>;
     
@@ -38,14 +41,24 @@ public:
 
     void Step(const float dt, size_t iterations);
 
+    /**
+     * This method adds body to a physic world to be managed here.
+     */
     template<class BodyType> 
-    void Add (
+    void Add(
         BodyType * const body, 
         std::optional<OnCollision> callback = std::nullopt
     );
 
+    /**
+     * This method erases body from the physic world.
+     * 
+     * @note
+     *      It performs a linear search, a swap and a pop_back on vector. This leads to 
+     *      possible reallocations etc. 
+     */
     template<class BodyType> 
-    void Erase(const BodyType* const body ) noexcept;
+    void Erase(const BodyType* const body) noexcept;
 
 private:
     void Step(const float dt);
