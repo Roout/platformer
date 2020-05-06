@@ -57,11 +57,27 @@ public:
 
     virtual ~StaticBody() = default;
 
+    /**
+     * This method check whether this body can interact with other one or not. 
+     * 
+     * @return 
+     *      Return indication whether two bodies can collide according 
+     *      to the assigned category or not. 
+     * 
+     * @note
+     *      The Box2d has implemented a similar approach. 
+     */
     [[nodiscard]] bool CanInteract( const StaticBody* const other ) const noexcept {
         return  (m_categoryBits & other->m_collideWithBits) != 0 &&
                 (m_collideWithBits & other->m_categoryBits) != 0;
     }
 
+    /**
+     * This method perform an intersection check for two bodies.
+     * 
+     * @return 
+     *      Return true if both bodies are intersecting false otherwise. 
+     */
     [[nodiscard]] bool Collide( const StaticBody *const body ) const noexcept {
         return m_shape.intersectsRect(body->m_shape);
     }
@@ -115,12 +131,22 @@ class KinematicBody final :
     public StaticBody 
 {   
 public:
-    using StaticBody::StaticBody;
-
+    KinematicBody(const cocos2d::Vec2& position, 
+        const cocos2d::Size& size,
+        core::Entity * const model,
+        float moveSpeed = MOVE_SPEED,
+        float jumpSpeed = JUMP_SPEED
+    ) :
+        StaticBody{ position, size, model },
+        m_moveSpeed { moveSpeed },
+        m_jumpSpeed { jumpSpeed }
+    { 
+    }
+    
     // Methods used by models (unit, projectile, etc)
 
     void SetXAxisSpeed(float speed) noexcept {
-        m_speed = speed;
+        m_moveSpeed = speed;
     }    
 
     void SetDirection(const cocos2d::Vec2& direction) noexcept {
@@ -168,12 +194,12 @@ private:
     
     void MoveX(float dt) noexcept {
         m_previousPosition.x = m_shape.origin.x;
-        m_shape.origin.x += m_direction.x * m_speed * dt;
+        m_shape.origin.x += m_direction.x * m_moveSpeed * dt;
     }
 
     void MoveY(float dt) noexcept {
         m_previousPosition.y = m_shape.origin.y;
-        m_shape.origin.y += m_direction.y * dt * JUMP_SPEED;
+        m_shape.origin.y += m_direction.y * dt * m_jumpSpeed;
 
         m_previousJumpTime = m_jumpTime;
 
@@ -206,7 +232,11 @@ private:
     /**
      * This is x-axis speed of the body. 
      */
-    float           m_speed { MOVE_SPEED };
+    float           m_moveSpeed { MOVE_SPEED };
+    /**
+     * This is y-axis speed of the body. 
+     */
+    float           m_jumpSpeed { JUMP_SPEED };
     /**
      * Define movement direction of the body. 
      */
