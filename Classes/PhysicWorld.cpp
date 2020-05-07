@@ -85,8 +85,23 @@ void PhysicWorld::Step(const float dt) {
 			kBody->RestoreX(); // restore position before collision
         }
 
-		// handle Y-movement
-		kBody->MoveY(dt);
+		/// handle Y-movement
+        
+        // indicate if whether it's possible for the body to fall down 
+        // after moving along X-axis
+        bool isFallingAfterXMove { false };
+        // Expression (kBody->m_direction.y > 0.f) == true, means that this body 
+        // is starting jumping
+        if( kBody->m_onGround && kBody->m_direction.y <= 0.f) {
+            // assume that it was moved along x-axis and 
+            // there wasn't anything to step on.
+            kBody->StartFall();
+            // it's possible that the body will fall down!
+            isFallingAfterXMove = true;
+        }
+		
+        kBody->MoveY(dt);
+
         { // find y-axis collision with static bodies
             bool wasAdjusted { false };
             size_t rhsBodyIndex { 0 };
@@ -115,11 +130,24 @@ void PhysicWorld::Step(const float dt) {
                 rhsBodyIndex++;
             }
             // if a collision occured
-            if( wasAdjusted && !kBody->IsFallingDown()) {
-                kBody->StartFall();
+            if(wasAdjusted) {
+                // it was falling down, but collide
+                if( kBody->IsFallingDown() ) {
+                    // so stop falling
+                    kBody->m_direction.y = 0.f;
+                    kBody->m_onGround = true;
+                } else { // it was in jump state or on the ground
+                    kBody->StartFall();
+                }
+            } else if( kBody->m_jumpTime > 0.f ) {
+                kBody->m_onGround = false;
+            } else if(isFallingAfterXMove) {
+                // no collision occured so a body is falling down
+                kBody->m_onGround = false;
             }
         }
 		// collisions with kinematic entities
+        /// TODO: implement this; for now it's ignoring collision with kinematic colliders
         hasCollide = false;
         FindCollisions(m_kinematicBodies, kinematicColliders);
         if (hasCollide) {

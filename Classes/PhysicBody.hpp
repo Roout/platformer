@@ -189,6 +189,10 @@ public:
         );
     }
 
+    [[nodiscard]] bool IsOnGround() const noexcept {
+        return m_onGround;
+    }
+
     // Methods used by PhysicWorld in movement&collision implementation.
 private:
     friend class PhysicWorld;
