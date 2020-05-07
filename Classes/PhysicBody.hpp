@@ -13,7 +13,8 @@ enum class CategoryBits: MaskType {
     HERO        = 0x0001,
     ENEMY       = 0x0002,
     BOUNDARY    = 0x0004,
-    PROJECTILE  = 0x0008
+    PROJECTILE  = 0x0008,
+    PLATFORM    = 0x0010
 };
 
 template<class ...Args>
@@ -252,6 +253,15 @@ private:
     float           m_jumpTime { 0.f }; 
     float           m_previousJumpTime { 0.f };
 
+    /// TODO: decide whether it need to be modified in restoreY, ... .
+    /**
+     * Indicate whether a body is on ground or not. 
+     */
+    bool            m_onGround { false };
+
+    /**
+     * List of some constants. Need to be replaced later. 
+     */
     static constexpr float JUMP_SPEED { 600.f };
     static constexpr float JUMP_TIME  { 0.55f };
     static constexpr float MOVE_SPEED { 550.f };
