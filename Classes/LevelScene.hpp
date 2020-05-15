@@ -3,7 +3,8 @@
 
 #include <memory>
 #include <vector>
-#include "PhysicWorld.hpp"
+#include "Border.hpp"
+#include "Platform.hpp"
 #include "cocos2d.h"
 
 class Unit;
@@ -38,8 +39,8 @@ private:
     std::unique_ptr<Unit>               m_unit { nullptr };
     std::unique_ptr<UserInputHandler>   m_inputHandler { nullptr };
 
-    std::vector<StaticBody> m_boundary;
-
+    std::vector<Border>     m_borders;
+    std::vector<Platform>   m_platforms;
 
     const int m_id { -1 }; 
 };

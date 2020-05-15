@@ -46,22 +46,25 @@ bool LevelScene::init() {
     TileMapParser parser{ tileMap };
     parser.Parse();
 
-    const auto playerPosition { parser.Acquire<ParsedType::HERO_POSITION>() };
+    const auto playerPosition { parser.Acquire<ParsedType::PLAYER>() };
     const auto obstacles { parser.Acquire<ParsedType::STATIC_BODIES>()}; 
 
-    // TODO: FIX THIS ERROR!
-    m_boundary.reserve(10000);
+    m_borders.reserve(5000);
+    m_platforms.reserve(200);
 
-    for(const auto& shape : obstacles ) {
-        m_boundary.emplace_back(shape.origin, shape.size, nullptr);
-        m_world->Add(&m_boundary.back(), [](core::Entity* const entity) {
-            static int x { 0 };
-            cocos2d::log("Boundary collide with some entity: %d", x++);
-        });
-        m_boundary.back().SetMask(
-            CreateMask(CategoryBits::BOUNDARY),
-            CreateMask(CategoryBits::ENEMY, CategoryBits::HERO, CategoryBits::PROJECTILE) 
-        );
+    for(const auto& [shape, category] : obstacles ) {
+        if (category == core::CategoryName::PLATFORM ) {
+            m_platforms.emplace_back(m_world.get(), 
+                shape.origin.x, shape.origin.y, 
+                shape.size.width, shape.size.height 
+            );
+        } 
+        else if(category == core::CategoryName::BORDER) {
+            m_borders.emplace_back(m_world.get(), 
+                shape.origin.x, shape.origin.y, 
+                shape.size.width, shape.size.height 
+            );
+        }
     }
 
     m_unit = std::make_unique<Unit>(m_world.get(), playerPosition.x, playerPosition.y);
