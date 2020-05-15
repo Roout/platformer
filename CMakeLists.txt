@@ -84,6 +84,8 @@ list(APPEND GAME_HEADER
      Classes/Weapon.hpp
      Classes/Core.hpp
      Classes/ProjectileView.hpp
+     Classes/Platform.hpp
+     Classes/Border.hpp
      )
 
 if(ANDROID)
