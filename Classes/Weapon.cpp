@@ -63,7 +63,7 @@ Projectile::Projectile (
     PhysicWorld::OnCollision weaponCallback
 ) :
     m_world { world }, 
-    m_body { position, size, this },
+    m_body { position, size },
     m_lifeTime { 0.1f }
 {
     m_world->Add( &m_body, [this, &weaponCallback](core::Entity* entity) {
@@ -74,11 +74,12 @@ Projectile::Projectile (
         this->Collapse();
     });
     
+    m_body.EmplaceFixture(this, core::CategoryName::UNDEFINED);
     m_body.SetDirection( { direction.x, 0.f });
     m_body.SetXAxisSpeed(xAxisSpeed);
     m_body.SetMask(
         CreateMask(CategoryBits::PROJECTILE),
-        CreateMask(CategoryBits::ENEMY, CategoryBits::BOUNDARY) 
+        CreateMask(CategoryBits::ENEMY, CategoryBits::BOUNDARY, CategoryBits::PLATFORM) 
     );
     cocos2d::log("Projectile was created with body");
 

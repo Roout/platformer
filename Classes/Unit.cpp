@@ -3,15 +3,16 @@
 
 Unit::Unit(PhysicWorld * const world, float x, float y) :
     m_world { world },
-    m_body {cocos2d::Vec2{ x, y }, cocos2d::Size{ m_width, m_height }, this },
+    m_body {cocos2d::Vec2{ x, y }, cocos2d::Size{ m_width, m_height }},
     m_health { 100 }
 {
     m_world->Add(&m_body, [](core::Entity* ) {
         cocos2d::log("Unit collide with some entity!");
     });
+    m_body.EmplaceFixture(this, core::CategoryName::UNDEFINED);
     m_body.SetMask(
         CreateMask(CategoryBits::HERO),
-        CreateMask(CategoryBits::ENEMY, CategoryBits::BOUNDARY, CategoryBits::PROJECTILE) 
+        CreateMask(CategoryBits::ENEMY, CategoryBits::BOUNDARY, CategoryBits::PROJECTILE, CategoryBits::PLATFORM) 
     );
     m_weapon = std::make_unique<Sword>(10, 20, 0.2f);
 }
