@@ -119,7 +119,7 @@ void PhysicWorld::Step(const float dt) {
                         bool hasCollision { false };
                         for(int i = 0; i < steps && !hasCollision; i++) {
                             kBody->MoveY(miniDeltaTime);
-                            if(rhs->CanInteract(kBody)) {
+                            if(rhs->Intersect(kBody)) {
                                 hasCollision = true;
                                 wasAdjusted = true;
                                 kBody->RestoreY();
