@@ -2,6 +2,7 @@
 #define PHYSIC_BODY_HPP
 
 #include "math/CCGeometry.h"  // cocos2d::Vec2, cocos2d::Size
+#include "Core.hpp"
 
 /**
  * Underlying type of bitmask used to represent 
@@ -22,14 +23,30 @@ constexpr MaskType CreateMask(Args ... bits) noexcept {
     return (static_cast<MaskType>(bits) | ...);
 } 
 
-namespace core {
+/**
+ * It's a holder class which separate the user information
+ * from the physic body types. 
+ * 
+ * If any of data member is initialized - all data members must be initialized
+ */
+struct Fixture final {
     /**
-     * Forward declaration of the base class of all entities in this game.
-     * Provide a set of the methods which are used on collision, e.g. 
-     * recieving the damage.
+     * Define the view pointer of the model this body belong to.
+     * Used by callback on collision.
      */
-    class Entity;
-}
+    core::Entity * const        m_entity { nullptr };
+    /**
+     * Indicate whoch category does the entity belong.
+     */
+    const core::CategoryName    m_category { core::CategoryName::UNDEFINED };
+
+
+    // constructor:
+    Fixture( core::Entity * const entity, core::CategoryName category) :
+        m_entity { entity },
+        m_category { category }
+    {}
+};
 
 class StaticBody {
 public:
@@ -46,17 +63,27 @@ public:
     StaticBody& operator= (StaticBody&&)  = default;
 
 public:
-
+    friend class PhysicWorld;
+    
     StaticBody (
         const cocos2d::Vec2& position, 
-        const cocos2d::Size& size,
-        core::Entity * const model
+        const cocos2d::Size& size
     ) :
-        m_shape { position, size },
-        m_model { model }
+        m_shape { position, size }
     {}
 
     virtual ~StaticBody() = default;
+
+    /**
+     * This method initializes user's data that needed to be used 
+     * when handling collisions. 
+     */
+    void EmplaceFixture(
+        core::Entity * const entity, 
+        core::CategoryName category) noexcept 
+    {
+        m_fixture.emplace(entity, category);
+    }
 
     /**
      * This method check whether this body can interact with other one or not. 
@@ -79,7 +106,7 @@ public:
      * @return 
      *      Return true if both bodies are intersecting false otherwise. 
      */
-    [[nodiscard]] bool Collide( const StaticBody *const body ) const noexcept {
+    [[nodiscard]] bool Intersect( const StaticBody *const body ) const noexcept {
         return m_shape.intersectsRect(body->m_shape);
     }
 
@@ -93,7 +120,7 @@ public:
     }
 
     [[nodiscard]] bool HasModel() const noexcept {
-        return m_model != nullptr;
+        return m_fixture.has_value();
     }
 
     /**
@@ -110,41 +137,40 @@ public:
      *      Callback function must have check for a valid 
      *      model pointer (not nullptr). 
      *      Possible side effect: change of the state of the 
-     *      model pointed by 'm_model' pointer.   
+     *      model pointed by "m_fixture->m_entity" pointer.   
      */
     template<class Callable>
     void InvokeCallback(Callable&& callback) noexcept {
-        std::invoke(callback, m_model);
+        std::invoke(callback, m_fixture->m_entity);
     }
 
 protected:
+
     MaskType        m_categoryBits { 0 };       // I am a ... .
     MaskType        m_collideWithBits { 0 };    // I collide with a ... .
     cocos2d::Rect   m_shape {};
-    /**
-     * Define the view pointer of the model this body belong to.
-     * Used by callback on collision.
-     */
-    core::Entity * m_model { nullptr }; 
+   
+    std::optional<Fixture> m_fixture { std::nullopt }; 
 };
 
 class KinematicBody final : 
     public StaticBody 
 {   
 public:
+    friend class PhysicWorld;
+
     KinematicBody(const cocos2d::Vec2& position, 
         const cocos2d::Size& size,
-        core::Entity * const model,
         float moveSpeed = MOVE_SPEED,
         float jumpSpeed = JUMP_SPEED
     ) :
-        StaticBody{ position, size, model },
+        StaticBody{ position, size },
         m_moveSpeed { moveSpeed },
         m_jumpSpeed { jumpSpeed }
     { 
     }
     
-    // Methods used by models (unit, projectile, etc)
+    /// Methods used by models (unit, projectile, etc)
 
     void SetXAxisSpeed(float speed) noexcept {
         m_moveSpeed = speed;
@@ -158,7 +184,7 @@ public:
         return m_direction;
     }
 
-    // Methods used by controllers (* input handler)
+    /// Methods used by controllers (* input handler)
 
     void Jump() noexcept {
         m_direction.y = 1.f;
@@ -193,9 +219,8 @@ public:
         return m_onGround;
     }
 
-    // Methods used by PhysicWorld in movement&collision implementation.
+    /// Methods used by PhysicWorld in movement&collision implementation.
 private:
-    friend class PhysicWorld;
     
     void MoveX(float dt) noexcept {
         m_previousPosition.x = m_shape.origin.x;
@@ -232,7 +257,7 @@ private:
         m_jumpTime = 0.f;
     }
 
-    // Properties
+    /// Properties
  private:   
     /**
      * This is x-axis speed of the body. 
