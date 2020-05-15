@@ -29,7 +29,7 @@ void PhysicWorld::Step(const float dt, size_t iterations) {
  * 
  * @param[in] reference to callerContainer
  *      This is a container that keeps track of either kinematic either static bodies
- *      from the PhysicWorld class. Used to access the entity passed as parametr to callback.
+ *      from the PhysicWorld class. Used to access the entity passed as parameter to callback.
  */
 template <
     class Container1, 
@@ -61,13 +61,13 @@ void PhysicWorld::Step(const float dt) {
 		bool hasCollide { false };
         /// TODO: refactore this to other free function
         const auto FindCollisions = 
-            [lhsBodyIndex = kBodyIndex, lhs = kBody, &hasCollide](
+            [this, lhsBodyIndex = kBodyIndex, lhs = kBody, &hasCollide](
                     const auto& bodies, 
                     auto& colliders
             ) {
             size_t rhsBodyIndex { 0 };
             for(const auto& [rhs, opt]: bodies) {
-                if(rhs != lhs && rhs->CanInteract(lhs) && rhs->Collide(lhs)) {
+                if(rhs != lhs && this->DetectCollision(*lhs, *rhs)) {
                     colliders.emplace_back(lhsBodyIndex, rhsBodyIndex);
                     hasCollide = true;
                 }
@@ -107,7 +107,7 @@ void PhysicWorld::Step(const float dt) {
             size_t rhsBodyIndex { 0 };
             for(const auto& [rhs, opt]: m_staticBodies) {
                 // don't break the loop to mark all blocks the body collided with.
-                if(rhs != kBody && rhs->CanInteract(kBody) && rhs->Collide(kBody)) {
+                if(this->DetectCollision<StaticBody>(*kBody, *rhs)) {
                     staticColliders.emplace_back(kBodyIndex, rhsBodyIndex);
                     // move body to position which is closet to second collided body
                     // if it wasn't moved before.
@@ -119,7 +119,7 @@ void PhysicWorld::Step(const float dt) {
                         bool hasCollision { false };
                         for(int i = 0; i < steps && !hasCollision; i++) {
                             kBody->MoveY(miniDeltaTime);
-                            if(rhs->Collide(kBody)) {
+                            if(rhs->CanInteract(kBody)) {
                                 hasCollision = true;
                                 wasAdjusted = true;
                                 kBody->RestoreY();

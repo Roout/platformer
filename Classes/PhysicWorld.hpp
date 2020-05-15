@@ -63,6 +63,27 @@ public:
 private:
     void Step(const float dt);
 
+    /**
+     * This method check whether two bodies have collided or not.
+     * 
+     * @param[in] lhs
+     *      The body we check for collision. It's always kinematic body.
+     * 
+     * @param[in] rhs
+     *      Other body we check for collision with. It can be either KinematicBody
+     *      either StaticBody.
+     * 
+     * @return 
+     *      The indication whether collision occure or not was returned. 
+     */
+    template<class Right>
+    [[nodiscard]] bool DetectCollision(
+        const KinematicBody& lhs, 
+        const Right& rhs
+    ) const noexcept;
+
+    /// Data members
+private:
     template<class BodyType>
     using MyPair = std::pair<BodyType*, std::optional<OnCollision>>;
 
@@ -75,54 +96,106 @@ private:
 /////////////////////////////
 
 template<class BodyType> 
-void PhysicWorld::Add(
-    BodyType * const body,
-    std::optional<OnCollision> callback
-) {
-    static_assert(
-            std::is_same_v<BodyType, StaticBody> || 
-            std::is_same_v<BodyType, KinematicBody>,
-            "wrong body type" 
-    );
+    void PhysicWorld::Add(
+        BodyType * const body,
+        std::optional<OnCollision> callback
+    ) {
+        static_assert(
+                std::is_same_v<BodyType, StaticBody> || 
+                std::is_same_v<BodyType, KinematicBody>,
+                "wrong body type" 
+        );
 
-    if constexpr (std::is_same_v<BodyType, StaticBody>) {
-        m_staticBodies.emplace_back(body, callback);
+        if constexpr (std::is_same_v<BodyType, StaticBody>) {
+            m_staticBodies.emplace_back(body, callback);
+        }
+        else {
+            m_kinematicBodies.emplace_back(body, callback);
+        }
     }
-    else {
-        m_kinematicBodies.emplace_back(body, callback);
-    }
-}
 
 template<class BodyType> 
-void PhysicWorld::Erase(const BodyType* const body ) noexcept {
-    static_assert(
-            std::is_same_v<BodyType, StaticBody> || 
-            std::is_same_v<BodyType, KinematicBody>,
-            "wrong body type" 
-    );
-
-    auto Remove = [body](std::vector<MyPair<BodyType>>& container) {
-        auto it = std::find_if(
-            container.begin(), 
-            container.end(), 
-            [body](const MyPair<BodyType>& cPair) {
-                return (body == cPair.first);
-            }
+    void PhysicWorld::Erase(const BodyType* const body ) noexcept {
+        static_assert(
+                std::is_same_v<BodyType, StaticBody> || 
+                std::is_same_v<BodyType, KinematicBody>,
+                "wrong body type" 
         );
-        assert(it != container.end());
-        // Order doesn't matter so I can just swap and pop element
-        const auto backIt = --container.cend();
-        // discard element pointed by iterator 'it'
-        *it = *backIt;
-        container.pop_back();
-    };
 
-    if constexpr (std::is_same_v<BodyType, StaticBody>) {
-        Remove(m_staticBodies);
+        auto Remove = [body](std::vector<MyPair<BodyType>>& container) {
+            auto it = std::find_if(
+                container.begin(), 
+                container.end(), 
+                [body](const MyPair<BodyType>& cPair) {
+                    return (body == cPair.first);
+                }
+            );
+            assert(it != container.end());
+            // Order doesn't matter so I can just swap and pop element
+            const auto backIt = --container.cend();
+            // discard element pointed by iterator 'it'
+            *it = *backIt;
+            container.pop_back();
+        };
+
+        if constexpr (std::is_same_v<BodyType, StaticBody>) {
+            Remove(m_staticBodies);
+        }
+        else {
+            Remove(m_kinematicBodies);
+        }
     }
-    else {
-        Remove(m_kinematicBodies);
+
+ template<class Right>
+    bool PhysicWorld::DetectCollision(
+        const KinematicBody& lhs, 
+        const Right& rhs
+    ) const noexcept {
+        static_assert(
+                std::is_same_v<Right, StaticBody> || 
+                std::is_same_v<Right, KinematicBody>,
+                "wrong body type" 
+        );
+
+        // exclude the most basic cases: mask collision or shape intersection don't occur.
+        if( auto canCollide { lhs.CanInteract(&rhs) && lhs.Intersect(&rhs) }; !canCollide ) {
+            return false;
+        }
+
+        if( !rhs.HasModel()) {
+            return true;
+        } 
+        else if( rhs.m_fixture->m_category == core::CategoryName::PLATFORM ) {
+            const auto moveDown { 
+                lhs.m_direction.y < 0.f 
+                // || pass through platform
+            };
+
+            // get current shape of the lhs kinematic body
+            auto lhsBefore { lhs.m_shape };        
+            // shift it to previous position
+            lhsBefore.origin = lhs.m_previousPosition;
+            
+            auto noIntersectionBefore { false };
+            
+            // compile-time fork: collision with kinematic and static body
+            if constexpr (std::is_same_v<Right, KinematicBody>) {
+                // get current shape of the rhs kinematic body
+                auto rhsBefore { rhs.m_shape };      
+                // shift it to previous position
+                rhsBefore.origin = rhs.m_previousPosition;
+    
+                noIntersectionBefore = !lhsBefore.intersectsRect(rhsBefore); 
+            } 
+            else { // check for collision with static body
+                noIntersectionBefore = !lhsBefore.intersectsRect(rhs.m_shape); 
+            }
+           
+            return ( moveDown && noIntersectionBefore );
+        } 
+        else {
+            return true;
+        }
     }
-}
 
 #endif // OWN_PHYSIC_WORLD_HPP
