@@ -4,8 +4,11 @@
 TileMapParser::TileMapParser(const cocos2d::FastTMXTiledMap * tileMap):
     m_tileMap{ tileMap }
 {
-    static constexpr auto expectedStaticBodiesCount { 50 };
+    static constexpr auto expectedStaticBodiesCount { 100 };
+    static constexpr auto expectedKinematicBodiesCount { 10 };
+
     this->Get<ParsedType::STATIC_BODIES>().reserve(expectedStaticBodiesCount);
+    this->Get<ParsedType::KINEMATIC_BODIES>().reserve(expectedKinematicBodiesCount);
 }
 
 void TileMapParser::Parse() {
@@ -22,7 +25,7 @@ void TileMapParser::Parse() {
 				const auto x = objMap.at("x").asFloat();
 				const auto y = objMap.at("y").asFloat();
 				if (name == "player") {
-					this->Get<ParsedType::HERO_POSITION>() = cocos2d::Vec2{x, y};
+					this->Get<ParsedType::PLAYER>() = cocos2d::Vec2{x, y};
 				}
 			}
 		}
@@ -43,19 +46,48 @@ void TileMapParser::Parse() {
 				if (tileGid) {
 					const auto tileProp { m_tileMap->getPropertiesForGID(tileGid) };
 					const auto& properties = tileProp.asValueMap();
-					const bool isCollidable {
-                        properties.count("collidable") > 0 && 
-                        properties.at("collidable").asBool()
-                    };
-					if (isCollidable) {
-                        this->Get<ParsedType::STATIC_BODIES>().emplace_back(
-                            cocos2d::Vec2{ i * tileSize.width, (height - j - 1) * tileSize.height }, 
-                            cocos2d::Size{ tileSize.width, tileSize.height }
-                        );
+
+					const auto bodyTypeIter = properties.find("body-type");
+					const auto categoryNameIter = properties.find("category-name");
+
+					const auto exist { 
+						bodyTypeIter != properties.end() && 
+						categoryNameIter != properties.end()
+					};
+
+					if (!exist) continue;
+
+					if(bodyTypeIter->second.asString() == "static") {
+						core::CategoryName category { core::CategoryName::UNDEFINED };
+
+						if( categoryNameIter->second.asString() == "platform" ) {
+							category = core::CategoryName::PLATFORM;
+						} 
+						else if(categoryNameIter->second.asString() == "border") {
+							category = core::CategoryName::BORDER;
+						} 
+
+						this->Get<ParsedType::STATIC_BODIES>().emplace_back(
+							cocos2d::Rect{
+								cocos2d::Vec2{ i * tileSize.width, (height - j - 1) * tileSize.height }, 
+								cocos2d::Size{ tileSize.width, tileSize.height }
+							},
+							category								
+						);
+					} else { // "kinematic"
+						core::CategoryName category { core::CategoryName::UNDEFINED };
+
+						this->Get<ParsedType::KINEMATIC_BODIES>().emplace_back(
+							cocos2d::Rect{
+								cocos2d::Vec2{ i * tileSize.width, (height - j - 1) * tileSize.height }, 
+								cocos2d::Size{ tileSize.width, tileSize.height }
+							},
+							category								
+						);
 					}
 
-				}
-			}
-		}
+				}	// tileGid
+			}	// for
+		}	// for
 	}
 }

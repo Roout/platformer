@@ -4,14 +4,21 @@
 #include <vector>
 #include <tuple>
 #include "math/CCGeometry.h" // cocos2d::Rect, cocos2d::Vec2
+#include "Core.hpp"
 
 namespace cocos2d {
     class FastTMXTiledMap;
 }
 
+/**
+ * Define parsed objects. Used as indexes so don't change the order 
+ * without testing TileMapeParser class.
+ */
 enum class ParsedType: short {
     STATIC_BODIES,
-    HERO_POSITION
+    KINEMATIC_BODIES,
+    PLAYER,
+    UNDEFINED
 };
 
 /** @brief
@@ -43,8 +50,9 @@ private:
     const cocos2d::FastTMXTiledMap * const m_tileMap { nullptr };
     // Parsed:
     std::tuple< 
-        std::vector<cocos2d::Rect>,
-        cocos2d::Vec2
+        std::vector<std::pair<cocos2d::Rect, core::CategoryName>>, // static bodies
+        std::vector<std::pair<cocos2d::Rect, core::CategoryName>>, // kinematic bodies
+        cocos2d::Vec2   // object
     > m_parsed {};
 };
 
