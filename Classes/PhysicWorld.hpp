@@ -89,6 +89,12 @@ private:
 
     std::vector<MyPair<StaticBody>>     m_staticBodies;
     std::vector<MyPair<KinematicBody>>  m_kinematicBodies;
+
+    /**
+     * This class update position of the kinematic bodies and handle the collision
+     * if any has occured.
+     */
+    friend struct CollisionResolver;
 };
 
 /////////////////////////////
@@ -146,7 +152,7 @@ template<class BodyType>
         }
     }
 
- template<class Right>
+template<class Right>
     bool PhysicWorld::DetectCollision(
         const KinematicBody& lhs, 
         const Right& rhs

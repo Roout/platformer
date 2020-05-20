@@ -166,7 +166,8 @@ public:
     ) :
         StaticBody{ position, size },
         m_moveSpeed { moveSpeed },
-        m_jumpSpeed { jumpSpeed }
+        m_jumpSpeed { jumpSpeed },
+        m_previousPosition { position }
     { 
     }
     
@@ -184,7 +185,7 @@ public:
         return m_direction;
     }
 
-    /// Methods used by controllers (* input handler)
+    /// Methods used by controllers ( input handler)
 
     void Jump() noexcept {
         m_direction.y = 1.f;
@@ -237,10 +238,7 @@ private:
             // jumping
             m_jumpTime -= dt;
         }
-        if( m_jumpTime <= 0.f ) {
-            // the jump time limit is over, now fall down 
-            m_direction.y = -1.f;
-        }
+        
     }
     
     void RestoreX() noexcept {

@@ -35,7 +35,7 @@ template <
     class Container1, 
     class Container2
 >  
-inline void InvokeCallback (
+static void InvokeCallback (
     const size_t callerIndex, 
     const Container1& callerContainer,
     const size_t argIndex, 
@@ -48,116 +48,221 @@ inline void InvokeCallback (
     }
 };
 
+
+/**
+ * This class update position of the kinematic bodies and handle the collision
+ * if any has occured.
+ * 
+ * @note 
+ *      This class is a friend of the PhysicWorld class.
+ */
+struct CollisionResolver final {
+public:
+    using ColliderIndexes = std::vector<std::pair<size_t, size_t>>;
+
+    CollisionResolver(PhysicWorld * const world ) :
+        m_world { world }
+    {
+    }
+
+    /**
+     * This method set up enviromentfor the collision resolver class.
+     * It initializes pointer to array of collider indexes which will be 
+     * filled when the work will be done.  
+     * 
+     * Need to be called before the @UpdatePosition method.
+     */
+    void SetEnviroment( 
+        ColliderIndexes * const colliderIndexes 
+    ) {
+        m_colliderIndexes = colliderIndexes;
+        m_hasEnviroment = true;
+    }
+
+    /**
+     * @note 
+     *      Expect @SetEnviroment method be called before.  
+     */
+    template<class RHS_Collider>
+    bool UpdatePosition(
+        KinematicBody * const kinematicBody,
+        const size_t kinematicBodyIndex,
+        void (KinematicBody::*Move)(float),
+        void (KinematicBody::*Restore)(),
+        const float dt
+    ) {
+        if( !m_hasEnviroment ) {
+            throw std::logic_error("Forgot to set up enviroment for the Collision resolver instance.");
+        }
+
+        (kinematicBody->*Move)(dt);
+
+        size_t rhsBodyIndex { 0 };
+        bool wasAdjusted { false };
+        auto lhs = kinematicBody;
+
+        auto colliderBodies { this->GetColliderBodies<RHS_Collider>() }; 
+
+        for(const auto& [rhs, opt]: *colliderBodies) {
+            if(rhs != lhs && m_world->DetectCollision(*lhs, *rhs)) {
+                m_colliderIndexes->emplace_back(kinematicBodyIndex, rhsBodyIndex);
+                // move body to position which is closet to second collided body
+                // if it wasn't moved before.
+                if(!wasAdjusted) {
+                    (lhs->*Restore)();
+                    // move along y-axis step by step (mini-step)
+                    const float miniDeltaTime { dt / STEPS_TO_RESOLVE_COLLISION };
+                    for(int i = 0; i < STEPS_TO_RESOLVE_COLLISION; i++) {
+                        (lhs->*Move)(miniDeltaTime);
+                        if(lhs->Intersect(rhs)) {
+                            (lhs->*Restore)();
+                            break;
+                        }
+                    }
+                    wasAdjusted = true; 
+                }
+            }
+            rhsBodyIndex++;
+        }
+
+        m_hasEnviroment = false;
+        return wasAdjusted;
+    }
+
+    /// hidden methods
+private:
+
+    /**
+     * @template types
+     *      RHS_Collider is a type of either KinematicBody or StaticBody.
+     * 
+     * @return
+     *      This function return pointer to kinematic bodies container from the physic world 
+     *      if template parameter is KinematicBody and StaticBody otherwise.  
+     */
+    template<class RHS_Collider>
+    auto GetColliderBodies() const noexcept {
+        if constexpr (std::is_same_v<RHS_Collider, KinematicBody>) {
+            return &m_world->m_kinematicBodies;
+        } else {
+            return &m_world->m_staticBodies;
+        }
+    }
+
+    /// data members
+private:
+    PhysicWorld * const m_world { nullptr };
+
+    /**
+     * @note 
+     *      - it has delayed initialization.
+     *      - can be changed!
+     */
+    ColliderIndexes * m_colliderIndexes { nullptr };
+
+    /**
+     * This flag indicate whether enviroment was set up before the 
+     * @UpdatePosition call or not.
+     * 
+     * It forces to set up (even if it was same before) enviroment
+     * each time adter the @UpdatePosition call.
+     */
+    bool m_hasEnviroment { false };
+
+    /**
+     * Constatant which describe how detailed the collision handled by 
+     * the main algorithm (simple simulation of the movement until it collide or 
+     * delta time consumed). The more this value the smaller steps will 
+     * kinematic body do and more work will be done (so overhead too). 
+     */
+    static constexpr size_t STEPS_TO_RESOLVE_COLLISION { 5 };
+};
+
 void PhysicWorld::Step(const float dt) {
+    // Pairs of [kinematic body index, kinematic body index] 
     std::vector<std::pair<size_t, size_t>> kinematicColliders;
+    // Pairs of [kinematic body index, static body index] 
     std::vector<std::pair<size_t, size_t>> staticColliders;
     
     static constexpr size_t maxExpectedSize { 5 };
 	kinematicColliders.reserve(maxExpectedSize);
 	staticColliders.reserve(maxExpectedSize);
 
-    size_t kBodyIndex { 0 };
-    for( auto& [kBody, optCallback]: m_kinematicBodies ) {
-		bool hasCollide { false };
-        /// TODO: refactore this to other free function
-        const auto FindCollisions = 
-            [this, lhsBodyIndex = kBodyIndex, lhs = kBody, &hasCollide](
-                    const auto& bodies, 
-                    auto& colliders
-            ) {
-            size_t rhsBodyIndex { 0 };
-            for(const auto& [rhs, opt]: bodies) {
-                if(rhs != lhs && this->DetectCollision(*lhs, *rhs)) {
-                    colliders.emplace_back(lhsBodyIndex, rhsBodyIndex);
-                    hasCollide = true;
-                }
-                rhsBodyIndex++;
-            }
-        };
+    CollisionResolver resolver { this };
 
-        // handle X-movement
-		kBody->MoveX(dt);
-		// collisions with static entities
-        FindCollisions(m_staticBodies, staticColliders);
-        // collisions with kinematic entities
-        FindCollisions(m_kinematicBodies, kinematicColliders);
-        if (hasCollide) {
-			kBody->RestoreX(); // restore position before collision
-        }
-
-		/// handle Y-movement
+    size_t kinematicBodyIndex { 0 };
+    for( auto& [kinematicBody, optCallback]: m_kinematicBodies ) {
+        /// handle X-movement
+		
+        // collisions with static entities
+        resolver.SetEnviroment(&staticColliders);
+        resolver.UpdatePosition<StaticBody>(
+            kinematicBody, 
+            kinematicBodyIndex, 
+            &KinematicBody::MoveX, 
+            &KinematicBody::RestoreX,
+            dt 
+        );
         
-        // indicate if whether it's possible for the body to fall down 
+        // collisions with kinematic entities
+        // TODO:  FindCollisions(m_kinematicBodies, kinematicColliders);
+
+        // Update on ground state after moving along X-axis 
+        // (unit may already leave ground) 
+
+        // Indicate whether it's POSSIBLE for the body to fall down 
         // after moving along X-axis
         bool isFallingAfterXMove { false };
         // Expression (kBody->m_direction.y > 0.f) == true, means that this body 
         // is starting jumping
-        if( kBody->m_onGround && kBody->m_direction.y <= 0.f) {
+        if( kinematicBody->m_onGround && kinematicBody->m_direction.y == 0.f) {
             // assume that it was moved along x-axis and 
             // there wasn't anything to step on.
-            kBody->StartFall();
+            kinematicBody->StartFall();
             // it's possible that the body will fall down!
             isFallingAfterXMove = true;
         }
 		
-        kBody->MoveY(dt);
 
-        { // find y-axis collision with static bodies
-            bool wasAdjusted { false };
-            size_t rhsBodyIndex { 0 };
-            for(const auto& [rhs, opt]: m_staticBodies) {
-                // don't break the loop to mark all blocks the body collided with.
-                if(this->DetectCollision<StaticBody>(*kBody, *rhs)) {
-                    staticColliders.emplace_back(kBodyIndex, rhsBodyIndex);
-                    // move body to position which is closet to second collided body
-                    // if it wasn't moved before.
-                    if(!wasAdjusted) {
-                        kBody->RestoreY();
-                        // move along y-axis step by step (mini-step)
-                        constexpr int steps { 5 };
-                        static const float miniDeltaTime { dt / steps };
-                        bool hasCollision { false };
-                        for(int i = 0; i < steps && !hasCollision; i++) {
-                            kBody->MoveY(miniDeltaTime);
-                            if(rhs->Intersect(kBody)) {
-                                hasCollision = true;
-                                wasAdjusted = true;
-                                kBody->RestoreY();
-                            }
-                        }
-                    }
-                }
-                rhsBodyIndex++;
+		/// handle Y-movement
+        // find y-axis collision with static bodies
+        resolver.SetEnviroment(&staticColliders);
+        bool wasAdjusted = resolver.UpdatePosition<StaticBody>(
+            kinematicBody, 
+            kinematicBodyIndex, 
+            &KinematicBody::MoveY, 
+            &KinematicBody::RestoreY,
+            dt 
+        );
+        
+        // if a collision occured
+        if(wasAdjusted) {
+            // it was falling down, but collide
+            if( kinematicBody->IsFallingDown() ) {
+                // so stop falling
+                kinematicBody->m_direction.y = 0.f;
+                kinematicBody->m_onGround = true;
+            } else { // it was in jump state or on the ground
+                kinematicBody->StartFall();
             }
-            // if a collision occured
-            if(wasAdjusted) {
-                // it was falling down, but collide
-                if( kBody->IsFallingDown() ) {
-                    // so stop falling
-                    kBody->m_direction.y = 0.f;
-                    kBody->m_onGround = true;
-                } else { // it was in jump state or on the ground
-                    kBody->StartFall();
-                }
-            } else if( kBody->m_jumpTime > 0.f ) {
-                kBody->m_onGround = false;
-            } else if(isFallingAfterXMove) {
-                // no collision occured so a body is falling down
-                kBody->m_onGround = false;
-            }
+        } else if( kinematicBody->m_jumpTime > 0.f ) {
+            kinematicBody->m_onGround = false;
+        } else if(isFallingAfterXMove) {
+            // no collision occured so a body is falling down
+            kinematicBody->m_onGround = false;
         }
+        
+        // the body was jumping and reached the highest point of the jump
+        if( !wasAdjusted && kinematicBody->m_jumpTime <= 0.f && kinematicBody->m_direction.y > 0.f ) {
+            kinematicBody->StartFall();
+            kinematicBody->m_onGround = false;
+        } 
+
 		// collisions with kinematic entities
-        /// TODO: implement this; for now it's ignoring collision with kinematic colliders
-        hasCollide = false;
-        FindCollisions(m_kinematicBodies, kinematicColliders);
-        if (hasCollide) {
-			kBody->RestoreY();
-			if(!kBody->IsFallingDown()) {
-                kBody->StartFall();
-            }
-		}
+        // TODO:  FindCollisions(m_kinematicBodies, kinematicColliders);
+       
         // update body index
-        kBodyIndex++;
+        kinematicBodyIndex++;
     }
 
     // handle all callbacks,
