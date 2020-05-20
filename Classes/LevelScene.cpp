@@ -89,6 +89,10 @@ void LevelScene::menuCloseCallback(cocos2d::Ref* pSender) {
 void LevelScene::update(float dt) {
     static unsigned int x { 0 };
     cocos2d::log("Update: %0.4f, %d", dt, x++);
+    cocos2d::log("Unit is at: [%0.4f, %0.4f]", 
+        m_unit->GetBody()->GetShape().origin.x, 
+        m_unit->GetBody()->GetShape().origin.y 
+    );
 
     m_unit->UpdateWeapon(dt);
     m_world->Step(dt, 1);
