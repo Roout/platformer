@@ -176,28 +176,34 @@ template<class Right>
                 lhs.m_direction.y < 0.f 
                 // || pass through platform
             };
-
+           
             // get current shape of the lhs kinematic body
             auto lhsBefore { lhs.m_shape };        
             // shift it to previous position
             lhsBefore.origin = lhs.m_previousPosition;
             
             auto noIntersectionBefore { false };
-            
-            // compile-time fork: collision with kinematic and static body
+
+            // shape moved only along x-axis
+            auto lhsAfterOnlyMoveX { lhs.m_shape };
+            // restore last y-axis movement.
+            lhsAfterOnlyMoveX.origin.y = lhs.m_previousPosition.y;
+            auto noIntersectionAfterMoveX = !lhsAfterOnlyMoveX.intersectsRect(rhs.m_shape);
+
+            // compile-time fork: collision with kinematic or static platform
             if constexpr (std::is_same_v<Right, KinematicBody>) {
                 // get current shape of the rhs kinematic body
                 auto rhsBefore { rhs.m_shape };      
                 // shift it to previous position
                 rhsBefore.origin = rhs.m_previousPosition;
     
-                noIntersectionBefore = !lhsBefore.intersectsRect(rhsBefore); 
+                noIntersectionBefore = !lhsBefore.intersectsRect(rhsBefore);
             } 
             else { // check for collision with static body
                 noIntersectionBefore = !lhsBefore.intersectsRect(rhs.m_shape); 
             }
            
-            return ( moveDown && noIntersectionBefore );
+            return ( moveDown && noIntersectionBefore && noIntersectionAfterMoveX );
         } 
         else {
             return true;
