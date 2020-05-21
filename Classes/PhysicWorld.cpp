@@ -193,10 +193,9 @@ void PhysicWorld::Step(const float dt) {
     size_t kinematicBodyIndex { 0 };
     for( auto& [kinematicBody, optCallback]: m_kinematicBodies ) {
         /// handle X-movement
-		
         // collisions with static entities
         resolver.SetEnviroment(&staticColliders);
-        resolver.UpdatePosition<StaticBody>(
+        bool xAxisCollisionOccured = resolver.UpdatePosition<StaticBody>(
             kinematicBody, 
             kinematicBodyIndex, 
             &KinematicBody::MoveX, 
@@ -227,7 +226,7 @@ void PhysicWorld::Step(const float dt) {
 		/// handle Y-movement
         // find y-axis collision with static bodies
         resolver.SetEnviroment(&staticColliders);
-        bool wasAdjusted = resolver.UpdatePosition<StaticBody>(
+        bool yAxisCollisionOccured = resolver.UpdatePosition<StaticBody>(
             kinematicBody, 
             kinematicBodyIndex, 
             &KinematicBody::MoveY, 
@@ -236,7 +235,7 @@ void PhysicWorld::Step(const float dt) {
         );
         
         // if a collision occured
-        if(wasAdjusted) {
+        if(yAxisCollisionOccured) {
             // it was falling down, but collide
             if( kinematicBody->IsFallingDown() ) {
                 // so stop falling
@@ -253,7 +252,7 @@ void PhysicWorld::Step(const float dt) {
         }
         
         // the body was jumping and reached the highest point of the jump
-        if( !wasAdjusted && kinematicBody->m_jumpTime <= 0.f && kinematicBody->m_direction.y > 0.f ) {
+        if( !yAxisCollisionOccured && kinematicBody->m_jumpTime <= 0.f && kinematicBody->m_direction.y > 0.f ) {
             kinematicBody->StartFall();
             kinematicBody->m_onGround = false;
         } 
