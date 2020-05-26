@@ -96,4 +96,6 @@ void LevelScene::update(float dt) {
 
     m_unit->UpdateWeapon(dt);
     m_world->Step(dt, 1);
+    m_unit->UpdateState();
+
 }

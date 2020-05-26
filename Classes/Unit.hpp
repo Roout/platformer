@@ -9,12 +9,10 @@
 class Unit final : public core::Entity { 
 public:
     enum class State {
-        idle_left,
-        idle_right,
-        move_left,
-        move_right,
+        idle,
+        move,
         jump,
-        melee_attack
+        attack
     };
     
     Unit(PhysicWorld * const world, float x, float y);
@@ -29,6 +27,10 @@ public:
         return &m_body;
     }
 
+    [[nodiscard]] State GetState() const noexcept {
+        return m_state;
+    }
+
     void RecieveDamage(int damage) noexcept override;
 
     /**
@@ -38,6 +40,7 @@ public:
 
     void UpdateWeapon(const float dt) noexcept;
     
+    void UpdateState() noexcept;
 private:
 
     PhysicWorld * const m_world { nullptr };
@@ -48,7 +51,7 @@ private:
 
     std::unique_ptr<Weapon> m_weapon { nullptr };
 
-    State m_state { State::idle_right };
+    State m_state { State::idle };
 
     static constexpr float m_width { 80.f };
     static constexpr float m_height { 146.f };

@@ -47,3 +47,13 @@ void Unit::MeleeAttack() noexcept {
 void Unit::UpdateWeapon(const float dt) noexcept {
     m_weapon->Update(dt);
 }
+
+void Unit::UpdateState() noexcept {
+    const auto direction { m_body.GetDirection() };
+    // TODO: add jumping
+    if( direction.x != 0.f ) {
+        m_state = State::move;
+    } else {
+        m_state = State::idle;
+    }
+}
