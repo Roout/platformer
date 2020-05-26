@@ -1,9 +1,13 @@
 #include "Unit.hpp"
 #include "cocos2d.h"
+#include "SizeDeducer.hpp"
 
 Unit::Unit(PhysicWorld * const world, float x, float y) :
     m_world { world },
-    m_body {cocos2d::Vec2{ x, y }, cocos2d::Size{ m_width, m_height }},
+    m_body { cocos2d::Vec2{ x, y }, cocos2d::Size { 
+        SizeDeducer::GetInstance().GetAdjustedSize(m_width), 
+        SizeDeducer::GetInstance().GetAdjustedSize(m_height) }
+    },
     m_health { 100 }
 {
     m_world->Add(&m_body, [](core::Entity* ) {

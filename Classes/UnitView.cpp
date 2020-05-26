@@ -4,6 +4,7 @@
 #include "dragonBones/DragonBonesHeaders.h"
 #include "dragonBones/cocos2dx/CCDragonBonesHeaders.h"
 
+#include "SizeDeducer.hpp"
 
 HeroView * HeroView::create(const Unit* const model) {
     auto pRet = new (std::nothrow) HeroView(model);
@@ -35,15 +36,15 @@ bool HeroView::init() {
     auto armatureDisplay = factory->buildArmatureDisplay("Armature", "walk");
 
     // TODO: scale factor depends on device resolution so it can'be predefined constant.
-    constexpr auto scaleFactor { 0.2f };
-    
+    constexpr auto designedScaleFactor { 0.2f };
+    const auto adjustedScaleFactor { SizeDeducer::GetInstance().GetAdjustedSize(designedScaleFactor) };
     armatureDisplay->setName("Armature");
     // armatureDisplay->setAnchorPoint(cocos2d::Vec2::ANCHOR_MIDDLE_BOTTOM);
     
     this->addChild(armatureDisplay);
 
     // adjust animation
-    armatureDisplay->setScale( scaleFactor );
+    armatureDisplay->setScale( adjustedScaleFactor );
     armatureDisplay->getAnimation()->play("walk");
 
     // debug
