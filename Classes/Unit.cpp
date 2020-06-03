@@ -4,25 +4,25 @@
 
 Unit::Unit(PhysicWorld * const world, float x, float y) :
     m_world { world },
-    m_body { cocos2d::Vec2{ x, y }, cocos2d::Size { 
-        SizeDeducer::GetInstance().GetAdjustedSize(m_width), 
-        SizeDeducer::GetInstance().GetAdjustedSize(m_height) }
+    m_body { 
+        m_world->Create<KinematicBody>(
+            [](core::Entity* ) {
+                cocos2d::log("Unit collide with some entity!");
+            },
+            cocos2d::Vec2{ x, y }, cocos2d::Size { 
+                SizeDeducer::GetInstance().GetAdjustedSize(m_width), 
+                SizeDeducer::GetInstance().GetAdjustedSize(m_height) 
+            }
+        )
     },
     m_health { 100 }
 {
-    m_world->Add(&m_body, [](core::Entity* ) {
-        cocos2d::log("Unit collide with some entity!");
-    });
-    m_body.EmplaceFixture(this, core::CategoryName::UNDEFINED);
-    m_body.SetMask(
+    m_body->EmplaceFixture(this, core::CategoryName::UNDEFINED);
+    m_body->SetMask(
         CreateMask(CategoryBits::HERO),
         CreateMask(CategoryBits::ENEMY, CategoryBits::BOUNDARY, CategoryBits::PROJECTILE, CategoryBits::PLATFORM) 
     );
     m_weapon = std::make_unique<Sword>(10, 20, 0.2f);
-}
-
-Unit::~Unit() {
-    m_world->Erase(&m_body);
 }
 
 void Unit::RecieveDamage(int damage) noexcept {
@@ -32,8 +32,8 @@ void Unit::RecieveDamage(int damage) noexcept {
 
 void Unit::MeleeAttack() noexcept {
     if( m_weapon->CanAttack() ) {
-        const auto direction = m_body.GetDirection();
-        auto position = m_body.GetShape().origin;
+        const auto direction = m_body->GetDirection();
+        auto position = m_body->GetShape().origin;
         if(direction.x >= 0.f) {
             position.x += m_width;
         }
@@ -53,7 +53,7 @@ void Unit::UpdateWeapon(const float dt) noexcept {
 }
 
 void Unit::UpdateState() noexcept {
-    const auto direction { m_body.GetDirection() };
+    const auto direction { m_body->GetDirection() };
     // TODO: add jumping
     if( direction.x != 0.f ) {
         m_state = State::move;

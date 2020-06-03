@@ -10,6 +10,7 @@
 #include <cassert>
 #include <type_traits>  // std::is_same_v, std::enable_if
 #include <cmath>        // std::fabs
+#include <memory>       // std::unique_ptr
 
 #include "PhysicBody.hpp"
 
@@ -42,20 +43,19 @@ public:
     void Step(const float dt, size_t iterations);
 
     /**
-     * This method adds body to a physic world to be managed here.
+     * TODO: fill
      */
-    template<class BodyType> 
-    void Add(
-        BodyType * const body, 
-        std::optional<OnCollision> callback = std::nullopt
+    template<class BodyType, class ...Args> 
+    BodyType* Create(
+        std::optional<OnCollision> callback,
+        Args ... args
     );
 
     /**
      * This method erases body from the physic world.
      * 
      * @note
-     *      It performs a linear search, a swap and a pop_back on vector. This leads to 
-     *      possible reallocations etc. 
+     *      It performs a linear search, a swap and a pop_back on vector.
      */
     template<class BodyType> 
     void Erase(const BodyType* const body) noexcept;
@@ -85,7 +85,7 @@ private:
     /// Data members
 private:
     template<class BodyType>
-    using MyPair = std::pair<BodyType*, std::optional<OnCollision>>;
+    using MyPair = std::pair<std::unique_ptr<BodyType>, std::optional<OnCollision>>;
 
     std::vector<MyPair<StaticBody>>     m_staticBodies;
     std::vector<MyPair<KinematicBody>>  m_kinematicBodies;
@@ -101,10 +101,10 @@ private:
 // TEMPLATE IMPLEMENTATION //
 /////////////////////////////
 
-template<class BodyType> 
-    void PhysicWorld::Add(
-        BodyType * const body,
-        std::optional<OnCollision> callback
+template<class BodyType, class ...Args> 
+    BodyType* PhysicWorld::Create(
+        std::optional<OnCollision> callback,
+        Args ... args
     ) {
         static_assert(
                 std::is_same_v<BodyType, StaticBody> || 
@@ -112,12 +112,17 @@ template<class BodyType>
                 "wrong body type" 
         );
 
+        auto body { std::make_unique<BodyType>(std::forward<Args>(args)...) };
+        const auto result { body.get() };
+
         if constexpr (std::is_same_v<BodyType, StaticBody>) {
-            m_staticBodies.emplace_back(body, callback);
+            m_staticBodies.emplace_back(std::move(body), callback);
         }
         else {
-            m_kinematicBodies.emplace_back(body, callback);
+            m_kinematicBodies.emplace_back(std::move(body), callback);
         }
+
+        return result;
     }
 
 template<class BodyType> 
@@ -133,7 +138,7 @@ template<class BodyType>
                 container.begin(), 
                 container.end(), 
                 [body](const MyPair<BodyType>& cPair) {
-                    return (body == cPair.first);
+                    return (body == cPair.first.get());
                 }
             );
             assert(it != container.end());

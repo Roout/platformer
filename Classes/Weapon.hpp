@@ -184,11 +184,11 @@ public:
     }
 
     [[nodiscard]] KinematicBody * GetBody() noexcept {
-        return &m_body;
+        return m_body;
     }
 
     [[nodiscard]] const KinematicBody * GetBody() const noexcept {
-        return &m_body;
+        return m_body;
     }
 
     /**
@@ -225,7 +225,7 @@ private:
      * Define an area where the attack can reach and do something, e.g. deal some damage. 
      * Exist until it collide with something or the projectile lifetime ends.
      */
-    KinematicBody m_body;
+    KinematicBody * const m_body { nullptr };
 
     /**
      * The view of the projectile.

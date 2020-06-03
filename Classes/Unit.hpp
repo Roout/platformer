@@ -17,14 +17,14 @@ public:
     
     Unit(PhysicWorld * const world, float x, float y);
 
-    ~Unit();
+    ~Unit() = default;
 
     [[nodiscard]] KinematicBody * GetBody() noexcept {
-        return &m_body;
+        return m_body;
     }
 
     [[nodiscard]] const KinematicBody * GetBody() const noexcept {
-        return &m_body;
+        return m_body;
     }
 
     [[nodiscard]] State GetState() const noexcept {
@@ -45,7 +45,7 @@ private:
 
     PhysicWorld * const m_world { nullptr };
 
-    KinematicBody m_body;
+    KinematicBody * const m_body { nullptr };
 
     int m_health { 100 };
 

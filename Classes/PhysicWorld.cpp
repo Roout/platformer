@@ -104,7 +104,7 @@ public:
         auto colliderBodies { this->GetColliderBodies<RHS_Collider>() }; 
 
         for(const auto& [rhs, opt]: *colliderBodies) {
-            if(rhs != lhs && m_world->DetectCollision(*lhs, *rhs)) {
+            if(rhs.get() != lhs && m_world->DetectCollision(*lhs, *rhs)) {
                 m_colliderIndexes->emplace_back(kinematicBodyIndex, rhsBodyIndex);
                 // move body to position which is closet to second collided body
                 // if it wasn't moved before.
@@ -114,7 +114,7 @@ public:
                     const float miniDeltaTime { dt / STEPS_TO_RESOLVE_COLLISION };
                     for(int i = 0; i < STEPS_TO_RESOLVE_COLLISION; i++) {
                         (lhs->*Move)(miniDeltaTime);
-                        if(lhs->Intersect(rhs)) {
+                        if(lhs->Intersect(rhs.get())) {
                             (lhs->*Restore)();
                             break;
                         }
@@ -196,7 +196,7 @@ void PhysicWorld::Step(const float dt) {
         // collisions with static entities
         resolver.SetEnviroment(&staticColliders);
         bool xAxisCollisionOccured = resolver.UpdatePosition<StaticBody>(
-            kinematicBody, 
+            kinematicBody.get(), 
             kinematicBodyIndex, 
             &KinematicBody::MoveX, 
             &KinematicBody::RestoreX,
@@ -227,7 +227,7 @@ void PhysicWorld::Step(const float dt) {
         // find y-axis collision with static bodies
         resolver.SetEnviroment(&staticColliders);
         bool yAxisCollisionOccured = resolver.UpdatePosition<StaticBody>(
-            kinematicBody, 
+            kinematicBody.get(), 
             kinematicBodyIndex, 
             &KinematicBody::MoveY, 
             &KinematicBody::RestoreY,
