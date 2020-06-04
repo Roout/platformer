@@ -4,19 +4,18 @@
 
 Unit::Unit(PhysicWorld * const world, float x, float y) :
     m_world { world },
-    m_body { 
-        m_world->Create<KinematicBody>(
-            [](core::Entity* ) {
-                cocos2d::log("Unit collide with some entity!");
-            },
-            cocos2d::Vec2{ x, y }, cocos2d::Size { 
-                SizeDeducer::GetInstance().GetAdjustedSize(m_width), 
-                SizeDeducer::GetInstance().GetAdjustedSize(m_height) 
-            }
-        )
-    },
     m_health { 100 }
 {
+    const auto callback = [](core::Entity* ) {
+        cocos2d::log("Unit collide with some entity!");
+    };
+    m_body = m_world->Create<KinematicBody>(
+        callback,
+        cocos2d::Vec2{ x, y }, cocos2d::Size { 
+            SizeDeducer::GetInstance().GetAdjustedSize(m_width), 
+            SizeDeducer::GetInstance().GetAdjustedSize(m_height) 
+        }
+    );
     m_body->EmplaceFixture(this, core::CategoryName::UNDEFINED);
     m_body->SetMask(
         CreateMask(CategoryBits::HERO),

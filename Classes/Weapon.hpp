@@ -225,14 +225,14 @@ private:
      * Define an area where the attack can reach and do something, e.g. deal some damage. 
      * Exist until it collide with something or the projectile lifetime ends.
      */
-    KinematicBody * const m_body { nullptr };
+    KinematicBody * m_body { nullptr };
 
     /**
      * The view of the projectile.
      * @note
      *      Declare after the physic body.
      */
-    ProjectileView *m_view { nullptr };
+    ProjectileView * m_view { nullptr };
 };
 
 

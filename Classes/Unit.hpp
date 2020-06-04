@@ -45,7 +45,7 @@ private:
 
     PhysicWorld * const m_world { nullptr };
 
-    KinematicBody * const m_body { nullptr };
+    KinematicBody * m_body { nullptr };
 
     int m_health { 100 };
 

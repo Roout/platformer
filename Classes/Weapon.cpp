@@ -63,20 +63,16 @@ Projectile::Projectile (
     PhysicWorld::OnCollision weaponCallback
 ) :
     m_world { world }, 
-    m_body { 
-        m_world->Create<KinematicBody>( 
-            [this, &weaponCallback](core::Entity* entity) {
-                // do the job known to sword
-                std::invoke(weaponCallback, entity);
-                // do the job known to this projectile:
-                // end it's lifetime after collision!
-                this->Collapse();
-            },
-            position, size 
-        )
-    },
     m_lifeTime { 0.1f }
 {    
+    const auto callback = [this, &weaponCallback](core::Entity* entity) {
+        // do the job known to sword
+        std::invoke(weaponCallback, entity);
+        // do the job known to this projectile:
+        // end it's lifetime after collision!
+        this->Collapse();
+    };
+    m_body = m_world->Create<KinematicBody>(callback, position, size);
     m_body->EmplaceFixture(this, core::CategoryName::UNDEFINED);
     m_body->SetDirection( { direction.x, 0.f });
     m_body->SetXAxisSpeed(xAxisSpeed);
