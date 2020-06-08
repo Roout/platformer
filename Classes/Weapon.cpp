@@ -2,19 +2,25 @@
 #include <type_traits> // std::invoke
 #include "cocos2d.h"
 #include "ProjectileView.hpp"
+#include "SizeDeducer.hpp"
 
 void Sword::Attack(
     PhysicWorld * const world,
     const cocos2d::Vec2& position,
     const cocos2d::Vec2& direction
 ) noexcept {
+    static constexpr float width { 60.f };
+    static constexpr float height { 146.f };
     // define size of projectile:
     // Size will be around the character size.
     // TODO: change size of the sword attack to something more than random magic values.
-    const cocos2d::Size size { 20.f, 28.f };
+    const cocos2d::Size size { 
+        SizeDeducer::GetInstance().GetAdjustedSize(width), 
+        SizeDeducer::GetInstance().GetAdjustedSize(height) 
+    };
     
     // define attack speed
-    const auto speed { 120.f };
+    const auto speed { SizeDeducer::GetInstance().GetAdjustedSize(120.f) };
 
     // define callback
     // Requirements: 

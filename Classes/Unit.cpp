@@ -9,6 +9,7 @@ Unit::Unit(PhysicWorld * const world, float x, float y) :
     const auto callback = [](core::Entity* ) {
         cocos2d::log("Unit collide with some entity!");
     };
+
     m_body = m_world->Create<KinematicBody>(
         callback,
         cocos2d::Vec2{ x, y }, cocos2d::Size { 
@@ -21,7 +22,12 @@ Unit::Unit(PhysicWorld * const world, float x, float y) :
         CreateMask(CategoryBits::HERO),
         CreateMask(CategoryBits::ENEMY, CategoryBits::BOUNDARY, CategoryBits::PROJECTILE, CategoryBits::PLATFORM) 
     );
-    m_weapon = std::make_unique<Sword>(10, 20, 0.2f);
+
+    const float damage { 10.f };
+    const float range { 20.f };
+    const float reloadTime { 0.2f };
+
+    m_weapon = std::make_unique<Sword>( damage, range, reloadTime );
 }
 
 void Unit::RecieveDamage(int damage) noexcept {
@@ -53,8 +59,10 @@ void Unit::UpdateWeapon(const float dt) noexcept {
 
 void Unit::UpdateState() noexcept {
     const auto direction { m_body->GetDirection() };
-    // TODO: add jumping
-    if( direction.x != 0.f ) {
+
+    if( direction.y != 0.f ) {
+        m_state = State::jump;
+    } else if( direction.x != 0.f ) {
         m_state = State::move;
     } else {
         m_state = State::idle;
