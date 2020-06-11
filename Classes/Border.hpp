@@ -25,6 +25,10 @@ public:
         );
     }
 
+    ~Border() {
+        m_world->Erase(m_body);
+    }
+    
 private:
     PhysicWorld * const m_world { nullptr };
 

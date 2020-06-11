@@ -77,7 +77,7 @@ inline std::string CreateAnimationName( Unit::State state) {
         case Unit::State::idle: animationName = "idle"; break;
         case Unit::State::jump: animationName = "jump"; break;
         case Unit::State::move: animationName = "walk"; break;
-        case Unit::State::attack: break; 
+        case Unit::State::attack: animationName = "attack"; break; 
         default: break;
     }
     return animationName;
@@ -142,7 +142,9 @@ void HeroView::UpdateAnimation() {
         m_lastState.direction   = currentDir;
         // run animation
         const std::string animationName { CreateAnimationName(currentState) };
-        if ( currentState == Unit::State::jump ) {
+        if ( currentState == Unit::State::jump || 
+             currentState == Unit::State::attack 
+        ) {
             armatureDisplay->getAnimation()->play(animationName, 1);
         } else {
             armatureDisplay->getAnimation()->play(animationName);

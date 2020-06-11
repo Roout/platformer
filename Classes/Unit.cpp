@@ -25,9 +25,13 @@ Unit::Unit(PhysicWorld * const world, float x, float y) :
 
     const float damage { 10.f };
     const float range { 20.f };
-    const float reloadTime { 0.2f };
+    const float reloadTime { m_maxAttackTime };
 
     m_weapon = std::make_unique<Sword>( damage, range, reloadTime );
+}
+
+Unit::~Unit() {
+    m_world->Erase(m_body);
 }
 
 void Unit::RecieveDamage(int damage) noexcept {
@@ -50,6 +54,9 @@ void Unit::MeleeAttack() noexcept {
         cocos2d::log(" >>> unit attack with sword: %d", ++x );
 
         m_weapon->Attack(m_world, position, direction);
+
+        m_state = State::attack;
+        m_attackTime = m_maxAttackTime;
     }
 }
 
@@ -57,8 +64,16 @@ void Unit::UpdateWeapon(const float dt) noexcept {
     m_weapon->Update(dt);
 }
 
-void Unit::UpdateState() noexcept {
+void Unit::UpdateState(const float dt) noexcept {
     const auto direction { m_body->GetDirection() };
+
+    if( m_state == State::attack ) {
+        m_attackTime -= dt;
+        if( m_attackTime > 0.f ) {
+            // exit to not change an attack state
+            return; 
+        }
+    }
 
     if( direction.y != 0.f ) {
         m_state = State::jump;

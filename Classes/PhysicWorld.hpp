@@ -143,9 +143,9 @@ template<class BodyType>
             );
             assert(it != container.end());
             // Order doesn't matter so I can just swap and pop element
-            const auto backIt = --container.cend();
+            auto backIt = --container.end();
             // discard element pointed by iterator 'it'
-            *it = *backIt;
+            *it = std::move(*backIt);
             container.pop_back();
         };
 

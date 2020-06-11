@@ -69,9 +69,9 @@ Projectile::Projectile (
     PhysicWorld::OnCollision weaponCallback
 ) :
     m_world { world }, 
-    m_lifeTime { 0.1f }
+    m_lifeTime { 0.2f }
 {    
-    const auto callback = [this, &weaponCallback](core::Entity* entity) {
+    const auto callback = [this, weaponCallback](core::Entity* entity) {
         // do the job known to sword
         std::invoke(weaponCallback, entity);
         // do the job known to this projectile:
@@ -96,5 +96,7 @@ Projectile::Projectile (
 Projectile::~Projectile() {
     auto map = cocos2d::Director::getInstance()->getRunningScene()->getChildByName("Map");
     map->removeChild(m_view);
+    m_world->Erase(m_body);
+
     cocos2d::log("Projectile was destroyed");
 }

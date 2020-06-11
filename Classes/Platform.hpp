@@ -25,6 +25,10 @@ public:
         );
     }
 
+    ~Platform() {
+        m_world->Erase(m_body);
+    }
+
 private:
     PhysicWorld * const m_world { nullptr };
     

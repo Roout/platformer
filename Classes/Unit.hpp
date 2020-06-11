@@ -17,7 +17,7 @@ public:
     
     Unit(PhysicWorld * const world, float x, float y);
 
-    ~Unit() = default;
+    ~Unit();
 
     [[nodiscard]] KinematicBody * GetBody() noexcept {
         return m_body;
@@ -40,7 +40,8 @@ public:
 
     void UpdateWeapon(const float dt) noexcept;
     
-    void UpdateState() noexcept;
+    void UpdateState(const float dt) noexcept;
+
 private:
 
     PhysicWorld * const m_world { nullptr };
@@ -52,6 +53,13 @@ private:
     std::unique_ptr<Weapon> m_weapon { nullptr };
 
     State m_state { State::idle };
+
+private:
+    /**
+     *  
+     */
+    static constexpr float m_maxAttackTime { 0.3f };
+    float m_attackTime { m_maxAttackTime };
 
     static constexpr float m_width { 80.f };
     static constexpr float m_height { 146.f };
