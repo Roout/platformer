@@ -12,16 +12,21 @@ void Sword::Attack(
     static constexpr float width { 60.f };
     static constexpr float height { 146.f };
     // define size of projectile:
-    // Size will be around the character size.
-    // TODO: change size of the sword attack to something more than random magic values.
+    // Size will be close to character's size.
+    /// TODO: change size of the sword attack to something more than random magic values.
     const cocos2d::Size size { 
         SizeDeducer::GetInstance().GetAdjustedSize(width), 
         SizeDeducer::GetInstance().GetAdjustedSize(height) 
     };
     
     // define attack speed
-    const auto speed { SizeDeducer::GetInstance().GetAdjustedSize(120.f) };
+    const auto speed { SizeDeducer::GetInstance().GetAdjustedSize(250.f) };
 
+    /// TODO: Update base on direction!
+    auto projectilePosition { position };
+    if( direction.x < 0.f) {
+        projectilePosition.x -= size.width;
+    }
     // define callback
     // Requirements: 
     // 1. Must nullify lifetime of the projectile on collision
@@ -31,7 +36,7 @@ void Sword::Attack(
         cocos2d::log("Sword projectile collide with some entity and expect to deal: %d damage.", damage);
 
     };
-    auto proj = std::make_unique<Projectile>(world, position, size, direction, speed, callback);
+    auto proj = std::make_unique<Projectile>(world, projectilePosition, size, direction, speed, callback);
     m_projectiles.emplace_back(std::move(proj));
 
     this->ForceReload();
@@ -69,7 +74,7 @@ Projectile::Projectile (
     PhysicWorld::OnCollision weaponCallback
 ) :
     m_world { world }, 
-    m_lifeTime { 0.2f }
+    m_lifeTime { 0.15f }
 {    
     const auto callback = [this, weaponCallback](core::Entity* entity) {
         // do the job known to sword
@@ -80,7 +85,9 @@ Projectile::Projectile (
     };
     m_body = m_world->Create<KinematicBody>(callback, position, size);
     m_body->EmplaceFixture(this, core::CategoryName::UNDEFINED);
-    m_body->SetDirection( { direction.x, 0.f });
+    m_body->SetDirection(direction);
+    // to allow the body going up, it must have some jump time:
+    if( direction.y > 0.f) m_body->Jump();
     m_body->SetXAxisSpeed(xAxisSpeed);
     m_body->SetMask(
         CreateMask(CategoryBits::PROJECTILE),

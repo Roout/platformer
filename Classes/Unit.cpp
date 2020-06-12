@@ -23,8 +23,8 @@ Unit::Unit(PhysicWorld * const world, float x, float y) :
         CreateMask(CategoryBits::ENEMY, CategoryBits::BOUNDARY, CategoryBits::PROJECTILE, CategoryBits::PLATFORM) 
     );
 
-    const float damage { 10.f };
-    const float range { 20.f };
+    const int damage { 10 };
+    const int range { 20 };
     const float reloadTime { m_maxAttackTime };
 
     m_weapon = std::make_unique<Sword>( damage, range, reloadTime );
@@ -41,13 +41,16 @@ void Unit::RecieveDamage(int damage) noexcept {
 
 void Unit::MeleeAttack() noexcept {
     if( m_weapon->CanAttack() ) {
-        const auto direction = m_body->GetDirection();
+        // update attack direction and position for idle case
         auto position = m_body->GetShape().origin;
-        if(direction.x >= 0.f) {
-            position.x += m_width;
+        auto direction = m_body->GetDirection();
+        if(m_lookSide == Side::right) {
+            direction.x = 1.f;
+            position.x += SizeDeducer::GetInstance().GetAdjustedSize(m_width);
         }
-        else if(direction.x < 0.f) {
-            position.x -= m_width;
+        else if(m_lookSide == Side::left) {
+            direction.x = -1.f;
+            // position will be updated later base on projectile width!
         }
 
         static int x { 0 };
@@ -66,6 +69,11 @@ void Unit::UpdateWeapon(const float dt) noexcept {
 
 void Unit::UpdateState(const float dt) noexcept {
     const auto direction { m_body->GetDirection() };
+
+    /// update the direction where charactar is looking now
+    if( direction.x > 0.f) m_lookSide = Side::right;
+    else if( direction.x < 0.f) m_lookSide = Side::left;
+
 
     if( m_state == State::attack ) {
         m_attackTime -= dt;

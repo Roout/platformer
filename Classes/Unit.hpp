@@ -55,10 +55,13 @@ private:
     State m_state { State::idle };
 
 private:
+    enum class Side { left, right };
+
+    Side m_lookSide { Side::left };
     /**
      *  
      */
-    static constexpr float m_maxAttackTime { 0.3f };
+    static constexpr float m_maxAttackTime { 0.5f };
     float m_attackTime { m_maxAttackTime };
 
     static constexpr float m_width { 80.f };
