@@ -18,7 +18,8 @@ public:
         return deducer;
     } 
 
-    float GetAdjustedSize(float value) const noexcept {
+    template<class T>
+    T GetAdjustedSize(const T value) const noexcept {
         return value * m_scaleFactor;
     } 
 

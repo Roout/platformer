@@ -70,9 +70,9 @@ bool LevelScene::init() {
     m_unit = std::make_unique<Unit>(m_world.get(), playerPosition.x, playerPosition.y);
     m_inputHandler = std::make_unique<UserInputHandler>(m_unit.get(), this);
 
-    auto playerNode { HeroView::create(m_unit.get())};
+    auto playerNode { HeroView::create(m_unit.get()) };
     tileMap->addChild(playerNode, 10);
-    auto followTheHero = cocos2d::Follow::create(playerNode);
+    auto followTheHero { cocos2d::Follow::create(playerNode) };
 	tileMap->runAction(followTheHero);
 
     return true;

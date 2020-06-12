@@ -59,7 +59,7 @@ private:
 
     Side m_lookSide { Side::left };
     /**
-     *  
+     * The duration of attack animation
      */
     static constexpr float m_maxAttackTime { 0.5f };
     float m_attackTime { m_maxAttackTime };

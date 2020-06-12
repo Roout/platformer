@@ -24,7 +24,7 @@ Unit::Unit(PhysicWorld * const world, float x, float y) :
     );
 
     const int damage { 10 };
-    const int range { 20 };
+    const int range { SizeDeducer::GetInstance().GetAdjustedSize(20) };
     const float reloadTime { m_maxAttackTime };
 
     m_weapon = std::make_unique<Sword>( damage, range, reloadTime );
@@ -44,6 +44,7 @@ void Unit::MeleeAttack() noexcept {
         // update attack direction and position for idle case
         auto position = m_body->GetShape().origin;
         auto direction = m_body->GetDirection();
+        
         if(m_lookSide == Side::right) {
             direction.x = 1.f;
             position.x += SizeDeducer::GetInstance().GetAdjustedSize(m_width);
