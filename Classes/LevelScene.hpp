@@ -9,6 +9,7 @@
 
 class Unit;
 class UserInputHandler;
+class BarrelManager;
 
 class LevelScene final : public cocos2d::Scene {
 public:
@@ -42,6 +43,7 @@ private:
     std::vector<Border>     m_borders;
     std::vector<Platform>   m_platforms;
 
+    std::unique_ptr<BarrelManager>      m_barrelManager { nullptr };
     const int m_id { -1 }; 
 };
 

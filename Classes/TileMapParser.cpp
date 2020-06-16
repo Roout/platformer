@@ -27,6 +27,15 @@ void TileMapParser::Parse() {
 				if (name == "player") {
 					this->Get<ParsedType::PLAYER>() = cocos2d::Vec2{x, y};
 				}
+				else if ( name == "barrel") {
+					this->Get<ParsedType::STATIC_BODIES>().emplace_back(
+						cocos2d::Rect{
+							cocos2d::Vec2{ x, y }, 
+							cocos2d::Size{ 1.f, 1.f } // size doesn't matter cuz it's defined in the class
+						},
+						core::CategoryName::BARREL								
+					);
+				}
 			}
 		}
 	}

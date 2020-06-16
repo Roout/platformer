@@ -31,6 +31,7 @@ namespace core {
     enum class CategoryName : int {
         PLATFORM,
         BORDER,
+        BARREL,
         PLAYER,
         UNDEFINED
     };

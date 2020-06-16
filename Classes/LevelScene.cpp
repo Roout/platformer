@@ -5,6 +5,8 @@
 #include "UserInputHandler.hpp"
 #include "TileMapParser.hpp"
 
+#include "BarrelManager.hpp"
+
 LevelScene::LevelScene(int id): 
     m_id{ id } 
 {
@@ -21,7 +23,6 @@ LevelScene* LevelScene::create(int id) {
     }
     return pRet;
 } 
-
 
 bool LevelScene::init() {
 	if (!cocos2d::Scene::init()) {
@@ -52,6 +53,8 @@ bool LevelScene::init() {
     m_borders.reserve(5000);
     m_platforms.reserve(200);
 
+    m_barrelManager = std::make_unique<BarrelManager>();
+
     for(const auto& [shape, category] : obstacles ) {
         if (category == core::CategoryName::PLATFORM ) {
             m_platforms.emplace_back(m_world.get(), 
@@ -65,10 +68,31 @@ bool LevelScene::init() {
                 shape.size.width, shape.size.height 
             );
         }
+        else if(category == core::CategoryName::BARREL) {
+            /// TODO: move width and height either to Barrel model either to map as object info.
+            static constexpr float width { 80 }, height { 100 };
+            
+            auto barrel { std::make_unique<Barrel>(m_world.get(), shape.origin.x, shape.origin.y, width, height ) };
+            auto barrelView = BarrelView::create(barrel.get());
+            
+            m_barrelManager->Add(move(barrel), barrelView);
+
+            tileMap->addChild(barrelView);
+        }
     }
 
-    m_unit = std::make_unique<Unit>(m_world.get(), playerPosition.x, playerPosition.y);
-    m_inputHandler = std::make_unique<UserInputHandler>(m_unit.get(), this);
+    m_unit          = std::make_unique<Unit>(m_world.get(), playerPosition.x, playerPosition.y);
+    m_inputHandler  = std::make_unique<UserInputHandler>(m_unit.get(), this);
+
+    /**
+     * TODO: 
+     * - get parsed position of the barrels
+     * - create barrels (model)
+     * - create barrels (view)
+     * - add all to barrel manager
+     * - test
+    */
+
 
     auto playerNode { HeroView::create(m_unit.get()) };
     tileMap->addChild(playerNode, 10);
@@ -98,4 +122,5 @@ void LevelScene::update(float dt) {
     m_world->Step(dt, 1);
     m_unit->UpdateState(dt);
 
+    m_barrelManager->Update();
 }
