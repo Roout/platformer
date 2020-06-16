@@ -86,6 +86,9 @@ list(APPEND GAME_HEADER
      Classes/ProjectileView.hpp
      Classes/Platform.hpp
      Classes/Border.hpp
+     Classes/Barrel.hpp
+     Classes/BarrelView.hpp
+     Classes/BarrelManager.hpp
      Classes/SizeDeducer.hpp
      )
 
