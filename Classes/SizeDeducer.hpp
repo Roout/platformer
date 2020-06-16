@@ -18,9 +18,10 @@ public:
         return deducer;
     } 
 
+    /// TODO: add type checks
     template<class T>
     T GetAdjustedSize(const T value) const noexcept {
-        return value * m_scaleFactor;
+        return static_cast<T>(value * m_scaleFactor);
     } 
 
     float GetScaleFactor() const noexcept {
