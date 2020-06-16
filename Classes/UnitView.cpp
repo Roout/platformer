@@ -31,8 +31,12 @@ bool HeroView::init() {
     
     // load animation data and build the armature
     const auto factory = dragonBones::CCFactory::getFactory();
-    factory->loadDragonBonesData("mc/mc_ske.json");
-    factory->loadTextureAtlasData("mc/mc_tex.json");
+    if(auto bonesData = factory->getDragonBonesData("mc"); bonesData == nullptr) {
+        factory->loadDragonBonesData("mc/mc_ske.json");
+    }
+    if(auto texture = factory->getTextureAtlasData("mc"); texture == nullptr) {
+        factory->loadTextureAtlasData("mc/mc_tex.json");
+    }
     auto armatureDisplay = factory->buildArmatureDisplay("Armature", "mc");
 
     // TODO: scale factor depends on device resolution so it can'be predefined constant.
