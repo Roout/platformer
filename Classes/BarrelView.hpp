@@ -26,13 +26,14 @@ public:
         if( !cocos2d::DrawNode::init() ) {
             return false;
         }
-        this->scheduleUpdate();
+        this->scheduleUpdate(); 
 
         const auto body { m_model->GetBody() };
         const auto shape { body->GetShape() };
         this->setAnchorPoint(cocos2d::Vec2::ANCHOR_MIDDLE_BOTTOM);
         this->setPosition(shape.origin + cocos2d::Vec2{ shape.size.width / 2.f, 0.f });
         
+        /// TODO: make armature creation factory function in another file!
         // load animation data and build the armature
         const auto factory = dragonBones::CCFactory::getFactory();
 
@@ -63,7 +64,7 @@ public:
         this->drawRect( 
             cocos2d::Vec2 { -box.size.width / 2.f, 0.f }, 
             cocos2d::Vec2 { box.size.width / 2.f, box.size.height }, 
-            cocos2d::Color4F::MAGENTA 
+            cocos2d::Color4F::MAGENTA
         );
         this->drawRect( 
             cocos2d::Vec2 { -shape.size.width / 2.f, 0.f }, 

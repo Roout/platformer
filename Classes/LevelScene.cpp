@@ -84,16 +84,6 @@ bool LevelScene::init() {
     m_unit          = std::make_unique<Unit>(m_world.get(), playerPosition.x, playerPosition.y);
     m_inputHandler  = std::make_unique<UserInputHandler>(m_unit.get(), this);
 
-    /**
-     * TODO: 
-     * - get parsed position of the barrels
-     * - create barrels (model)
-     * - create barrels (view)
-     * - add all to barrel manager
-     * - test
-    */
-
-
     auto playerNode { HeroView::create(m_unit.get()) };
     tileMap->addChild(playerNode, 10);
     auto followTheHero { cocos2d::Follow::create(playerNode) };
