@@ -90,6 +90,7 @@ list(APPEND GAME_HEADER
      Classes/BarrelView.hpp
      Classes/BarrelManager.hpp
      Classes/SizeDeducer.hpp
+     Classes/SmoothFollower.hpp
      )
 
 if(ANDROID)

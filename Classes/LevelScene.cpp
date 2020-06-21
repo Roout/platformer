@@ -4,8 +4,8 @@
 #include "UnitView.hpp"
 #include "UserInputHandler.hpp"
 #include "TileMapParser.hpp"
-
 #include "BarrelManager.hpp"
+#include "SmoothFollower.hpp"
 
 LevelScene::LevelScene(int id): 
     m_id{ id } 
@@ -81,13 +81,20 @@ bool LevelScene::init() {
         }
     }
 
-    m_unit          = std::make_unique<Unit>(m_world.get(), playerPosition.x, playerPosition.y);
-    m_inputHandler  = std::make_unique<UserInputHandler>(m_unit.get(), this);
+    m_unit              = std::make_shared<Unit>(m_world.get(), playerPosition.x, playerPosition.y);
+    m_playerFollower    = std::make_unique<SmoothFollower>(m_unit);
+    m_inputHandler      = std::make_unique<UserInputHandler>(m_unit.get(), this);
 
     auto playerNode { HeroView::create(m_unit.get()) };
     tileMap->addChild(playerNode, 10);
-    auto followTheHero { cocos2d::Follow::create(playerNode) };
-	tileMap->runAction(followTheHero);
+
+    ///TODO: set map position so that the player will be visible at the center
+    const auto shift { playerPosition 
+        - cocos2d::Vec2{ visibleSize.width / 2.f, visibleSize.height / 3.f } 
+        - origin / 2.f 
+    };
+    tileMap->setPosition(-shift);
+
 
     return true;
 }
@@ -101,16 +108,25 @@ void LevelScene::menuCloseCallback(cocos2d::Ref* pSender) {
 }
 
 void LevelScene::update(float dt) {
+   
+    m_unit->UpdateWeapon(dt);
+    m_world->Step(dt, 1);
+    m_unit->UpdateState(dt);
+    
+    
+    m_playerFollower->UpdateAfterUnitMove(dt);
+    auto director { cocos2d::Director::getInstance() };
+    const auto visibleSize = director->getVisibleSize();
+	const auto origin = director->getVisibleOrigin();
+    auto mapNode = this->getChildByName("Map");
+    m_playerFollower->UpdateNodePosition(mapNode);
+
+    m_barrelManager->Update();
+
     static unsigned int x { 0 };
     cocos2d::log("Update: %0.4f, %d", dt, x++);
     cocos2d::log("Unit is at: [%0.4f, %0.4f]", 
         m_unit->GetBody()->GetShape().origin.x, 
         m_unit->GetBody()->GetShape().origin.y 
     );
-
-    m_unit->UpdateWeapon(dt);
-    m_world->Step(dt, 1);
-    m_unit->UpdateState(dt);
-
-    m_barrelManager->Update();
 }
