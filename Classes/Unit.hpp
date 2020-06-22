@@ -42,6 +42,10 @@ public:
     
     void UpdateState(const float dt) noexcept;
 
+    int GetHealth() const noexcept {
+        return m_health;
+    }
+    
 private:
 
     PhysicWorld * const m_world { nullptr };

@@ -6,6 +6,7 @@
 #include "TileMapParser.hpp"
 #include "BarrelManager.hpp"
 #include "SmoothFollower.hpp"
+#include "HealthBar.hpp"
 
 LevelScene::LevelScene(int id): 
     m_id{ id } 
@@ -88,13 +89,20 @@ bool LevelScene::init() {
     auto playerNode { HeroView::create(m_unit.get()) };
     tileMap->addChild(playerNode, 10);
 
-    ///TODO: set map position so that the player will be visible at the center
-    const auto shift { playerPosition 
+    const auto mapShift { playerPosition 
         - cocos2d::Vec2{ visibleSize.width / 2.f, visibleSize.height / 3.f } 
         - origin / 2.f 
     };
-    tileMap->setPosition(-shift);
+    tileMap->setPosition(-mapShift);
 
+    /// TODO: move somewhere
+    HealthBar *bar = HealthBar::create(m_unit);
+    { // TODO: expect some refactoring
+        const auto shape = m_unit->GetBody()->GetShape();
+        static constexpr float shift { 15.f };
+        bar->setPosition(-shape.size.width / 2.f, shape.size.height + shift);
+    }
+    playerNode->addChild(bar);
 
     return true;
 }

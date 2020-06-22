@@ -71,6 +71,7 @@ list(APPEND GAME_SOURCE
      Classes/TileMapParser.cpp
      Classes/Weapon.cpp
      Classes/ProjectileView.cpp
+     Classes/HealthBar.cpp
      )
 list(APPEND GAME_HEADER
      Classes/AppDelegate.h
@@ -91,6 +92,7 @@ list(APPEND GAME_HEADER
      Classes/BarrelManager.hpp
      Classes/SizeDeducer.hpp
      Classes/SmoothFollower.hpp
+     Classes/HealthBar.hpp
      )
 
 if(ANDROID)

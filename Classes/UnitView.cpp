@@ -69,7 +69,7 @@ bool HeroView::init() {
     auto state = cocos2d::Label::createWithTTF("state", "fonts/arial.ttf", 25);
     state->setName("state");
     //state->setAnchorPoint();
-    state->setPosition(0.f, shape.size.height + 30.f);
+    state->setPosition(0.f, shape.size.height + 60.f);
     this->addChild(state);
     return true;
 }
