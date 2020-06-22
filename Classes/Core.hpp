@@ -33,6 +33,7 @@ namespace core {
         BORDER,
         BARREL,
         PLAYER,
+        SPIKES,
         UNDEFINED
     };
 }

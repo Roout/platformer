@@ -15,7 +15,8 @@ enum class CategoryBits: MaskType {
     ENEMY       = 0x0002,
     BOUNDARY    = 0x0004,
     PROJECTILE  = 0x0008,
-    PLATFORM    = 0x0010
+    PLATFORM    = 0x0010,
+    TRAP        = 0x0020
 };
 
 template<class ...Args>

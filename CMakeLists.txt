@@ -93,6 +93,7 @@ list(APPEND GAME_HEADER
      Classes/SizeDeducer.hpp
      Classes/SmoothFollower.hpp
      Classes/HealthBar.hpp
+     Classes/Spikes.hpp
      )
 
 if(ANDROID)

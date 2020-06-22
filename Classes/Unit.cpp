@@ -17,10 +17,16 @@ Unit::Unit(PhysicWorld * const world, float x, float y) :
             SizeDeducer::GetInstance().GetAdjustedSize(m_height) 
         }
     );
-    m_body->EmplaceFixture(this, core::CategoryName::UNDEFINED);
+    m_body->EmplaceFixture(this, core::CategoryName::PLAYER);
     m_body->SetMask(
         CreateMask(CategoryBits::HERO),
-        CreateMask(CategoryBits::ENEMY, CategoryBits::BOUNDARY, CategoryBits::PROJECTILE, CategoryBits::PLATFORM) 
+        CreateMask(
+            CategoryBits::ENEMY, 
+            CategoryBits::BOUNDARY, 
+            CategoryBits::PROJECTILE, 
+            CategoryBits::PLATFORM, 
+            CategoryBits::TRAP
+        ) 
     );
 
     const int damage { 10 };
