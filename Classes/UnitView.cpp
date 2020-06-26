@@ -1,5 +1,5 @@
 #include "UnitView.hpp"
-#include "PhysicWorld.hpp"
+#include "PhysicsHelper.hpp"
 
 #include "dragonBones/DragonBonesHeaders.h"
 #include "dragonBones/cocos2dx/CCDragonBonesHeaders.h"
@@ -24,12 +24,19 @@ bool HeroView::init() {
     }
     this->scheduleUpdate();
 
-    const auto body { m_model->GetBody() };
-    const auto shape { body->GetShape() };
-    this->setAnchorPoint(cocos2d::Vec2::ANCHOR_MIDDLE_BOTTOM);
-    this->setPosition(shape.origin + cocos2d::Vec2{ shape.size.width / 2.f, 0.f });
+    const auto unitBodySize = m_model->GetSize();
+    auto body = cocos2d::PhysicsBody::createBox(unitBodySize);
+    body->setPositionOffset( {0.f, unitBodySize.height / 2.f} );
+    this->addComponent(body);
+
+    // Last update data are similar to current model's data
+    // on initialization.
+    /// TODO: initialize this to default values as the unit was just created!
+    m_lastState.direction = body->getVelocity();
+    m_lastState.state = m_model->GetState();
     
     // load animation data and build the armature
+    /// TODO: move this to function
     const auto factory = dragonBones::CCFactory::getFactory();
     if(auto bonesData = factory->getDragonBonesData("mc"); bonesData == nullptr) {
         factory->loadDragonBonesData("mc/mc_ske.json");
@@ -60,16 +67,11 @@ bool HeroView::init() {
         cocos2d::Vec2 { box.size.width / 2.f, box.size.height }, 
         cocos2d::Color4F::MAGENTA 
     );
-    this->drawRect( 
-        cocos2d::Vec2 { -shape.size.width / 2.f, 0.f }, 
-        cocos2d::Vec2 { shape.size.width / 2.f, shape.size.height }, 
-        cocos2d::Color4F::YELLOW
-    );
+
     // add state lable:
     auto state = cocos2d::Label::createWithTTF("state", "fonts/arial.ttf", 25);
     state->setName("state");
-    //state->setAnchorPoint();
-    state->setPosition(0.f, shape.size.height + 60.f);
+    state->setPosition(0.f, unitBodySize.height + 60.f);
     this->addChild(state);
     return true;
 }
@@ -103,18 +105,18 @@ void HeroView::FlipX(const cocos2d::Vec2& currentDir) {
 }
 
 void HeroView::UpdateAnimation() {
-    const auto body { m_model->GetBody() };
+    const auto body { this->getPhysicsBody() };
 
     auto armatureDisplay = dynamic_cast<dragonBones::CCArmatureDisplay*>(
         this->getChildByName("Armature")
     );
     
     const auto currentState { m_model->GetState() };
-    const auto currentDir   { body->GetDirection() };
+    const auto currentDir   { body->getVelocity() };
 
     if( currentState == m_lastState.state ) 
     { // state is same, checking for state details
-        if( m_lastState.direction.x != currentDir.x ) 
+        if( !helper::HaveSameSigns(m_lastState.direction.x, currentDir.x ) ) 
         { // direction has been changed, adjust animation:
             if( currentDir.x != 0.f ) {
                 // unit moving in another direction
@@ -128,12 +130,11 @@ void HeroView::UpdateAnimation() {
         }
         // otherwise directions are equel and nothing really changed!
     } else { // state has been changed.
+        /// TODO: flipX can be seperated cuz now it's same for equel and different states! 
         // adjust view to the new state
         if( currentState == Unit::State::move ) {
             // invert the image if needed
-            if( ( currentDir.x > 0.f && m_lastState.direction.x <= 0.f ) ||
-                ( currentDir.x < 0.f && m_lastState.direction.x >= 0.f )
-            ) {
+            if( !helper::HaveSameSigns(m_lastState.direction.x, currentDir.x ) ) {
                 this->FlipX(currentDir);
             }
         }
@@ -159,11 +160,6 @@ void HeroView::UpdateAnimation() {
 void HeroView::update(float dt) {
     // Update animation
     this->UpdateAnimation();
-
-    const auto body { m_model->GetBody() };
-    const auto shape { body->GetShape() };
-    this->setPosition(shape.origin + cocos2d::Vec2{ shape.size.width / 2.f, 0.f });
-
     // Debug >> Update state:
     auto stateLabel = dynamic_cast<cocos2d::Label*>(this->getChildByName("state"));
     
@@ -173,10 +169,4 @@ void HeroView::update(float dt) {
  
 HeroView::HeroView(const Unit* model) : 
     m_model { model }
-{
-    const auto body { m_model->GetBody() };
-    // Last update data are similar to current model's data
-    // on initialization.
-    m_lastState.direction = body->GetDirection();
-    m_lastState.state = m_model->GetState();
-}
+{}

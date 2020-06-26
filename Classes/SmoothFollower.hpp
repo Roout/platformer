@@ -10,7 +10,7 @@ public:
         m_unit{ unit }
     {
         if( auto body = unit->GetBody(); body != nullptr ) {
-            const auto position { body->GetShape().origin };
+            const auto position { body->getOwner()->getPosition()};
             // set up follower position
             x = position.x;
             y = position.y;
@@ -23,9 +23,9 @@ public:
     void UpdateAfterUnitMove(const float dt) {
         if( const auto unit = m_unit.lock(); unit != nullptr ) {
             if( const auto body = unit->GetBody(); body != nullptr ) {
-                const auto destination { body->GetShape().origin };
+                const auto destination { body->getOwner()->getPosition() };
                 static constexpr auto alpha { 0.1f }; 
-                static constexpr auto eps { 1.f }; 
+                static constexpr auto eps { 0.1f }; 
 
                 const auto pos = this->lerp(destination, alpha);
                 if( pos.fuzzyEquals(destination, eps)) {

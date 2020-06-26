@@ -10,11 +10,7 @@ class Unit;
  * Unit's health bar.
  * 
  * @code
- * HealthBar *bar = HealthBar::create(m_unit);
- * const auto shape = m_unit->GetBody()->GetShape();
- * bar->setPosition(-shape.size.width / 2.f, shape.size.height + 15.f);
- * playerNode->addChild(bar); 
- * 
+ *  @endcode
  */
 class HealthBar final : public cocos2d::DrawNode {
 public:

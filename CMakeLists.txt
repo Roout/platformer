@@ -64,7 +64,6 @@ endif()
 list(APPEND GAME_SOURCE
      Classes/AppDelegate.cpp
      Classes/LevelScene.cpp
-     Classes/PhysicWorld.cpp
      Classes/Unit.cpp
      Classes/UnitView.cpp
      Classes/UserInputHandler.cpp
@@ -77,8 +76,6 @@ list(APPEND GAME_HEADER
      Classes/AppDelegate.h
      Classes/LevelScene.hpp
      Classes/Unit.hpp
-     Classes/PhysicWorld.hpp
-     Classes/PhysicBody.hpp
      Classes/UnitView.hpp
      Classes/UserInputHandler.hpp
      Classes/TileMapParser.hpp
@@ -94,6 +91,7 @@ list(APPEND GAME_HEADER
      Classes/SmoothFollower.hpp
      Classes/HealthBar.hpp
      Classes/Spikes.hpp
+     Classes/PhysicsHelper.hpp
      )
 
 if(ANDROID)

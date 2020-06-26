@@ -1,26 +1,26 @@
 #include "UserInputHandler.hpp"
 #include "Unit.hpp"
-#include "PhysicWorld.hpp" // KinematicBody access
+#include "PhysicsHelper.hpp"
 
 #include "cocos2d.h"
 
 UserInputHandler::Input UserInputHandler::Input::Create(WinKeyCode keyCode) noexcept {
     Input input;
     if (keyCode == WinKeyCode::KEY_LEFT_ARROW ||
-        keyCode == WinKeyCode::KEY_A) 
-    {
+        keyCode == WinKeyCode::KEY_A
+    ) {
         input.dx = -1;
     }
     else if (keyCode == WinKeyCode::KEY_RIGHT_ARROW ||
-            keyCode == WinKeyCode::KEY_D)
-    {
+            keyCode == WinKeyCode::KEY_D
+    ) {
         input.dx = 1;
     }
     
     if (keyCode == WinKeyCode::KEY_UP_ARROW ||
-            keyCode == WinKeyCode::KEY_W || 
-            keyCode == WinKeyCode::KEY_SPACE)
-    {
+        keyCode == WinKeyCode::KEY_W || 
+        keyCode == WinKeyCode::KEY_SPACE
+    ) {
         input.jump = true;
     }
     
@@ -60,17 +60,17 @@ void UserInputHandler::OnKeyPressed(
     cocos2d::Event* event
 ) {
     m_lastInput.Merge(Input::Create(keyCode));
-    auto body = m_model->GetBody();
-    
-    if(m_lastInput.jump && body->CanJump()) {
-        body->Jump();
+    const auto body = m_model->GetBody();
+    static constexpr float EPS { 0.000001 };
+    if(m_lastInput.jump && helper::IsEquel(const_cast<cocos2d::PhysicsBody*>(body)->getVelocity().y, 0.f, EPS) ) {
+        m_movement.Jump();
     }
 
     if( m_lastInput.dx == 1) {
-        body->MoveRight();
+        m_movement.MoveRight();
     }
     else if( m_lastInput.dx == -1) {
-        body->MoveLeft();
+        m_movement.MoveLeft();
     }
 
     if( m_lastInput.attack) {
@@ -84,8 +84,7 @@ void UserInputHandler::OnKeyRelease(
 ) {
     const Input released{ Input::Create(keyCode)};
     if(released.dx && released.dx == m_lastInput.dx) {
-        auto body = m_model->GetBody();
-        body->Stop();
+        m_movement.Stop();
         m_lastInput.dx = 0;
     }
     if(released.attack) {

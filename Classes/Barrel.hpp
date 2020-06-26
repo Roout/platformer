@@ -2,32 +2,32 @@
 #define BARREL_HPP
 
 #include "Core.hpp"
-#include "PhysicWorld.hpp"
 #include "cocos2d.h"
 
 class Barrel final : public core::Entity {
 public:
-    
-    Barrel(PhysicWorld * const world, float x, float y, float w, float h) :
-        m_world { world }
+    Barrel( 
+        cocos2d::PhysicsBody * const body, 
+        const cocos2d::Size& size 
+    ) : 
+        m_body { body },
+        m_size { size }
     {   
-        const auto callback = [x,y](core::Entity * ) {
-            cocos2d::log("Barrel at [%f, %f] collide with some entity!", x, y);
-        };
-        m_body = m_world->Create<StaticBody>(
-            callback,
-            cocos2d::Vec2{ x, y }, cocos2d::Size{ w, h } 
+        m_body->setDynamic(false);
+        m_body->setCategoryBitmask(
+            core::CreateMask(
+                core::CategoryBits::BARREL
+            )
         );
-        m_body->EmplaceFixture(this, core::CategoryName::BARREL);
-        m_body->SetMask(
-            CreateMask(CategoryBits::BOUNDARY),
-            CreateMask(CategoryBits::PROJECTILE) 
+        m_body->setCollisionBitmask(
+            core::CreateMask(
+                core::CategoryBits::BOUNDARY, 
+                core::CategoryBits::PROJECTILE
+            )
         );
     }
 
-    ~Barrel() {
-        m_world->Erase(m_body);
-    }
+    ~Barrel() = default;
     
     void RecieveDamage( [[maybe_unused]] int damage) noexcept override {
         m_isExploded = true;
@@ -37,15 +37,25 @@ public:
         return m_isExploded;
     }
 
-    const StaticBody * GetBody() const noexcept {
+    const cocos2d::PhysicsBody * GetBody() const noexcept {
         return m_body;
-    } 
+    }
+
+    /**
+     * Return size of the barrel 
+     * which was already adjusted to the resolution difference
+     */
+    const cocos2d::Size GetSize() const noexcept {
+        return m_size;
+    }
 
 private:
-    
-    PhysicWorld * const m_world { nullptr };
+    cocos2d::PhysicsBody * m_body { nullptr };
 
-    StaticBody * m_body { nullptr };
+    /**
+     * Keep size of the barrel which was already adjusted to the resolution difference
+     */
+    const cocos2d::Size m_size;
 
     bool m_isExploded { false };
 };

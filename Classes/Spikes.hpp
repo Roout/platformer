@@ -1,7 +1,7 @@
 #ifndef SPIKES_HPP
 #define SPIKES_HPP
 
-#include "PhysicWorld.hpp"
+#include "cocos2d.h"
 #include "Core.hpp"
 
 /**
@@ -9,32 +9,28 @@
  */
 class Spikes final : public core::Entity {
 public:
-    Spikes(PhysicWorld * const world, float x, float y, float w, float h) :
-        m_world { world }
-    {   
-        const auto callback = [x,y, this](core::Entity * entity ) {
-            cocos2d::log("Spikes at [%f, %f] collide with some entity!\n It deal %f damage!",
-                x / 80.f, 
-                y / 80.f, 
-                m_damage 
-            );
-            if( entity != nullptr ) {
-                entity->RecieveDamage(static_cast<int>(this->DealDamage()));
-            }
-        };
-        m_body = m_world->Create<StaticBody>(
-            callback,
-            cocos2d::Vec2{ x, y }, cocos2d::Size{ w, h } 
+    Spikes(
+        const cocos2d::Vec2& pos, 
+        const cocos2d::Size& size
+    ) {   
+        m_body = cocos2d::PhysicsBody::createBox(size);
+        m_body->setDynamic(false);
+        m_body->setPositionOffset(pos);
+        m_body->setCategoryBitmask(
+            core::CreateMask(
+                core::CategoryBits::TRAP
+            )
         );
-        m_body->EmplaceFixture(this, core::CategoryName::SPIKES);
-        m_body->SetMask(
-            CreateMask(CategoryBits::TRAP),
-            CreateMask(CategoryBits::ENEMY, CategoryBits::HERO) 
+        m_body->setCollisionBitmask(
+            core::CreateMask(
+                core::CategoryBits::ENEMY, 
+                core::CategoryBits::HERO
+            )
         );
     }
 
     ~Spikes() {
-        m_world->Erase(m_body);
+        m_body->removeFromWorld();
     }
 
     void Update(const float dt) {
@@ -58,9 +54,8 @@ public:
     }
 
 private:
-    PhysicWorld * const m_world { nullptr };
     
-    StaticBody * m_body { nullptr };
+    cocos2d::PhysicsBody * m_body { nullptr };
 
     float   m_cooldown { 0.f };
 

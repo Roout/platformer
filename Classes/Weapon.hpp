@@ -2,8 +2,7 @@
 #define WEAPON_SYSTEM_HPP
 
 #include "Core.hpp"
-#include "math/CCGeometry.h"
-#include "PhysicWorld.hpp"
+#include "cocos2d.h"
 #include <vector>
 #include <memory>
 
@@ -26,9 +25,9 @@ public:
      * damage, range and reload time values. 
      */
     Weapon(int damage, int range, float reloadTime):
-        m_damage{damage},
-        m_range{range},
-        m_maxReloadTime{reloadTime}
+        m_damage { damage },
+        m_range { range },
+        m_maxReloadTime { reloadTime }
     {
     }
 
@@ -62,20 +61,15 @@ public:
      * - MUST force weapon to reload. 
      * - Doesn't attack anyone, but create the projectile.
      * 
-     * @param[in] world
-     *      Pointer to PhysicWorld where a projectile created by the weapon will be managed.
-     *      Used only by factory function for creating projectile body.
-     * 
      * @param[in] position
      *      A left-bottom corner of the created projectile.
      * 
-     * @param[in] direction
-     *      The direction where the projectile will move.
+     * @param[in] velocity
+     *      The velocity where the projectile will move.
      */
     virtual void Attack (
-        PhysicWorld * const world,
         const cocos2d::Vec2& position,
-        const cocos2d::Vec2& direction
+        const cocos2d::Vec2& velocity
     ) noexcept = 0;
 
     /**
@@ -154,12 +148,10 @@ public:
 public:
 
     Projectile(
-        PhysicWorld * const world,
         const cocos2d::Vec2& position,
         const cocos2d::Size& size,
-        const cocos2d::Vec2& direction,
-        const float xAxisSpeed,
-        PhysicWorld::OnCollision weaponCallback
+        const cocos2d::Vec2& velocity,
+        const float speed
     );
 
     ~Projectile();
@@ -183,11 +175,11 @@ public:
         return m_lifeTime > 0.f;
     }
 
-    [[nodiscard]] KinematicBody * GetBody() noexcept {
+    [[nodiscard]] cocos2d::PhysicsBody * GetBody() noexcept {
         return m_body;
     }
 
-    [[nodiscard]] const KinematicBody * GetBody() const noexcept {
+    [[nodiscard]] const cocos2d::PhysicsBody * GetBody() const noexcept {
         return m_body;
     }
 
@@ -213,8 +205,6 @@ private:
     // Properties
 private:
     
-    PhysicWorld * const m_world { nullptr };
-
     /**
      * Keep track of projectile lifetime. When 'm_lifeTime' <= 0.f
      * projectile should disappear.
@@ -225,12 +215,10 @@ private:
      * Define an area where the attack can reach and do something, e.g. deal some damage. 
      * Exist until it collide with something or the projectile lifetime ends.
      */
-    KinematicBody * m_body { nullptr };
+    cocos2d::PhysicsBody * m_body { nullptr };
 
     /**
      * The view of the projectile.
-     * @note
-     *      Declare after the physic body.
      */
     ProjectileView * m_view { nullptr };
 };
@@ -244,9 +232,6 @@ public:
      * This method create the sword's projectile using 
      * information from weapon owner and weapon. 
      * 
-     * @param[in] world
-     *      Pointer to PhysicWorld where a projectile created by the weapon will be managed.
-     * 
      * @param[in] position
      *      A left-bottom corner of the created projectile.
      * 
@@ -254,7 +239,6 @@ public:
      *      The direction where the projectile will move.
      */
     void Attack(
-        PhysicWorld * const world,
         const cocos2d::Vec2& position,
         const cocos2d::Vec2& direction
     ) noexcept override;

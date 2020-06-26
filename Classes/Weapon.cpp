@@ -5,7 +5,6 @@
 #include "SizeDeducer.hpp"
 
 void Sword::Attack(
-    PhysicWorld * const world,
     const cocos2d::Vec2& position,
     const cocos2d::Vec2& direction
 ) noexcept {
@@ -27,16 +26,8 @@ void Sword::Attack(
     if( direction.x < 0.f) {
         projectilePosition.x -= size.width;
     }
-    // define callback
-    // Requirements: 
-    // 1. Must nullify lifetime of the projectile on collision
-    // 2. Must deduct health
-    auto callback = [damage = this->GetDamage()](core::Entity* const rhs) {
-        rhs->RecieveDamage(damage);
-        cocos2d::log("Sword projectile collide with some entity and expect to deal: %d damage.", damage);
-
-    };
-    auto proj = std::make_unique<Projectile>(world, projectilePosition, size, direction, speed, callback);
+    
+    auto proj = std::make_unique<Projectile>(projectilePosition, size, direction, speed);
     m_projectiles.emplace_back(std::move(proj));
 
     this->ForceReload();
@@ -66,32 +57,32 @@ void Sword::UpdateProjectiles(const float dt) noexcept {
 
 
 Projectile::Projectile (
-    PhysicWorld * const world,
     const cocos2d::Vec2& position,
     const cocos2d::Size& size,
-    const cocos2d::Vec2& direction,
-    const float xAxisSpeed,
-    PhysicWorld::OnCollision weaponCallback
-) :
-    m_world { world }, 
+    const cocos2d::Vec2& velocity,
+    const float speed
+) : 
     m_lifeTime { 0.15f }
 {    
-    const auto callback = [this, weaponCallback](core::Entity* entity) {
-        // do the job known to sword
-        std::invoke(weaponCallback, entity);
-        // do the job known to this projectile:
-        // end it's lifetime after collision!
-        this->Collapse();
-    };
-    m_body = m_world->Create<KinematicBody>(callback, position, size);
-    m_body->EmplaceFixture(this, core::CategoryName::UNDEFINED);
-    m_body->SetDirection(direction);
-    // to allow the body going up, it must have some jump time:
-    if( direction.y > 0.f) m_body->Jump();
-    m_body->SetXAxisSpeed(xAxisSpeed);
-    m_body->SetMask(
-        CreateMask(CategoryBits::PROJECTILE),
-        CreateMask(CategoryBits::ENEMY, CategoryBits::BOUNDARY, CategoryBits::PLATFORM) 
+    m_body = cocos2d::PhysicsBody::createBox(size);
+    m_body->setVelocity(velocity);
+    m_body->setVelocityLimit(speed);
+    m_body->setGravityEnable(true);
+    m_body->setRotationEnable(false);
+    m_body->setPositionOffset(position);
+    m_body->setCategoryBitmask(
+        core::CreateMask(
+            core::CategoryBits::PROJECTILE
+        )
+    );
+    m_body->setCollisionBitmask(
+        core::CreateMask(
+            core::CategoryBits::ENEMY, 
+            core::CategoryBits::HERO, 
+            core::CategoryBits::BARREL, 
+            core::CategoryBits::BOUNDARY, 
+            core::CategoryBits::PROJECTILE 
+        )
     );
     cocos2d::log("Projectile was created with body");
 
@@ -101,9 +92,10 @@ Projectile::Projectile (
 }
 
 Projectile::~Projectile() {
+    /// TODO: clean up this shit. It should be destroyed in right order by itself.
     auto map = cocos2d::Director::getInstance()->getRunningScene()->getChildByName("Map");
     map->removeChild(m_view);
-    m_world->Erase(m_body);
-
     cocos2d::log("Projectile was destroyed");
+
+    m_body->removeFromWorld();
 }

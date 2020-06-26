@@ -1,34 +1,11 @@
 #include "Unit.hpp"
 #include "cocos2d.h"
 #include "SizeDeducer.hpp"
+#include "PhysicsHelper.hpp" 
 
-Unit::Unit(PhysicWorld * const world, float x, float y) :
-    m_world { world },
+Unit::Unit() :
     m_health { 100 }
-{
-    const auto callback = [](core::Entity* ) {
-        cocos2d::log("Unit collide with some entity!");
-    };
-
-    m_body = m_world->Create<KinematicBody>(
-        callback,
-        cocos2d::Vec2{ x, y }, cocos2d::Size { 
-            SizeDeducer::GetInstance().GetAdjustedSize(m_width), 
-            SizeDeducer::GetInstance().GetAdjustedSize(m_height) 
-        }
-    );
-    m_body->EmplaceFixture(this, core::CategoryName::PLAYER);
-    m_body->SetMask(
-        CreateMask(CategoryBits::HERO),
-        CreateMask(
-            CategoryBits::ENEMY, 
-            CategoryBits::BOUNDARY, 
-            CategoryBits::PROJECTILE, 
-            CategoryBits::PLATFORM, 
-            CategoryBits::TRAP
-        ) 
-    );
-
+{   
     const int damage { 10 };
     const int range { SizeDeducer::GetInstance().GetAdjustedSize(20) };
     const float reloadTime { m_maxAttackTime };
@@ -36,8 +13,35 @@ Unit::Unit(PhysicWorld * const world, float x, float y) :
     m_weapon = std::make_unique<Sword>( damage, range, reloadTime );
 }
 
-Unit::~Unit() {
-    m_world->Erase(m_body);
+Unit::~Unit() {}
+
+void Unit::AddBody(cocos2d::PhysicsBody * const body) noexcept {
+    m_body = body;
+    m_body->setGravityEnable(false);
+    m_body->setRotationEnable(false);
+    m_body->setVelocityLimit(550);
+    // m_body->setPositionOffset(cocos2d::Vec2{x, y});
+    m_body->setCategoryBitmask(
+        core::CreateMask(
+            core::CategoryBits::HERO
+        )
+    );
+    m_body->setCollisionBitmask(
+        core::CreateMask(
+            core::CategoryBits::ENEMY, 
+            core::CategoryBits::BOUNDARY, 
+            core::CategoryBits::PROJECTILE, 
+            core::CategoryBits::PLATFORM, 
+            core::CategoryBits::TRAP
+        )
+    );
+}
+
+cocos2d::Size Unit::GetSize() const noexcept {
+    return {
+        SizeDeducer::GetInstance().GetAdjustedSize(m_width), 
+        SizeDeducer::GetInstance().GetAdjustedSize(m_height)
+    };
 }
 
 void Unit::RecieveDamage(int damage) noexcept {
@@ -48,9 +52,8 @@ void Unit::RecieveDamage(int damage) noexcept {
 void Unit::MeleeAttack() noexcept {
     if( m_weapon->CanAttack() ) {
         // update attack direction and position for idle case
-        auto position = m_body->GetShape().origin;
-        auto direction = m_body->GetDirection();
-        
+        auto position = m_body->getPosition();
+        auto direction = m_body->getVelocity();
         if(m_lookSide == Side::right) {
             direction.x = 1.f;
             position.x += SizeDeducer::GetInstance().GetAdjustedSize(m_width);
@@ -63,7 +66,7 @@ void Unit::MeleeAttack() noexcept {
         static int x { 0 };
         cocos2d::log(" >>> unit attack with sword: %d", ++x );
 
-        m_weapon->Attack(m_world, position, direction);
+        m_weapon->Attack(position, direction);
 
         m_state = State::attack;
         m_attackTime = m_maxAttackTime;
@@ -75,7 +78,7 @@ void Unit::UpdateWeapon(const float dt) noexcept {
 }
 
 void Unit::UpdateState(const float dt) noexcept {
-    const auto direction { m_body->GetDirection() };
+    const auto direction { m_body->getVelocity() };
 
     /// update the direction where charactar is looking now
     if( direction.x > 0.f) m_lookSide = Side::right;

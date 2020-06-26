@@ -2,6 +2,7 @@
 #define USER_INPUT_H
 
 #include "CCEventKeyboard.h"
+#include "PhysicsHelper.hpp"
 
 // This is player's avatar
 class Unit; 
@@ -53,6 +54,7 @@ private:
 
     Input m_lastInput {};
     Unit * const m_model { nullptr };
+    helper::Movement m_movement;
 };
 
 #endif // USER_INPUT_H

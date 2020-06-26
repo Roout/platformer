@@ -1,6 +1,6 @@
 #include "ProjectileView.hpp"
 #include "Weapon.hpp"
-
+#include "PhysicsHelper.hpp"
 
 ProjectileView * ProjectileView::create(const Projectile* const model) {
     auto pRet = new (std::nothrow) ProjectileView(model);
@@ -19,16 +19,17 @@ bool ProjectileView::init() {
         return false;
     }
     this->scheduleUpdate();
-    const auto body { m_model->GetBody() };
-    const auto shape { body->GetShape() };
-    this->setPosition(shape.origin);
-    this->drawSolidRect(cocos2d::Vec2::ZERO, shape.size, cocos2d::Color4F::BLUE );
+    // const auto body { m_model->GetBody() };
+    // const auto size { m_model->GetSize() };
+    // const auto position { m_model->GetBody()->getPosition() };
+    // this->setPosition(position);
+    
+    //this->drawSolidRect(cocos2d::Vec2::ZERO, size, cocos2d::Color4F::BLUE );
     return true;
 };
 
-void ProjectileView::update([[maybe_unused]] float dt){
-    const auto shape { m_model->GetBody()->GetShape() };
-    this->setPosition(shape.origin);
+void ProjectileView::update([[maybe_unused]] float dt) {
+
 }
 
 ProjectileView::ProjectileView(const Projectile* model) :

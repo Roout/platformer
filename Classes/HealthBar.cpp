@@ -1,5 +1,6 @@
 #include "HealthBar.hpp"
 #include "Unit.hpp"
+#include "PhysicsHelper.hpp"
 
 HealthBar * HealthBar::create( const std::shared_ptr<Unit>& model) {
     auto pRet = new (std::nothrow) HealthBar(model);
@@ -22,8 +23,8 @@ bool HealthBar::init() {
         if(const auto body { unit->GetBody() }; body != nullptr) {
             this->scheduleUpdate(); 
 
-            const auto shape = body->GetShape();
-            const auto barSize { cocos2d::Size(shape.size.width, 25.f) };
+            const auto size = unit->GetSize();
+            const auto barSize { cocos2d::Size(size.width, 20.f) };
 
             auto boarder = cocos2d::DrawNode::create();
             boarder->drawRect(

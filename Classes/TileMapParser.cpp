@@ -78,6 +78,7 @@ void TileMapParser::Parse() {
 
 						this->Get<ParsedType::STATIC_BODIES>().emplace_back(
 							cocos2d::Rect{
+								// cocos2d::Vec2{ i, j }, 
 								cocos2d::Vec2{ i * tileSize.width, (height - j - 1) * tileSize.height }, 
 								cocos2d::Size{ tileSize.width, tileSize.height }
 							},

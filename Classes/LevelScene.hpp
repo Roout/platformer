@@ -15,6 +15,8 @@ class SmoothFollower;
 class LevelScene final : public cocos2d::Scene {
 public:
 
+    [[nodiscard]] static cocos2d::Scene* createScene(int id);
+
     [[nodiscard]] static LevelScene* create(int id);
 
     [[nodiscard]] bool init() override;
@@ -32,20 +34,20 @@ public:
 
 private:
 	LevelScene(int id);
-// Order of creation: 
-// * PhysicWorld => Unit => UserInputHandler
-// Order of destruction
-// * UserInputHandler => Unit => PhysicWorld
-// It's obvious but I still would like to repeat this part here. 
-    std::unique_ptr<PhysicWorld>        m_world { nullptr };
+
+    // model:
     std::shared_ptr<Unit>               m_unit { nullptr };
+    // controller:
     std::unique_ptr<SmoothFollower>     m_playerFollower { nullptr };
     std::unique_ptr<UserInputHandler>   m_inputHandler { nullptr };
 
+    // models
     std::vector<Border>     m_borders;
     std::vector<Platform>   m_platforms;
-
+    // controller
     std::unique_ptr<BarrelManager>      m_barrelManager { nullptr };
+
+    // level id. Used to load a map
     const int m_id { -1 }; 
 };
 

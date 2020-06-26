@@ -2,9 +2,9 @@
 #define UNIT_HPP
 
 #include "Core.hpp"
-#include "PhysicWorld.hpp"
 #include "Weapon.hpp"
 #include <memory>
+#include "cocos2d.h"
 
 class Unit final : public core::Entity { 
 public:
@@ -15,17 +15,18 @@ public:
         attack
     };
     
-    Unit(PhysicWorld * const world, float x, float y);
+    Unit();
 
     ~Unit();
 
-    [[nodiscard]] KinematicBody * GetBody() noexcept {
+    void AddBody(cocos2d::PhysicsBody * const body) noexcept;
+
+    [[nodiscard]] const cocos2d::PhysicsBody * GetBody() const noexcept {
         return m_body;
     }
 
-    [[nodiscard]] const KinematicBody * GetBody() const noexcept {
-        return m_body;
-    }
+    [[nodiscard]] cocos2d::Size GetSize() const noexcept;
+
 
     [[nodiscard]] State GetState() const noexcept {
         return m_state;
@@ -47,10 +48,7 @@ public:
     }
     
 private:
-
-    PhysicWorld * const m_world { nullptr };
-
-    KinematicBody * m_body { nullptr };
+    cocos2d::PhysicsBody * m_body { nullptr };
 
     int m_health { 100 };
 
@@ -68,8 +66,8 @@ private:
     static constexpr float m_maxAttackTime { 0.5f };
     float m_attackTime { m_maxAttackTime };
 
-    static constexpr float m_width { 80.f };
-    static constexpr float m_height { 146.f };
+    static constexpr float  m_width { 80.f };
+    static constexpr float  m_height { 135.f };    
 };
 
 #endif // UNIT_HPP

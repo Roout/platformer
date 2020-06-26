@@ -5,6 +5,8 @@
 #include "SizeDeducer.hpp"
 #include "cocos2d.h"
 
+#include "PhysicsHelper.hpp"
+
 #include "dragonBones/DragonBonesHeaders.h"
 #include "dragonBones/cocos2dx/CCDragonBonesHeaders.h"
 
@@ -28,11 +30,8 @@ public:
         }
         this->scheduleUpdate(); 
 
-        const auto body { m_model->GetBody() };
-        const auto shape { body->GetShape() };
-        this->setAnchorPoint(cocos2d::Vec2::ANCHOR_MIDDLE_BOTTOM);
-        this->setPosition(shape.origin + cocos2d::Vec2{ shape.size.width / 2.f, 0.f });
-        
+        const auto bodySize { m_model->GetSize() };
+
         /// TODO: make armature creation factory function in another file!
         // load animation data and build the armature
         const auto factory = dragonBones::CCFactory::getFactory();
@@ -66,17 +65,19 @@ public:
             cocos2d::Vec2 { box.size.width / 2.f, box.size.height }, 
             cocos2d::Color4F::MAGENTA
         );
-        this->drawRect( 
-            cocos2d::Vec2 { -shape.size.width / 2.f, 0.f }, 
-            cocos2d::Vec2 { shape.size.width / 2.f, shape.size.height }, 
-            cocos2d::Color4F::YELLOW
-        );
+
+        // this->drawRect( 
+        //     cocos2d::Vec2 { -shape.size.width / 2.f, 0.f }, 
+        //     cocos2d::Vec2 { shape.size.width / 2.f, shape.size.height }, 
+        //     cocos2d::Color4F::YELLOW
+        // );
+        
         // add state lable:
         auto state = cocos2d::Label::createWithTTF("state", "fonts/arial.ttf", 25);
         state->setName("state");
         state->setString("idle");
         //state->setAnchorPoint();
-        state->setPosition(0.f, shape.size.height + 30.f);
+        state->setPosition(0.f, bodySize.height + 30.f);
         this->addChild(state);
         return true;
     }

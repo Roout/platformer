@@ -2,37 +2,38 @@
 #define BORDER_HPP
 
 #include "Core.hpp"
-#include "PhysicWorld.hpp"
 #include "cocos2d.h"
 
-class Border final : public core::Entity {
+class Border final {
 public:
 
-    Border(PhysicWorld * const world, float x, float y, float w, float h) :
-        m_world { world }
+    Border(cocos2d::PhysicsBody * const body) 
+        : m_body { body }
     {   
-        const auto callback = [x,y](core::Entity * ) {
-            cocos2d::log("Border at [%f, %f] collide with some entity!", x, y);
-        };
-        m_body = m_world->Create<StaticBody>(
-            callback,
-            cocos2d::Vec2{ x, y }, cocos2d::Size{ w, h } 
+        m_body->setDynamic(false);
+        m_body->setCategoryBitmask(
+            core::CreateMask(
+                core::CategoryBits::BOUNDARY
+            )
         );
-        m_body->EmplaceFixture(this, core::CategoryName::BORDER);
-        m_body->SetMask(
-            CreateMask(CategoryBits::BOUNDARY),
-            CreateMask(CategoryBits::ENEMY, CategoryBits::HERO, CategoryBits::PROJECTILE, CategoryBits::PLATFORM) 
+        m_body->setCollisionBitmask(
+            core::CreateMask(
+                core::CategoryBits::ENEMY, 
+                core::CategoryBits::HERO, 
+                core::CategoryBits::PROJECTILE, 
+                core::CategoryBits::PLATFORM
+            )
         );
     }
 
-    ~Border() {
-        m_world->Erase(m_body);
-    }
+    ~Border() = default;
     
-private:
-    PhysicWorld * const m_world { nullptr };
+    const cocos2d::PhysicsBody * GetBody() const noexcept {
+        return m_body;
+    }
 
-    StaticBody * m_body { nullptr };
+private:
+    cocos2d::PhysicsBody * m_body { nullptr };
 };
 
 #endif // BORDER_HPP

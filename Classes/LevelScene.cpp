@@ -1,12 +1,28 @@
 #include "LevelScene.hpp"
 #include "Unit.hpp"
-#include "PhysicWorld.hpp"
 #include "UnitView.hpp"
 #include "UserInputHandler.hpp"
 #include "TileMapParser.hpp"
 #include "BarrelManager.hpp"
 #include "SmoothFollower.hpp"
 #include "HealthBar.hpp"
+#include "PhysicsHelper.hpp"
+
+cocos2d::Scene* LevelScene::createScene(int id) {
+    auto scene { cocos2d::Scene::createWithPhysics() };
+    auto world = scene->getPhysicsWorld();
+    // set gravity
+    world->setGravity(cocos2d::Vec2(0, -900));
+
+    // optional: set debug draw
+    world->setDebugDrawMask(cocos2d::PhysicsWorld::DEBUGDRAW_ALL);
+
+    auto level { LevelScene::create(id) };
+
+    scene->addChild(level);
+
+    return scene;
+}
 
 LevelScene::LevelScene(int id): 
     m_id{ id } 
@@ -32,19 +48,13 @@ bool LevelScene::init() {
 	this->scheduleUpdate();
 
 	const auto visibleSize = cocos2d::Director::getInstance()->getVisibleSize();
-	const cocos2d::Vec2 origin = cocos2d::Director::getInstance()->getVisibleOrigin();
+	const auto origin = cocos2d::Director::getInstance()->getVisibleOrigin();
     
     const auto tmxFile { cocos2d::StringUtils::format("Map/level_%d.tmx", m_id) };
     cocos2d::FastTMXTiledMap *tileMap { cocos2d::FastTMXTiledMap::create(tmxFile) };
     tileMap->setName("Map");
-    // tileMap->setAnchorPoint( {0.5f, 0.5f} );
-    // tileMap->setPosition( cocos2d::Vec2{visibleSize.width, visibleSize.height } / 2.f + origin / 2.f);
-    // tileMap->setScale(2.f); // temporary
-
     this->addChild(tileMap);
-
-    m_world = std::make_unique<PhysicWorld>(); 
-
+    
     TileMapParser parser{ tileMap };
     parser.Parse();
 
@@ -58,50 +68,65 @@ bool LevelScene::init() {
 
     for(const auto& [shape, category] : obstacles ) {
         if (category == core::CategoryName::PLATFORM ) {
-            m_platforms.emplace_back(m_world.get(), 
-                shape.origin.x, shape.origin.y, 
-                shape.size.width, shape.size.height 
-            );
+            auto body = cocos2d::PhysicsBody::createBox(shape.size);
+            body->setPositionOffset(shape.size / 2.f);
+            auto node = Node::create();
+            node->setPosition(shape.origin);
+            node->addComponent(body);
+            tileMap->addChild(node);
+            m_platforms.emplace_back(body);
         } 
         else if(category == core::CategoryName::BORDER) {
-            m_borders.emplace_back(m_world.get(), 
-                shape.origin.x, shape.origin.y, 
-                shape.size.width, shape.size.height 
-            );
+            auto body = cocos2d::PhysicsBody::createBox(shape.size);
+            body->setPositionOffset(shape.size / 2.f);
+            auto node = Node::create();
+            node->setPosition(shape.origin);
+            node->addComponent(body);
+            tileMap->addChild(node);
+
+            m_borders.emplace_back(body);
         }
         else if(category == core::CategoryName::BARREL) {
             /// TODO: move width and height either to Barrel model either to map as object info.
-            static constexpr float width { 80 }, height { 100 };
-            
-            auto barrel { std::make_unique<Barrel>(m_world.get(), shape.origin.x, shape.origin.y, width, height ) };
-            auto barrelView = BarrelView::create(barrel.get());
-            
-            m_barrelManager->Add(move(barrel), barrelView);
+            const auto size { cocos2d::Size{ 80, 100 } };
+            auto body = cocos2d::PhysicsBody::createBox(size);
+            body->setPositionOffset(size / 2.f);
 
+            auto barrel { std::make_unique<Barrel>(body,  size) };
+            auto barrelView = BarrelView::create(barrel.get());
+            barrelView->setPosition(shape.origin);
+            barrelView->addComponent(body);
             tileMap->addChild(barrelView);
+            m_barrelManager->Add(move(barrel), barrelView);
         }
     }
-
-    m_unit              = std::make_shared<Unit>(m_world.get(), playerPosition.x, playerPosition.y);
-    m_playerFollower    = std::make_unique<SmoothFollower>(m_unit);
+    m_unit              = std::make_shared<Unit>();
     m_inputHandler      = std::make_unique<UserInputHandler>(m_unit.get(), this);
 
     auto playerNode { HeroView::create(m_unit.get()) };
+    const auto body { playerNode->getPhysicsBody() };
+    const auto unitBodySize { m_unit->GetSize() };
+
+    m_unit->AddBody(body);
+
+    playerNode->setAnchorPoint(cocos2d::Vec2::ANCHOR_MIDDLE_BOTTOM);
+    playerNode->setPosition(playerPosition);
+    playerNode->setName("Player");
     tileMap->addChild(playerNode, 10);
 
     const auto mapShift { playerPosition 
         - cocos2d::Vec2{ visibleSize.width / 2.f, visibleSize.height / 3.f } 
-        - origin / 2.f 
+        - origin 
     };
     tileMap->setPosition(-mapShift);
 
+    /// TODO: Get rid of the requirement to have Node* being created with new position!
+    m_playerFollower    = std::make_unique<SmoothFollower>(m_unit);
+
     /// TODO: move somewhere
+    static constexpr float healthBarShift { 15.f };
     HealthBar *bar = HealthBar::create(m_unit);
-    { // TODO: expect some refactoring
-        const auto shape = m_unit->GetBody()->GetShape();
-        static constexpr float shift { 15.f };
-        bar->setPosition(-shape.size.width / 2.f, shape.size.height + shift);
-    }
+    bar->setPosition(-unitBodySize.width / 2.f, unitBodySize.height + healthBarShift);
     playerNode->addChild(bar);
 
     return true;
@@ -118,11 +143,10 @@ void LevelScene::menuCloseCallback(cocos2d::Ref* pSender) {
 void LevelScene::update(float dt) {
    
     m_unit->UpdateWeapon(dt);
-    m_world->Step(dt, 1);
     m_unit->UpdateState(dt);
     
-    
     m_playerFollower->UpdateAfterUnitMove(dt);
+    
     auto director { cocos2d::Director::getInstance() };
     const auto visibleSize = director->getVisibleSize();
 	const auto origin = director->getVisibleOrigin();
@@ -133,8 +157,6 @@ void LevelScene::update(float dt) {
 
     static unsigned int x { 0 };
     cocos2d::log("Update: %0.4f, %d", dt, x++);
-    cocos2d::log("Unit is at: [%0.4f, %0.4f]", 
-        m_unit->GetBody()->GetShape().origin.x, 
-        m_unit->GetBody()->GetShape().origin.y 
-    );
+    // const auto position { ->getPosition() };
+    // cocos2d::log("Unit is at: [%0.4f, %0.4f]", position.x, position.y );
 }
