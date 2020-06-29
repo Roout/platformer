@@ -25,8 +25,12 @@ bool HeroView::init() {
     this->scheduleUpdate();
 
     const auto unitBodySize = m_model->GetSize();
-    auto body = cocos2d::PhysicsBody::createBox(unitBodySize);
-    body->setPositionOffset( {0.f, unitBodySize.height / 2.f} );
+    auto body = cocos2d::PhysicsBody::createBox(
+        unitBodySize,
+        cocos2d::PhysicsMaterial(1.f, 0.f, 0.f), 
+        {0.f, unitBodySize.height / 2.f}
+    );
+    body->setMass(1.f);
     this->addComponent(body);
 
     // Last update data are similar to current model's data

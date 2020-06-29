@@ -2,10 +2,11 @@
 #define USER_INPUT_H
 
 #include "CCEventKeyboard.h"
-#include "PhysicsHelper.hpp"
+#include <memory>
 
 // This is player's avatar
 class Unit; 
+class Movement;
 namespace cocos2d {
     class Node;
 }
@@ -54,7 +55,7 @@ private:
 
     Input m_lastInput {};
     Unit * const m_model { nullptr };
-    helper::Movement m_movement;
+    std::unique_ptr<Movement> m_movement;
 };
 
 #endif // USER_INPUT_H

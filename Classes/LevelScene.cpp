@@ -101,13 +101,14 @@ bool LevelScene::init() {
         }
     }
     m_unit              = std::make_shared<Unit>();
-    m_inputHandler      = std::make_unique<UserInputHandler>(m_unit.get(), this);
 
     auto playerNode { HeroView::create(m_unit.get()) };
     const auto body { playerNode->getPhysicsBody() };
     const auto unitBodySize { m_unit->GetSize() };
 
     m_unit->AddBody(body);
+    /// TODO: MUST be initialized after attaching body to unit! This looks bad as design!
+    m_inputHandler      = std::make_unique<UserInputHandler>(m_unit.get(), this);
 
     playerNode->setAnchorPoint(cocos2d::Vec2::ANCHOR_MIDDLE_BOTTOM);
     playerNode->setPosition(playerPosition);

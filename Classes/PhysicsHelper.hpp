@@ -10,8 +10,25 @@
 namespace helper {
     
     constexpr bool IsEquel(const float a, const float b, const float eps) noexcept {
-        return (a - eps <= b && b >= a + eps);
+        return (a - eps <= b && b <= a + eps);
     } 
+
+    constexpr bool IsPositive(const float x, const float eps) noexcept {
+        return !IsEquel(x, 0.f, eps) && x > 0.f;
+    }
+
+    constexpr bool IsNegative(const float x, const float eps) noexcept {
+        return !IsEquel(x, 0.f, eps) && x < 0.f;
+    }
+
+    constexpr bool IsGreater(const float a, const float b, const float eps) noexcept {
+        return !IsEquel(a, b, eps) && a > b;
+    }
+
+    constexpr bool IsLesser(const float a, const float b, const float eps) noexcept {
+        return !IsEquel(a, b, eps) && a < b;
+    }
+
 
     constexpr bool HaveSameSigns(const float a, const float b) noexcept {
         constexpr float EPS { 0.00001f };
@@ -23,37 +40,7 @@ namespace helper {
      */
     inline bool HaveSameSigns(const cocos2d::Vec2& lhs, const cocos2d::Vec2& rhs) noexcept {
         return HaveSameSigns(lhs.x, rhs.x) && HaveSameSigns(lhs.y, rhs.y);
-    }
+    }    
 
-    class Movement final {
-    public:
-
-        Movement (
-            
-        ) 
-        {
-
-        }
-
-        void MoveLeft() {
-
-        }
-
-        void MoveRight() {
-            
-        }
-
-        void Jump() {
-            
-        }
-
-        void Stop() {
-
-        }
-
-    private:
-        
-    };
-    
 }
 #endif // PHYSICS_HELPER_HPP

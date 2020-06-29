@@ -1,7 +1,6 @@
 #include "UserInputHandler.hpp"
 #include "Unit.hpp"
 #include "PhysicsHelper.hpp"
-
 #include "cocos2d.h"
 
 UserInputHandler::Input UserInputHandler::Input::Create(WinKeyCode keyCode) noexcept {
@@ -40,7 +39,8 @@ void UserInputHandler::Input::Merge(const Input& input) noexcept {
 }  
 
 UserInputHandler::UserInputHandler(Unit * const model, cocos2d::Node * const node ):
-    m_model { model }
+    m_model { model },
+    m_movement { std::make_unique<Movement>(model) }
 {
     auto listener = cocos2d::EventListenerKeyboard::create();
     
@@ -63,14 +63,14 @@ void UserInputHandler::OnKeyPressed(
     const auto body = m_model->GetBody();
     static constexpr float EPS { 0.000001 };
     if(m_lastInput.jump && helper::IsEquel(const_cast<cocos2d::PhysicsBody*>(body)->getVelocity().y, 0.f, EPS) ) {
-        m_movement.Jump();
+        m_movement->Jump();
     }
 
     if( m_lastInput.dx == 1) {
-        m_movement.MoveRight();
+        m_movement->MoveRight();
     }
     else if( m_lastInput.dx == -1) {
-        m_movement.MoveLeft();
+        m_movement->MoveLeft();
     }
 
     if( m_lastInput.attack) {
@@ -82,11 +82,13 @@ void UserInputHandler::OnKeyRelease(
     WinKeyCode keyCode, 
     cocos2d::Event* event
 ) {
-    const Input released{ Input::Create(keyCode)};
+    const Input released { Input::Create(keyCode) };
+    // TODO: release up and left/right is ongoing!
     if(released.dx && released.dx == m_lastInput.dx) {
-        m_movement.Stop();
+        m_movement->StopXAxisMove();
         m_lastInput.dx = 0;
     }
+
     if(released.attack) {
         m_lastInput.attack = false;
     }

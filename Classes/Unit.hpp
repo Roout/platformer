@@ -6,6 +6,8 @@
 #include <memory>
 #include "cocos2d.h"
 
+class Movement;
+
 class Unit final : public core::Entity { 
 public:
     enum class State {
@@ -68,6 +70,25 @@ private:
 
     static constexpr float  m_width { 80.f };
     static constexpr float  m_height { 135.f };    
+
+    friend class Movement;
+};
+
+class Movement final {
+public:
+    Movement ( Unit * const unit ):
+        m_unit { unit } 
+    {
+    }
+
+    void MoveLeft() noexcept;
+    void MoveRight() noexcept;
+    void Jump() noexcept;
+    void Stop() noexcept;
+    void StopXAxisMove() noexcept;
+
+private:
+    Unit * const m_unit { nullptr };
 };
 
 #endif // UNIT_HPP
