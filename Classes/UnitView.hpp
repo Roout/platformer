@@ -17,7 +17,7 @@ private:
 
     void UpdateAnimation();
 
-    void FlipX(const cocos2d::Vec2& currentDir);
+    void FlipX(const Unit::Side);
 private:
 
     const Unit * const m_model { nullptr };
@@ -28,7 +28,7 @@ private:
      * with animation and other stuff.
      */
     struct LastUpdate {
-        cocos2d::Vec2   direction { 0.f, 0.f };
+        Unit::Side   direction { Unit::Side::left };
         Unit::State     state { Unit::State::idle };
     } m_lastState {};
 };

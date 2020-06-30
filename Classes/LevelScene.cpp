@@ -12,7 +12,7 @@ cocos2d::Scene* LevelScene::createScene(int id) {
     auto scene { cocos2d::Scene::createWithPhysics() };
     auto world = scene->getPhysicsWorld();
     // set gravity
-    world->setGravity(cocos2d::Vec2(0, -900));
+    world->setGravity(cocos2d::Vec2(0, -1000));
 
     // optional: set debug draw
     world->setDebugDrawMask(cocos2d::PhysicsWorld::DEBUGDRAW_ALL);
@@ -108,7 +108,8 @@ bool LevelScene::init() {
 
     m_unit->AddBody(body);
     /// TODO: MUST be initialized after attaching body to unit! This looks bad as design!
-    m_inputHandler      = std::make_unique<UserInputHandler>(m_unit.get(), this);
+    m_movement      = std::make_unique<Movement> (m_unit.get());
+    m_inputHandler  = std::make_unique<UserInputHandler>(m_unit.get(), m_movement.get(), this);
 
     playerNode->setAnchorPoint(cocos2d::Vec2::ANCHOR_MIDDLE_BOTTOM);
     playerNode->setPosition(playerPosition);
@@ -143,6 +144,8 @@ void LevelScene::menuCloseCallback(cocos2d::Ref* pSender) {
 
 void LevelScene::update(float dt) {
    
+    m_movement->Update(dt);
+
     m_unit->UpdateWeapon(dt);
     m_unit->UpdateState(dt);
     

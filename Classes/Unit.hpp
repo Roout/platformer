@@ -16,7 +16,9 @@ public:
         jump,
         attack
     };
-    
+
+    enum class Side { left, right };
+
     Unit();
 
     ~Unit();
@@ -32,6 +34,10 @@ public:
 
     [[nodiscard]] State GetState() const noexcept {
         return m_state;
+    }
+
+    [[nodiscard]] Side GetSide() const noexcept {
+        return m_lookSide;
     }
 
     void RecieveDamage(int damage) noexcept override;
@@ -59,7 +65,6 @@ private:
     State m_state { State::idle };
 
 private:
-    enum class Side { left, right };
 
     Side m_lookSide { Side::left };
     /**
@@ -78,17 +83,35 @@ class Movement final {
 public:
     Movement ( Unit * const unit ):
         m_unit { unit } 
-    {
-    }
+    {}
 
-    void MoveLeft() noexcept;
-    void MoveRight() noexcept;
+    void Update(const float dt) noexcept;
+
     void Jump() noexcept;
+    void MoveRight() noexcept;
+    void MoveLeft() noexcept;
     void Stop() noexcept;
     void StopXAxisMove() noexcept;
 
 private:
     Unit * const m_unit { nullptr };
+
+    static constexpr float  m_desiredVelocity { 550.f };
+    static constexpr float  m_jumpHeight { 255.f };
+    static constexpr float  m_timeToJumpApex { 0.55 };
+
+    static constexpr int    m_timeStepsToCompletion { 6 };
+
+    struct Counter {
+        int remainingJumpSteps { 0 };
+        int remainingMoveLeft { 0 };
+        int remainingMoveRight { 0 };
+
+        void Clear() {
+            remainingJumpSteps = remainingMoveLeft = remainingMoveRight = 0;
+        }
+
+    } m_counter;
 };
 
 #endif // UNIT_HPP

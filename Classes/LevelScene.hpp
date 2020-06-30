@@ -8,6 +8,7 @@
 #include "cocos2d.h"
 
 class Unit;
+class Movement;
 class UserInputHandler;
 class BarrelManager;
 class SmoothFollower;
@@ -39,6 +40,7 @@ private:
     std::shared_ptr<Unit>               m_unit { nullptr };
     // controller:
     std::unique_ptr<SmoothFollower>     m_playerFollower { nullptr };
+    std::unique_ptr<Movement>           m_movement { nullptr };
     std::unique_ptr<UserInputHandler>   m_inputHandler { nullptr };
 
     // models

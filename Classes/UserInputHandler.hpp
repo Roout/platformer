@@ -17,7 +17,7 @@ using WinKeyCode = cocos2d::EventKeyboard::KeyCode;
 class UserInputHandler final {
 public:
     // define which unit and which node it listen to.
-    UserInputHandler(Unit * const, cocos2d::Node * const );
+    UserInputHandler(Unit * const, Movement * const, cocos2d::Node * const );
     ~UserInputHandler() = default;
 
     UserInputHandler(const UserInputHandler& ) = delete;
@@ -55,7 +55,7 @@ private:
 
     Input m_lastInput {};
     Unit * const m_model { nullptr };
-    std::unique_ptr<Movement> m_movement;
+    Movement * const m_movement { nullptr };
 };
 
 #endif // USER_INPUT_H

@@ -38,9 +38,13 @@ void UserInputHandler::Input::Merge(const Input& input) noexcept {
     }
 }  
 
-UserInputHandler::UserInputHandler(Unit * const model, cocos2d::Node * const node ):
+UserInputHandler::UserInputHandler(
+    Unit * const model, 
+    Movement * const movement, 
+    cocos2d::Node * const node 
+) :
     m_model { model },
-    m_movement { std::make_unique<Movement>(model) }
+    m_movement { movement }
 {
     auto listener = cocos2d::EventListenerKeyboard::create();
     

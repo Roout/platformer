@@ -30,13 +30,13 @@ bool HeroView::init() {
         cocos2d::PhysicsMaterial(1.f, 0.f, 0.f), 
         {0.f, unitBodySize.height / 2.f}
     );
-    body->setMass(1.f);
+    body->setMass(25.f);
     this->addComponent(body);
 
     // Last update data are similar to current model's data
     // on initialization.
     /// TODO: initialize this to default values as the unit was just created!
-    m_lastState.direction = body->getVelocity();
+    m_lastState.direction = m_model->GetSide();
     m_lastState.state = m_model->GetState();
     
     // load animation data and build the armature
@@ -93,17 +93,17 @@ inline std::string CreateAnimationName( Unit::State state) {
     return animationName;
 }
 
-void HeroView::FlipX(const cocos2d::Vec2& currentDir) {
+void HeroView::FlipX(const Unit::Side currentSide) {
     auto armatureDisplay = dynamic_cast<dragonBones::CCArmatureDisplay*>(
         this->getChildByName("Armature")
     );
 
     if(const auto isTurnedRight = armatureDisplay->getArmature()->getFlipX(); 
-        isTurnedRight && currentDir.x < 0.f
+        isTurnedRight && currentSide == Unit::Side::left
     ) {
         armatureDisplay->getArmature()->setFlipX(false);
     } 
-    else if( !isTurnedRight && currentDir.x > 0.f) { 
+    else if( !isTurnedRight && currentSide == Unit::Side::right) { 
         armatureDisplay->getArmature()->setFlipX(true);
     }
 }
@@ -116,39 +116,33 @@ void HeroView::UpdateAnimation() {
     );
     
     const auto currentState { m_model->GetState() };
-    const auto currentDir   { body->getVelocity() };
+    const auto currentSide  { m_model->GetSide() };
 
     if( currentState == m_lastState.state ) 
     { // state is same, checking for state details
-        if( !helper::HaveSameSigns(m_lastState.direction.x, currentDir.x ) ) 
+        if( m_lastState.direction != currentSide ) 
         { // direction has been changed, adjust animation:
-            if( currentDir.x != 0.f ) {
-                // unit moving in another direction
-                this->FlipX(currentDir);
-            } else {
-                // the model doesn't move along x-Axis but stayed still!
-                // TODO: add another animation
-            }
+            this->FlipX(currentSide);
             // update last state:
-            m_lastState.direction = currentDir;
+            m_lastState.direction = currentSide;
         }
         // otherwise directions are equel and nothing really changed!
     } else { // state has been changed.
         /// TODO: flipX can be seperated cuz now it's same for equel and different states! 
         // adjust view to the new state
-        if( currentState == Unit::State::move ) {
+        if( currentState == Unit::State::move || currentState == Unit::State::jump ) {
             // invert the image if needed
-            if( !helper::HaveSameSigns(m_lastState.direction.x, currentDir.x ) ) {
-                this->FlipX(currentDir);
+            if( m_lastState.direction != currentSide ) {
+                this->FlipX(currentSide);
             }
         }
-        else if ( currentState == Unit::State::jump ) {
-            // do nothing ..
-        }
+        // else if ( currentState == Unit::State::jump ) {
+        //     // do nothing ..
+        // }
 
         // update last state
         m_lastState.state       = currentState;
-        m_lastState.direction   = currentDir;
+        m_lastState.direction   = currentSide;
         // run animation
         const std::string animationName { CreateAnimationName(currentState) };
         if ( currentState == Unit::State::jump || 

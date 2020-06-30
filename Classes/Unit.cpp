@@ -20,7 +20,7 @@ void Unit::AddBody(cocos2d::PhysicsBody * const body) noexcept {
     m_body->setDynamic(true);
     m_body->setGravityEnable(true);
     m_body->setRotationEnable(false);
-    m_body->setVelocityLimit(550);
+    //m_body->setVelocityLimit(550);
     // m_body->setPositionOffset(cocos2d::Vec2{x, y});
     m_body->setCategoryBitmask(
         core::CreateMask(
@@ -82,8 +82,11 @@ void Unit::UpdateState(const float dt) noexcept {
     const auto direction { m_body->getVelocity() };
     constexpr float EPS { 0.00001f };
     /// update the direction where charactar is looking now
-    if( helper::IsPositive(direction.x, EPS) ) m_lookSide = Side::right;
-    else if( helper::IsNegative(direction.x, EPS) ) m_lookSide = Side::left;
+    if( helper::IsPositive(direction.x, EPS) ) {
+        m_lookSide = Side::right;
+    } else if( helper::IsNegative(direction.x, EPS) ) {
+        m_lookSide = Side::left;
+    }
 
 
     if( m_state == State::attack ) {
@@ -103,28 +106,72 @@ void Unit::UpdateState(const float dt) noexcept {
     }
 }
 
+void Movement::Update(const float dt) noexcept {
+    if( m_counter.remainingJumpSteps ) {
+        // F = mv / t
+        const auto force { 
+            ( m_unit->m_body->getMass() * m_desiredVelocity ) / 
+            ( dt * m_timeStepsToCompletion ) 
+        };
+        const auto multiplier { (2.f * m_counter.remainingJumpSteps + 1.f) / 6.f };
+        m_unit->m_body->applyForce({ 0.f, force * multiplier });
+        m_counter.remainingJumpSteps--;
+    }
 
-void Movement::MoveLeft() noexcept {
-    m_unit->m_body->applyImpulse({ -450.f, 0.f });
-}
+    auto jumpSideMoveMultiplier { 1.f };
+    if( m_unit->GetState() == Unit::State::jump) {
+        jumpSideMoveMultiplier = 0.6f;
+    }
 
-void Movement::MoveRight() noexcept {
-    m_unit->m_body->applyImpulse({ 450.f, 0.f });
+    if( m_counter.remainingMoveLeft ) {
+        m_counter.remainingMoveLeft--;
+        // F = mv / t
+        const auto force { 
+            ( m_unit->m_body->getMass() * m_desiredVelocity ) / 
+            ( dt * m_timeStepsToCompletion ) 
+        };
+        
+        m_unit->m_body->applyForce({ -force, 0.f });
+    }
+    else if( m_counter.remainingMoveRight ) {
+        m_counter.remainingMoveRight--;
+        // F = mv / t
+        const auto force { 
+            ( m_unit->m_body->getMass() * m_desiredVelocity ) / 
+            ( dt * m_timeStepsToCompletion ) 
+        };
+        m_unit->m_body->applyForce({ force, 0.f });
+    }
+
+    const auto currentVelocity { m_unit->m_body->getVelocity() };
+    m_unit->m_body->setVelocity({
+        cocos2d::clampf(currentVelocity.x, -m_desiredVelocity * jumpSideMoveMultiplier, m_desiredVelocity * jumpSideMoveMultiplier),
+        cocos2d::clampf(currentVelocity.y, -m_desiredVelocity, m_desiredVelocity )
+    });
 }
 
 void Movement::Jump() noexcept {
-    // auto vel = m_unit->m_body->getVelocity();
-    // vel.y = 550.f;
-    // m_unit->m_body->setVelocity(vel);
-    m_unit->m_body->applyImpulse({0.f, 3000.f});
-}
+    m_counter.remainingJumpSteps = m_timeStepsToCompletion;
+};
+void Movement::MoveRight() noexcept {
+    m_counter.remainingMoveRight = m_timeStepsToCompletion;
+    m_counter.remainingMoveLeft  = 0;
+};
+void Movement::MoveLeft() noexcept {
+    m_counter.remainingMoveRight = 0;
+    m_counter.remainingMoveLeft  = m_timeStepsToCompletion;
+};
 
 void Movement::Stop() noexcept {
     m_unit->m_body->setVelocity({ 0.f, 0.f });
     m_unit->m_body->resetForces();
+
+    m_counter.Clear();
 }
 
 void Movement::StopXAxisMove() noexcept {
     const auto vel { m_unit->m_body->getVelocity() };
     m_unit->m_body->setVelocity({ 0.f, vel.y });
+
+    m_counter.remainingMoveLeft = m_counter.remainingMoveRight = 0;
 }
