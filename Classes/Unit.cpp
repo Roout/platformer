@@ -20,8 +20,6 @@ void Unit::AddBody(cocos2d::PhysicsBody * const body) noexcept {
     m_body->setDynamic(true);
     m_body->setGravityEnable(true);
     m_body->setRotationEnable(false);
-    //m_body->setVelocityLimit(550);
-    // m_body->setPositionOffset(cocos2d::Vec2{x, y});
     m_body->setCategoryBitmask(
         core::CreateMask(
             core::CategoryBits::HERO
@@ -88,7 +86,6 @@ void Unit::UpdateState(const float dt) noexcept {
         m_lookSide = Side::left;
     }
 
-
     if( m_state == State::attack ) {
         m_attackTime -= dt;
         if(  helper::IsPositive(m_attackTime, EPS) ) {
@@ -145,7 +142,11 @@ void Movement::Update(const float dt) noexcept {
 
     const auto currentVelocity { m_unit->m_body->getVelocity() };
     m_unit->m_body->setVelocity({
-        cocos2d::clampf(currentVelocity.x, -m_desiredVelocity * jumpSideMoveMultiplier, m_desiredVelocity * jumpSideMoveMultiplier),
+        cocos2d::clampf(
+            currentVelocity.x, 
+            -m_desiredVelocity * jumpSideMoveMultiplier, 
+            m_desiredVelocity * jumpSideMoveMultiplier
+        ),
         cocos2d::clampf(currentVelocity.y, -m_desiredVelocity, m_desiredVelocity )
     });
 }
