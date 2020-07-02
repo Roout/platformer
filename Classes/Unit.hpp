@@ -97,8 +97,8 @@ private:
     Unit * const m_unit { nullptr };
 
     static constexpr float  m_desiredVelocity { 550.f };
-    static constexpr float  m_jumpHeight { 255.f };
-    static constexpr float  m_timeToJumpApex { 0.55 };
+    // static constexpr float  m_jumpHeight { 255.f };
+    // static constexpr float  m_timeToJumpApex { 0.55 };
 
     static constexpr int    m_timeStepsToCompletion { 6 };
 

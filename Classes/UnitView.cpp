@@ -109,8 +109,6 @@ void HeroView::FlipX(const Unit::Side currentSide) {
 }
 
 void HeroView::UpdateAnimation() {
-    const auto body { this->getPhysicsBody() };
-
     auto armatureDisplay = dynamic_cast<dragonBones::CCArmatureDisplay*>(
         this->getChildByName("Armature")
     );
