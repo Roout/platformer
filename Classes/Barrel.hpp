@@ -3,16 +3,24 @@
 
 #include "Core.hpp"
 #include "cocos2d.h"
+#include "SizeDeducer.hpp"
 
 class Barrel final : public core::Entity {
 public:
-    Barrel( 
-        cocos2d::PhysicsBody * const body, 
-        const cocos2d::Size& size 
-    ) : 
-        m_body { body },
-        m_size { size }
-    {   
+    Barrel() = default;
+
+    ~Barrel() = default;
+    
+    void RecieveDamage( [[maybe_unused]] int damage) noexcept override {
+        m_isExploded = true;
+    } 
+
+    bool IsExploded() const noexcept {
+        return m_isExploded;
+    }
+
+    void AddPhysicsBody(cocos2d::PhysicsBody * const body) noexcept {
+        m_body = body;
         m_body->setDynamic(false);
         m_body->setCategoryBitmask(
             core::CreateMask(
@@ -27,16 +35,6 @@ public:
         );
     }
 
-    ~Barrel() = default;
-    
-    void RecieveDamage( [[maybe_unused]] int damage) noexcept override {
-        m_isExploded = true;
-    } 
-
-    bool IsExploded() const noexcept {
-        return m_isExploded;
-    }
-
     const cocos2d::PhysicsBody * GetBody() const noexcept {
         return m_body;
     }
@@ -46,18 +44,21 @@ public:
      * which was already adjusted to the resolution difference
      */
     const cocos2d::Size GetSize() const noexcept {
-        return m_size;
+        return {
+            SizeDeducer::GetInstance().GetAdjustedSize(m_width),
+            SizeDeducer::GetInstance().GetAdjustedSize(m_height)
+        };
     }
 
 private:
     cocos2d::PhysicsBody * m_body { nullptr };
 
-    /**
-     * Keep size of the barrel which was already adjusted to the resolution difference
-     */
-    const cocos2d::Size m_size;
-
     bool m_isExploded { false };
+
+private:
+
+    static constexpr float m_width { 55.f };
+    static constexpr float m_height { 120.f };
 };
 
 #endif // BARREL_HPP

@@ -41,6 +41,67 @@ LevelScene* LevelScene::create(int id) {
     return pRet;
 } 
 
+namespace helper {
+    
+    bool OnContactBegin(cocos2d::PhysicsContact& contact) {
+        const auto shapeA { contact.getShapeA() };
+        const auto shapeB { contact.getShapeB() };
+        
+        const auto bodyA { shapeA->getBody() };
+        const auto bodyB { shapeB->getBody() };
+
+        auto nodeA { bodyA->getNode() };
+        auto nodeB { bodyB->getNode() };
+
+        enum { BODY_A, BODY_B };
+        bool isHeroSensor[2] = { 
+            shapeA->getCategoryBitmask() == core::CreateMask(core::CategoryBits::HERO_SENSOR),
+            shapeB->getCategoryBitmask() == core::CreateMask(core::CategoryBits::HERO_SENSOR)
+        };
+
+        if (nodeA && nodeB && (isHeroSensor[BODY_A] || isHeroSensor[BODY_B]) ) {
+            HeroView * heroView { dynamic_cast<HeroView*>(isHeroSensor[BODY_A]? nodeA : nodeB) };
+            // bool onGround {
+            //     isHeroSensor[BODY_A]? 
+            //         helper::IsEquel(bodyA->getVelocity().y, 0.f, 0.000001f):
+            //         helper::IsEquel(bodyB->getVelocity().y, 0.f, 0.000001f)
+            // };
+            heroView->SetContactWithGround(true);
+        }
+
+        return true;
+    }
+
+    bool OnContactSeparate(cocos2d::PhysicsContact& contact) {
+        const auto shapeA { contact.getShapeA() };
+        const auto shapeB { contact.getShapeB() };
+
+        const auto bodyA { shapeA->getBody() };
+        const auto bodyB { shapeB->getBody() };
+
+        auto nodeA { bodyA->getNode() };
+        auto nodeB { bodyB->getNode() };
+
+        enum { BODY_A, BODY_B };
+        bool isHeroSensor[2] = { 
+            shapeA->getCategoryBitmask() == core::CreateMask(core::CategoryBits::HERO_SENSOR),
+            shapeB->getCategoryBitmask() == core::CreateMask(core::CategoryBits::HERO_SENSOR)
+        };
+
+        if (nodeA && nodeB && (isHeroSensor[BODY_A] || isHeroSensor[BODY_B]) ) {
+            HeroView * heroView { dynamic_cast<HeroView*>(isHeroSensor[BODY_A]? nodeA : nodeB) };
+            bool onGround {
+                isHeroSensor[BODY_A]? 
+                    helper::IsEquel(bodyA->getVelocity().y, 0.f, 0.000001f):
+                    helper::IsEquel(bodyB->getVelocity().y, 0.f, 0.000001f)
+            };
+            heroView->SetContactWithGround(onGround);
+        }
+
+        return true;
+    }
+};
+
 bool LevelScene::init() {
 	if (!cocos2d::Scene::init()) {
 		return false;
@@ -69,38 +130,41 @@ bool LevelScene::init() {
     for(const auto& [shape, category] : obstacles ) {
         if (category == core::CategoryName::PLATFORM ) {
             auto body = cocos2d::PhysicsBody::createBox(shape.size);
+            body->setDynamic(false);
             body->setPositionOffset(shape.size / 2.f);
+            
             auto node = Node::create();
             node->setPosition(shape.origin);
             node->addComponent(body);
+            
             tileMap->addChild(node);
             m_platforms.emplace_back(body);
         } 
         else if(category == core::CategoryName::BORDER) {
             auto body = cocos2d::PhysicsBody::createBox(shape.size);
+            body->setDynamic(false);
             body->setPositionOffset(shape.size / 2.f);
+            
             auto node = Node::create();
             node->setPosition(shape.origin);
             node->addComponent(body);
+            
             tileMap->addChild(node);
-
             m_borders.emplace_back(body);
         }
         else if(category == core::CategoryName::BARREL) {
-            /// TODO: move width and height either to Barrel model either to map as object info.
-            const auto size { cocos2d::Size{ 80, 100 } };
-            auto body = cocos2d::PhysicsBody::createBox(size);
-            body->setPositionOffset(size / 2.f);
-
-            auto barrel { std::make_unique<Barrel>(body,  size) };
-            auto barrelView = BarrelView::create(barrel.get());
+            auto barrel { std::make_unique<Barrel>() };
+            auto barrelView { BarrelView::create(barrel.get()) };
+            
             barrelView->setPosition(shape.origin);
-            barrelView->addComponent(body);
+            barrel->AddPhysicsBody(barrelView->getPhysicsBody());
+
             tileMap->addChild(barrelView);
             m_barrelManager->Add(move(barrel), barrelView);
         }
     }
-    m_unit              = std::make_shared<Unit>();
+
+    m_unit = std::make_shared<Unit>();
 
     auto playerNode { HeroView::create(m_unit.get()) };
     const auto body { playerNode->getPhysicsBody() };
@@ -123,7 +187,7 @@ bool LevelScene::init() {
     tileMap->setPosition(-mapShift);
 
     /// TODO: Get rid of the requirement to have Node* being created with new position!
-    m_playerFollower    = std::make_unique<SmoothFollower>(m_unit);
+    m_playerFollower = std::make_unique<SmoothFollower>(m_unit);
 
     /// TODO: move somewhere
     static constexpr float healthBarShift { 15.f };
@@ -131,65 +195,10 @@ bool LevelScene::init() {
     bar->setPosition(-unitBodySize.width / 2.f, unitBodySize.height + healthBarShift);
     playerNode->addChild(bar);
 
+    // Add physics body contact listener
     auto shapeContactListener = cocos2d::EventListenerPhysicsContact::create();
-    shapeContactListener->onContactBegin = [](cocos2d::PhysicsContact& contact) {
-        const auto shapeA { contact.getShapeA() };
-        const auto shapeB { contact.getShapeB() };
-        
-        const auto bodyA { shapeA->getBody() };
-        const auto bodyB { shapeB->getBody() };
-
-        auto nodeA { bodyA->getNode() };
-        auto nodeB { bodyB->getNode() };
-
-        enum { BODY_A, BODY_B };
-        bool isHeroSensor[2] = { 
-            shapeA->getCategoryBitmask() == core::CreateMask(core::CategoryBits::HERO_SENSOR),
-            shapeB->getCategoryBitmask() == core::CreateMask(core::CategoryBits::HERO_SENSOR)
-        };
-
-        if (nodeA && nodeB && (isHeroSensor[BODY_A] || isHeroSensor[BODY_B]) ) {
-            HeroView * heroView { dynamic_cast<HeroView*>(isHeroSensor[BODY_A]? nodeA : nodeB) };
-            // bool onGround {
-            //     isHeroSensor[BODY_A]? 
-            //         helper::IsEquel(bodyA->getVelocity().y, 0.f, 0.000001f):
-            //         helper::IsEquel(bodyB->getVelocity().y, 0.f, 0.000001f)
-            // };
-            heroView->SetContactWithGround(true);
-        }
-
-        return true;
-    };
-
-    shapeContactListener->onContactSeparate = [](cocos2d::PhysicsContact& contact) {
-        const auto shapeA { contact.getShapeA() };
-        const auto shapeB { contact.getShapeB() };
-
-        const auto bodyA { shapeA->getBody() };
-        const auto bodyB { shapeB->getBody() };
-
-        auto nodeA { bodyA->getNode() };
-        auto nodeB { bodyB->getNode() };
-
-        enum { BODY_A, BODY_B };
-        bool isHeroSensor[2] = { 
-            shapeA->getCategoryBitmask() == core::CreateMask(core::CategoryBits::HERO_SENSOR),
-            shapeB->getCategoryBitmask() == core::CreateMask(core::CategoryBits::HERO_SENSOR)
-        };
-
-        if (nodeA && nodeB && (isHeroSensor[BODY_A] || isHeroSensor[BODY_B]) ) {
-            HeroView * heroView { dynamic_cast<HeroView*>(isHeroSensor[BODY_A]? nodeA : nodeB) };
-            bool onGround {
-                isHeroSensor[BODY_A]? 
-                    helper::IsEquel(bodyA->getVelocity().y, 0.f, 0.000001f):
-                    helper::IsEquel(bodyB->getVelocity().y, 0.f, 0.000001f)
-            };
-            heroView->SetContactWithGround(onGround);
-        }
-
-        return true;
-    };
-
+    shapeContactListener->onContactBegin = helper::OnContactBegin;
+    shapeContactListener->onContactSeparate = helper::OnContactSeparate;
     this->getEventDispatcher()->addEventListenerWithSceneGraphPriority(shapeContactListener, this);
 
     return true;

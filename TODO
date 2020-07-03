@@ -2,4 +2,6 @@ Bugs:
 
 [x] Fix double jump animation
 [ ] Fix x-axis collision with flat ground
-[ ] Fix barrel's bodies
+[x] Fix barrel's bodies
+[ ] Fix the horizontal speed of the unit which has just land. If the move-button 
+hasn't been released the unit will move with slow-down multiplier used for jumps. 

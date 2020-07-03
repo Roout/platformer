@@ -31,6 +31,13 @@ public:
         this->scheduleUpdate(); 
 
         const auto bodySize { m_model->GetSize() };
+        auto body = cocos2d::PhysicsBody::createBox(bodySize,
+            cocos2d::PhysicsMaterial(1.f, 0.f, 0.f), 
+            {0.f, bodySize.height / 2.f}
+        );
+        body->setDynamic(false);
+        this->addComponent(body);
+
 
         /// TODO: make armature creation factory function in another file!
         // load animation data and build the armature
@@ -66,12 +73,6 @@ public:
             cocos2d::Color4F::MAGENTA
         );
 
-        // this->drawRect( 
-        //     cocos2d::Vec2 { -shape.size.width / 2.f, 0.f }, 
-        //     cocos2d::Vec2 { shape.size.width / 2.f, shape.size.height }, 
-        //     cocos2d::Color4F::YELLOW
-        // );
-        
         // add state lable:
         auto state = cocos2d::Label::createWithTTF("state", "fonts/arial.ttf", 25);
         state->setName("state");
