@@ -51,10 +51,27 @@ public:
     
     void UpdateState(const float dt) noexcept;
 
-    int GetHealth() const noexcept {
+    [[nodiscard]] int GetHealth() const noexcept {
         return m_health;
     }
     
+    // Some esoteric attempts to check
+    [[nodiscard]] bool IsOnGround() const noexcept;
+
+    /**
+     * It's used by unit's view to update data about unit's state.
+     * Update @m_isOnGround variable. 
+     * 
+     * Invoked from event listener on contact between sensor attached to 
+     * unit's physics body and ground (e.g. platform).
+     * 
+     * @param[in] hasContactWithGround
+     *      Variable indicate whether unit's sensor is in contact with froun or not.
+     */
+    void HasContactWithGround(bool hasContactWithGround) noexcept {
+        m_hasContactWithGround = hasContactWithGround;
+    }
+
 private:
     cocos2d::PhysicsBody * m_body { nullptr };
 
@@ -62,7 +79,9 @@ private:
 
     std::unique_ptr<Weapon> m_weapon { nullptr };
 
-    State m_state { State::idle };
+    State m_state { State::idle };  
+
+    bool m_hasContactWithGround { false };
 
 private:
 

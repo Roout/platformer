@@ -24,12 +24,16 @@ Consist of linking dragonbones library and setting up the compilable and linkabl
 [x] implement character movement without physiscs  
 [x] move/jump - ~~maybe use chipmunk/box2d~~: done with my custom engine without any optimisations  
   
-**v0.2** _Weapon system_  
-[ ] create weapon system  
-[ ] add melee weapons  
-[ ] extend unit class: add health bar and weapon holder  
-[ ] add static enemies with weapons  
-  
+**v0.2** _some updates_  
+[x] create weapon system  
+[x] add melee weapons  
+[x] extend unit class: add health bar and weapon holder  
+[x] switched to chipmunk
+[ ] 
+[ ]
+[ ]
+[ ]
+
 **v0.3** _Enemies_
 [ ] add automatic behavior to enemies:  
 	- aggro  

@@ -1,20 +1,5 @@
-List:
+Bugs:
 
-[x] Implement attack
-    [x] add attack's projectile
-    [x] add view to be able to see the attack's body
-
-[ ] Implement debug draw for the physic world
-
-[ ] Refactoring physic world:
-    [ ] let it know the entities it keeps: unit, box, gift, bonus... whatever. 
-    Motivation: it's better to have several vectors of bodies and accept the verbosity and 
-    problems with scale-ability disadvantages than dancing with virtual callbacks.. 
-    [ ] fix bug with pointers
-    [ ] decide whether it's good to switched to physic world singleton? 
-
-[ ] Distinguish: character is staning on the ground, falling down, jumping up etc.
-
-[ ] Implement unit states:
-    - walk, jump, fall, idle
-    - direction: left, right
+[x] Fix double jump animation
+[ ] Fix x-axis collision with flat ground
+[ ] Fix barrel's bodies

@@ -6,21 +6,22 @@
 
 class HeroView final : public cocos2d::DrawNode {
 public:
-    static HeroView * create(const Unit* const model);
+    static HeroView * create(Unit* const model);
 
     [[nodiscard]] bool init() override;
 
     void update([[maybe_unused]] float dt) override;
 
+    void SetContactWithGround(bool) noexcept;
 private:
-    HeroView(const Unit* model);
+    HeroView(Unit* const model);
 
     void UpdateAnimation();
 
     void FlipX(const Unit::Side);
 private:
 
-    const Unit * const m_model { nullptr };
+    Unit * const m_model { nullptr };
 
     /**
      * Data from the previous unit state.

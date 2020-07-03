@@ -34,6 +34,29 @@ void Unit::AddBody(cocos2d::PhysicsBody * const body) noexcept {
             core::CategoryBits::TRAP
         )
     );
+
+    const auto sensorShapeSize = cocos2d::Size{ 
+        GetSize().width / 2.f,
+        SizeDeducer::GetInstance().GetAdjustedSize(10.f)
+    };
+    auto sensorShape = cocos2d::PhysicsShapeBox::create(
+        sensorShapeSize, 
+        cocos2d::PHYSICSSHAPE_MATERIAL_DEFAULT
+    );
+    sensorShape->setSensor(true);
+    sensorShape->setCategoryBitmask(
+        core::CreateMask(
+            core::CategoryBits::HERO_SENSOR
+        )
+    );
+    sensorShape->setCollisionBitmask(0);
+    sensorShape->setContactTestBitmask(
+        core::CreateMask(
+            core::CategoryBits::BOUNDARY,
+            core::CategoryBits::PLATFORM
+        )
+    );
+    m_body->addShape(sensorShape, false);
 }
 
 cocos2d::Size Unit::GetSize() const noexcept {
@@ -76,16 +99,25 @@ void Unit::UpdateWeapon(const float dt) noexcept {
     m_weapon->Update(dt);
 }
 
+bool Unit::IsOnGround() const noexcept {
+    const auto direction { m_body->getVelocity() };
+    constexpr float EPS { 0.00001f };
+    
+    auto isOnGround { helper::IsEquel(direction.y, 0.f, EPS) };
+    return isOnGround && m_hasContactWithGround;
+}
+
 void Unit::UpdateState(const float dt) noexcept {
     const auto direction { m_body->getVelocity() };
     constexpr float EPS { 0.00001f };
-    /// update the direction where charactar is looking now
+    // update character direction
     if( helper::IsPositive(direction.x, EPS) ) {
         m_lookSide = Side::right;
     } else if( helper::IsNegative(direction.x, EPS) ) {
         m_lookSide = Side::left;
     }
 
+    // update character state
     if( m_state == State::attack ) {
         m_attackTime -= dt;
         if(  helper::IsPositive(m_attackTime, EPS) ) {
@@ -94,7 +126,7 @@ void Unit::UpdateState(const float dt) noexcept {
         }
     }
 
-    if( !helper::IsEquel(direction.y, 0.f, EPS) ) {
+    if( ! this->IsOnGround() ) {
         m_state = State::jump;
     } else if( !helper::IsEquel(direction.x, 0.f, EPS) ) {
         m_state = State::move;

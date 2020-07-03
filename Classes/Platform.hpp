@@ -23,6 +23,9 @@ public:
                 core::CategoryBits::PROJECTILE
             )
         );
+        m_body->setContactTestBitmask(
+            core::CreateMask(core::CategoryBits::HERO_SENSOR)
+        );
     }
 
     ~Platform() = default;

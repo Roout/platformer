@@ -50,7 +50,8 @@ namespace core {
         PROJECTILE  = 0x0008,
         PLATFORM    = 0x0010,
         TRAP        = 0x0020,
-        BARREL      = 0x0040
+        BARREL      = 0x0040,
+        HERO_SENSOR = 0x0080
     };
 
     template<class ...Args>

@@ -64,9 +64,8 @@ void UserInputHandler::OnKeyPressed(
     cocos2d::Event* event
 ) {
     m_lastInput.Merge(Input::Create(keyCode));
-    const auto body = m_model->GetBody();
-    static constexpr float EPS { 0.000001 };
-    if(m_lastInput.jump && helper::IsEquel(const_cast<cocos2d::PhysicsBody*>(body)->getVelocity().y, 0.f, EPS) ) {
+
+    if(m_lastInput.jump && m_model->IsOnGround() ) {
         m_movement->Jump();
     }
 

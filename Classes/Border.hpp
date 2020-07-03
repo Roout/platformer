@@ -24,6 +24,9 @@ public:
                 core::CategoryBits::PLATFORM
             )
         );
+        m_body->setContactTestBitmask(
+            core::CreateMask(core::CategoryBits::HERO_SENSOR)
+        );
     }
 
     ~Border() = default;

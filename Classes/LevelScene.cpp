@@ -131,6 +131,67 @@ bool LevelScene::init() {
     bar->setPosition(-unitBodySize.width / 2.f, unitBodySize.height + healthBarShift);
     playerNode->addChild(bar);
 
+    auto shapeContactListener = cocos2d::EventListenerPhysicsContact::create();
+    shapeContactListener->onContactBegin = [](cocos2d::PhysicsContact& contact) {
+        const auto shapeA { contact.getShapeA() };
+        const auto shapeB { contact.getShapeB() };
+        
+        const auto bodyA { shapeA->getBody() };
+        const auto bodyB { shapeB->getBody() };
+
+        auto nodeA { bodyA->getNode() };
+        auto nodeB { bodyB->getNode() };
+
+        enum { BODY_A, BODY_B };
+        bool isHeroSensor[2] = { 
+            shapeA->getCategoryBitmask() == core::CreateMask(core::CategoryBits::HERO_SENSOR),
+            shapeB->getCategoryBitmask() == core::CreateMask(core::CategoryBits::HERO_SENSOR)
+        };
+
+        if (nodeA && nodeB && (isHeroSensor[BODY_A] || isHeroSensor[BODY_B]) ) {
+            HeroView * heroView { dynamic_cast<HeroView*>(isHeroSensor[BODY_A]? nodeA : nodeB) };
+            // bool onGround {
+            //     isHeroSensor[BODY_A]? 
+            //         helper::IsEquel(bodyA->getVelocity().y, 0.f, 0.000001f):
+            //         helper::IsEquel(bodyB->getVelocity().y, 0.f, 0.000001f)
+            // };
+            heroView->SetContactWithGround(true);
+        }
+
+        return true;
+    };
+
+    shapeContactListener->onContactSeparate = [](cocos2d::PhysicsContact& contact) {
+        const auto shapeA { contact.getShapeA() };
+        const auto shapeB { contact.getShapeB() };
+
+        const auto bodyA { shapeA->getBody() };
+        const auto bodyB { shapeB->getBody() };
+
+        auto nodeA { bodyA->getNode() };
+        auto nodeB { bodyB->getNode() };
+
+        enum { BODY_A, BODY_B };
+        bool isHeroSensor[2] = { 
+            shapeA->getCategoryBitmask() == core::CreateMask(core::CategoryBits::HERO_SENSOR),
+            shapeB->getCategoryBitmask() == core::CreateMask(core::CategoryBits::HERO_SENSOR)
+        };
+
+        if (nodeA && nodeB && (isHeroSensor[BODY_A] || isHeroSensor[BODY_B]) ) {
+            HeroView * heroView { dynamic_cast<HeroView*>(isHeroSensor[BODY_A]? nodeA : nodeB) };
+            bool onGround {
+                isHeroSensor[BODY_A]? 
+                    helper::IsEquel(bodyA->getVelocity().y, 0.f, 0.000001f):
+                    helper::IsEquel(bodyB->getVelocity().y, 0.f, 0.000001f)
+            };
+            heroView->SetContactWithGround(onGround);
+        }
+
+        return true;
+    };
+
+    this->getEventDispatcher()->addEventListenerWithSceneGraphPriority(shapeContactListener, this);
+
     return true;
 }
 

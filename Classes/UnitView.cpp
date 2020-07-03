@@ -6,7 +6,7 @@
 
 #include "SizeDeducer.hpp"
 
-HeroView * HeroView::create(const Unit* const model) {
+HeroView * HeroView::create(Unit* const model) {
     auto pRet = new (std::nothrow) HeroView(model);
     if (pRet && pRet->init()) {
         pRet->autorelease();
@@ -77,6 +77,7 @@ bool HeroView::init() {
     state->setName("state");
     state->setPosition(0.f, unitBodySize.height + 60.f);
     this->addChild(state);
+    
     return true;
 }
 
@@ -163,6 +164,10 @@ void HeroView::update(float dt) {
     stateLabel->setString(CreateAnimationName(m_model->GetState()));
 }
  
-HeroView::HeroView(const Unit* model) : 
+HeroView::HeroView(Unit* const model) : 
     m_model { model }
 {}
+
+void HeroView::SetContactWithGround(bool isInContact) noexcept {
+    m_model->HasContactWithGround(isInContact);
+}
