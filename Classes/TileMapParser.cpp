@@ -4,11 +4,10 @@
 TileMapParser::TileMapParser(const cocos2d::FastTMXTiledMap * tileMap):
     m_tileMap{ tileMap }
 {
-    static constexpr auto expectedStaticBodiesCount { 100 };
-    static constexpr auto expectedKinematicBodiesCount { 10 };
-
-    this->Get<ParsedType::STATIC_BODIES>().reserve(expectedStaticBodiesCount);
-    this->Get<ParsedType::KINEMATIC_BODIES>().reserve(expectedKinematicBodiesCount);
+    this->Get<core::CategoryName::PLATFORM>().reserve(20);
+	this->Get<core::CategoryName::BORDER>().reserve(100);
+	this->Get<core::CategoryName::BARREL>().reserve(10);
+	this->Get<core::CategoryName::SPIKES>().reserve(10);
 }
 
 void TileMapParser::Parse() {
@@ -24,17 +23,18 @@ void TileMapParser::Parse() {
 			if (type == "point") {
 				const auto x = objMap.at("x").asFloat();
 				const auto y = objMap.at("y").asFloat();
+
+				details::Form form;
+
 				if (name == "player") {
-					this->Get<ParsedType::PLAYER>() = cocos2d::Vec2{x, y};
+					form.m_type = core::CategoryName::PLAYER;
+					form.m_botLeft = cocos2d::Vec2{x, y};
+					this->Get<core::CategoryName::PLAYER>().emplace_back(form);
 				}
 				else if ( name == "barrel") {
-					this->Get<ParsedType::STATIC_BODIES>().emplace_back(
-						cocos2d::Rect{
-							cocos2d::Vec2{ x, y }, 
-							cocos2d::Size{ 1.f, 1.f } // size doesn't matter cuz it's defined in the class
-						},
-						core::CategoryName::BARREL								
-					);
+					form.m_type = core::CategoryName::BARREL;
+					form.m_botLeft = cocos2d::Vec2{x, y};
+					this->Get<core::CategoryName::BARREL>().emplace_back(form);
 				}
 			}
 		}
@@ -46,56 +46,83 @@ void TileMapParser::Parse() {
 		const auto mapSize { obstaclesLayer->getLayerSize() };
 		const auto width { static_cast<int>(mapSize.width) };
 		const auto height { static_cast<int>(mapSize.height) };
-		for (int i = 0; i < width; i++) {
-			for (int j = 0; j < height; j++) {
+
+		// check whether the tile was already visited
+		// for now I don't need it.
+    	std::vector<std::vector<char>> isVisited (height, std::vector<char>(width, false));
+		
+		auto GetTileInfo = [this](int tileGid) {
+			auto info { std::make_pair(std::string(""), std::string("")) };
+			
+			if (tileGid) {
+				const auto tileProp { m_tileMap->getPropertiesForGID(tileGid) };
+				const auto& properties = tileProp.asValueMap();
+
+				const auto bodyTypeIter = properties.find("body-type");
+				const auto categoryNameIter = properties.find("category-name");
+
+				const auto exist { 
+					bodyTypeIter != properties.end() && 
+					categoryNameIter != properties.end()
+				};
+
+				if( exist ) {
+					info = std::make_pair(bodyTypeIter->second.asString(), categoryNameIter->second.asString());
+				}
+			}
+
+			return info;
+		};
+
+		for (int y = 0; y < height; y++) {
+			for (int x = 0; x < width; x++) {
 				const auto tileGid = obstaclesLayer->getTileGIDAt({
-					static_cast<float>(i),
-					static_cast<float>(j) 
+					static_cast<float>(x),
+					static_cast<float>(y) 
 				});
+
 				if (tileGid) {
-					const auto tileProp { m_tileMap->getPropertiesForGID(tileGid) };
-					const auto& properties = tileProp.asValueMap();
+					// { bodyType, categoryName}
+					const auto [srcBodyType, srcCategoryName] = GetTileInfo(tileGid);
+					
+					if(srcBodyType == "static" && !isVisited[y][x] ) {
+						isVisited[y][x] = true;
+						const auto category { core::CategoryFromString(srcCategoryName) };
+						// Some bodies can consist from several tiles so
+						// they should be combined into one physics body.
 
-					const auto bodyTypeIter = properties.find("body-type");
-					const auto categoryNameIter = properties.find("category-name");
+						// merge all horizontal neighbors:
+						auto col { x + 1 };
+						while(col && col < width && !isVisited[y][col] ) {
+							// if the right tile is same (static & categoory)
+							// then merge them
+							const auto gid = obstaclesLayer->getTileGIDAt({
+								static_cast<float>(col),
+								static_cast<float>(y) 
+							});
+							if(!gid) break;
+							
+							if(	const auto [neighborBody, neighborCategory] = GetTileInfo(gid);
+								neighborBody != srcBodyType || 
+								srcCategoryName != neighborCategory
+							) {
+								break;
+							}
 
-					const auto exist { 
-						bodyTypeIter != properties.end() && 
-						categoryNameIter != properties.end()
-					};
+							isVisited[y][col] = true;
+							col++;
+						}
 
-					if (!exist) continue;
+						details::Form form;
+						form.m_rect = cocos2d::Rect{
+							cocos2d::Vec2{ x * tileSize.width, (height - y - 1) * tileSize.height }, 
+							cocos2d::Size{ tileSize.width * (col - x), tileSize.height }
+						};
+						form.m_position = { x, y };
+						form.m_type = category;
 
-					if(bodyTypeIter->second.asString() == "static") {
-						core::CategoryName category { core::CategoryName::UNDEFINED };
-
-						if( categoryNameIter->second.asString() == "platform" ) {
-							category = core::CategoryName::PLATFORM;
-						} 
-						else if(categoryNameIter->second.asString() == "border") {
-							category = core::CategoryName::BORDER;
-						} 
-
-						this->Get<ParsedType::STATIC_BODIES>().emplace_back(
-							cocos2d::Rect{
-								// cocos2d::Vec2{ i, j }, 
-								cocos2d::Vec2{ i * tileSize.width, (height - j - 1) * tileSize.height }, 
-								cocos2d::Size{ tileSize.width, tileSize.height }
-							},
-							category								
-						);
-					} else { // "kinematic"
-						core::CategoryName category { core::CategoryName::UNDEFINED };
-
-						this->Get<ParsedType::KINEMATIC_BODIES>().emplace_back(
-							cocos2d::Rect{
-								cocos2d::Vec2{ i * tileSize.width, (height - j - 1) * tileSize.height }, 
-								cocos2d::Size{ tileSize.width, tileSize.height }
-							},
-							category								
-						);
-					}
-
+						this->Get(category).emplace_back(form);
+					} 
 				}	// tileGid
 			}	// for
 		}	// for

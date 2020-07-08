@@ -1,6 +1,8 @@
 #ifndef CORE_HPP
 #define CORE_HPP
 
+#include <string>
+
 namespace core {
 
     /**
@@ -34,8 +36,27 @@ namespace core {
         BARREL,
         PLAYER,
         SPIKES,
-        UNDEFINED
+        UNDEFINED,
+        COUNT
     };
+
+    inline CategoryName CategoryFromString(const std::string& str) noexcept {
+        CategoryName category { core::CategoryName::UNDEFINED };
+
+        if( str == "platform" ) {
+            category = CategoryName::PLATFORM;
+        } else if(str == "border") {
+            category = CategoryName::BORDER;
+        } else if(str == "spikes") {
+            category = CategoryName::SPIKES;
+        } else if(str == "player") {
+            category = CategoryName::PLAYER;
+        } else if(str == "barrel") {
+            category = CategoryName::BARREL;
+        }
+
+        return category;
+    }
 
     /**
      * Underlying type of bitmask used to represent 
@@ -58,6 +79,16 @@ namespace core {
     constexpr MaskType CreateMask(Args ... bits) noexcept {
         return (static_cast<MaskType>(bits) | ...);
     } 
+
+    template<class T>
+    constexpr size_t EnumCast(T enumeration) noexcept {
+        return static_cast<size_t> (enumeration);
+    }
+
+    template<class Enum>
+    constexpr size_t EnumSize() noexcept {
+        return static_cast<size_t> (Enum::COUNT);
+    }
 
 }
 

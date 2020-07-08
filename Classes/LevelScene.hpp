@@ -36,8 +36,11 @@ public:
 private:
 	LevelScene(int id);
 
+    void InitTileMapObjects(cocos2d::FastTMXTiledMap * map);
+
     // model:
     std::shared_ptr<Unit>               m_unit { nullptr };
+    cocos2d::Vec2                       m_playerPosition { 0.f, 0.f };
     // controller:
     std::unique_ptr<SmoothFollower>     m_playerFollower { nullptr };
     std::unique_ptr<Movement>           m_movement { nullptr };

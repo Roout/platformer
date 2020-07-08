@@ -2,58 +2,63 @@
 #define TILE_MAP_PARSER_HPP
 
 #include <vector>
-#include <tuple>
+#include <array>
 #include "math/CCGeometry.h" // cocos2d::Rect, cocos2d::Vec2
 #include "Core.hpp"
+
 
 namespace cocos2d {
     class FastTMXTiledMap;
 }
 
-/**
- * Define parsed objects. Used as indexes so don't change the order 
- * without testing TileMapeParser class.
- */
-enum class ParsedType: short {
-    STATIC_BODIES,
-    KINEMATIC_BODIES,
-    PLAYER,
-    UNDEFINED
-};
+namespace details {
+    
+    struct Form final {
+        core::CategoryName  m_type;
+        std::pair<int,int>  m_position;
+        cocos2d::Vec2       m_botLeft;
+        cocos2d::Vec2       m_topRight;
+        cocos2d::Rect       m_rect;
+    };
+}
 
 /** @brief
  * Parse layers of the cocos2d::FastTMXTiledMap 
 */
 class TileMapParser final {
 public:
+    using CategoryName = core::CategoryName;
 
     TileMapParser(const cocos2d::FastTMXTiledMap * tilemap);
 
     void Parse();
 
-    template <ParsedType Type>
+    template <CategoryName category>
     [[nodiscard]] auto&& Acquire() noexcept {
-        return Get<Type>(std::move(m_parsed));
+        return std::move(m_parsed[core::EnumCast(category)]);
+    }
+
+    [[nodiscard]] auto&& Acquire(CategoryName category) noexcept {
+        return std::move(m_parsed[core::EnumCast(category)]);
     }
 
 private:
-    template <ParsedType Type, class Tuple>
-    [[nodiscard]] static auto&& Get(Tuple&& parsed) noexcept {
-        return std::get<static_cast<short>(Type)>(std::forward<Tuple>(parsed));
+
+    template <CategoryName category>
+    [[nodiscard]] auto& Get() noexcept {
+        return m_parsed[core::EnumCast(category)];
     }
 
-    template <ParsedType Type>
-    [[nodiscard]] auto& Get() noexcept {
-        return Get<Type>(m_parsed);
+    [[nodiscard]] auto& Get(CategoryName category) noexcept {
+        return m_parsed[core::EnumCast(category)];
     }
 
     const cocos2d::FastTMXTiledMap * const m_tileMap { nullptr };
-    // Parsed:
-    std::tuple< 
-        std::vector<std::pair<cocos2d::Rect, core::CategoryName>>, // static bodies
-        std::vector<std::pair<cocos2d::Rect, core::CategoryName>>, // kinematic bodies
-        cocos2d::Vec2   // object
-    > m_parsed {};
+    
+    std::array<
+        std::vector<details::Form>, 
+        core::EnumSize<CategoryName>()
+    >  m_parsed;
 };
 
 #endif // TILE_MAP_PARSER_HPP

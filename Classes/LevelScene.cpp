@@ -100,7 +100,64 @@ namespace helper {
 
         return true;
     }
+
 };
+
+void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
+    TileMapParser parser{ map };
+    parser.Parse();
+
+    m_borders.reserve(5000);
+    m_platforms.reserve(200);
+    m_barrelManager = std::make_unique<BarrelManager>();
+
+    for(size_t i = 0; i < core::EnumSize<core::CategoryName>(); i++) {
+        const auto category { static_cast<core::CategoryName>(i) };
+        auto parsedForms { parser.Acquire(category) };
+        for(const auto& form: parsedForms) {
+            if ( form.m_type == core::CategoryName::PLAYER ) {
+                m_playerPosition = form.m_botLeft;
+            } 
+            else if(form.m_type == core::CategoryName::PLATFORM ) {
+                auto body = cocos2d::PhysicsBody::createBox(form.m_rect.size);
+                body->setDynamic(false);
+                body->setPositionOffset(form.m_rect.size / 2.f);
+                
+                auto node = Node::create();
+                node->setPosition(form.m_rect.origin);
+                node->addComponent(body);
+
+                map->addChild(node);
+                m_platforms.emplace_back(body);
+            }
+            else if(form.m_type == core::CategoryName::BORDER) {
+                auto body = cocos2d::PhysicsBody::createBox(form.m_rect.size);
+                body->setDynamic(false);
+                body->setPositionOffset(form.m_rect.size / 2.f);
+                
+                auto node = Node::create();
+                node->setPosition(form.m_rect.origin);
+                node->addComponent(body);
+
+                map->addChild(node);
+                m_borders.emplace_back(body);
+            }
+            else if(form.m_type == core::CategoryName::SPIKES) {
+
+            }
+            else if(form.m_type == core::CategoryName::BARREL) {
+                auto barrel { std::make_unique<Barrel>() };
+                auto barrelView { BarrelView::create(barrel.get()) };
+                
+                barrelView->setPosition(form.m_botLeft);
+                barrel->AddPhysicsBody(barrelView->getPhysicsBody());
+
+                map->addChild(barrelView);
+                m_barrelManager->Add(move(barrel), barrelView);
+            }
+        }
+    }
+}
 
 bool LevelScene::init() {
 	if (!cocos2d::Scene::init()) {
@@ -115,57 +172,10 @@ bool LevelScene::init() {
     cocos2d::FastTMXTiledMap *tileMap { cocos2d::FastTMXTiledMap::create(tmxFile) };
     tileMap->setName("Map");
     this->addChild(tileMap);
-    
-    TileMapParser parser{ tileMap };
-    parser.Parse();
 
-    const auto playerPosition { parser.Acquire<ParsedType::PLAYER>() };
-    const auto obstacles { parser.Acquire<ParsedType::STATIC_BODIES>()}; 
-
-    m_borders.reserve(5000);
-    m_platforms.reserve(200);
-
-    m_barrelManager = std::make_unique<BarrelManager>();
-
-    for(const auto& [shape, category] : obstacles ) {
-        if (category == core::CategoryName::PLATFORM ) {
-            auto body = cocos2d::PhysicsBody::createBox(shape.size);
-            body->setDynamic(false);
-            body->setPositionOffset(shape.size / 2.f);
-            
-            auto node = Node::create();
-            node->setPosition(shape.origin);
-            node->addComponent(body);
-            
-            tileMap->addChild(node);
-            m_platforms.emplace_back(body);
-        } 
-        else if(category == core::CategoryName::BORDER) {
-            auto body = cocos2d::PhysicsBody::createBox(shape.size);
-            body->setDynamic(false);
-            body->setPositionOffset(shape.size / 2.f);
-            
-            auto node = Node::create();
-            node->setPosition(shape.origin);
-            node->addComponent(body);
-            
-            tileMap->addChild(node);
-            m_borders.emplace_back(body);
-        }
-        else if(category == core::CategoryName::BARREL) {
-            auto barrel { std::make_unique<Barrel>() };
-            auto barrelView { BarrelView::create(barrel.get()) };
-            
-            barrelView->setPosition(shape.origin);
-            barrel->AddPhysicsBody(barrelView->getPhysicsBody());
-
-            tileMap->addChild(barrelView);
-            m_barrelManager->Add(move(barrel), barrelView);
-        }
-    }
-
+    this->InitTileMapObjects(tileMap);
+   
     m_unit = std::make_shared<Unit>();
-
     auto playerNode { HeroView::create(m_unit.get()) };
     const auto body { playerNode->getPhysicsBody() };
     const auto unitBodySize { m_unit->GetSize() };
@@ -176,11 +186,11 @@ bool LevelScene::init() {
     m_inputHandler  = std::make_unique<UserInputHandler>(m_unit.get(), m_movement.get(), this);
 
     playerNode->setAnchorPoint(cocos2d::Vec2::ANCHOR_MIDDLE_BOTTOM);
-    playerNode->setPosition(playerPosition);
+    playerNode->setPosition(m_playerPosition);
     playerNode->setName("Player");
     tileMap->addChild(playerNode, 10);
 
-    const auto mapShift { playerPosition 
+    const auto mapShift { m_playerPosition 
         - cocos2d::Vec2{ visibleSize.width / 2.f, visibleSize.height / 3.f } 
         - origin 
     };
