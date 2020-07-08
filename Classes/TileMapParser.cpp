@@ -93,7 +93,7 @@ void TileMapParser::Parse() {
 
 						// merge all horizontal neighbors:
 						auto col { x + 1 };
-						while(col && col < width && !isVisited[y][col] ) {
+						while(col < width && !isVisited[y][col] ) {
 							// if the right tile is same (static & categoory)
 							// then merge them
 							const auto gid = obstaclesLayer->getTileGIDAt({
@@ -122,6 +122,42 @@ void TileMapParser::Parse() {
 						form.m_type = category;
 
 						this->Get(category).emplace_back(form);
+
+						// now merge into vertical body if possible
+
+						auto row = y + 1;
+						while(row < height && !isVisited[row][x] ) {
+							// if the right tile is same (static & categoory)
+							// then merge them
+							const auto gid = obstaclesLayer->getTileGIDAt({
+								static_cast<float>(x),
+								static_cast<float>(row) 
+							});
+							if(!gid) break;
+							
+							if(	const auto [neighborBody, neighborCategory] = GetTileInfo(gid);
+								neighborBody != srcBodyType || 
+								srcCategoryName != neighborCategory
+							) {
+								break;
+							}
+
+							isVisited[row][x] = true;
+							row++;
+						}
+						
+						if( row > y + 1) { // at least one tile was merged
+							form.m_rect = cocos2d::Rect{
+								cocos2d::Vec2{ x * tileSize.width, (height - row) * tileSize.height }, 
+								cocos2d::Size{ tileSize.width, tileSize.height * (row - y - 1.f) }
+							};
+							form.m_position = { x, row - 1 };
+							form.m_type = category;
+							this->Get(category).emplace_back(form);
+						}
+
+						// skip horizontal tiles if can
+						x = col - 1;
 					} 
 				}	// tileGid
 			}	// for
