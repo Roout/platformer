@@ -71,6 +71,7 @@ list(APPEND GAME_SOURCE
      Classes/Weapon.cpp
      Classes/ProjectileView.cpp
      Classes/HealthBar.cpp
+     Classes/Curses.cpp
      )
 list(APPEND GAME_HEADER
      Classes/AppDelegate.h
@@ -92,6 +93,7 @@ list(APPEND GAME_HEADER
      Classes/HealthBar.hpp
      Classes/Spikes.hpp
      Classes/PhysicsHelper.hpp
+     Classes/Curses.hpp
      )
 
 if(ANDROID)
