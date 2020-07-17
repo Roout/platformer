@@ -44,29 +44,57 @@ LevelScene* LevelScene::create(int id) {
 namespace helper {
     
     bool OnContactBegin(cocos2d::PhysicsContact& contact) {
-        const auto shapeA { contact.getShapeA() };
-        const auto shapeB { contact.getShapeB() };
-        
-        const auto bodyA { shapeA->getBody() };
-        const auto bodyB { shapeB->getBody() };
-
-        auto nodeA { bodyA->getNode() };
-        auto nodeB { bodyB->getNode() };
-
         enum { BODY_A, BODY_B };
-        bool isHeroSensor[2] = { 
-            shapeA->getCategoryBitmask() == core::CreateMask(core::CategoryBits::HERO_SENSOR),
-            shapeB->getCategoryBitmask() == core::CreateMask(core::CategoryBits::HERO_SENSOR)
+
+        cocos2d::PhysicsShape * const shapes[2] = { 
+            contact.getShapeA(),
+            contact.getShapeB() 
+        };
+        cocos2d::PhysicsBody * const bodies[2] = { 
+            shapes[BODY_A]->getBody(),
+            shapes[BODY_B]->getBody()
+        };
+        cocos2d::Node * const nodes[2] = { 
+            bodies[BODY_A]->getNode(),
+            bodies[BODY_B]->getNode() 
+        };
+        
+        const bool isHeroSensor[2] = { 
+            shapes[BODY_A]->getCategoryBitmask() == core::CreateMask(core::CategoryBits::HERO_SENSOR),
+            shapes[BODY_B]->getCategoryBitmask() == core::CreateMask(core::CategoryBits::HERO_SENSOR)
         };
 
-        if (nodeA && nodeB && (isHeroSensor[BODY_A] || isHeroSensor[BODY_B]) ) {
-            HeroView * heroView { dynamic_cast<HeroView*>(isHeroSensor[BODY_A]? nodeA : nodeB) };
-            // bool onGround {
-            //     isHeroSensor[BODY_A]? 
-            //         helper::IsEquel(bodyA->getVelocity().y, 0.f, 0.000001f):
-            //         helper::IsEquel(bodyB->getVelocity().y, 0.f, 0.000001f)
-            // };
+        // There are nodes one of which is with hero sensor attached 
+        // i.e. basicaly it's hero and other body
+        if (nodes[BODY_A] && nodes[BODY_B] && (isHeroSensor[BODY_A] || isHeroSensor[BODY_B]) ) {
+            HeroView * heroView { dynamic_cast<HeroView*>(isHeroSensor[BODY_A]? nodes[BODY_A] : nodes[BODY_B]) };
             heroView->SetContactWithGround(true);
+
+            return true;
+        } 
+        
+        const int bodyMasks[2] = {
+            bodies[BODY_A]->getCategoryBitmask(),
+            bodies[BODY_B]->getCategoryBitmask()
+        };
+        const bool isPlatform[2] = {
+            bodyMasks[BODY_A] == core::CreateMask(core::CategoryBits::PLATFORM),
+            bodyMasks[BODY_B] == core::CreateMask(core::CategoryBits::PLATFORM)
+        };
+        // contact of any unit's body and platform starts
+        if( isPlatform[BODY_A] || isPlatform[BODY_B] ) {
+            const auto platformIndex { isPlatform[BODY_A]? BODY_A: BODY_B };
+            const auto moveUpwards { helper::IsGreater(bodies[platformIndex ^ 1]->getVelocity().y, 0.f, 0.000001f) };
+
+            // Ordinates before collision:
+            const auto unitBottomOrdinate { nodes[platformIndex ^ 1]->getPosition().y };
+            const auto platformTopOrdinate { 
+                nodes[platformIndex]->getPosition().y + 
+                nodes[platformIndex]->getContentSize().height
+            };
+            const auto canPassThrough { helper::IsLesser(unitBottomOrdinate, platformTopOrdinate, 0.00001f) };
+            
+            return !(moveUpwards || canPassThrough);
         }
 
         return true;
@@ -96,6 +124,7 @@ namespace helper {
                     helper::IsEquel(bodyB->getVelocity().y, 0.f, 0.000001f)
             };
             heroView->SetContactWithGround(onGround);
+            return true;
         }
 
         return true;
@@ -121,9 +150,10 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
             else if(form.m_type == core::CategoryName::PLATFORM ) {
                 auto body = cocos2d::PhysicsBody::createBox(form.m_rect.size);
                 body->setDynamic(false);
-                body->setPositionOffset(form.m_rect.size / 2.f);
+                // body->setPositionOffset(form.m_rect.size / 2.f);
                 
                 auto node = Node::create();
+                node->setContentSize(form.m_rect.size);
                 node->setPosition(form.m_rect.origin);
                 node->addComponent(body);
 

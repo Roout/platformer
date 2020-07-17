@@ -24,7 +24,11 @@ public:
             )
         );
         m_body->setContactTestBitmask(
-            core::CreateMask(core::CategoryBits::HERO_SENSOR)
+            core::CreateMask(
+                core::CategoryBits::HERO_SENSOR,
+                core::CategoryBits::HERO,
+                core::CategoryBits::ENEMY
+            )
         );
     }
 

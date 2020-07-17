@@ -21,9 +21,7 @@ void Unit::AddBody(cocos2d::PhysicsBody * const body) noexcept {
     m_body->setGravityEnable(true);
     m_body->setRotationEnable(false);
     m_body->setCategoryBitmask(
-        core::CreateMask(
-            core::CategoryBits::HERO
-        )
+        core::CreateMask(core::CategoryBits::HERO)
     );
     m_body->setCollisionBitmask(
         core::CreateMask(
@@ -34,7 +32,9 @@ void Unit::AddBody(cocos2d::PhysicsBody * const body) noexcept {
             core::CategoryBits::TRAP
         )
     );
-
+    m_body->setContactTestBitmask(
+        core::CreateMask(core::CategoryBits::PLATFORM)
+    );
     const auto sensorShapeSize = cocos2d::Size{ 
         GetSize().width / 2.f,
         SizeDeducer::GetInstance().GetAdjustedSize(10.f)
