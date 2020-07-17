@@ -97,35 +97,72 @@ namespace helper {
             return !(moveUpwards || canPassThrough);
         }
 
+        // handle contact of spikes and unit
+        const bool isTrap[2] = {
+            bodyMasks[BODY_A] == core::CreateMask(core::CategoryBits::TRAP),
+            bodyMasks[BODY_B] == core::CreateMask(core::CategoryBits::TRAP)
+        };
+        if( isTrap[BODY_A] || isTrap[BODY_B] ) {
+            const auto trapIndex { isTrap[BODY_A]? BODY_A: BODY_B };
+
+            auto unit { dynamic_cast<HeroView*>(nodes[trapIndex^1]) };
+            unit->AddCurse<Curses::CurseType::DPS>(10.f, Curses::UNLIMITED);
+            return true;
+        }
+
         return true;
     }
 
     bool OnContactSeparate(cocos2d::PhysicsContact& contact) {
-        const auto shapeA { contact.getShapeA() };
-        const auto shapeB { contact.getShapeB() };
-
-        const auto bodyA { shapeA->getBody() };
-        const auto bodyB { shapeB->getBody() };
-
-        auto nodeA { bodyA->getNode() };
-        auto nodeB { bodyB->getNode() };
-
         enum { BODY_A, BODY_B };
-        bool isHeroSensor[2] = { 
-            shapeA->getCategoryBitmask() == core::CreateMask(core::CategoryBits::HERO_SENSOR),
-            shapeB->getCategoryBitmask() == core::CreateMask(core::CategoryBits::HERO_SENSOR)
+
+        cocos2d::PhysicsShape * const shapes[2] = { 
+            contact.getShapeA(),
+            contact.getShapeB() 
+        };
+        cocos2d::PhysicsBody * const bodies[2] = { 
+            shapes[BODY_A]->getBody(),
+            shapes[BODY_B]->getBody()
+        };
+        cocos2d::Node * const nodes[2] = { 
+            bodies[BODY_A]->getNode(),
+            bodies[BODY_B]->getNode() 
         };
 
-        if (nodeA && nodeB && (isHeroSensor[BODY_A] || isHeroSensor[BODY_B]) ) {
-            HeroView * heroView { dynamic_cast<HeroView*>(isHeroSensor[BODY_A]? nodeA : nodeB) };
+        const int bodyMasks[2] = {
+            bodies[BODY_A]->getCategoryBitmask(),
+            bodies[BODY_B]->getCategoryBitmask()
+        };
+
+        bool isHeroSensor[2] = { 
+            shapes[BODY_A]->getCategoryBitmask() == core::CreateMask(core::CategoryBits::HERO_SENSOR),
+            shapes[BODY_B]->getCategoryBitmask() == core::CreateMask(core::CategoryBits::HERO_SENSOR)
+        };
+
+        if (nodes[BODY_A] && nodes[BODY_B] && (isHeroSensor[BODY_A] || isHeroSensor[BODY_B]) ) {
+            HeroView * heroView { dynamic_cast<HeroView*>(isHeroSensor[BODY_A]? nodes[BODY_A] : nodes[BODY_B]) };
             bool onGround {
                 isHeroSensor[BODY_A]? 
-                    helper::IsEquel(bodyA->getVelocity().y, 0.f, 0.000001f):
-                    helper::IsEquel(bodyB->getVelocity().y, 0.f, 0.000001f)
+                    helper::IsEquel(bodies[BODY_A]->getVelocity().y, 0.f, 0.000001f):
+                    helper::IsEquel(bodies[BODY_B]->getVelocity().y, 0.f, 0.000001f)
             };
             heroView->SetContactWithGround(onGround);
             return true;
         }
+
+        // handle contact of spikes and unit
+        const bool isTrap[2] = {
+            bodyMasks[BODY_A] == core::CreateMask(core::CategoryBits::TRAP),
+            bodyMasks[BODY_B] == core::CreateMask(core::CategoryBits::TRAP)
+        };
+        if( isTrap[BODY_A] || isTrap[BODY_B] ) {
+            const auto trapIndex { isTrap[BODY_A]? BODY_A: BODY_B };
+
+            auto unit { dynamic_cast<HeroView*>(nodes[trapIndex^1]) };
+            unit->RemoveCurse<Curses::CurseType::DPS>();
+            return true;
+        }
+
 
         return true;
     }
@@ -150,7 +187,6 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
             else if(form.m_type == core::CategoryName::PLATFORM ) {
                 auto body = cocos2d::PhysicsBody::createBox(form.m_rect.size);
                 body->setDynamic(false);
-                // body->setPositionOffset(form.m_rect.size / 2.f);
                 
                 auto node = Node::create();
                 node->setContentSize(form.m_rect.size);
@@ -173,7 +209,16 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                 m_borders.emplace_back(body);
             }
             else if(form.m_type == core::CategoryName::SPIKES) {
+                auto body = cocos2d::PhysicsBody::createBox(form.m_rect.size);
+                body->setDynamic(false);
+                
+                auto node = Node::create();
+                node->setContentSize(form.m_rect.size);
+                node->setPosition(form.m_rect.origin);
+                node->addComponent(body);
 
+                map->addChild(node);
+                m_traps.emplace_back(body);
             }
             else if(form.m_type == core::CategoryName::BARREL) {
                 auto barrel { std::make_unique<Barrel>() };
@@ -261,13 +306,12 @@ void LevelScene::update(float dt) {
     
     m_playerFollower->UpdateAfterUnitMove(dt);
     
-    auto director { cocos2d::Director::getInstance() };
-    const auto visibleSize = director->getVisibleSize();
-	const auto origin = director->getVisibleOrigin();
     auto mapNode = this->getChildByName("Map");
     m_playerFollower->UpdateNodePosition(mapNode);
 
     m_barrelManager->Update();
+
+    m_unit->UpdateCurses(dt);
 
     static unsigned int x { 0 };
     cocos2d::log("Update: %0.4f, %d", dt, x++);
