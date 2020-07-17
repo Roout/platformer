@@ -12,7 +12,23 @@ public:
 
     void update([[maybe_unused]] float dt) override;
 
+    /**
+     * Functions used to modify unit.
+     * Used by callbacks: onContactBegin, OnContactSeparate because it's easy to 
+     * retrieve this drawable node (view) than pass unit's model. 
+     */
     void SetContactWithGround(bool) noexcept;
+
+    template<Curses::CurseType type, class ...Args>
+    void AddCurse(Args&&... args) noexcept {
+        m_model->AddCurse<type>(std::forward<Args>(args)...);
+    }
+
+    template<Curses::CurseType type>
+    void RemoveCurse() noexcept {
+        m_model->RemoveCurse<type>();
+    }
+    // end of functions which modify unit
 private:
     HeroView(Unit* const model);
 

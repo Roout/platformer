@@ -4,7 +4,8 @@
 #include "PhysicsHelper.hpp" 
 
 Unit::Unit() :
-    m_health { 100 }
+    m_health { 100 },
+    m_curses { this }
 {   
     const int damage { 10 };
     const int range { SizeDeducer::GetInstance().GetAdjustedSize(20) };
@@ -12,8 +13,6 @@ Unit::Unit() :
 
     m_weapon = std::make_unique<Sword>( damage, range, reloadTime );
 }
-
-Unit::~Unit() {}
 
 void Unit::AddBody(cocos2d::PhysicsBody * const body) noexcept {
     m_body = body;
@@ -28,12 +27,14 @@ void Unit::AddBody(cocos2d::PhysicsBody * const body) noexcept {
             core::CategoryBits::ENEMY, 
             core::CategoryBits::BOUNDARY, 
             core::CategoryBits::PROJECTILE, 
-            core::CategoryBits::PLATFORM, 
-            core::CategoryBits::TRAP
+            core::CategoryBits::PLATFORM 
         )
     );
     m_body->setContactTestBitmask(
-        core::CreateMask(core::CategoryBits::PLATFORM)
+        core::CreateMask(
+            core::CategoryBits::PLATFORM,
+            core::CategoryBits::TRAP
+        )
     );
     const auto sensorShapeSize = cocos2d::Size{ 
         GetSize().width / 2.f,
@@ -133,6 +134,10 @@ void Unit::UpdateState(const float dt) noexcept {
     } else {
         m_state = State::idle;
     }
+}
+
+void Unit::UpdateCurses(const float dt) noexcept {
+    m_curses.Update(dt);
 }
 
 void Movement::Update(const float dt) noexcept {

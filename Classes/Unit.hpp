@@ -2,6 +2,7 @@
 #define UNIT_HPP
 
 #include "Core.hpp"
+#include "Curses.hpp"
 #include "Weapon.hpp"
 #include <memory>
 #include "cocos2d.h"
@@ -17,11 +18,12 @@ public:
         attack
     };
 
-    enum class Side { left, right };
+    enum class Side { 
+        left, 
+        right 
+    };
 
     Unit();
-
-    ~Unit();
 
     void AddBody(cocos2d::PhysicsBody * const body) noexcept;
 
@@ -51,6 +53,8 @@ public:
     
     void UpdateState(const float dt) noexcept;
 
+    void UpdateCurses(const float dt) noexcept;
+
     [[nodiscard]] int GetHealth() const noexcept {
         return m_health;
     }
@@ -72,6 +76,16 @@ public:
         m_hasContactWithGround = hasContactWithGround;
     }
 
+    template<Curses::CurseType type, class ...Args>
+    void AddCurse(Args&&... args) noexcept {
+        m_curses.AddCurse<type>(std::forward<Args>(args)...);
+    }
+
+    template<Curses::CurseType type>
+    void RemoveCurse() noexcept {
+        m_curses.RemoveCurse<type>();
+    }
+
 private:
     cocos2d::PhysicsBody * m_body { nullptr };
 
@@ -83,6 +97,7 @@ private:
 
     bool m_hasContactWithGround { false };
 
+    Curses::CurseHub m_curses;
 private:
 
     Side m_lookSide { Side::left };
