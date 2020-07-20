@@ -153,7 +153,7 @@ void Movement::Update(const float dt) noexcept {
         m_counter.remainingJumpSteps--;
     }
 
-    auto jumpSideMoveMultiplier { 1.f };
+    auto jumpSideMoveMultiplier { 0.8f };
     if( m_unit->GetState() == Unit::State::jump) {
         jumpSideMoveMultiplier = 0.6f;
     }
