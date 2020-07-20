@@ -67,7 +67,7 @@ namespace helper {
         // There are nodes one of which is with hero sensor attached 
         // i.e. basicaly it's hero and other body
         if (nodes[BODY_A] && nodes[BODY_B] && (isHeroSensor[BODY_A] || isHeroSensor[BODY_B]) ) {
-            HeroView * heroView { dynamic_cast<HeroView*>(isHeroSensor[BODY_A]? nodes[BODY_A] : nodes[BODY_B]) };
+            UnitView * heroView { dynamic_cast<UnitView*>(isHeroSensor[BODY_A]? nodes[BODY_A] : nodes[BODY_B]) };
             heroView->SetContactWithGround(true);
 
             return true;
@@ -105,7 +105,7 @@ namespace helper {
         if( isTrap[BODY_A] || isTrap[BODY_B] ) {
             const auto trapIndex { isTrap[BODY_A]? BODY_A: BODY_B };
 
-            auto unit { dynamic_cast<HeroView*>(nodes[trapIndex^1]) };
+            auto unit { dynamic_cast<UnitView*>(nodes[trapIndex^1]) };
             unit->AddCurse<Curses::CurseType::DPS>(10.f, Curses::UNLIMITED);
             return true;
         }
@@ -140,7 +140,7 @@ namespace helper {
         };
 
         if (nodes[BODY_A] && nodes[BODY_B] && (isHeroSensor[BODY_A] || isHeroSensor[BODY_B]) ) {
-            HeroView * heroView { dynamic_cast<HeroView*>(isHeroSensor[BODY_A]? nodes[BODY_A] : nodes[BODY_B]) };
+            UnitView * heroView { dynamic_cast<UnitView*>(isHeroSensor[BODY_A]? nodes[BODY_A] : nodes[BODY_B]) };
             bool onGround {
                 isHeroSensor[BODY_A]? 
                     helper::IsEquel(bodies[BODY_A]->getVelocity().y, 0.f, 0.000001f):
@@ -158,7 +158,7 @@ namespace helper {
         if( isTrap[BODY_A] || isTrap[BODY_B] ) {
             const auto trapIndex { isTrap[BODY_A]? BODY_A: BODY_B };
 
-            auto unit { dynamic_cast<HeroView*>(nodes[trapIndex^1]) };
+            auto unit { dynamic_cast<UnitView*>(nodes[trapIndex^1]) };
             unit->RemoveCurse<Curses::CurseType::DPS>();
             return true;
         }
@@ -251,7 +251,7 @@ bool LevelScene::init() {
     this->InitTileMapObjects(tileMap);
    
     m_unit = std::make_shared<Unit>();
-    auto playerNode { HeroView::create(m_unit.get()) };
+    auto playerNode { UnitView::create(m_unit.get()) };
     const auto body { playerNode->getPhysicsBody() };
     const auto unitBodySize { m_unit->GetSize() };
 

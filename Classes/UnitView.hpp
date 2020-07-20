@@ -4,9 +4,9 @@
 #include "cocos2d.h"
 #include "Unit.hpp"
 
-class HeroView final : public cocos2d::DrawNode {
+class UnitView final : public cocos2d::DrawNode {
 public:
-    static HeroView * create(Unit* const model);
+    static UnitView * create(Unit* const model);
 
     [[nodiscard]] bool init() override;
 
@@ -30,7 +30,7 @@ public:
     }
     // end of functions which modify unit
 private:
-    HeroView(Unit* const model);
+    UnitView(Unit* const model);
 
     void UpdateAnimation();
 

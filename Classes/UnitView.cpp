@@ -6,8 +6,8 @@
 
 #include "SizeDeducer.hpp"
 
-HeroView * HeroView::create(Unit* const model) {
-    auto pRet = new (std::nothrow) HeroView(model);
+UnitView * UnitView::create(Unit* const model) {
+    auto pRet = new (std::nothrow) UnitView(model);
     if (pRet && pRet->init()) {
         pRet->autorelease();
     }
@@ -18,7 +18,7 @@ HeroView * HeroView::create(Unit* const model) {
     return pRet;
 }
 
-bool HeroView::init() {
+bool UnitView::init() {
     if( !cocos2d::DrawNode::init() ) {
         return false;
     }
@@ -94,7 +94,7 @@ inline std::string CreateAnimationName( Unit::State state) {
     return animationName;
 }
 
-void HeroView::FlipX(const Unit::Side currentSide) {
+void UnitView::FlipX(const Unit::Side currentSide) {
     auto armatureDisplay = dynamic_cast<dragonBones::CCArmatureDisplay*>(
         this->getChildByName("Armature")
     );
@@ -109,7 +109,7 @@ void HeroView::FlipX(const Unit::Side currentSide) {
     }
 }
 
-void HeroView::UpdateAnimation() {
+void UnitView::UpdateAnimation() {
     auto armatureDisplay = dynamic_cast<dragonBones::CCArmatureDisplay*>(
         this->getChildByName("Armature")
     );
@@ -154,7 +154,7 @@ void HeroView::UpdateAnimation() {
     }
 }
 
-void HeroView::update(float dt) {
+void UnitView::update(float dt) {
     // Update animation
     this->UpdateAnimation();
     // Debug >> Update state:
@@ -164,10 +164,10 @@ void HeroView::update(float dt) {
     stateLabel->setString(CreateAnimationName(m_model->GetState()));
 }
  
-HeroView::HeroView(Unit* const model) : 
+UnitView::UnitView(Unit* const model) : 
     m_model { model }
 {}
 
-void HeroView::SetContactWithGround(bool isInContact) noexcept {
+void UnitView::SetContactWithGround(bool isInContact) noexcept {
     m_model->HasContactWithGround(isInContact);
 }
