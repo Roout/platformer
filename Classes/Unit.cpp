@@ -148,7 +148,7 @@ void Movement::Update(const float dt) noexcept {
             ( m_unit->m_body->getMass() * m_desiredVelocity ) / 
             ( dt * m_timeStepsToCompletion ) 
         };
-        const auto multiplier { (2.f * m_counter.remainingJumpSteps + 1.f) / 6.f };
+        const auto multiplier { (4.f * m_counter.remainingJumpSteps + 1.f) / 6.f };
         m_unit->m_body->applyForce({ 0.f, force * multiplier });
         m_counter.remainingJumpSteps--;
     }
