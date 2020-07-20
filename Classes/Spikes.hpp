@@ -3,7 +3,7 @@
 
 #include "cocos2d.h"
 #include "Core.hpp"
-
+#include "Utils.hpp"
 
 /**
  * Do damage every m_maxCooldown seconds to each body it can influence
@@ -15,12 +15,12 @@ public:
     {   
         m_body->setDynamic(false);
         m_body->setCategoryBitmask(
-            core::CreateMask(
+            Utils::CreateMask(
                 core::CategoryBits::TRAP
             )
         );
         m_body->setContactTestBitmask(
-            core::CreateMask(
+            Utils::CreateMask(
                 core::CategoryBits::ENEMY, 
                 core::CategoryBits::HERO
             )

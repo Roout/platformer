@@ -23,12 +23,12 @@ public:
         m_body = body;
         m_body->setDynamic(false);
         m_body->setCategoryBitmask(
-            core::CreateMask(
+            Utils::CreateMask(
                 core::CategoryBits::BARREL
             )
         );
         m_body->setCollisionBitmask(
-            core::CreateMask(
+            Utils::CreateMask(
                 core::CategoryBits::BOUNDARY, 
                 core::CategoryBits::PROJECTILE
             )

@@ -2,6 +2,7 @@
 #include "cocos2d.h"
 #include "SizeDeducer.hpp"
 #include "PhysicsHelper.hpp" 
+#include "Utils.hpp"
 
 Unit::Unit() :
     m_health { 100 },
@@ -20,10 +21,10 @@ void Unit::AddBody(cocos2d::PhysicsBody * const body) noexcept {
     m_body->setGravityEnable(true);
     m_body->setRotationEnable(false);
     m_body->setCategoryBitmask(
-        core::CreateMask(core::CategoryBits::HERO)
+        Utils::CreateMask(core::CategoryBits::HERO)
     );
     m_body->setCollisionBitmask(
-        core::CreateMask(
+        Utils::CreateMask(
             core::CategoryBits::ENEMY, 
             core::CategoryBits::BOUNDARY, 
             core::CategoryBits::PROJECTILE, 
@@ -31,7 +32,7 @@ void Unit::AddBody(cocos2d::PhysicsBody * const body) noexcept {
         )
     );
     m_body->setContactTestBitmask(
-        core::CreateMask(
+        Utils::CreateMask(
             core::CategoryBits::PLATFORM,
             core::CategoryBits::TRAP
         )
@@ -46,13 +47,13 @@ void Unit::AddBody(cocos2d::PhysicsBody * const body) noexcept {
     );
     sensorShape->setSensor(true);
     sensorShape->setCategoryBitmask(
-        core::CreateMask(
+        Utils::CreateMask(
             core::CategoryBits::HERO_SENSOR
         )
     );
     sensorShape->setCollisionBitmask(0);
     sensorShape->setContactTestBitmask(
-        core::CreateMask(
+        Utils::CreateMask(
             core::CategoryBits::BOUNDARY,
             core::CategoryBits::PLATFORM
         )

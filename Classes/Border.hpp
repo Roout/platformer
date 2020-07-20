@@ -3,6 +3,7 @@
 
 #include "Core.hpp"
 #include "cocos2d.h"
+#include "Utils.hpp"
 
 class Border final {
 public:
@@ -12,12 +13,12 @@ public:
     {   
         m_body->setDynamic(false);
         m_body->setCategoryBitmask(
-            core::CreateMask(
+            Utils::CreateMask(
                 core::CategoryBits::BOUNDARY
             )
         );
         m_body->setCollisionBitmask(
-            core::CreateMask(
+            Utils::CreateMask(
                 core::CategoryBits::ENEMY, 
                 core::CategoryBits::HERO, 
                 core::CategoryBits::PROJECTILE, 
@@ -25,7 +26,7 @@ public:
             )
         );
         m_body->setContactTestBitmask(
-            core::CreateMask(core::CategoryBits::HERO_SENSOR)
+            Utils::CreateMask(core::CategoryBits::HERO_SENSOR)
         );
     }
 

@@ -2,6 +2,7 @@
 #define PLATFORM_HPP
 
 #include "Core.hpp"
+#include "Utils.hpp"
 #include "cocos2d.h"
 
 class Platform final : public core::Entity {
@@ -12,19 +13,19 @@ public:
     {   
         m_body->setDynamic(false);
         m_body->setCategoryBitmask(
-            core::CreateMask(
+            Utils::CreateMask(
                 core::CategoryBits::PLATFORM
             )
         );
         m_body->setCollisionBitmask(
-            core::CreateMask(
+            Utils::CreateMask(
                 core::CategoryBits::HERO,
                 core::CategoryBits::ENEMY, 
                 core::CategoryBits::PROJECTILE
             )
         );
         m_body->setContactTestBitmask(
-            core::CreateMask(
+            Utils::CreateMask(
                 core::CategoryBits::HERO_SENSOR,
                 core::CategoryBits::HERO,
                 core::CategoryBits::ENEMY

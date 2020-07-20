@@ -83,6 +83,7 @@ list(APPEND GAME_HEADER
      Classes/TileMapParser.hpp
      Classes/Weapon.hpp
      Classes/Core.hpp
+     Classes/Utils.hpp
      Classes/ProjectileView.hpp
      Classes/Platform.hpp
      Classes/Border.hpp

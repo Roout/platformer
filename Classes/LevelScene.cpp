@@ -7,6 +7,7 @@
 #include "SmoothFollower.hpp"
 #include "HealthBar.hpp"
 #include "PhysicsHelper.hpp"
+#include "Utils.hpp"
 
 cocos2d::Scene* LevelScene::createScene(int id) {
     auto scene { cocos2d::Scene::createWithPhysics() };
@@ -60,8 +61,8 @@ namespace helper {
         };
         
         const bool isHeroSensor[2] = { 
-            shapes[BODY_A]->getCategoryBitmask() == core::CreateMask(core::CategoryBits::HERO_SENSOR),
-            shapes[BODY_B]->getCategoryBitmask() == core::CreateMask(core::CategoryBits::HERO_SENSOR)
+            shapes[BODY_A]->getCategoryBitmask() == Utils::CreateMask(core::CategoryBits::HERO_SENSOR),
+            shapes[BODY_B]->getCategoryBitmask() == Utils::CreateMask(core::CategoryBits::HERO_SENSOR)
         };
 
         // There are nodes one of which is with hero sensor attached 
@@ -78,8 +79,8 @@ namespace helper {
             bodies[BODY_B]->getCategoryBitmask()
         };
         const bool isPlatform[2] = {
-            bodyMasks[BODY_A] == core::CreateMask(core::CategoryBits::PLATFORM),
-            bodyMasks[BODY_B] == core::CreateMask(core::CategoryBits::PLATFORM)
+            bodyMasks[BODY_A] == Utils::CreateMask(core::CategoryBits::PLATFORM),
+            bodyMasks[BODY_B] == Utils::CreateMask(core::CategoryBits::PLATFORM)
         };
         // contact of any unit's body and platform starts
         if( isPlatform[BODY_A] || isPlatform[BODY_B] ) {
@@ -99,8 +100,8 @@ namespace helper {
 
         // handle contact of spikes and unit
         const bool isTrap[2] = {
-            bodyMasks[BODY_A] == core::CreateMask(core::CategoryBits::TRAP),
-            bodyMasks[BODY_B] == core::CreateMask(core::CategoryBits::TRAP)
+            bodyMasks[BODY_A] == Utils::CreateMask(core::CategoryBits::TRAP),
+            bodyMasks[BODY_B] == Utils::CreateMask(core::CategoryBits::TRAP)
         };
         if( isTrap[BODY_A] || isTrap[BODY_B] ) {
             const auto trapIndex { isTrap[BODY_A]? BODY_A: BODY_B };
@@ -135,8 +136,8 @@ namespace helper {
         };
 
         bool isHeroSensor[2] = { 
-            shapes[BODY_A]->getCategoryBitmask() == core::CreateMask(core::CategoryBits::HERO_SENSOR),
-            shapes[BODY_B]->getCategoryBitmask() == core::CreateMask(core::CategoryBits::HERO_SENSOR)
+            shapes[BODY_A]->getCategoryBitmask() == Utils::CreateMask(core::CategoryBits::HERO_SENSOR),
+            shapes[BODY_B]->getCategoryBitmask() == Utils::CreateMask(core::CategoryBits::HERO_SENSOR)
         };
 
         if (nodes[BODY_A] && nodes[BODY_B] && (isHeroSensor[BODY_A] || isHeroSensor[BODY_B]) ) {
@@ -152,8 +153,8 @@ namespace helper {
 
         // handle contact of spikes and unit
         const bool isTrap[2] = {
-            bodyMasks[BODY_A] == core::CreateMask(core::CategoryBits::TRAP),
-            bodyMasks[BODY_B] == core::CreateMask(core::CategoryBits::TRAP)
+            bodyMasks[BODY_A] == Utils::CreateMask(core::CategoryBits::TRAP),
+            bodyMasks[BODY_B] == Utils::CreateMask(core::CategoryBits::TRAP)
         };
         if( isTrap[BODY_A] || isTrap[BODY_B] ) {
             const auto trapIndex { isTrap[BODY_A]? BODY_A: BODY_B };
@@ -177,7 +178,7 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
     m_platforms.reserve(200);
     m_barrelManager = std::make_unique<BarrelManager>();
 
-    for(size_t i = 0; i < core::EnumSize<core::CategoryName>(); i++) {
+    for(size_t i = 0; i < Utils::EnumSize<core::CategoryName>(); i++) {
         const auto category { static_cast<core::CategoryName>(i) };
         auto parsedForms { parser.Acquire(category) };
         for(const auto& form: parsedForms) {

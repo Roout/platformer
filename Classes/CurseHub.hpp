@@ -2,7 +2,7 @@
 #define CURSE_HUB_HPP
 
 #include "Curses.hpp"
-#include "Core.hpp"
+#include "Utils.hpp"
 #include <memory>
 #include <array>
 
@@ -29,20 +29,20 @@ namespace Curses {
         void AddCurse(Args&&... args) noexcept {
             using identity = typename get_curse_type<type>::identity;
 
-            if(!m_curses[core::EnumCast(type)]) {
-                m_curses[core::EnumCast(type)] = std::make_unique<identity>(std::forward<Args>(args)...);
+            if(!m_curses[Utils::EnumCast(type)]) {
+                m_curses[Utils::EnumCast(type)] = std::make_unique<identity>(std::forward<Args>(args)...);
             }
         }
 
         template<CurseType type>
         void RemoveCurse() noexcept {
-            m_curses[core::EnumCast(type)].reset();
+            m_curses[Utils::EnumCast(type)].reset();
         }
 
     private:
         Unit * const m_unit { nullptr };
 
-        std::array<CursePointer, core::EnumSize<CurseType>()> m_curses;
+        std::array<CursePointer, Utils::EnumSize<CurseType>()> m_curses;
     };
 
 }

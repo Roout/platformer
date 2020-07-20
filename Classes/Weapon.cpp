@@ -3,6 +3,7 @@
 #include "cocos2d.h"
 #include "ProjectileView.hpp"
 #include "SizeDeducer.hpp"
+#include "Utils.hpp"
 
 void Sword::Attack(
     const cocos2d::Vec2& position,
@@ -71,12 +72,12 @@ Projectile::Projectile (
     m_body->setRotationEnable(false);
     m_body->setPositionOffset(position);
     m_body->setCategoryBitmask(
-        core::CreateMask(
+        Utils::CreateMask(
             core::CategoryBits::PROJECTILE
         )
     );
     m_body->setCollisionBitmask(
-        core::CreateMask(
+        Utils::CreateMask(
             core::CategoryBits::ENEMY, 
             core::CategoryBits::HERO, 
             core::CategoryBits::BARREL, 

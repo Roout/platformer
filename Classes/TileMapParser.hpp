@@ -5,7 +5,7 @@
 #include <array>
 #include "math/CCGeometry.h" // cocos2d::Rect, cocos2d::Vec2
 #include "Core.hpp"
-
+#include "Utils.hpp"
 
 namespace cocos2d {
     class FastTMXTiledMap;
@@ -39,25 +39,25 @@ public:
     }
 
     [[nodiscard]] auto&& Acquire(CategoryName category) noexcept {
-        return std::move(m_parsed[core::EnumCast(category)]);
+        return std::move(m_parsed[Utils::EnumCast(category)]);
     }
 
 private:
 
     template <CategoryName category>
     [[nodiscard]] auto& Get() noexcept {
-        return m_parsed[core::EnumCast(category)];
+        return m_parsed[Utils::EnumCast(category)];
     }
 
     [[nodiscard]] auto& Get(CategoryName category) noexcept {
-        return m_parsed[core::EnumCast(category)];
+        return m_parsed[Utils::EnumCast(category)];
     }
 
     const cocos2d::FastTMXTiledMap * const m_tileMap { nullptr };
     
     std::array<
         std::vector<details::Form>, 
-        core::EnumSize<CategoryName>()
+        Utils::EnumSize<CategoryName>()
     >  m_parsed;
 };
 

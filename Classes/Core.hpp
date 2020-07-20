@@ -58,13 +58,7 @@ namespace core {
         return category;
     }
 
-    /**
-     * Underlying type of bitmask used to represent 
-     * entity's category.
-     */
-    using MaskType = int;
-
-    enum class CategoryBits: MaskType {
+    enum class CategoryBits: int {
         HERO        = 0x0001,
         ENEMY       = 0x0002,
         BOUNDARY    = 0x0004,
@@ -74,22 +68,6 @@ namespace core {
         BARREL      = 0x0040,
         HERO_SENSOR = 0x0080
     };
-
-    template<class ...Args>
-    constexpr MaskType CreateMask(Args ... bits) noexcept {
-        return (static_cast<MaskType>(bits) | ...);
-    } 
-
-    template<class T>
-    constexpr size_t EnumCast(T enumeration) noexcept {
-        return static_cast<size_t> (enumeration);
-    }
-
-    template<class Enum>
-    constexpr size_t EnumSize() noexcept {
-        return static_cast<size_t> (Enum::COUNT);
-    }
-
 }
 
 #endif // CORE_HPP
