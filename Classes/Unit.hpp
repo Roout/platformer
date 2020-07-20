@@ -2,7 +2,7 @@
 #define UNIT_HPP
 
 #include "Core.hpp"
-#include "Curses.hpp"
+#include "CurseHub.hpp"
 #include "Weapon.hpp"
 #include <memory>
 #include "cocos2d.h"
