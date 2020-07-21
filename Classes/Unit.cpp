@@ -76,15 +76,15 @@ void Unit::RecieveDamage(int damage) noexcept {
 void Unit::MeleeAttack() noexcept {
     if( m_weapon->CanAttack() ) {
         // update attack direction and position for idle case
-        auto position = m_body->getPosition();
-        auto direction = m_body->getVelocity();
+        auto position = cocos2d::Vec2::ZERO;// m_body->getPosition();
+        auto direction = cocos2d::Vec2::ZERO;// m_body->getVelocity();
         if(m_lookSide == Side::right) {
             direction.x = 1.f;
             position.x += SizeDeducer::GetInstance().GetAdjustedSize(m_width);
         }
         else if(m_lookSide == Side::left) {
             direction.x = -1.f;
-            // position will be updated later base on projectile width!
+            position.x -= SizeDeducer::GetInstance().GetAdjustedSize(m_width);
         }
 
         static int x { 0 };

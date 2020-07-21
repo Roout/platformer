@@ -22,13 +22,7 @@ void Sword::Attack(
     // define attack speed
     const auto speed { SizeDeducer::GetInstance().GetAdjustedSize(250.f) };
 
-    /// TODO: Update base on direction!
-    auto projectilePosition { position };
-    if( direction.x < 0.f) {
-        projectilePosition.x -= size.width;
-    }
-    
-    auto proj = std::make_unique<Projectile>(projectilePosition, size, direction, speed);
+    auto proj = std::make_unique<Projectile>(position, size, direction, speed);
     m_projectiles.emplace_back(std::move(proj));
 
     this->ForceReload();
@@ -66,37 +60,51 @@ Projectile::Projectile (
     m_lifeTime { 0.15f }
 {    
     m_body = cocos2d::PhysicsBody::createBox(size);
-    m_body->setVelocity(velocity);
+    m_body->setVelocity(velocity * speed);
+    m_body->setDynamic(false);
     m_body->setVelocityLimit(speed);
     m_body->setGravityEnable(true);
     m_body->setRotationEnable(false);
-    m_body->setPositionOffset(position);
     m_body->setCategoryBitmask(
         Utils::CreateMask(
             core::CategoryBits::PROJECTILE
         )
     );
-    m_body->setCollisionBitmask(
+    const auto interactWith { 
         Utils::CreateMask(
             core::CategoryBits::ENEMY, 
-            core::CategoryBits::HERO, 
+            /// TODO: add this when unit will be inherit as HERO or ENEMY and define categoty it collide with
+            // core::CategoryBits::HERO,  
             core::CategoryBits::BARREL, 
             core::CategoryBits::BOUNDARY, 
             core::CategoryBits::PROJECTILE 
         )
-    );
-    cocos2d::log("Projectile was created with body");
+    };
+    m_body->setCollisionBitmask(interactWith);
+    m_body->setContactTestBitmask(interactWith);
+
+    cocos2d::log("Projectile was created");
 
     m_view = ProjectileView::create(this);
-    auto map = cocos2d::Director::getInstance()->getRunningScene()->getChildByName("Map");
-    map->addChild(m_view);
+    /**
+     * Anchor point is choosen same as unit it's attached to.
+     */
+    m_view->setAnchorPoint(cocos2d::Vec2::ANCHOR_MIDDLE_BOTTOM);
+    m_view->setPosition(position);
+    m_view->setContentSize(size);
+    m_view->addComponent(m_body);
+
+    /**
+     * These 'runtime queries' is hard to be erased. 
+     */
+    auto runningScene { cocos2d::Director::getInstance()->getRunningScene() };
+    auto map = runningScene->getChildByName("Map");
+    auto player = map->getChildByName("Player");
+
+    player->addChild(m_view);
 }
 
 Projectile::~Projectile() {
-    /// TODO: clean up this shit. It should be destroyed in right order by itself.
-    auto map = cocos2d::Director::getInstance()->getRunningScene()->getChildByName("Map");
-    map->removeChild(m_view);
+    m_view->removeFromParentAndCleanup(true);
     cocos2d::log("Projectile was destroyed");
-
-    m_body->removeFromWorld();
 }

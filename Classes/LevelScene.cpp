@@ -9,22 +9,6 @@
 #include "PhysicsHelper.hpp"
 #include "Utils.hpp"
 
-cocos2d::Scene* LevelScene::createScene(int id) {
-    auto scene { cocos2d::Scene::createWithPhysics() };
-    auto world = scene->getPhysicsWorld();
-    // set gravity
-    world->setGravity(cocos2d::Vec2(0, -1000));
-
-    // optional: set debug draw
-    world->setDebugDrawMask(cocos2d::PhysicsWorld::DEBUGDRAW_ALL);
-
-    auto level { LevelScene::create(id) };
-
-    scene->addChild(level);
-
-    return scene;
-}
-
 LevelScene::LevelScene(int id): 
     m_id{ id } 
 {
@@ -236,9 +220,16 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
 }
 
 bool LevelScene::init() {
-	if (!cocos2d::Scene::init()) {
+	if (!cocos2d::Scene::initWithPhysics()) {
 		return false;
 	}
+
+    auto world = this->getPhysicsWorld();
+    // set gravity
+    world->setGravity(cocos2d::Vec2(0, -1000));
+    // optional: set debug draw
+    world->setDebugDrawMask(cocos2d::PhysicsWorld::DEBUGDRAW_ALL);
+
 	this->scheduleUpdate();
 
 	const auto visibleSize = cocos2d::Director::getInstance()->getVisibleSize();

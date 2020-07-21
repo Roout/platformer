@@ -19,12 +19,7 @@ bool ProjectileView::init() {
         return false;
     }
     this->scheduleUpdate();
-    // const auto body { m_model->GetBody() };
-    // const auto size { m_model->GetSize() };
-    // const auto position { m_model->GetBody()->getPosition() };
-    // this->setPosition(position);
-    
-    //this->drawSolidRect(cocos2d::Vec2::ZERO, size, cocos2d::Color4F::BLUE );
+
     return true;
 };
 

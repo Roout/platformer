@@ -17,8 +17,6 @@ class SmoothFollower;
 class LevelScene final : public cocos2d::Scene {
 public:
 
-    [[nodiscard]] static cocos2d::Scene* createScene(int id);
-
     [[nodiscard]] static LevelScene* create(int id);
 
     [[nodiscard]] bool init() override;
