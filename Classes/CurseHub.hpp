@@ -5,6 +5,7 @@
 #include "Utils.hpp"
 #include <memory>
 #include <array>
+#include <limits>
 
 class Unit;
 
@@ -19,6 +20,11 @@ namespace Curses {
      */
     class CurseHub final {
     public:
+        /**
+         * This 'id' is used to mark curses which came not from traps.
+         */
+        static constexpr size_t ignored { std::numeric_limits<size_t>::max() };
+
         using CursePointer = std::unique_ptr<Curse>;
 
         CurseHub(Unit * const);
@@ -26,23 +32,31 @@ namespace Curses {
         void Update(const float dt);
 
         template<CurseType type, class ...Args>
-        void AddCurse(Args&&... args) noexcept {
+        void AddCurse(size_t trapId, Args&&... args) noexcept {
             using identity = typename get_curse_type<type>::identity;
 
-            if(!m_curses[Utils::EnumCast(type)]) {
-                m_curses[Utils::EnumCast(type)] = std::make_unique<identity>(std::forward<Args>(args)...);
+            for(size_t i = 0; i < MAX_SIZE; i++) {
+                if(!m_curses[i]) {
+                    m_curses[i] = std::make_unique<identity>( trapId, std::forward<Args>(args)...);
+                    break;
+                }
             }
         }
 
-        template<CurseType type>
-        void RemoveCurse() noexcept {
-            m_curses[Utils::EnumCast(type)].reset();
+        void RemoveCurse(size_t id) noexcept {
+            for(size_t i = 0; i < MAX_SIZE; i++) {
+                if( m_curses[i] && m_curses[i]->GetId() == id ) {
+                    m_curses[i].reset();
+                }
+            }
         }
 
     private:
+        static constexpr size_t MAX_SIZE { 16 };
+
         Unit * const m_unit { nullptr };
 
-        std::array<CursePointer, Utils::EnumSize<CurseType>()> m_curses;
+        std::array<CursePointer, MAX_SIZE> m_curses;
     };
 
 }

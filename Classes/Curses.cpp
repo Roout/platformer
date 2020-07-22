@@ -1,7 +1,8 @@
 #include "Curses.hpp"
 #include "Unit.hpp"
 
-Curses::DPS::DPS(float damagePerSecond, float duration):
+Curses::DPS::DPS(size_t id, float damagePerSecond, float duration):
+    Curse{ id },
     m_damage { damagePerSecond },
     m_duration { duration },
     m_cooldown { 0.f }
