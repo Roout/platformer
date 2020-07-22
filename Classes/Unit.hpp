@@ -77,13 +77,12 @@ public:
     }
 
     template<Curses::CurseType type, class ...Args>
-    void AddCurse(Args&&... args) noexcept {
-        m_curses.AddCurse<type>(std::forward<Args>(args)...);
+    void AddCurse(size_t id, Args&&... args) noexcept {
+        m_curses.AddCurse<type>(id, std::forward<Args>(args)...);
     }
 
-    template<Curses::CurseType type>
-    void RemoveCurse() noexcept {
-        m_curses.RemoveCurse<type>();
+    void RemoveCurse(size_t id) noexcept {
+        m_curses.RemoveCurse(id);
     }
 
 private:

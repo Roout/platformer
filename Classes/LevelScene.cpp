@@ -8,6 +8,8 @@
 #include "HealthBar.hpp"
 #include "PhysicsHelper.hpp"
 #include "Utils.hpp"
+#include "ProjectileView.hpp"
+#include "Traps.hpp"
 
 LevelScene::LevelScene(int id): 
     m_id{ id } 
@@ -90,9 +92,45 @@ namespace helper {
         if( isTrap[BODY_A] || isTrap[BODY_B] ) {
             const auto trapIndex { isTrap[BODY_A]? BODY_A: BODY_B };
 
-            auto unit { dynamic_cast<UnitView*>(nodes[trapIndex^1]) };
-            unit->AddCurse<Curses::CurseType::DPS>(10.f, Curses::UNLIMITED);
-            return true;
+            const auto unit { dynamic_cast<UnitView*>(nodes[trapIndex^1]) };
+            const auto trap { dynamic_cast<Traps::Trap*>(nodes[trapIndex]) };
+            
+            trap->CurseTarget(unit);
+
+            return false;
+        }
+
+        const bool isProjectile[2] = {
+            bodyMasks[BODY_A] == Utils::CreateMask(core::CategoryBits::PROJECTILE),
+            bodyMasks[BODY_B] == Utils::CreateMask(core::CategoryBits::PROJECTILE)
+        };
+        const bool isUnit[2] = {
+            bodyMasks[BODY_A] == Utils::CreateMask(core::CategoryBits::HERO, core::CategoryBits::ENEMY),
+            bodyMasks[BODY_B] == Utils::CreateMask(core::CategoryBits::HERO, core::CategoryBits::ENEMY)
+        };
+
+
+        if( isProjectile[BODY_A] || isProjectile[BODY_B] ) {
+            const auto projectileIndex { isProjectile[BODY_A]? BODY_A: BODY_B };
+
+            auto projView { dynamic_cast<ProjectileView*>(nodes[projectileIndex]) };
+            
+            // damage target if possible
+            if(isUnit[projectileIndex ^ 1]) {
+                const auto unit { dynamic_cast<UnitView*>(nodes[projectileIndex^1]) };
+                unit->AddCurse<Curses::CurseType::INSTANT>(
+                    Curses::CurseHub::ignored, 
+                    static_cast<float>(projView->GetDamage())
+                );
+            } else if( bodyMasks[projectileIndex ^ 1] == Utils::CreateMask(core::CategoryBits::BARREL)) {
+                const auto barrel { dynamic_cast<BarrelView*>(nodes[projectileIndex^1]) };
+                barrel->Explode();
+            }
+
+            // destroy projectile
+            projView->Collapse();
+            // end contact
+            return false;
         }
 
         return true;
@@ -143,9 +181,12 @@ namespace helper {
         if( isTrap[BODY_A] || isTrap[BODY_B] ) {
             const auto trapIndex { isTrap[BODY_A]? BODY_A: BODY_B };
 
-            auto unit { dynamic_cast<UnitView*>(nodes[trapIndex^1]) };
-            unit->RemoveCurse<Curses::CurseType::DPS>();
-            return true;
+            const auto unit { dynamic_cast<UnitView*>(nodes[trapIndex^1]) };
+            const auto trap { dynamic_cast<Traps::Trap*>(nodes[trapIndex]) };
+            
+            trap->RemoveCurse(unit);
+
+            return false;
         }
 
 
@@ -194,16 +235,9 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                 m_borders.emplace_back(body);
             }
             else if(form.m_type == core::CategoryName::SPIKES) {
-                auto body = cocos2d::PhysicsBody::createBox(form.m_rect.size);
-                body->setDynamic(false);
-                
-                auto node = Node::create();
-                node->setContentSize(form.m_rect.size);
-                node->setPosition(form.m_rect.origin);
-                node->addComponent(body);
-
-                map->addChild(node);
-                m_traps.emplace_back(body);
+                auto trap = Traps::Spikes::create(form.m_rect.size);
+                trap->setPosition(form.m_rect.origin + form.m_rect.size / 2.f);
+                map->addChild(trap);
             }
             else if(form.m_type == core::CategoryName::BARREL) {
                 auto barrel { std::make_unique<Barrel>() };

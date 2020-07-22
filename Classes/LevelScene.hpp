@@ -5,7 +5,6 @@
 #include <vector>
 #include "Border.hpp"
 #include "Platform.hpp"
-#include "Spikes.hpp"
 #include "cocos2d.h"
 
 class Unit;
@@ -48,7 +47,6 @@ private:
     // models
     std::vector<Border>     m_borders;
     std::vector<Platform>   m_platforms;
-    std::vector<Spikes>     m_traps;
     // controller
     std::unique_ptr<BarrelManager>      m_barrelManager { nullptr };
 

@@ -12,7 +12,7 @@
 
 class BarrelView final : public cocos2d::DrawNode {
 public:
-    static BarrelView * create(const Barrel* const model) {
+    static BarrelView * create(Barrel* const model) {
         auto pRet = new (std::nothrow) BarrelView(model);
         if (pRet && pRet->init()) {
             pRet->autorelease();
@@ -90,6 +90,8 @@ public:
     }
 
     void Explode() {
+        m_model->RecieveDamage(1);
+
         m_exploded = true;
 
         // update animation
@@ -110,13 +112,13 @@ public:
 
 private:
 
-    BarrelView(const Barrel* model) : 
+    BarrelView(Barrel* model) : 
         m_model { model }
     {}
 
 private:
 
-    const Barrel * const m_model { nullptr };
+    Barrel * const m_model { nullptr };
 
     /**
      * Time which shows how long will the BarrelView exist 

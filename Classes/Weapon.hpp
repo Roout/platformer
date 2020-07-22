@@ -193,8 +193,6 @@ public:
         return m_lifeTime < rhs.m_lifeTime;
     }
 
-private:
-
     /**
      * This method ends the projectile lifetime. So it will disappear. 
      */

@@ -2,7 +2,7 @@
 #include "Weapon.hpp"
 #include "PhysicsHelper.hpp"
 
-ProjectileView * ProjectileView::create(const Projectile* const model) {
+ProjectileView * ProjectileView::create(Projectile* const model) {
     auto pRet = new (std::nothrow) ProjectileView(model);
     if (pRet && pRet->init()) {
         pRet->autorelease();
@@ -27,7 +27,15 @@ void ProjectileView::update([[maybe_unused]] float dt) {
 
 }
 
-ProjectileView::ProjectileView(const Projectile* model) :
+ProjectileView::ProjectileView(Projectile* const model) :
     m_model { model }
 {
+}
+
+int ProjectileView::GetDamage() const noexcept {
+    return 30;
+}
+
+void ProjectileView::Collapse() noexcept {
+    m_model->Collapse();
 }

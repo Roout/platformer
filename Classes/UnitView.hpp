@@ -20,13 +20,12 @@ public:
     void SetContactWithGround(bool) noexcept;
 
     template<Curses::CurseType type, class ...Args>
-    void AddCurse(Args&&... args) noexcept {
-        m_model->AddCurse<type>(std::forward<Args>(args)...);
+    void AddCurse(size_t id, Args&&... args) noexcept {
+        return m_model->AddCurse<type>(id, std::forward<Args>(args)...);
     }
 
-    template<Curses::CurseType type>
-    void RemoveCurse() noexcept {
-        m_model->RemoveCurse<type>();
+    void RemoveCurse(size_t id) noexcept {
+        m_model->RemoveCurse(id);
     }
     // end of functions which modify unit
 private:

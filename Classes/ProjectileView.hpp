@@ -7,16 +7,19 @@ class Projectile;
 
 class ProjectileView final : public cocos2d::DrawNode {
 public:
-    static ProjectileView * create(const Projectile* const model);
+    static ProjectileView * create(Projectile* const model);
 
     [[nodiscard]] bool init() override;
 
     void update([[maybe_unused]] float dt) override;
 
-private:
-    ProjectileView(const Projectile* model);
+    int GetDamage() const noexcept;
 
-    const Projectile * const m_model { nullptr };
+    void Collapse() noexcept;
+private:
+    ProjectileView(Projectile* const model);
+
+    Projectile * const m_model { nullptr };
 };
 
 #endif // PROJECTILE_VIEW_HPP

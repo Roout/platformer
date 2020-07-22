@@ -33,6 +33,12 @@ public:
                 core::CategoryBits::PROJECTILE
             )
         );
+        m_body->setContactTestBitmask(
+           Utils::CreateMask(
+                core::CategoryBits::BOUNDARY,
+                core::CategoryBits::PROJECTILE
+            ) 
+        );
     }
 
     const cocos2d::PhysicsBody * GetBody() const noexcept {
