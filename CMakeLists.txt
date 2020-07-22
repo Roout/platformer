@@ -73,6 +73,7 @@ list(APPEND GAME_SOURCE
      Classes/HealthBar.cpp
      Classes/Curses.cpp
      Classes/CurseHub.cpp
+     Classes/Barrel.cpp
      )
 list(APPEND GAME_HEADER
      Classes/AppDelegate.h
