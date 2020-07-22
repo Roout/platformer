@@ -93,7 +93,7 @@ list(APPEND GAME_HEADER
      Classes/SizeDeducer.hpp
      Classes/SmoothFollower.hpp
      Classes/HealthBar.hpp
-     Classes/Spikes.hpp
+     Classes/Traps.hpp
      Classes/PhysicsHelper.hpp
      Classes/Curses.hpp
      Classes/CurseHub.hpp
