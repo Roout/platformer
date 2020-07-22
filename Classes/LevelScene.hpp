@@ -10,7 +10,6 @@
 class Unit;
 class Movement;
 class UserInputHandler;
-class BarrelManager;
 class SmoothFollower;
 
 class LevelScene final : public cocos2d::Scene {
@@ -47,8 +46,6 @@ private:
     // models
     std::vector<Border>     m_borders;
     std::vector<Platform>   m_platforms;
-    // controller
-    std::unique_ptr<BarrelManager>      m_barrelManager { nullptr };
 
     // level id. Used to load a map
     const int m_id { -1 }; 

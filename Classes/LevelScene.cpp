@@ -1,9 +1,9 @@
 #include "LevelScene.hpp"
 #include "Unit.hpp"
 #include "UnitView.hpp"
+#include "Barrel.hpp"
 #include "UserInputHandler.hpp"
 #include "TileMapParser.hpp"
-#include "BarrelManager.hpp"
 #include "SmoothFollower.hpp"
 #include "HealthBar.hpp"
 #include "PhysicsHelper.hpp"
@@ -123,7 +123,7 @@ namespace helper {
                     static_cast<float>(projView->GetDamage())
                 );
             } else if( bodyMasks[projectileIndex ^ 1] == Utils::CreateMask(core::CategoryBits::BARREL)) {
-                const auto barrel { dynamic_cast<BarrelView*>(nodes[projectileIndex^1]) };
+                const auto barrel { dynamic_cast<Barrel*>(nodes[projectileIndex^1]) };
                 barrel->Explode();
             }
 
@@ -201,7 +201,6 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
 
     m_borders.reserve(5000);
     m_platforms.reserve(200);
-    m_barrelManager = std::make_unique<BarrelManager>();
 
     for(size_t i = 0; i < Utils::EnumSize<core::CategoryName>(); i++) {
         const auto category { static_cast<core::CategoryName>(i) };
@@ -240,14 +239,9 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                 map->addChild(trap);
             }
             else if(form.m_type == core::CategoryName::BARREL) {
-                auto barrel { std::make_unique<Barrel>() };
-                auto barrelView { BarrelView::create(barrel.get()) };
-                
-                barrelView->setPosition(form.m_botLeft);
-                barrel->AddPhysicsBody(barrelView->getPhysicsBody());
-
-                map->addChild(barrelView);
-                m_barrelManager->Add(move(barrel), barrelView);
+                auto barrel { Barrel::create() };
+                barrel->setPosition(form.m_botLeft);
+                map->addChild(barrel);
             }
         }
     }
@@ -335,12 +329,8 @@ void LevelScene::update(float dt) {
     auto mapNode = this->getChildByName("Map");
     m_playerFollower->UpdateNodePosition(mapNode);
 
-    m_barrelManager->Update();
-
     m_unit->UpdateCurses(dt);
 
-    static unsigned int x { 0 };
-    cocos2d::log("Update: %0.4f, %d", dt, x++);
-    // const auto position { ->getPosition() };
-    // cocos2d::log("Unit is at: [%0.4f, %0.4f]", position.x, position.y );
+    // static unsigned int x { 0 };
+    // cocos2d::log("Update: %0.4f, %d", dt, x++);
 }

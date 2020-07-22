@@ -88,8 +88,6 @@ list(APPEND GAME_HEADER
      Classes/Platform.hpp
      Classes/Border.hpp
      Classes/Barrel.hpp
-     Classes/BarrelView.hpp
-     Classes/BarrelManager.hpp
      Classes/SizeDeducer.hpp
      Classes/SmoothFollower.hpp
      Classes/HealthBar.hpp
