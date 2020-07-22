@@ -2,6 +2,7 @@
 #include "Unit.hpp"
 #include "UnitView.hpp"
 #include "Barrel.hpp"
+#include "Platform.hpp"
 #include "UserInputHandler.hpp"
 #include "TileMapParser.hpp"
 #include "SmoothFollower.hpp"
@@ -77,7 +78,7 @@ namespace helper {
             const auto unitBottomOrdinate { nodes[platformIndex ^ 1]->getPosition().y };
             const auto platformTopOrdinate { 
                 nodes[platformIndex]->getPosition().y + 
-                nodes[platformIndex]->getContentSize().height
+                nodes[platformIndex]->getContentSize().height / 2.f
             };
             const auto canPassThrough { helper::IsLesser(unitBottomOrdinate, platformTopOrdinate, 0.00001f) };
             
@@ -200,7 +201,6 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
     parser.Parse();
 
     m_borders.reserve(5000);
-    m_platforms.reserve(200);
 
     for(size_t i = 0; i < Utils::EnumSize<core::CategoryName>(); i++) {
         const auto category { static_cast<core::CategoryName>(i) };
@@ -210,23 +210,15 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                 m_playerPosition = form.m_botLeft;
             } 
             else if(form.m_type == core::CategoryName::PLATFORM ) {
-                auto body = cocos2d::PhysicsBody::createBox(form.m_rect.size);
-                body->setDynamic(false);
-                
-                auto node = Node::create();
-                node->setContentSize(form.m_rect.size);
-                node->setPosition(form.m_rect.origin);
-                node->addComponent(body);
-
-                map->addChild(node);
-                m_platforms.emplace_back(body);
+                auto platform = Platform::create(form.m_rect.size);
+                platform->setPosition(form.m_rect.origin + form.m_rect.size / 2.f);
+                map->addChild(platform);
             }
             else if(form.m_type == core::CategoryName::BORDER) {
                 auto body = cocos2d::PhysicsBody::createBox(form.m_rect.size);
-                body->setDynamic(false);
                 body->setPositionOffset(form.m_rect.size / 2.f);
                 
-                auto node = Node::create();
+                auto node = cocos2d::Node::create();
                 node->setPosition(form.m_rect.origin);
                 node->addComponent(body);
 

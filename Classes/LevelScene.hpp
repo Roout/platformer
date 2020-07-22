@@ -4,7 +4,6 @@
 #include <memory>
 #include <vector>
 #include "Border.hpp"
-#include "Platform.hpp"
 #include "cocos2d.h"
 
 class Unit;
@@ -45,7 +44,6 @@ private:
 
     // models
     std::vector<Border>     m_borders;
-    std::vector<Platform>   m_platforms;
 
     // level id. Used to load a map
     const int m_id { -1 }; 

@@ -5,42 +5,47 @@
 #include "Utils.hpp"
 #include "cocos2d.h"
 
-class Platform final : public core::Entity {
+class Platform final : public cocos2d::Node {
 public:
-    
-    Platform( cocos2d::PhysicsBody * const body) 
-        : m_body { body }
-    {   
-        m_body->setDynamic(false);
-        m_body->setCategoryBitmask(
+    static Platform* create(const cocos2d::Size & size) {
+        auto pRet = new (std::nothrow) Platform(size);
+        if (pRet && pRet->init()) {
+            pRet->autorelease();
+        }
+        else {
+            delete pRet;
+            pRet = nullptr;
+        }
+        return pRet;
+    }
+
+private: 
+
+    Platform( const cocos2d::Size& size ) {
+        auto body { cocos2d::PhysicsBody::createBox(size) };
+        body->setDynamic(false);
+        body->setCategoryBitmask(
             Utils::CreateMask(
                 core::CategoryBits::PLATFORM
             )
         );
-        m_body->setCollisionBitmask(
+        body->setCollisionBitmask(
             Utils::CreateMask(
                 core::CategoryBits::HERO,
                 core::CategoryBits::ENEMY, 
                 core::CategoryBits::PROJECTILE
             )
         );
-        m_body->setContactTestBitmask(
+        body->setContactTestBitmask(
             Utils::CreateMask(
                 core::CategoryBits::HERO_SENSOR,
                 core::CategoryBits::HERO,
                 core::CategoryBits::ENEMY
             )
         );
+        this->addComponent(body);
+        this->setContentSize(size);
     }
-
-    ~Platform() = default;
-
-    const cocos2d::PhysicsBody * GetBody() const noexcept {
-        return m_body;
-    }
-
-private:
-    cocos2d::PhysicsBody * m_body { nullptr };
 };
 
 #endif // PLATFORM_HPP
