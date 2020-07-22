@@ -24,6 +24,21 @@ namespace Utils {
     constexpr size_t CreateMask(Args ... bits) noexcept {
         return (static_cast<size_t>(bits) | ...);
     } 
+
+    /**
+     * Generate numbers in range (0, 2^64].
+     * Overflow is possible. (no check performed)
+     */
+    class LinearGenerator final {
+    public:
+    
+        size_t Next() const noexcept {
+            return ++m_value;
+        }
+
+    private:
+        mutable size_t m_value { 0 };
+    };
 }
 
 #endif // UNIQUE_UTILS_HPP
