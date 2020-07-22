@@ -1,12 +1,7 @@
 #ifndef WEAPON_SYSTEM_HPP
 #define WEAPON_SYSTEM_HPP
 
-#include "Core.hpp"
 #include "cocos2d.h"
-#include <vector>
-#include <memory>
-
-class ProjectileView;
 
 /**
  * Weapon defines attack damage, attack range and attack speed
@@ -125,103 +120,6 @@ private:
     float m_reload { 0.f };
 };
 
-/**
- * This class represent the objects created by weapon. 
- * It used to track which targets did the weapon hit.
- * It has lifetime and body.
- * Melee and range weapons generate at least one projectile.   
- * 
- * @note
- *      It used ONLY to track collision, invoke callback, 
- *      manage the lifetime and disappear on first collision
- *      (whatever it callide) or when lifetime is over.
- */
-class Projectile : public core::Entity {
-public:
-    // Lifecycle managment
-    Projectile(const Projectile&) = delete;
-    Projectile& operator=(const Projectile&) = delete;
-
-    Projectile(Projectile&&) = default;
-    Projectile& operator=(Projectile&&) = default;
-
-public:
-
-    Projectile(
-        const cocos2d::Vec2& position,
-        const cocos2d::Size& size,
-        const cocos2d::Vec2& velocity,
-        const float speed
-    );
-
-    ~Projectile();
-
-    /**
-     * This function update projectile state by keeping track 
-     * of it's lifetime.
-     */
-    void Update(const float dt) noexcept {
-        if (m_lifeTime > 0.f) {
-            m_lifeTime -= dt;
-        }
-    }
-   
-    /**
-     * This function tells whether this prjectile still exist or not.
-     * @return 
-     *      The indication that the projectile still exist. 
-     */
-    [[nodiscard]] bool IsExist() const noexcept {
-        return m_lifeTime > 0.f;
-    }
-
-    [[nodiscard]] cocos2d::PhysicsBody * GetBody() noexcept {
-        return m_body;
-    }
-
-    [[nodiscard]] const cocos2d::PhysicsBody * GetBody() const noexcept {
-        return m_body;
-    }
-
-    /**
-     * This compare operator overload usefull for sorting projectiles by lifeTime.
-     * @return
-     *      The indication that this projectile's life time is shorter 
-     *      than the lifetime of the object you compare it too. 
-     */
-    [[nodiscard]] bool operator< (const Projectile& rhs) const noexcept {
-        return m_lifeTime < rhs.m_lifeTime;
-    }
-
-    /**
-     * This method ends the projectile lifetime. So it will disappear. 
-     */
-    void Collapse() noexcept {
-        m_lifeTime = 0.f;
-    }
-
-    // Properties
-private:
-    
-    /**
-     * Keep track of projectile lifetime. When 'm_lifeTime' <= 0.f
-     * projectile should disappear.
-     */
-    float m_lifeTime { 0.f };
-
-    /**
-     * Define an area where the attack can reach and do something, e.g. deal some damage. 
-     * Exist until it collide with something or the projectile lifetime ends.
-     */
-    cocos2d::PhysicsBody * m_body { nullptr };
-
-    /**
-     * The view of the projectile.
-     */
-    ProjectileView * m_view { nullptr };
-};
-
-
 class Sword final : public Weapon {
 public:
     using Weapon::Weapon;
@@ -233,37 +131,14 @@ public:
      * @param[in] position
      *      A left-bottom corner of the created projectile.
      * 
-     * @param[in] direction
-     *      The direction where the projectile will move.
+     * @param[in] velocity
+     *      The velocity of the projectile.
      */
     void Attack(
         const cocos2d::Vec2& position,
-        const cocos2d::Vec2& direction
+        const cocos2d::Vec2& velocity
     ) noexcept override;
     
-// TODO: move all part from below to base class
-    /**
-     * Update reload time.
-     * Update projectiles. 
-     */
-    void Update(const float dt) noexcept override;
-
-    // Methods
-private:
-
-    /**
-     * This method updates projectiles lifetime and erases expired.
-     */
-    void UpdateProjectiles(const float dt) noexcept;
-
-    // Properties
-private:
-
-    /**
-     * Keep and manage created but yet expired or collided projectiles.
-     * Projectiles are sorted in decreasing order. 
-     */
-    std::vector<std::unique_ptr<Projectile>> m_projectiles;
 };
 
 #endif // WEAPON_SYSTEM_HPP

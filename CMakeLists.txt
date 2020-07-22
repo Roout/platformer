@@ -69,11 +69,11 @@ list(APPEND GAME_SOURCE
      Classes/UserInputHandler.cpp
      Classes/TileMapParser.cpp
      Classes/Weapon.cpp
-     Classes/ProjectileView.cpp
      Classes/HealthBar.cpp
      Classes/Curses.cpp
      Classes/CurseHub.cpp
      Classes/Barrel.cpp
+     Classes/Projectile.cpp
      )
 list(APPEND GAME_HEADER
      Classes/AppDelegate.h
@@ -85,7 +85,7 @@ list(APPEND GAME_HEADER
      Classes/Weapon.hpp
      Classes/Core.hpp
      Classes/Utils.hpp
-     Classes/ProjectileView.hpp
+     Classes/Projectile.hpp
      Classes/Platform.hpp
      Classes/Border.hpp
      Classes/Barrel.hpp

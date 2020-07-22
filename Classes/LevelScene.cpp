@@ -9,7 +9,7 @@
 #include "HealthBar.hpp"
 #include "PhysicsHelper.hpp"
 #include "Utils.hpp"
-#include "ProjectileView.hpp"
+#include "Projectile.hpp"
 #include "Traps.hpp"
 
 LevelScene::LevelScene(int id): 
@@ -114,14 +114,14 @@ namespace helper {
         if( isProjectile[BODY_A] || isProjectile[BODY_B] ) {
             const auto projectileIndex { isProjectile[BODY_A]? BODY_A: BODY_B };
 
-            auto projView { dynamic_cast<ProjectileView*>(nodes[projectileIndex]) };
+            auto proj { dynamic_cast<Projectile*>(nodes[projectileIndex]) };
             
             // damage target if possible
             if(isUnit[projectileIndex ^ 1]) {
                 const auto unit { dynamic_cast<UnitView*>(nodes[projectileIndex^1]) };
                 unit->AddCurse<Curses::CurseType::INSTANT>(
                     Curses::CurseHub::ignored, 
-                    static_cast<float>(projView->GetDamage())
+                    static_cast<float>(proj->GetDamage())
                 );
             } else if( bodyMasks[projectileIndex ^ 1] == Utils::CreateMask(core::CategoryBits::BARREL)) {
                 const auto barrel { dynamic_cast<Barrel*>(nodes[projectileIndex^1]) };
@@ -129,7 +129,7 @@ namespace helper {
             }
 
             // destroy projectile
-            projView->Collapse();
+            proj->Collapse();
             // end contact
             return false;
         }

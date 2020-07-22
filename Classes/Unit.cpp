@@ -8,7 +8,7 @@ Unit::Unit() :
     m_health { 100 },
     m_curses { this }
 {   
-    const int damage { 10 };
+    const int damage { 25 };
     const int range { SizeDeducer::GetInstance().GetAdjustedSize(20) };
     const float reloadTime { m_maxAttackTime };
 
