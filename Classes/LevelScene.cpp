@@ -2,6 +2,7 @@
 #include "Unit.hpp"
 #include "UnitView.hpp"
 #include "Barrel.hpp"
+#include "Border.hpp"
 #include "Platform.hpp"
 #include "UserInputHandler.hpp"
 #include "TileMapParser.hpp"
@@ -61,6 +62,7 @@ namespace helper {
             return true;
         } 
         
+        /// Platform & Unit
         const int bodyMasks[2] = {
             bodies[BODY_A]->getCategoryBitmask(),
             bodies[BODY_B]->getCategoryBitmask()
@@ -69,7 +71,6 @@ namespace helper {
             bodyMasks[BODY_A] == Utils::CreateMask(core::CategoryBits::PLATFORM),
             bodyMasks[BODY_B] == Utils::CreateMask(core::CategoryBits::PLATFORM)
         };
-        // contact of any unit's body and platform starts
         if( isPlatform[BODY_A] || isPlatform[BODY_B] ) {
             const auto platformIndex { isPlatform[BODY_A]? BODY_A: BODY_B };
             const auto moveUpwards { helper::IsGreater(bodies[platformIndex ^ 1]->getVelocity().y, 0.f, 0.000001f) };
@@ -85,7 +86,7 @@ namespace helper {
             return !(moveUpwards || canPassThrough);
         }
 
-        // handle contact of spikes and unit
+        /// Spikes & Unit
         const bool isTrap[2] = {
             bodyMasks[BODY_A] == Utils::CreateMask(core::CategoryBits::TRAP),
             bodyMasks[BODY_B] == Utils::CreateMask(core::CategoryBits::TRAP)
@@ -101,6 +102,7 @@ namespace helper {
             return false;
         }
 
+        /// Projectile & (Unit or Barrel)
         const bool isProjectile[2] = {
             bodyMasks[BODY_A] == Utils::CreateMask(core::CategoryBits::PROJECTILE),
             bodyMasks[BODY_B] == Utils::CreateMask(core::CategoryBits::PROJECTILE)
@@ -109,8 +111,6 @@ namespace helper {
             bodyMasks[BODY_A] == Utils::CreateMask(core::CategoryBits::HERO, core::CategoryBits::ENEMY),
             bodyMasks[BODY_B] == Utils::CreateMask(core::CategoryBits::HERO, core::CategoryBits::ENEMY)
         };
-
-
         if( isProjectile[BODY_A] || isProjectile[BODY_B] ) {
             const auto projectileIndex { isProjectile[BODY_A]? BODY_A: BODY_B };
 
@@ -121,7 +121,7 @@ namespace helper {
                 const auto unit { dynamic_cast<UnitView*>(nodes[projectileIndex^1]) };
                 unit->AddCurse<Curses::CurseType::INSTANT>(
                     Curses::CurseHub::ignored, 
-                    static_cast<float>(proj->GetDamage())
+                    proj->GetDamage()
                 );
             } else if( bodyMasks[projectileIndex ^ 1] == Utils::CreateMask(core::CategoryBits::BARREL)) {
                 const auto barrel { dynamic_cast<Barrel*>(nodes[projectileIndex^1]) };
@@ -130,7 +130,7 @@ namespace helper {
 
             // destroy projectile
             proj->Collapse();
-            // end contact
+            // end contact, no need to process collision
             return false;
         }
 
@@ -200,38 +200,30 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
     TileMapParser parser{ map };
     parser.Parse();
 
-    m_borders.reserve(5000);
-
     for(size_t i = 0; i < Utils::EnumSize<core::CategoryName>(); i++) {
         const auto category { static_cast<core::CategoryName>(i) };
-        auto parsedForms { parser.Acquire(category) };
+        const auto parsedForms { parser.Acquire(category) };
         for(const auto& form: parsedForms) {
             if ( form.m_type == core::CategoryName::PLAYER ) {
                 m_playerPosition = form.m_botLeft;
             } 
             else if(form.m_type == core::CategoryName::PLATFORM ) {
-                auto platform = Platform::create(form.m_rect.size);
+                const auto platform = Platform::create(form.m_rect.size);
                 platform->setPosition(form.m_rect.origin + form.m_rect.size / 2.f);
                 map->addChild(platform);
             }
             else if(form.m_type == core::CategoryName::BORDER) {
-                auto body = cocos2d::PhysicsBody::createBox(form.m_rect.size);
-                body->setPositionOffset(form.m_rect.size / 2.f);
-                
-                auto node = cocos2d::Node::create();
-                node->setPosition(form.m_rect.origin);
-                node->addComponent(body);
-
-                map->addChild(node);
-                m_borders.emplace_back(body);
+                const auto border { Border::create(form.m_rect.size) };
+                border->setPosition(form.m_rect.origin + form.m_rect.size / 2.f);
+                map->addChild(border);
             }
             else if(form.m_type == core::CategoryName::SPIKES) {
-                auto trap = Traps::Spikes::create(form.m_rect.size);
+                const auto trap = Traps::Spikes::create(form.m_rect.size);
                 trap->setPosition(form.m_rect.origin + form.m_rect.size / 2.f);
                 map->addChild(trap);
             }
             else if(form.m_type == core::CategoryName::BARREL) {
-                auto barrel { Barrel::create() };
+                const auto barrel { Barrel::create() };
                 barrel->setPosition(form.m_botLeft);
                 map->addChild(barrel);
             }
@@ -263,7 +255,7 @@ bool LevelScene::init() {
     this->InitTileMapObjects(tileMap);
    
     m_unit = std::make_shared<Unit>();
-    auto playerNode { UnitView::create(m_unit.get()) };
+    const auto playerNode { UnitView::create(m_unit.get()) };
     const auto body { playerNode->getPhysicsBody() };
     const auto unitBodySize { m_unit->GetSize() };
 

@@ -5,19 +5,29 @@
 #include "cocos2d.h"
 #include "Utils.hpp"
 
-class Border final {
+class Border final : public cocos2d::Node {
 public:
+    static Border* create(const cocos2d::Size & size) {
+        auto pRet = new (std::nothrow) Border(size);
+        if (pRet && pRet->init()) {
+            pRet->autorelease();
+        }
+        else {
+            delete pRet;
+            pRet = nullptr;
+        }
+        return pRet;
+    }
 
-    Border(cocos2d::PhysicsBody * const body) 
-        : m_body { body }
-    {   
-        m_body->setDynamic(false);
-        m_body->setCategoryBitmask(
-            Utils::CreateMask(
-                core::CategoryBits::BOUNDARY
-            )
+private:
+
+    Border(const cocos2d::Size& size) {   
+        cocos2d::PhysicsBody * const body = cocos2d::PhysicsBody::createBox(size);
+        body->setDynamic(false);
+        body->setCategoryBitmask(
+            Utils::CreateMask( core::CategoryBits::BOUNDARY )
         );
-        m_body->setCollisionBitmask(
+        body->setCollisionBitmask(
             Utils::CreateMask(
                 core::CategoryBits::ENEMY, 
                 core::CategoryBits::HERO, 
@@ -25,19 +35,13 @@ public:
                 core::CategoryBits::PLATFORM
             )
         );
-        m_body->setContactTestBitmask(
+        body->setContactTestBitmask(
             Utils::CreateMask(core::CategoryBits::HERO_SENSOR)
         );
-    }
 
-    ~Border() = default;
-    
-    const cocos2d::PhysicsBody * GetBody() const noexcept {
-        return m_body;
+        this->addComponent(body);
+        this->setContentSize(size);
     }
-
-private:
-    cocos2d::PhysicsBody * m_body { nullptr };
 };
 
 #endif // BORDER_HPP

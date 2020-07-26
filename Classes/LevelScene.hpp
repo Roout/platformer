@@ -2,8 +2,6 @@
 #define LEVEL_SCENE_HPP
 
 #include <memory>
-#include <vector>
-#include "Border.hpp"
 #include "cocos2d.h"
 
 class Unit;
@@ -41,9 +39,6 @@ private:
     std::unique_ptr<SmoothFollower>     m_playerFollower { nullptr };
     std::unique_ptr<Movement>           m_movement { nullptr };
     std::unique_ptr<UserInputHandler>   m_inputHandler { nullptr };
-
-    // models
-    std::vector<Border>     m_borders;
 
     // level id. Used to load a map
     const int m_id { -1 }; 
