@@ -89,6 +89,7 @@ inline std::string CreateAnimationName( Unit::State state) {
         case Unit::State::jump: animationName = "jump"; break;
         case Unit::State::move: animationName = "walk"; break;
         case Unit::State::attack: animationName = "attack"; break; 
+        case Unit::State::dead: animationName = "dead"; break; 
         default: break;
     }
     return animationName;

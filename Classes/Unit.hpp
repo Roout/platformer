@@ -15,7 +15,8 @@ public:
         idle,
         move,
         jump,
-        attack
+        attack,
+        dead
     };
 
     enum class Side { 

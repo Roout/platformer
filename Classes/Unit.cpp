@@ -139,6 +139,11 @@ void Unit::UpdateState(const float dt) noexcept {
 
 void Unit::UpdateCurses(const float dt) noexcept {
     m_curses.Update(dt);
+    // Check health points:
+    if( m_health <= 0) {
+        m_state = State::dead;
+        // Do smth on death
+    }
 }
 
 void Movement::Update(const float dt) noexcept {
