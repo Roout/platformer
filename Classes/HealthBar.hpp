@@ -14,17 +14,17 @@ class Unit;
  */
 class HealthBar final : public cocos2d::DrawNode {
 public:
-    static HealthBar * create( const std::shared_ptr<Unit>& model);
+    static HealthBar * create( const Unit * unit);
 
     [[nodiscard]] bool init() override ;
 
     void update(float dt) override;
 
 private:
-    HealthBar(const std::shared_ptr<Unit>& model);
+    HealthBar(const Unit * const unit);
 
 private:
-    std::weak_ptr<Unit> m_model;
+    const Unit * const m_unit { nullptr };
 
     int m_maxHealth { 0 };
 };

@@ -1,6 +1,5 @@
 #include "LevelScene.hpp"
 #include "Unit.hpp"
-#include "UnitView.hpp"
 #include "Barrel.hpp"
 #include "Border.hpp"
 #include "Platform.hpp"
@@ -12,6 +11,7 @@
 #include "Utils.hpp"
 #include "Projectile.hpp"
 #include "Traps.hpp"
+#include "SizeDeducer.hpp"
 
 LevelScene::LevelScene(int id): 
     m_id{ id } 
@@ -56,8 +56,8 @@ namespace helper {
         // There are nodes one of which is with hero sensor attached 
         // i.e. basicaly it's hero and other body
         if (nodes[BODY_A] && nodes[BODY_B] && (isHeroSensor[BODY_A] || isHeroSensor[BODY_B]) ) {
-            UnitView * heroView { dynamic_cast<UnitView*>(isHeroSensor[BODY_A]? nodes[BODY_A] : nodes[BODY_B]) };
-            heroView->SetContactWithGround(true);
+            Unit * heroView { dynamic_cast<Unit*>(isHeroSensor[BODY_A]? nodes[BODY_A] : nodes[BODY_B]) };
+            heroView->HasContactWithGround(true);
 
             return true;
         } 
@@ -94,7 +94,7 @@ namespace helper {
         if( isTrap[BODY_A] || isTrap[BODY_B] ) {
             const auto trapIndex { isTrap[BODY_A]? BODY_A: BODY_B };
 
-            const auto unit { dynamic_cast<UnitView*>(nodes[trapIndex^1]) };
+            const auto unit { dynamic_cast<Unit*>(nodes[trapIndex^1]) };
             const auto trap { dynamic_cast<Traps::Trap*>(nodes[trapIndex]) };
             
             trap->CurseTarget(unit);
@@ -118,7 +118,7 @@ namespace helper {
             
             // damage target if possible
             if(isUnit[projectileIndex ^ 1]) {
-                const auto unit { dynamic_cast<UnitView*>(nodes[projectileIndex^1]) };
+                const auto unit { dynamic_cast<Unit*>(nodes[projectileIndex^1]) };
                 unit->AddCurse<Curses::CurseType::INSTANT>(
                     Curses::CurseHub::ignored, 
                     proj->GetDamage()
@@ -164,13 +164,13 @@ namespace helper {
         };
 
         if (nodes[BODY_A] && nodes[BODY_B] && (isHeroSensor[BODY_A] || isHeroSensor[BODY_B]) ) {
-            UnitView * heroView { dynamic_cast<UnitView*>(isHeroSensor[BODY_A]? nodes[BODY_A] : nodes[BODY_B]) };
+            Unit * heroView { dynamic_cast<Unit*>(isHeroSensor[BODY_A]? nodes[BODY_A] : nodes[BODY_B]) };
             bool onGround {
                 isHeroSensor[BODY_A]? 
                     helper::IsEquel(bodies[BODY_A]->getVelocity().y, 0.f, 0.000001f):
                     helper::IsEquel(bodies[BODY_B]->getVelocity().y, 0.f, 0.000001f)
             };
-            heroView->SetContactWithGround(onGround);
+            heroView->HasContactWithGround(onGround);
             return true;
         }
 
@@ -182,7 +182,7 @@ namespace helper {
         if( isTrap[BODY_A] || isTrap[BODY_B] ) {
             const auto trapIndex { isTrap[BODY_A]? BODY_A: BODY_B };
 
-            const auto unit { dynamic_cast<UnitView*>(nodes[trapIndex^1]) };
+            const auto unit { dynamic_cast<Unit*>(nodes[trapIndex^1]) };
             const auto trap { dynamic_cast<Traps::Trap*>(nodes[trapIndex]) };
             
             trap->RemoveCurse(unit);
@@ -205,7 +205,14 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
         const auto parsedForms { parser.Acquire(category) };
         for(const auto& form: parsedForms) {
             if ( form.m_type == core::CategoryName::PLAYER ) {
-                m_playerPosition = form.m_botLeft;
+                const cocos2d::Size size { 
+                    SizeDeducer::GetInstance().GetAdjustedSize(80.f), 
+                    SizeDeducer::GetInstance().GetAdjustedSize(135.f)
+                };
+                const auto hero { Player::create(size) };
+                hero->setName("Player");
+                hero->setPosition(form.m_botLeft + size / 2.f);
+                map->addChild(hero, 10);
             } 
             else if(form.m_type == core::CategoryName::PLATFORM ) {
                 const auto platform = Platform::create(form.m_rect.size);
@@ -237,52 +244,34 @@ bool LevelScene::init() {
 	}
 
     auto world = this->getPhysicsWorld();
-    // set gravity
     world->setGravity(cocos2d::Vec2(0, -1000));
-    // optional: set debug draw
     world->setDebugDrawMask(cocos2d::PhysicsWorld::DEBUGDRAW_ALL);
 
 	this->scheduleUpdate();
-
-	const auto visibleSize = cocos2d::Director::getInstance()->getVisibleSize();
-	const auto origin = cocos2d::Director::getInstance()->getVisibleOrigin();
     
     const auto tmxFile { cocos2d::StringUtils::format("Map/level_%d.tmx", m_id) };
     cocos2d::FastTMXTiledMap *tileMap { cocos2d::FastTMXTiledMap::create(tmxFile) };
     tileMap->setName("Map");
     this->addChild(tileMap);
-
     this->InitTileMapObjects(tileMap);
    
-    m_unit = std::make_shared<Unit>();
-    const auto playerNode { UnitView::create(m_unit.get()) };
-    const auto body { playerNode->getPhysicsBody() };
-    const auto unitBodySize { m_unit->GetSize() };
-
-    m_unit->AddBody(body);
     /// TODO: MUST be initialized after attaching body to unit! This looks bad as design!
-    m_movement      = std::make_unique<Movement> (m_unit.get());
-    m_inputHandler  = std::make_unique<UserInputHandler>(m_unit.get(), m_movement.get(), this);
+    const auto player { dynamic_cast<Player*>(tileMap->getChildByName("Player"))};
+    m_inputHandler  = std::make_unique<UserInputHandler>(player);
 
-    playerNode->setAnchorPoint(cocos2d::Vec2::ANCHOR_MIDDLE_BOTTOM);
-    playerNode->setPosition(m_playerPosition);
-    playerNode->setName("Player");
-    tileMap->addChild(playerNode, 10);
-
-    const auto mapShift { m_playerPosition 
+    const auto visibleSize = cocos2d::Director::getInstance()->getVisibleSize();
+	const auto origin = cocos2d::Director::getInstance()->getVisibleOrigin();
+    const auto mapShift { player->getPosition() 
         - cocos2d::Vec2{ visibleSize.width / 2.f, visibleSize.height / 3.f } 
         - origin 
     };
     tileMap->setPosition(-mapShift);
 
-    /// TODO: Get rid of the requirement to have Node* being created with new position!
-    m_playerFollower = std::make_unique<SmoothFollower>(m_unit);
-
     /// TODO: move somewhere
     static constexpr float healthBarShift { 15.f };
-    HealthBar *bar = HealthBar::create(m_unit);
-    bar->setPosition(-unitBodySize.width / 2.f, unitBodySize.height + healthBarShift);
-    playerNode->addChild(bar);
+    HealthBar *bar = HealthBar::create(player);
+    bar->setPosition(-player->getContentSize().width / 2.f, player->getContentSize().height + healthBarShift);
+    player->addChild(bar);
 
     // Add physics body contact listener
     auto shapeContactListener = cocos2d::EventListenerPhysicsContact::create();
@@ -302,18 +291,6 @@ void LevelScene::menuCloseCallback(cocos2d::Ref* pSender) {
 }
 
 void LevelScene::update(float dt) {
-   
-    m_movement->Update(dt);
-
-    m_unit->UpdateWeapon(dt);
-    m_unit->UpdateState(dt);
-    
-    m_playerFollower->UpdateAfterUnitMove(dt);
-    
-    auto mapNode = this->getChildByName("Map");
-    m_playerFollower->UpdateNodePosition(mapNode);
-
-    m_unit->UpdateCurses(dt);
 
     // static unsigned int x { 0 };
     // cocos2d::log("Update: %0.4f, %d", dt, x++);

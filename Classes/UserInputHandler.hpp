@@ -6,18 +6,15 @@
 
 // This is player's avatar
 class Unit; 
-class Movement;
-namespace cocos2d {
-    class Node;
-}
 
 using WinKeyCode = cocos2d::EventKeyboard::KeyCode;
+
 // used as controller
-// note: must be destroyed before Unit
+// for now it need to live at least as much as player
 class UserInputHandler final {
 public:
     // define which unit and which node it listen to.
-    UserInputHandler(Unit * const, Movement * const, cocos2d::Node * const );
+    UserInputHandler(Unit * const);
     ~UserInputHandler() = default;
 
     UserInputHandler(const UserInputHandler& ) = delete;
@@ -54,8 +51,7 @@ private:
     };
 
     Input m_lastInput {};
-    Unit * const m_model { nullptr };
-    Movement * const m_movement { nullptr };
+    Unit * const m_player { nullptr };
 };
 
 #endif // USER_INPUT_H

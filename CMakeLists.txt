@@ -65,7 +65,8 @@ list(APPEND GAME_SOURCE
      Classes/AppDelegate.cpp
      Classes/LevelScene.cpp
      Classes/Unit.cpp
-     Classes/UnitView.cpp
+     Classes/UnitMovement.cpp
+     Classes/SmoothFollower.cpp
      Classes/UserInputHandler.cpp
      Classes/TileMapParser.cpp
      Classes/Weapon.cpp
@@ -79,7 +80,7 @@ list(APPEND GAME_HEADER
      Classes/AppDelegate.h
      Classes/LevelScene.hpp
      Classes/Unit.hpp
-     Classes/UnitView.hpp
+     Classes/UnitMovement.hpp
      Classes/UserInputHandler.hpp
      Classes/TileMapParser.hpp
      Classes/Weapon.hpp

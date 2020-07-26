@@ -38,13 +38,8 @@ void UserInputHandler::Input::Merge(const Input& input) noexcept {
     }
 }  
 
-UserInputHandler::UserInputHandler(
-    Unit * const model, 
-    Movement * const movement, 
-    cocos2d::Node * const node 
-) :
-    m_model { model },
-    m_movement { movement }
+UserInputHandler::UserInputHandler(Unit * const player) :
+    m_player { player }
 {
     auto listener = cocos2d::EventListenerKeyboard::create();
     
@@ -56,7 +51,7 @@ UserInputHandler::UserInputHandler(
     };
 
 	auto eventDispatcher = cocos2d::Director::getInstance()->getEventDispatcher();
-	eventDispatcher->addEventListenerWithSceneGraphPriority(listener, node);
+	eventDispatcher->addEventListenerWithSceneGraphPriority(listener, player);
 }
 
 void UserInputHandler::OnKeyPressed(
@@ -65,19 +60,19 @@ void UserInputHandler::OnKeyPressed(
 ) {
     m_lastInput.Merge(Input::Create(keyCode));
 
-    if(m_lastInput.jump && m_model->IsOnGround() ) {
-        m_movement->Jump();
+    if(m_lastInput.jump && m_player->IsOnGround() ) {
+        m_player->GetMovement().Jump();
     }
 
     if( m_lastInput.dx == 1) {
-        m_movement->MoveRight();
+        m_player->GetMovement().MoveRight();
     }
     else if( m_lastInput.dx == -1) {
-        m_movement->MoveLeft();
+        m_player->GetMovement().MoveLeft();
     }
 
     if( m_lastInput.attack) {
-        m_model->MeleeAttack();
+        m_player->MeleeAttack();
     }
 }
 
@@ -88,7 +83,7 @@ void UserInputHandler::OnKeyRelease(
     const Input released { Input::Create(keyCode) };
     // TODO: release up and left/right is ongoing!
     if(released.dx && released.dx == m_lastInput.dx) {
-        m_movement->StopXAxisMove();
+        m_player->GetMovement().StopXAxisMove();
         m_lastInput.dx = 0;
     }
 

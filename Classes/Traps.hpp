@@ -5,7 +5,6 @@
 #include "Core.hpp"
 #include "Utils.hpp"
 #include "Curses.hpp"
-#include "UnitView.hpp"
 
 namespace Traps {
 
@@ -19,9 +18,9 @@ namespace Traps {
             return m_id;
         }
 
-        virtual void CurseTarget(UnitView * const unit) = 0;
+        virtual void CurseTarget(Unit * const unit) = 0;
         
-        void RemoveCurse(UnitView * const unit) {
+        void RemoveCurse(Unit* const unit) {
             unit->RemoveCurse(this->GetId());
         };
 
@@ -67,7 +66,7 @@ namespace Traps {
             return pRet;
         }
 
-        void CurseTarget(UnitView * const unit) override {
+        void CurseTarget(Unit * const unit) override {
             unit->AddCurse<Curses::CurseType::DPS>(this->GetId(), m_damage, Curses::UNLIMITED);
         };
 
