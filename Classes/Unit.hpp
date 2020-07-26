@@ -9,7 +9,7 @@
 
 class Movement;
 
-class Unit final : public core::Entity { 
+class Unit final { 
 public:
     enum class State {
         idle,
@@ -43,7 +43,7 @@ public:
         return m_lookSide;
     }
 
-    void RecieveDamage(int damage) noexcept override;
+    void RecieveDamage(int damage) noexcept;
 
     /**
      * This function initiate a melee attack. 
