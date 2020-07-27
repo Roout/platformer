@@ -189,8 +189,6 @@ namespace helper {
 
             return false;
         }
-
-
         return true;
     }
 
@@ -255,7 +253,6 @@ bool LevelScene::init() {
     this->addChild(tileMap);
     this->InitTileMapObjects(tileMap);
    
-    /// TODO: MUST be initialized after attaching body to unit! This looks bad as design!
     const auto player { dynamic_cast<Player*>(tileMap->getChildByName("Player"))};
     m_inputHandler  = std::make_unique<UserInputHandler>(player);
 
@@ -291,7 +288,6 @@ void LevelScene::menuCloseCallback(cocos2d::Ref* pSender) {
 }
 
 void LevelScene::update(float dt) {
-
     // static unsigned int x { 0 };
     // cocos2d::log("Update: %0.4f, %d", dt, x++);
 }
