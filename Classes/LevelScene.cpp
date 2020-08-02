@@ -49,8 +49,8 @@ namespace helper {
         };
         
         const bool isHeroSensor[2] = { 
-            shapes[BODY_A]->getCategoryBitmask() == Utils::CreateMask(core::CategoryBits::HERO_SENSOR),
-            shapes[BODY_B]->getCategoryBitmask() == Utils::CreateMask(core::CategoryBits::HERO_SENSOR)
+            shapes[BODY_A]->getCategoryBitmask() == Utils::CreateMask(core::CategoryBits::GROUND_SENSOR),
+            shapes[BODY_B]->getCategoryBitmask() == Utils::CreateMask(core::CategoryBits::GROUND_SENSOR)
         };
 
         // There are nodes one of which is with hero sensor attached 
@@ -159,8 +159,8 @@ namespace helper {
         };
 
         bool isHeroSensor[2] = { 
-            shapes[BODY_A]->getCategoryBitmask() == Utils::CreateMask(core::CategoryBits::HERO_SENSOR),
-            shapes[BODY_B]->getCategoryBitmask() == Utils::CreateMask(core::CategoryBits::HERO_SENSOR)
+            shapes[BODY_A]->getCategoryBitmask() == Utils::CreateMask(core::CategoryBits::GROUND_SENSOR),
+            shapes[BODY_B]->getCategoryBitmask() == Utils::CreateMask(core::CategoryBits::GROUND_SENSOR)
         };
 
         if (nodes[BODY_A] && nodes[BODY_B] && (isHeroSensor[BODY_A] || isHeroSensor[BODY_B]) ) {

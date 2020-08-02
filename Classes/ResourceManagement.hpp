@@ -9,8 +9,7 @@
 namespace Resource {
 
     inline dragonBones::CCArmatureDisplay* BuildArmatureDisplay(
-        const std::string& cacheName,
-        const std::string& armatureName
+        const std::string& cacheName
     ) {
         const auto factory = dragonBones::CCFactory::getFactory();
         if(const auto bonesData = factory->getDragonBonesData(cacheName); bonesData == nullptr) {
@@ -19,7 +18,7 @@ namespace Resource {
         if(const auto texture = factory->getTextureAtlasData(cacheName); texture == nullptr) {
             factory->loadTextureAtlasData(cacheName + "/" + cacheName + "_tex.json");
         }
-        return factory->buildArmatureDisplay(armatureName, cacheName);
+        return factory->buildArmatureDisplay("Armature", cacheName);
     }
 }
 

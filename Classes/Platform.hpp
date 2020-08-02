@@ -38,7 +38,7 @@ private:
         );
         body->setContactTestBitmask(
             Utils::CreateMask(
-                core::CategoryBits::HERO_SENSOR,
+                core::CategoryBits::GROUND_SENSOR,
                 core::CategoryBits::HERO,
                 core::CategoryBits::ENEMY
             )

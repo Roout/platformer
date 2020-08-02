@@ -36,7 +36,7 @@ private:
             )
         );
         body->setContactTestBitmask(
-            Utils::CreateMask(core::CategoryBits::HERO_SENSOR)
+            Utils::CreateMask(core::CategoryBits::GROUND_SENSOR)
         );
 
         this->addComponent(body);

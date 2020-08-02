@@ -7,7 +7,7 @@
 #include "ResourceManagement.hpp"
 
 Unit* Unit::create(const cocos2d::Size& size) {
-    auto pRet = new (std::nothrow) Unit(size);
+    auto pRet = new (std::nothrow) Unit(size, "mc");
     if(pRet && pRet->init()) {
         pRet->autorelease();
     } else {
@@ -17,9 +17,13 @@ Unit* Unit::create(const cocos2d::Size& size) {
     return pRet;
 }
 
-Unit::Unit(const cocos2d::Size& size) :
+Unit::Unit(
+    const cocos2d::Size& size, 
+    const std::string& dragonBonesName
+) :
     m_curses { this },
-    m_movement { this }
+    m_movement { this },
+    m_dragonBonesName { dragonBonesName }
 {   
     // Create body
     this->CreateBody(size);
@@ -38,7 +42,7 @@ bool Unit::init() {
     this->scheduleUpdate();
 
     // load animation data and build the armature
-    const auto armatureDisplay = Resource::BuildArmatureDisplay("mc", "Armature");
+    const auto armatureDisplay = Resource::BuildArmatureDisplay(m_dragonBonesName);
 
     // TODO: scale factor depends on device resolution so it can'be predefined constant.
     constexpr auto designedScaleFactor { 0.2f };
@@ -112,7 +116,7 @@ void Unit::CreateBody(const cocos2d::Size& size) {
     sensorShape->setSensor(true);
     sensorShape->setCategoryBitmask(
         Utils::CreateMask(
-            core::CategoryBits::HERO_SENSOR
+            core::CategoryBits::GROUND_SENSOR
         )
     );
     sensorShape->setCollisionBitmask(0);
@@ -276,7 +280,7 @@ Player* Player::create(const cocos2d::Size& size) {
 }
 
 Player::Player(const cocos2d::Size& sz) :
-    Unit { sz }
+    Unit { sz, "mc" }
 {}
 
 

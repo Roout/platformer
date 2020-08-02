@@ -47,7 +47,7 @@ namespace core {
         PLATFORM    = 0x0010,
         TRAP        = 0x0020,
         BARREL      = 0x0040,
-        HERO_SENSOR = 0x0080
+        GROUND_SENSOR = 0x0080
     };
 }
 

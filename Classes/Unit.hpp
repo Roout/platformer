@@ -72,7 +72,10 @@ protected:
         right 
     };
 
-    Unit(const cocos2d::Size& size);
+    Unit(
+        const cocos2d::Size& size, 
+        const std::string& dragonBonesName
+    );
 
 private:
 
@@ -107,7 +110,7 @@ private:
         Side m_side { Side::left };
     };
 
-    Curses::CurseHub m_curses;
+    Curses::CurseHub m_curses { this };
 
     Movement m_movement { this };
 
@@ -120,6 +123,7 @@ private:
 
     std::unique_ptr<Weapon> m_weapon { nullptr };
 
+    const std::string m_dragonBonesName {};
     /**
      * The duration of attack animation
      */

@@ -65,6 +65,7 @@ list(APPEND GAME_SOURCE
      Classes/AppDelegate.cpp
      Classes/LevelScene.cpp
      Classes/Unit.cpp
+     Classes/Enemy.cpp
      Classes/UnitMovement.cpp
      Classes/SmoothFollower.cpp
      Classes/UserInputHandler.cpp
@@ -80,6 +81,7 @@ list(APPEND GAME_HEADER
      Classes/AppDelegate.h
      Classes/LevelScene.hpp
      Classes/Unit.hpp
+     Classes/Enemy.hpp
      Classes/Brain.hpp
      Classes/UnitMovement.hpp
      Classes/ResourceManagement.hpp

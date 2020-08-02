@@ -24,7 +24,7 @@ bool Barrel::init() {
     this->scheduleUpdate(); 
 
     // load animation data and build the armature
-    const auto armatureDisplay = Resource::BuildArmatureDisplay("barrel", "Armature");
+    const auto armatureDisplay = Resource::BuildArmatureDisplay("barrel");
 
     // TODO: scale factor depends on device resolution so it can'be predefined constant.
     constexpr auto designedScaleFactor { 0.2f };
