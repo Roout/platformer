@@ -80,7 +80,9 @@ list(APPEND GAME_HEADER
      Classes/AppDelegate.h
      Classes/LevelScene.hpp
      Classes/Unit.hpp
+     Classes/Brain.hpp
      Classes/UnitMovement.hpp
+     Classes/ResourceManagement.hpp
      Classes/UserInputHandler.hpp
      Classes/TileMapParser.hpp
      Classes/Weapon.hpp

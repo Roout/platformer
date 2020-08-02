@@ -3,8 +3,7 @@
 #include "SizeDeducer.hpp"
 #include "Utils.hpp"
 
-#include "dragonBones/DragonBonesHeaders.h"
-#include "dragonBones/cocos2dx/CCDragonBonesHeaders.h"
+#include "ResourceManagement.hpp"
 
 Barrel * Barrel::create() {
     auto pRet = new (std::nothrow) Barrel();
@@ -24,17 +23,8 @@ bool Barrel::init() {
     }
     this->scheduleUpdate(); 
 
-    /// TODO: make armature creation factory function in another file!
     // load animation data and build the armature
-    const auto factory = dragonBones::CCFactory::getFactory();
-
-    if(auto bonesData = factory->getDragonBonesData("barrel"); bonesData == nullptr) {
-        factory->loadDragonBonesData("barrel/barrel_ske.json");
-    }
-    if(auto texture = factory->getTextureAtlasData("barrel"); texture == nullptr) {
-        factory->loadTextureAtlasData("barrel/barrel_tex.json");
-    }
-    auto armatureDisplay = factory->buildArmatureDisplay("Armature", "barrel");
+    const auto armatureDisplay = Resource::BuildArmatureDisplay("barrel", "Armature");
 
     // TODO: scale factor depends on device resolution so it can'be predefined constant.
     constexpr auto designedScaleFactor { 0.2f };

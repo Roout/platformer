@@ -4,8 +4,7 @@
 #include "PhysicsHelper.hpp" 
 #include "Utils.hpp"
 
-#include "dragonBones/DragonBonesHeaders.h"
-#include "dragonBones/cocos2dx/CCDragonBonesHeaders.h"
+#include "ResourceManagement.hpp"
 
 Unit* Unit::create(const cocos2d::Size& size) {
     auto pRet = new (std::nothrow) Unit(size);
@@ -39,15 +38,7 @@ bool Unit::init() {
     this->scheduleUpdate();
 
     // load animation data and build the armature
-    /// TODO: move this to function
-    const auto factory = dragonBones::CCFactory::getFactory();
-    if(auto bonesData = factory->getDragonBonesData("mc"); bonesData == nullptr) {
-        factory->loadDragonBonesData("mc/mc_ske.json");
-    }
-    if(auto texture = factory->getTextureAtlasData("mc"); texture == nullptr) {
-        factory->loadTextureAtlasData("mc/mc_tex.json");
-    }
-    auto armatureDisplay = factory->buildArmatureDisplay("Armature", "mc");
+    const auto armatureDisplay = Resource::BuildArmatureDisplay("mc", "Armature");
 
     // TODO: scale factor depends on device resolution so it can'be predefined constant.
     constexpr auto designedScaleFactor { 0.2f };
