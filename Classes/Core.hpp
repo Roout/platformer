@@ -11,13 +11,26 @@ namespace core {
      * @note 
      *      It used as indexes for tilemap parser so don't change order.  
      */
-    enum class CategoryName : int {
+    enum class CategoryName {
+        UNDEFINED,
+        
         PLATFORM,
         BORDER,
         BARREL,
         PLAYER,
+        ENEMY,
         SPIKES,
+        
+        COUNT
+    };
+
+    enum class EnemyType {
         UNDEFINED,
+
+        WARRIOR, // in fact it's axe-warrior
+        ARCHER,
+        SPEARMAN,
+
         COUNT
     };
 
@@ -34,6 +47,8 @@ namespace core {
             category = CategoryName::PLAYER;
         } else if(str == "barrel") {
             category = CategoryName::BARREL;
+        } else if(str == "enemy") {
+            category = CategoryName::ENEMY;
         }
 
         return category;
