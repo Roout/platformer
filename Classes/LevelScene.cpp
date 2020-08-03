@@ -6,12 +6,12 @@
 #include "UserInputHandler.hpp"
 #include "TileMapParser.hpp"
 #include "SmoothFollower.hpp"
-#include "HealthBar.hpp"
 #include "PhysicsHelper.hpp"
 #include "Utils.hpp"
 #include "Projectile.hpp"
 #include "Traps.hpp"
 #include "SizeDeducer.hpp"
+#include "Enemy.hpp"
 
 LevelScene::LevelScene(int id): 
     m_id{ id } 
@@ -48,16 +48,16 @@ namespace helper {
             bodies[BODY_B]->getNode() 
         };
         
-        const bool isHeroSensor[2] = { 
+        const bool isUnitSensor[2] = { 
             shapes[BODY_A]->getCategoryBitmask() == Utils::CreateMask(core::CategoryBits::GROUND_SENSOR),
             shapes[BODY_B]->getCategoryBitmask() == Utils::CreateMask(core::CategoryBits::GROUND_SENSOR)
         };
 
-        // There are nodes one of which is with hero sensor attached 
-        // i.e. basicaly it's hero and other body
-        if (nodes[BODY_A] && nodes[BODY_B] && (isHeroSensor[BODY_A] || isHeroSensor[BODY_B]) ) {
-            Unit * heroView { dynamic_cast<Unit*>(isHeroSensor[BODY_A]? nodes[BODY_A] : nodes[BODY_B]) };
-            heroView->HasContactWithGround(true);
+        // There are nodes one of which is with unit sensor attached 
+        // i.e. basicaly it's unit and other collidable body
+        if (nodes[BODY_A] && nodes[BODY_B] && (isUnitSensor[BODY_A] || isUnitSensor[BODY_B]) ) {
+            Unit * unit { dynamic_cast<Unit*>(isUnitSensor[BODY_A]? nodes[BODY_A] : nodes[BODY_B]) };
+            unit->HasContactWithGround(true);
 
             return true;
         } 
@@ -107,14 +107,16 @@ namespace helper {
             bodyMasks[BODY_A] == Utils::CreateMask(core::CategoryBits::PROJECTILE),
             bodyMasks[BODY_B] == Utils::CreateMask(core::CategoryBits::PROJECTILE)
         };
+
+        const auto unitMask { Utils::CreateMask(core::CategoryBits::HERO, core::CategoryBits::ENEMY) };
         const bool isUnit[2] = {
-            bodyMasks[BODY_A] == Utils::CreateMask(core::CategoryBits::HERO, core::CategoryBits::ENEMY),
-            bodyMasks[BODY_B] == Utils::CreateMask(core::CategoryBits::HERO, core::CategoryBits::ENEMY)
+            (bodyMasks[BODY_A] & unitMask) > 0,
+            (bodyMasks[BODY_B] & unitMask) > 0
         };
         if( isProjectile[BODY_A] || isProjectile[BODY_B] ) {
             const auto projectileIndex { isProjectile[BODY_A]? BODY_A: BODY_B };
 
-            auto proj { dynamic_cast<Projectile*>(nodes[projectileIndex]) };
+            const auto proj { dynamic_cast<Projectile*>(nodes[projectileIndex]) };
             
             // damage target if possible
             if(isUnit[projectileIndex ^ 1]) {
@@ -158,15 +160,15 @@ namespace helper {
             bodies[BODY_B]->getCategoryBitmask()
         };
 
-        bool isHeroSensor[2] = { 
+        bool isUnitSensor[2] = { 
             shapes[BODY_A]->getCategoryBitmask() == Utils::CreateMask(core::CategoryBits::GROUND_SENSOR),
             shapes[BODY_B]->getCategoryBitmask() == Utils::CreateMask(core::CategoryBits::GROUND_SENSOR)
         };
 
-        if (nodes[BODY_A] && nodes[BODY_B] && (isHeroSensor[BODY_A] || isHeroSensor[BODY_B]) ) {
-            Unit * heroView { dynamic_cast<Unit*>(isHeroSensor[BODY_A]? nodes[BODY_A] : nodes[BODY_B]) };
+        if (nodes[BODY_A] && nodes[BODY_B] && (isUnitSensor[BODY_A] || isUnitSensor[BODY_B]) ) {
+            Unit * heroView { dynamic_cast<Unit*>(isUnitSensor[BODY_A]? nodes[BODY_A] : nodes[BODY_B]) };
             bool onGround {
-                isHeroSensor[BODY_A]? 
+                isUnitSensor[BODY_A]? 
                     helper::IsEquel(bodies[BODY_A]->getVelocity().y, 0.f, 0.000001f):
                     helper::IsEquel(bodies[BODY_B]->getVelocity().y, 0.f, 0.000001f)
             };
@@ -209,7 +211,7 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                 };
                 const auto hero { Player::create(size) };
                 hero->setName("Player");
-                hero->setPosition(form.m_botLeft + size / 2.f);
+                hero->setPosition(form.m_botLeft);
                 map->addChild(hero, 10);
             } 
             else if(form.m_type == core::CategoryName::PLATFORM ) {
@@ -231,6 +233,22 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                 const auto barrel { Barrel::create() };
                 barrel->setPosition(form.m_botLeft);
                 map->addChild(barrel);
+            }
+            else if(form.m_type == core::CategoryName::ENEMY) {
+                /// TODO: cleanup size variable
+                const cocos2d::Size size { 
+                    SizeDeducer::GetInstance().GetAdjustedSize(80.f), 
+                    SizeDeducer::GetInstance().GetAdjustedSize(135.f)
+                };
+                switch(form.m_enemyType) {
+                    case core::EnemyType::WARRIOR: {
+                        const auto warrior { Enemies::Warrior::create(size) };
+                        warrior->setName("Warrior");
+                        warrior->setPosition(form.m_botLeft);
+                        map->addChild(warrior, 9);
+                    } break;
+                    default: break;
+                }
             }
         }
     }
@@ -263,12 +281,6 @@ bool LevelScene::init() {
         - origin 
     };
     tileMap->setPosition(-mapShift);
-
-    /// TODO: move somewhere
-    static constexpr float healthBarShift { 15.f };
-    HealthBar *bar = HealthBar::create(player);
-    bar->setPosition(-player->getContentSize().width / 2.f, player->getContentSize().height + healthBarShift);
-    player->addChild(bar);
 
     // Add physics body contact listener
     auto shapeContactListener = cocos2d::EventListenerPhysicsContact::create();

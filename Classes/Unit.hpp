@@ -57,8 +57,8 @@ public:
         m_curses.RemoveCurse(id);
     }
 
+    /// Types
 protected:
-
     enum class Act {
         idle,
         move,
@@ -72,18 +72,32 @@ protected:
         right 
     };
 
+    struct State final {
+        /**
+         * Indicate what the unit is doing now 
+         */
+        Act m_act { Act::idle };
+        /**
+         * Indicate where the unit is looking now
+         */
+        Side m_side { Side::left };
+    };
+
+    friend class Movement;
+
+protected:
+
     Unit(
         const cocos2d::Size& size, 
         const std::string& dragonBonesName
     );
 
-private:
-
+    /// Update functions
     void UpdateWeapon(const float dt) noexcept;
     
     void UpdatePosition(const float dt) noexcept;
 
-    void UpdateState(const float dt) noexcept;
+    virtual void UpdateState(const float dt) noexcept;
 
     void UpdateCurses(const float dt) noexcept;
 
@@ -96,20 +110,8 @@ private:
 
     std::string CreateAnimationName(Act state);
 
-private:
-    friend class Movement;
-
-    struct State final {
-        /**
-         * Indicate what the unit is doing now 
-         */
-        Act m_act { Act::idle };
-        /**
-         * Indicate where the unit is looking now
-         */
-        Side m_side { Side::left };
-    };
-
+    /// Properties
+protected:
     Curses::CurseHub m_curses { this };
 
     Movement m_movement { this };
@@ -117,6 +119,7 @@ private:
     int m_health { 100 };
     
     State m_currentState {};
+
     State m_previousState {};
 
     bool m_hasContactWithGround { false };
@@ -128,8 +131,8 @@ private:
      * The duration of attack animation
      */
     static constexpr float m_maxAttackTime { 0.5f };
+    
     float m_attackTime { m_maxAttackTime };
-
 };
 
 class Player final : public Unit {

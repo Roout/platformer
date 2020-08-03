@@ -3,7 +3,7 @@
 #include "SizeDeducer.hpp"
 #include "PhysicsHelper.hpp" 
 #include "Utils.hpp"
-
+#include "HealthBar.hpp"
 #include "ResourceManagement.hpp"
 
 Unit* Unit::create(const cocos2d::Size& size) {
@@ -27,7 +27,8 @@ Unit::Unit(
 {   
     // Create body
     this->CreateBody(size);
-    
+    // Initialize state
+
     // Create weapon
     const int damage { 25 };
     const int range { SizeDeducer::GetInstance().GetAdjustedSize(20) };
@@ -55,7 +56,12 @@ bool Unit::init() {
 
     // adjust animation
     armatureDisplay->setScale( adjustedScaleFactor );
-    armatureDisplay->getAnimation()->play("idle");
+
+    /// TODO: move somewhere
+    static constexpr float healthBarShift { 15.f };
+    HealthBar *bar = HealthBar::create(this);
+    bar->setPosition(-this->getContentSize().width / 2.f, this->getContentSize().height + healthBarShift);
+    this->addChild(bar);
 
     // add state lable:
     auto state = cocos2d::Label::createWithTTF("state", "fonts/arial.ttf", 25);
@@ -90,34 +96,18 @@ void Unit::CreateBody(const cocos2d::Size& size) {
     body->setDynamic(true);
     body->setGravityEnable(true);
     body->setRotationEnable(false);
-    body->setCategoryBitmask(
-        Utils::CreateMask(core::CategoryBits::HERO)
-    );
-    body->setCollisionBitmask(
-        Utils::CreateMask(
-            core::CategoryBits::ENEMY, 
-            core::CategoryBits::BOUNDARY, 
-            core::CategoryBits::PROJECTILE, 
-            core::CategoryBits::PLATFORM 
-        )
-    );
-    body->setContactTestBitmask(
-        Utils::CreateMask(
-            core::CategoryBits::PLATFORM,
-            core::CategoryBits::TRAP
-        )
-    );
     
-    const cocos2d::Size sensorShapeSize { size.width / 2.f, 10.f };
+    const cocos2d::Size sensorShapeSize { size.width * 0.9f, 8.f };
     const auto sensorShape = cocos2d::PhysicsShapeBox::create(
         sensorShapeSize, 
         cocos2d::PHYSICSSHAPE_MATERIAL_DEFAULT
     );
     sensorShape->setSensor(true);
+    sensorShape->setTag(
+        Utils::CreateMask(core::CategoryBits::GROUND_SENSOR)
+    );
     sensorShape->setCategoryBitmask(
-        Utils::CreateMask(
-            core::CategoryBits::GROUND_SENSOR
-        )
+        Utils::CreateMask(core::CategoryBits::GROUND_SENSOR)
     );
     sensorShape->setCollisionBitmask(0);
     sensorShape->setContactTestBitmask(
@@ -220,11 +210,7 @@ void Unit::UpdatePosition(const float dt) noexcept {
 }
 
 bool Unit::IsOnGround() const noexcept {
-    const auto direction { this->getPhysicsBody()->getVelocity() };
-    constexpr float EPS { 0.00001f };
-    
-    auto isOnGround { helper::IsEquel(direction.y, 0.f, EPS) };
-    return isOnGround && m_hasContactWithGround;
+    return m_hasContactWithGround;
 }
 
 void Unit::UpdateState(const float dt) noexcept {
@@ -289,6 +275,41 @@ bool Player::init() {
         return false; 
     }
     m_follower = std::make_unique<SmoothFollower>(this);
+
+    const auto body { this->getPhysicsBody() };
+    body->setCategoryBitmask(
+        Utils::CreateMask(core::CategoryBits::HERO)
+    );
+    body->setCollisionBitmask(
+        Utils::CreateMask(
+            core::CategoryBits::ENEMY, 
+            core::CategoryBits::BOUNDARY, 
+            core::CategoryBits::PROJECTILE, 
+            core::CategoryBits::PLATFORM 
+        )
+    );
+    body->setContactTestBitmask(
+        Utils::CreateMask(
+            core::CategoryBits::TRAP,
+            core::CategoryBits::PLATFORM
+        )
+    );
+    const auto sensor { 
+        body->getShape(Utils::EnumCast(
+            core::CategoryBits::GROUND_SENSOR)
+        ) 
+    };
+    sensor->setCollisionBitmask(0);
+    sensor->setCategoryBitmask(
+        Utils::CreateMask(core::CategoryBits::GROUND_SENSOR)
+    );
+    sensor->setContactTestBitmask(
+        Utils::CreateMask(
+            core::CategoryBits::BOUNDARY,
+            core::CategoryBits::PLATFORM,
+            core::CategoryBits::ENEMY
+        )
+    );
     return true;
 }
 
