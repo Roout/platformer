@@ -44,7 +44,7 @@ Projectile::Projectile (
     m_lifeTime { 0.15f },
     m_damage { damage }
 {    
-    auto body = cocos2d::PhysicsBody::createBox(size);
+    const auto body = cocos2d::PhysicsBody::createBox(size);
     body->setVelocity(velocity);
     body->setDynamic(false);
     body->setGravityEnable(true);
@@ -64,7 +64,7 @@ Projectile::Projectile (
             core::CategoryBits::PROJECTILE 
         )
     };
-    body->setCollisionBitmask(interactWith);
+    // body->setCollisionBitmask(interactWith);
     body->setContactTestBitmask(interactWith);
 
     /**
