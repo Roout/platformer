@@ -1,12 +1,30 @@
 #include "TileMapParser.hpp"
 #include "cocos2d.h"
 
+namespace {
+	core::EnemyType AsEnemyType(const std::string& ty) noexcept {
+		auto type { core::EnemyType::UNDEFINED };
+		if( ty == "warrior" ) {
+			type = core::EnemyType::WARRIOR;
+		} 
+		else if ( ty == "archer" ) {
+			type = core::EnemyType::ARCHER;
+		}
+		else if ( ty == "spearman") {
+			type = core::EnemyType::SPEARMAN;
+		}
+		return type;
+	}
+}
+
+
 TileMapParser::TileMapParser(const cocos2d::FastTMXTiledMap * tileMap):
     m_tileMap{ tileMap }
 {
     this->Get<core::CategoryName::PLATFORM>().reserve(20);
 	this->Get<core::CategoryName::BORDER>().reserve(100);
 	this->Get<core::CategoryName::BARREL>().reserve(10);
+	this->Get<core::CategoryName::ENEMY>().reserve(30);
 	this->Get<core::CategoryName::SPIKES>().reserve(10);
 }
 
@@ -19,23 +37,24 @@ void TileMapParser::Parse() {
 			const auto& objMap = object.asValueMap();
 			const auto type = objMap.at("type").asString();
 			const auto name = objMap.at("name").asString();
-			// TODO: change to object names
-			if (type == "point") {
-				const auto x = objMap.at("x").asFloat();
-				const auto y = objMap.at("y").asFloat();
+			const auto x = objMap.at("x").asFloat();
+			const auto y = objMap.at("y").asFloat();
 
-				details::Form form;
+			details::Form form;
+			form.m_botLeft = cocos2d::Vec2{x, y};
 
-				if (name == "player") {
-					form.m_type = core::CategoryName::PLAYER;
-					form.m_botLeft = cocos2d::Vec2{x, y};
-					this->Get<core::CategoryName::PLAYER>().emplace_back(form);
-				}
-				else if ( name == "barrel") {
-					form.m_type = core::CategoryName::BARREL;
-					form.m_botLeft = cocos2d::Vec2{x, y};
-					this->Get<core::CategoryName::BARREL>().emplace_back(form);
-				}
+			if (name == "player") {
+				form.m_type = core::CategoryName::PLAYER;
+				this->Get<core::CategoryName::PLAYER>().emplace_back(form);
+			}
+			else if ( name == "barrel") {
+				form.m_type = core::CategoryName::BARREL;
+				this->Get<core::CategoryName::BARREL>().emplace_back(form);
+			}
+			else if ( name == "enemy" ) {
+				form.m_type = core::CategoryName::ENEMY;
+				form.m_enemyType = ::AsEnemyType(type);
+				this->Get<core::CategoryName::ENEMY>().emplace_back(form);
 			}
 		}
 	}

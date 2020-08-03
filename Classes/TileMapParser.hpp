@@ -14,10 +14,10 @@ namespace cocos2d {
 namespace details {
     
     struct Form final {
-        core::CategoryName  m_type;
+        core::CategoryName  m_type { core::CategoryName::UNDEFINED };
+        core::EnemyType     m_enemyType { core::EnemyType::UNDEFINED };
         std::pair<int,int>  m_position;
         cocos2d::Vec2       m_botLeft;
-        cocos2d::Vec2       m_topRight;
         cocos2d::Rect       m_rect;
     };
 }
