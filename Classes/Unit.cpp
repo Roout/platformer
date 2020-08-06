@@ -210,7 +210,9 @@ void Unit::UpdatePosition(const float dt) noexcept {
 }
 
 bool Unit::IsOnGround() const noexcept {
-    return m_hasContactWithGround;
+    const auto velocity { this->getPhysicsBody()->getVelocity() };
+    constexpr float EPS { 0.000001f };  
+    return helper::IsEquel(velocity.y, 0.f, EPS) && m_hasContactWithGround;
 }
 
 void Unit::UpdateState(const float dt) noexcept {
