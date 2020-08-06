@@ -133,38 +133,51 @@ DBCCSprite* DBCCSprite::create()
 
     return sprite;
 }
-
+/** \update
+ * \lib cocos2dx 4.0
+ * \brief change check visibility from approach of testing center point 
+ * to testing for the whole rect intersection
+ * \author Roout
+ * \date 06.08.2020
+ */
 bool DBCCSprite::_checkVisibility(const cocos2d::Mat4& transform, const cocos2d::Size& size, const cocos2d::Rect& rect)
 {
-    auto scene = cocos2d::Director::getInstance()->getRunningScene();
+    const auto scene = cocos2d::Director::getInstance()->getRunningScene();
 
     //If draw to Rendertexture, return true directly.
     // only cull the default camera. The culling algorithm is valid for default camera.
     if (!scene || (scene && scene->getDefaultCamera() != cocos2d::Camera::getVisitingCamera()))
         return true;
 
-    auto director = cocos2d::Director::getInstance();
-    cocos2d::Rect visiableRect(director->getVisibleOrigin(), director->getVisibleSize());
-
-    // transform center point to screen space
-    float hSizeX = size.width / 2;
-    float hSizeY = size.height / 2;
-
-    cocos2d::Vec3 v3p(hSizeX, hSizeY, 0);
-
-    transform.transformPoint(&v3p);
-    cocos2d::Vec2 v2p = cocos2d::Camera::getVisitingCamera()->projectGL(v3p);
+    const auto director = cocos2d::Director::getInstance();
+    cocos2d::Rect visibleRect(director->getVisibleOrigin(), director->getVisibleSize());
 
     // convert content size to world coordinates
-    float wshw = std::max(fabsf(hSizeX * transform.m[0] + hSizeY * transform.m[4]), fabsf(hSizeX * transform.m[0] - hSizeY * transform.m[4]));
-    float wshh = std::max(fabsf(hSizeX * transform.m[1] + hSizeY * transform.m[5]), fabsf(hSizeX * transform.m[1] - hSizeY * transform.m[5]));
+    const auto wsw = std::max(
+        fabsf(size.width * transform.m[0] + size.height * transform.m[4]), 
+        fabsf(size.width * transform.m[0] - size.height * transform.m[4])
+    );
+    const auto wsh = std::max(
+        fabsf(size.width * transform.m[1] + size.height * transform.m[5]), 
+        fabsf(size.width * transform.m[1] - size.height * transform.m[5])
+    );
+    
+    // current position in local coordinates
+    auto pos3d { cocos2d::Vec3::ZERO };
+    // current position in world coordinates
+    transform.getTranslation(&pos3d);
 
-    // enlarge visible rect half size in screen coord
-    visiableRect.origin.x -= wshw;
-    visiableRect.origin.y -= wshh;
-    visiableRect.size.width += wshw * 2;
-    visiableRect.size.height += wshh * 2;
-    bool ret = visiableRect.containsPoint(v2p);
+    const auto pos2d = cocos2d::Camera::getVisitingCamera()->projectGL(pos3d);
+    // object's boundaries
+    cocos2d::Rect boundingBox { pos2d, { wsw, wsh } };
+
+    // enlarge visible rect by @size in screen coord
+    visibleRect.origin.x -= wsw;
+    visibleRect.origin.y -= wsh;
+    visibleRect.size.width += wsw * 2;
+    visibleRect.size.height += wsh * 2;
+
+    const auto ret { boundingBox.intersectsRect(visibleRect) };
     return ret;
 }
 
