@@ -1,7 +1,6 @@
 #ifndef ENEMY_HPP
 #define ENEMY_HPP
 
-#include "Utils.hpp"
 #include "Unit.hpp"
 #include "cocos2d.h"
 
@@ -9,7 +8,7 @@ namespace Enemies {
 
     class Warrior final: public Unit {
     public:
-        static Warrior* create(const cocos2d::Size&);
+        static Warrior* create(const cocos2d::Size&, size_t id);
 
         [[nodiscard]] bool init() override;
 
@@ -21,17 +20,15 @@ namespace Enemies {
 
     private:
     
-        Warrior(const cocos2d::Size&);
+        Warrior(const cocos2d::Size&, size_t id);
         
         void UpdateState(const float dt) noexcept override;
     
     private:
-        inline static Utils::LinearGenerator m_generator {};
 
         const size_t m_id { 0 };
     };
 
 };
-
 
 #endif // ENEMY_HPP

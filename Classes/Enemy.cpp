@@ -1,8 +1,8 @@
 #include "Enemy.hpp"
 #include "PhysicsHelper.hpp"
 
-Enemies::Warrior* Enemies::Warrior::create(const cocos2d::Size& size) {
-    auto pRet { new (std::nothrow) Warrior(size) };
+Enemies::Warrior* Enemies::Warrior::create(const cocos2d::Size& size, size_t id) {
+    auto pRet { new (std::nothrow) Warrior(size, id) };
     if( pRet && pRet->init()) {
         pRet->autorelease();
     } else {
@@ -83,9 +83,9 @@ void Enemies::Warrior::UpdateState(const float dt) noexcept {
     m_currentState.m_act = Act::move;
 }
 
-Enemies::Warrior::Warrior(const cocos2d::Size& size): 
+Enemies::Warrior::Warrior(const cocos2d::Size& size, size_t id): 
     Unit{size, "warrior"},
-    m_id { m_generator.Next() }
+    m_id { id }
 {
 }
 
