@@ -12,6 +12,7 @@
 #include "Traps.hpp"
 #include "SizeDeducer.hpp"
 #include "Enemy.hpp"
+#include "EnemyPath.hpp"
 
 LevelScene::LevelScene(int id): 
     m_id{ id } 
@@ -242,7 +243,7 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                 };
                 switch(form.m_enemyType) {
                     case core::EnemyType::WARRIOR: {
-                        const auto warrior { Enemies::Warrior::create(size) };
+                        const auto warrior { Enemies::Warrior::create(size, form.m_id) };
                         warrior->setName("Warrior");
                         warrior->setPosition(form.m_botLeft);
                         map->addChild(warrior, 9);
@@ -251,6 +252,12 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                 }
             }
         }
+    }
+    
+    path::Forest forest;
+    { // make doc local to this block
+        auto doc = forest.Load(2);
+        forest.Parse(doc);
     }
 }
 
@@ -266,7 +273,7 @@ bool LevelScene::init() {
 	this->scheduleUpdate();
     
     const auto tmxFile { cocos2d::StringUtils::format("Map/level_%d.tmx", m_id) };
-    cocos2d::FastTMXTiledMap *tileMap { cocos2d::FastTMXTiledMap::create(tmxFile) };
+    const auto tileMap { cocos2d::FastTMXTiledMap::create(tmxFile) };
     tileMap->setName("Map");
     this->addChild(tileMap);
     this->InitTileMapObjects(tileMap);
