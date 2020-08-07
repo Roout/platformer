@@ -10,13 +10,12 @@ namespace {
 		else if ( ty == "archer" ) {
 			type = core::EnemyType::ARCHER;
 		}
-		else if ( ty == "spearman") {
+		else if ( ty == "spear_man") {
 			type = core::EnemyType::SPEARMAN;
 		}
 		return type;
 	}
 }
-
 
 TileMapParser::TileMapParser(const cocos2d::FastTMXTiledMap * tileMap):
     m_tileMap{ tileMap }
@@ -43,17 +42,18 @@ void TileMapParser::Parse() {
 			details::Form form;
 			form.m_botLeft = cocos2d::Vec2{x, y};
 
-			if (name == "player") {
+			if ( name == "player" ) {
 				form.m_type = core::CategoryName::PLAYER;
 				this->Get<core::CategoryName::PLAYER>().emplace_back(form);
 			}
-			else if ( name == "barrel") {
+			else if ( name == "barrel" ) {
 				form.m_type = core::CategoryName::BARREL;
 				this->Get<core::CategoryName::BARREL>().emplace_back(form);
 			}
 			else if ( name == "enemy" ) {
 				form.m_type = core::CategoryName::ENEMY;
 				form.m_enemyType = ::AsEnemyType(type);
+				form.m_id = objMap.at("id").asUnsignedInt();
 				this->Get<core::CategoryName::ENEMY>().emplace_back(form);
 			}
 		}
