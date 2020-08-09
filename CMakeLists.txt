@@ -65,8 +65,9 @@ list(APPEND GAME_SOURCE
      Classes/AppDelegate.cpp
      Classes/LevelScene.cpp
      Classes/Unit.cpp
+     Classes/Navigator.cpp
      Classes/Enemy.cpp
-     Classes/EnemyPath.cpp
+     Classes/PathNodes.cpp
      Classes/UnitMovement.cpp
      Classes/SmoothFollower.cpp
      Classes/UserInputHandler.cpp
@@ -83,8 +84,8 @@ list(APPEND GAME_HEADER
      Classes/LevelScene.hpp
      Classes/Unit.hpp
      Classes/Enemy.hpp
-     Classes/EnemyPath.hpp
-     Classes/Brain.hpp
+     Classes/PathNodes.hpp
+     Classes/Navigator.hpp
      Classes/UnitMovement.hpp
      Classes/ResourceManagement.hpp
      Classes/UserInputHandler.hpp
