@@ -57,6 +57,10 @@ public:
         m_curses.RemoveCurse(id);
     }
 
+    bool LookLeft() const noexcept {
+        return m_currentState.m_side == Side::left;
+    }
+    
     /// Types
 protected:
     enum class Act {
@@ -114,9 +118,9 @@ protected:
 protected:
     Curses::CurseHub m_curses { this };
 
-    Movement m_movement { this };
-
     int m_health { 100 };
+
+    Movement m_movement;
     
     State m_currentState {};
 
