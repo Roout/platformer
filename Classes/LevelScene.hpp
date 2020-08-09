@@ -3,6 +3,7 @@
 
 #include <memory>
 #include "cocos2d.h"
+#include "PathNodes.hpp"
 
 class UserInputHandler;
 
@@ -31,6 +32,8 @@ private:
 
     // controller:
     std::unique_ptr<UserInputHandler>   m_inputHandler { nullptr };
+
+    path::Forest m_forest;
 
     // level id. Used to load a map
     const int m_id { -1 }; 

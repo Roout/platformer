@@ -12,7 +12,6 @@
 #include "Traps.hpp"
 #include "SizeDeducer.hpp"
 #include "Enemy.hpp"
-#include "EnemyPath.hpp"
 
 LevelScene::LevelScene(int id): 
     m_id{ id } 
@@ -198,9 +197,14 @@ namespace helper {
 };
 
 void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
+    { // make doc local to this block
+        auto doc = m_forest.Load(m_id);
+        m_forest.Parse(doc);
+    }
+
     TileMapParser parser{ map };
     parser.Parse();
-
+    
     for(size_t i = 0; i < Utils::EnumSize<core::CategoryName>(); i++) {
         const auto category { static_cast<core::CategoryName>(i) };
         const auto parsedForms { parser.Acquire(category) };
@@ -246,18 +250,13 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                         const auto warrior { Enemies::Warrior::create(size, form.m_id) };
                         warrior->setName("Warrior");
                         warrior->setPosition(form.m_botLeft);
+                        warrior->AttachNavigator(map->getMapSize(), map->getTileSize().width, &m_forest);
                         map->addChild(warrior, 9);
                     } break;
                     default: break;
                 }
             }
         }
-    }
-    
-    path::Forest forest;
-    { // make doc local to this block
-        auto doc = forest.Load(2);
-        forest.Parse(doc);
     }
 }
 
@@ -266,7 +265,7 @@ bool LevelScene::init() {
 		return false;
 	}
 
-    auto world = this->getPhysicsWorld();
+    const auto world = this->getPhysicsWorld();
     world->setGravity(cocos2d::Vec2(0, -1000));
     world->setDebugDrawMask(cocos2d::PhysicsWorld::DEBUGDRAW_ALL);
 
@@ -290,7 +289,7 @@ bool LevelScene::init() {
     tileMap->setPosition(-mapShift);
 
     // Add physics body contact listener
-    auto shapeContactListener = cocos2d::EventListenerPhysicsContact::create();
+    const auto shapeContactListener = cocos2d::EventListenerPhysicsContact::create();
     shapeContactListener->onContactBegin = helper::OnContactBegin;
     shapeContactListener->onContactSeparate = helper::OnContactSeparate;
     this->getEventDispatcher()->addEventListenerWithSceneGraphPriority(shapeContactListener, this);
