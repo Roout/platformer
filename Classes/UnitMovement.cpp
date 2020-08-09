@@ -6,7 +6,7 @@ void Movement::Update(const float dt) noexcept {
     if( m_counter.remainingJumpSteps ) {
         // F = mv / t
         const auto force { 
-            ( m_unit->getPhysicsBody()->getMass() * m_desiredVelocity ) / 
+            ( m_unit->getPhysicsBody()->getMass() * m_desiredVelocity * 1.5f ) / 
             ( dt * m_timeStepsToCompletion ) 
         };
         const auto multiplier { (4.f * m_counter.remainingJumpSteps + 1.f) / 6.f };
@@ -74,4 +74,8 @@ void Movement::StopXAxisMove() noexcept {
     m_unit->getPhysicsBody()->setVelocity({ 0.f, vel.y });
 
     m_counter.remainingMoveLeft = m_counter.remainingMoveRight = 0;
+}
+
+void Movement::SetMaxSpeed(float speed) noexcept {
+    m_desiredVelocity = speed;
 }
