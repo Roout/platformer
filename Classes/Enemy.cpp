@@ -1,5 +1,11 @@
 #include "Enemy.hpp"
 #include "PhysicsHelper.hpp"
+#include "SizeDeducer.hpp"
+#include "Player.hpp"
+#include "Core.hpp"
+#include "Weapon.hpp"
+#include <memory>
+#include <limits>
 
 Enemies::Warrior* Enemies::Warrior::create(const cocos2d::Size& size, size_t id) {
     auto pRet { new (std::nothrow) Warrior(size, id) };
@@ -16,7 +22,7 @@ bool Enemies::Warrior::init() {
     if( !Unit::init()) {
         return false; 
     }
-    
+
     // change masks for physics body
     const auto body { this->getPhysicsBody() };
     body->setMass(2000.f);
@@ -32,10 +38,10 @@ bool Enemies::Warrior::init() {
     );
     body->setContactTestBitmask(
         Utils::CreateMask(
+    //        core::CategoryBits::GROUND_SENSOR,
             core::CategoryBits::TRAP,
             core::CategoryBits::PLATFORM,
-            core::CategoryBits::PROJECTILE, 
-            core::CategoryBits::GROUND_SENSOR
+            core::CategoryBits::PROJECTILE
         )
     );
     const auto sensor { 
@@ -49,9 +55,9 @@ bool Enemies::Warrior::init() {
     );
     sensor->setContactTestBitmask(
         Utils::CreateMask(
+        //    core::CategoryBits::HERO,
             core::CategoryBits::BOUNDARY,
-            core::CategoryBits::PLATFORM,
-            core::CategoryBits::HERO
+            core::CategoryBits::PLATFORM
         )
     );
 
@@ -88,9 +94,49 @@ Enemies::Warrior::Warrior(const cocos2d::Size& size, size_t id):
     m_id { id }
 {
     m_movement.SetMaxSpeed(130.f);
+
+    // Create weapon
+    m_maxAttackTime = 0.6f;
+    const int damage { 5 };
+    const int range { SizeDeducer::GetInstance().GetAdjustedSize(90) };
+    const float reloadTime { 0.7f };
+    m_weapon = std::make_unique<Axe>( damage, range, reloadTime );
+}
+
+bool Enemies::Warrior::NeedAttack() const noexcept {
+    const auto attackIsReady = m_influence.EnemyDetected() && m_weapon->CanAttack();
+    const auto target = dynamic_cast<Unit*>(this->getParent()->getChildByName(Player::NAME));
+    const auto enemyIsClose = [this, target]() { 
+        // use some simple algorithm to determine whether player is close enough to
+        // perform an attack
+        if( target ) {
+            const auto radius = static_cast<float>(m_weapon->GetRange());
+            const cocos2d::Rect lhs { 
+                target->getPosition() - cocos2d::Vec2{ target->getContentSize().width / 2.f, 0.f },
+                target->getContentSize()
+            };
+            const cocos2d::Rect rhs {
+                this->getPosition() - cocos2d::Vec2 { this->getContentSize().width / 2.f + radius, 0.f },
+                this->getContentSize() + cocos2d::Size { 2.f * radius, 0.f }
+            };
+            return lhs.intersectsRect(rhs);
+        }
+        return false;
+    };
+    auto lookAtEnemy { false };
+    if( target->getPosition().x < this->getPosition().x  && this->LookLeft() ) {
+        lookAtEnemy = true;
+    } else if( target->getPosition().x > this->getPosition().x && !this->LookLeft() ) {
+        lookAtEnemy = true;
+    }
+    return attackIsReady && lookAtEnemy && enemyIsClose();
 }
 
 void Enemies::Warrior::update(float dt) {
+    m_influence.Update();
+    if( this->NeedAttack() ) {
+        this->Attack();
+    }
     m_navigator->Navigate(dt);    
     Unit::update(dt);
 }
@@ -98,8 +144,58 @@ void Enemies::Warrior::update(float dt) {
 void Enemies::Warrior::AttachNavigator(
     const cocos2d::Size& mapSize, 
     float tileSize,
-    path::Forest * const forest
+    path::Supplement * const supplement
 ) {
     m_navigator = std::make_unique<Navigator>(mapSize, tileSize);
-    m_navigator->Init(this, forest);
+    m_navigator->Init(this, supplement);
+}
+
+void Enemies::Warrior::AttachInfluenceArea(
+    const cocos2d::Size& mapSize, 
+    float tileSize,
+    path::Supplement * const supplement
+) {
+    const auto mapHeight { static_cast<int> (mapSize.height) };
+    const auto warriorTilePosition { this->getPosition() / tileSize };
+    
+    auto CoordsFromTile = [&mapHeight](int x, int y) {
+        return cocos2d::Vec2 {
+            static_cast<float>(x),
+            static_cast<float>(mapHeight - y - 1)
+        };
+    };
+    // Find closest area to this unit
+    size_t rectDataIndex { 0 };
+    size_t closest { std::numeric_limits<size_t>::max() };
+    float minDistance { std::numeric_limits<float>::max() };  
+    for(const auto& rectData: supplement->areas) {
+        // Extract 2 tiles coordinates in Tiled program system: bot left & top right
+        const auto coords { CoordsFromTile (rectData[0], rectData[1]) };
+        const auto distance = fabs(warriorTilePosition.x - coords.x) + fabs(warriorTilePosition.y - coords.y);
+        if( minDistance > distance ) {
+            minDistance = distance;
+            closest = rectDataIndex;
+        }
+        rectDataIndex++;
+    }
+    // Create from them a rectangular
+    if( closest != std::numeric_limits<size_t>::max() ) {
+        const auto& rectData = supplement->areas[closest];
+        const auto pointA { CoordsFromTile (rectData[0], rectData[1]) };
+        const auto pointB { CoordsFromTile (rectData[2], rectData[3]) };
+        const cocos2d::Rect rect {
+            { pointA.x * tileSize, pointA.y * tileSize },
+            { (pointB.x - pointA.x + 1) * tileSize, (pointB.y - pointA.y + 1) * tileSize }
+        };
+        // Attach influence
+        m_influence.Attach(this, rect);
+    }
+}
+
+void Enemies::Warrior::Pursue(Unit * target) noexcept {
+    m_navigator->Pursue(target);
+}
+
+void Enemies::Warrior::Patrol() noexcept {
+    m_navigator->Patrol();
 }
