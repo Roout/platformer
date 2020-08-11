@@ -10,7 +10,7 @@
 #include <string>
 #include <cstring>
 
-rapidjson::Document path::Forest::Load(size_t id) {
+rapidjson::Document path::Supplement::Load(size_t id) {
     rapidjson::Document doc;
 
     const auto filepath { cocos2d::StringUtils::format(pathTemplate, id) };
@@ -30,7 +30,7 @@ rapidjson::Document path::Forest::Load(size_t id) {
     return doc;
 }
 
-void path::Forest::Parse(rapidjson::Document& doc) {
+void path::Supplement::Parse(rapidjson::Document& doc) {
     waypoints.reserve(100);
     const auto& points = doc["waypoints"].GetArray(); 
     for(const auto& p: points) {
@@ -41,11 +41,22 @@ void path::Forest::Parse(rapidjson::Document& doc) {
     size_t vertexIndex { 0 };
     const auto& trees = doc["trees"].GetArray();
     for(const auto& tree: trees) {
-        const auto& neighbours { tree.GetArray() };
+        const auto neighbours { tree.GetArray() };
         for(const auto& neighbour: neighbours) {
             const auto action { !strcmp(neighbour["action"].GetString(), "move")? Action::move: Action::jump };
             adj[vertexIndex].emplace_back( neighbour["vert"].GetInt(), action );
         }
         vertexIndex++;
+    }
+    
+    const auto influence = doc["influence"].GetArray();
+    areas.resize(influence.Size());
+    size_t pointIndex { 0 };
+    for(const auto& rect: influence) {
+        const auto p { rect.GetArray() };
+        for(size_t i = 0; i < 4; i++) {
+            areas[pointIndex][i] = p[i].GetInt();
+        }
+        pointIndex++;
     }
 }
