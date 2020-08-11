@@ -12,6 +12,7 @@
 #include "Traps.hpp"
 #include "SizeDeducer.hpp"
 #include "Enemy.hpp"
+#include "Player.hpp"
 
 LevelScene::LevelScene(int id): 
     m_id{ id } 
@@ -198,8 +199,8 @@ namespace helper {
 
 void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
     { // make doc local to this block
-        auto doc = m_forest.Load(m_id);
-        m_forest.Parse(doc);
+        auto doc = m_supplement.Load(m_id);
+        m_supplement.Parse(doc);
     }
 
     TileMapParser parser{ map };
@@ -215,7 +216,8 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                     SizeDeducer::GetInstance().GetAdjustedSize(135.f)
                 };
                 const auto hero { Player::create(size) };
-                hero->setName("Player");
+                hero->setName(Player::NAME);
+                hero->setAnchorPoint(cocos2d::Vec2::ANCHOR_BOTTOM_LEFT);
                 hero->setPosition(form.m_botLeft);
                 map->addChild(hero, 10);
             } 
@@ -248,9 +250,10 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                 switch(form.m_enemyType) {
                     case core::EnemyType::WARRIOR: {
                         const auto warrior { Enemies::Warrior::create(size, form.m_id) };
-                        warrior->setName("Warrior");
+                        warrior->setName(Enemies::Warrior::NAME);
                         warrior->setPosition(form.m_botLeft);
-                        warrior->AttachNavigator(map->getMapSize(), map->getTileSize().width, &m_forest);
+                        warrior->AttachNavigator(map->getMapSize(), map->getTileSize().width, &m_supplement);
+                        warrior->AttachInfluenceArea(map->getMapSize(), map->getTileSize().width, &m_supplement);
                         map->addChild(warrior, 9);
                     } break;
                     default: break;

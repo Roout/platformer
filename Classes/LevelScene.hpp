@@ -33,7 +33,7 @@ private:
     // controller:
     std::unique_ptr<UserInputHandler>   m_inputHandler { nullptr };
 
-    path::Forest m_forest;
+    path::Supplement m_supplement;
 
     // level id. Used to load a map
     const int m_id { -1 }; 
