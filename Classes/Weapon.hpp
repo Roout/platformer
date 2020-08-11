@@ -56,14 +56,14 @@ public:
      * - MUST force weapon to reload. 
      * - Doesn't attack anyone, but create the projectile.
      * 
-     * @param[in] position
-     *      A left-bottom corner of the created projectile.
+     * @param[in] area
+     *      An area which will be attacked by the weapon.
      * 
      * @param[in] velocity
      *      The velocity where the projectile will move.
      */
     virtual void Attack (
-        const cocos2d::Vec2& position,
+        const cocos2d::Rect& area,
         const cocos2d::Vec2& velocity
     ) noexcept = 0;
 
@@ -128,17 +128,38 @@ public:
      * This method create the sword's projectile using 
      * information from weapon owner and weapon. 
      * 
-     * @param[in] position
-     *      A left-bottom corner of the created projectile.
+     * @param[in] area
+     *      An area which will be attacked by the weapon.
      * 
      * @param[in] velocity
-     *      The velocity of the projectile.
+     *      The velocity where the projectile will move.
      */
-    void Attack(
-        const cocos2d::Vec2& position,
+    void Attack (
+        const cocos2d::Rect& area,
         const cocos2d::Vec2& velocity
     ) noexcept override;
     
+};
+
+class Axe final : public Weapon {
+public:
+    using Weapon::Weapon;
+
+    /**
+     * This method create the axe's projectile using 
+     * information from weapon owner and weapon. 
+     * 
+    * @param[in] area
+     *      An area which will be attacked by the weapon
+     *      and recieve damage
+     * 
+     * @param[in] velocity
+     *      The velocity where the projectile will move.
+     */
+    void Attack (
+        const cocos2d::Rect& area,
+        const cocos2d::Vec2& velocity
+    ) noexcept override;
 };
 
 #endif // WEAPON_SYSTEM_HPP
