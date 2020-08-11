@@ -1,13 +1,12 @@
 #ifndef UNIT_HPP
 #define UNIT_HPP
 
-#include "Core.hpp"
 #include "CurseHub.hpp"
-#include "Weapon.hpp"
-#include "SmoothFollower.hpp"
 #include "UnitMovement.hpp"
 #include <memory>
 #include "cocos2d.h"
+
+class Weapon;
 
 class Unit : public cocos2d::Node { 
 public:
@@ -25,7 +24,7 @@ public:
     /**
      * This function initiate a melee attack. 
      */
-    void MeleeAttack();
+    virtual void Attack();
 
     // Some esoteric attempts to check
     [[nodiscard]] bool IsOnGround() const noexcept;
@@ -134,25 +133,9 @@ protected:
     /**
      * The duration of attack animation
      */
-    static constexpr float m_maxAttackTime { 0.5f };
+    float m_maxAttackTime { 0.5f };
     
     float m_attackTime { m_maxAttackTime };
-};
-
-class Player final : public Unit {
-public:
-    static Player* create(const cocos2d::Size&);
-
-    [[nodiscard]] bool init() override;
-
-    void update(float dt) override;
-
-    void setPosition(const cocos2d::Vec2& position) override;
-
-private:
-    Player(const cocos2d::Size&);
-
-    std::unique_ptr<SmoothFollower> m_follower { nullptr };
 };
 
 #endif // UNIT_HPP

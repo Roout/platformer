@@ -1,10 +1,11 @@
 #include "Unit.hpp"
-#include "cocos2d.h"
 #include "SizeDeducer.hpp"
 #include "PhysicsHelper.hpp" 
 #include "Utils.hpp"
 #include "HealthBar.hpp"
 #include "ResourceManagement.hpp"
+#include "Weapon.hpp"
+#include "Core.hpp"
 
 Unit* Unit::create(const cocos2d::Size& size) {
     auto pRet = new (std::nothrow) Unit(size, "mc");
@@ -28,12 +29,6 @@ Unit::Unit(
     // Create body
     this->CreateBody(size);
     // Initialize state
-
-    // Create weapon
-    const int damage { 25 };
-    const int range { SizeDeducer::GetInstance().GetAdjustedSize(20) };
-    const float reloadTime { m_maxAttackTime };
-    m_weapon = std::make_unique<Sword>( damage, range, reloadTime );
 }
 
 bool Unit::init() {
@@ -51,7 +46,6 @@ bool Unit::init() {
         SizeDeducer::GetInstance().GetAdjustedSize(designedScaleFactor) 
     };
     armatureDisplay->setName("Armature");
-    
     this->addChild(armatureDisplay);
 
     // adjust animation
@@ -59,12 +53,12 @@ bool Unit::init() {
 
     /// TODO: move somewhere
     static constexpr float healthBarShift { 15.f };
-    HealthBar *bar = HealthBar::create(this);
+    const auto bar = HealthBar::create(this);
     bar->setPosition(-this->getContentSize().width / 2.f, this->getContentSize().height + healthBarShift);
     this->addChild(bar);
 
     // add state lable:
-    auto state = cocos2d::Label::createWithTTF("state", "fonts/arial.ttf", 25);
+    const auto state = cocos2d::Label::createWithTTF("state", "fonts/arial.ttf", 25);
     state->setName("state");
     state->setPosition(0.f, this->getContentSize().height + 60.f);
     this->addChild(state);
@@ -166,7 +160,7 @@ void Unit::update(float dt) {
     this->UpdateCurses(dt);
 
     // Debug >> Update state:
-    auto stateLabel = dynamic_cast<cocos2d::Label*>(this->getChildByName("state"));
+    const auto stateLabel = dynamic_cast<cocos2d::Label*>(this->getChildByName("state"));
     if( !stateLabel ) throw "can't find label!";
     stateLabel->setString(CreateAnimationName(m_currentState.m_act));
 }
@@ -176,24 +170,29 @@ void Unit::RecieveDamage(int damage) noexcept {
     cocos2d::log(" >>> unit recieve %d damage. Current health is %d.", damage, m_health);
 }
 
-void Unit::MeleeAttack() {
+void Unit::Attack() {
     if( m_weapon->CanAttack() ) {
-        // update attack direction and position for idle case
-        auto position = cocos2d::Vec2::ZERO;
-        auto direction = cocos2d::Vec2::ZERO;
+        const auto attackRange { 
+            SizeDeducer::GetInstance().GetScaleFactor() * m_weapon->GetRange() 
+        };
+        
+        auto position = this->getPosition();
         if(m_currentState.m_side == Side::right) {
-            direction.x = 1.f;
-            position.x += this->getContentSize().width;
+            position.x += this->getContentSize().width / 2.f;
         }
         else {
-            direction.x = -1.f;
-            position.x -= this->getContentSize().width;
+            position.x -= this->getContentSize().width / 2.f + attackRange;
         }
 
         static int x { 0 };
         cocos2d::log(" >>> unit attack with sword: %d", ++x );
 
-        m_weapon->Attack(position, direction);
+        const cocos2d::Rect attackedArea {
+            position,
+            cocos2d::Size{ attackRange, this->getContentSize().height }
+        };
+
+        m_weapon->Attack(attackedArea, this->getPhysicsBody()->getVelocity());
         // update state
         m_currentState.m_act = Act::attack;
         // update cooldown
@@ -254,73 +253,4 @@ void Unit::UpdateCurses(const float dt) noexcept {
         m_currentState.m_act = Act::dead;
         // Do smth on death
     }
-}
-
-Player* Player::create(const cocos2d::Size& size) {
-    auto pRet { new (std::nothrow) Player(size) };
-    if( pRet && pRet->init()) {
-        pRet->autorelease();
-    } else {
-        delete pRet;
-        pRet = nullptr;
-    }
-    return pRet;
-}
-
-Player::Player(const cocos2d::Size& sz) :
-    Unit { sz, "mc" }
-{}
-
-
-bool Player::init() {
-    if( !Unit::init()) {
-        return false; 
-    }
-    m_follower = std::make_unique<SmoothFollower>(this);
-
-    const auto body { this->getPhysicsBody() };
-    body->setCategoryBitmask(
-        Utils::CreateMask(core::CategoryBits::HERO)
-    );
-    body->setCollisionBitmask(
-        Utils::CreateMask(
-  //          core::CategoryBits::ENEMY, 
-            core::CategoryBits::BOUNDARY, 
-            core::CategoryBits::PROJECTILE, 
-            core::CategoryBits::PLATFORM 
-        )
-    );
-    body->setContactTestBitmask(
-        Utils::CreateMask(
-            core::CategoryBits::TRAP,
-            core::CategoryBits::PLATFORM
-        )
-    );
-    const auto sensor { 
-        body->getShape(Utils::EnumCast(
-            core::CategoryBits::GROUND_SENSOR)
-        ) 
-    };
-    sensor->setCollisionBitmask(0);
-    sensor->setCategoryBitmask(
-        Utils::CreateMask(core::CategoryBits::GROUND_SENSOR)
-    );
-    sensor->setContactTestBitmask(
-        Utils::CreateMask(
-            core::CategoryBits::BOUNDARY,
-            core::CategoryBits::PLATFORM,
-            core::CategoryBits::ENEMY
-        )
-    );
-    return true;
-}
-
-void Player::setPosition(const cocos2d::Vec2& position) {
-    Node::setPosition(position.x, position.y);
-    m_follower->Reset();
-}
-
-void Player::update(float dt) {
-    Unit::update(dt);
-    m_follower->UpdateMapPosition(dt);
 }
