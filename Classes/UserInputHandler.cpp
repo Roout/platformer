@@ -72,7 +72,7 @@ void UserInputHandler::OnKeyPressed(
     }
 
     if( m_lastInput.attack) {
-        m_player->MeleeAttack();
+        m_player->Attack();
     }
 }
 
