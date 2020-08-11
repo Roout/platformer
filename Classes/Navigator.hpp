@@ -9,13 +9,22 @@
 class Unit;
 
 class Navigator {
-public:    
+public:
+    enum class Mode {
+        patrol,
+        pursue
+    };
+
     // mapSize in tiles
     Navigator(const cocos2d::Size& mapSize, float tileSize);
 
-    void Init(Unit* const unit, path::Forest * const forest);
+    void Init(Unit* const unit, path::Supplement * const);
 
     void Navigate(const float dt);
+
+    void Pursue(Unit * const target) noexcept;
+
+    void Patrol() noexcept;
 
     /// helper methods
 private:
@@ -34,7 +43,8 @@ private:
 private:
     /// external data
     Unit * m_unit { nullptr };
-    path::Forest * m_forest { nullptr };
+    Unit * m_target { nullptr }; // target of the pursuit if exist
+    path::Supplement * m_supplement { nullptr };
 
     size_t m_mapHeight { 0 }; // number of tiles
     float m_tileSize { 0.f };
@@ -43,6 +53,7 @@ private:
     size_t m_start;
     size_t m_destination;
     path::Action m_action { path::Action::move };
+    Mode m_mode { Mode::patrol };
 
     static constexpr size_t failure { std::numeric_limits<size_t>::max() };
 };

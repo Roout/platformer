@@ -1,5 +1,6 @@
 #include "Navigator.hpp"
 #include "Unit.hpp"
+#include "PhysicsHelper.hpp"
 
 #include <utility>
 #include <tuple>
@@ -9,9 +10,9 @@ Navigator::Navigator(const cocos2d::Size& mapSize, float tileSize):
     m_tileSize{ tileSize }
 {}
 
-void Navigator::Init(Unit* const unit, path::Forest * const forest) {
+void Navigator::Init(Unit* const unit, path::Supplement * const forest) {
     m_unit = unit;
-    m_forest = forest;
+    m_supplement = forest;
     // initialize path points
     const auto unitTile { unit->getPosition() / m_tileSize };
     m_start = this->FindClosestWaypoint(unitTile);
@@ -24,7 +25,7 @@ void Navigator::Init(Unit* const unit, path::Forest * const forest) {
 cocos2d::Vec2 Navigator::AsInvertedTilemapCoords(int x, int y) const noexcept  {
     return {
         static_cast<float>(x), 
-        static_cast<float>(m_mapHeight - y) // invert
+        static_cast<float>(m_mapHeight - y - 1) // invert
     };
 }
 
@@ -33,9 +34,9 @@ size_t Navigator::FindClosestWaypoint(const cocos2d::Vec2& p) const {
     size_t closest { failure };
     size_t index { 0 };
     auto distance { std::numeric_limits<float>::max() };
-    for(const auto& tile: m_forest->waypoints ) {
-        const auto inverted = m_mapHeight - tile.second;
-        const auto dist { fabs(p.x - tile.first) + fabs(p.y - inverted) };
+    for(const auto& tile: m_supplement->waypoints ) {
+        const auto inverted = this->AsInvertedTilemapCoords(tile.first, tile.second);
+        const auto dist { fabs(p.x - inverted.x) + fabs(p.y - inverted.y) };
         if(dist < distance) {
             distance = dist;
             closest = index;
@@ -45,14 +46,30 @@ size_t Navigator::FindClosestWaypoint(const cocos2d::Vec2& p) const {
     return closest;
 }
 
-std::pair<size_t, path::Action> Navigator::FindDestination(size_t from) {
-    const auto start { m_forest->waypoints[from] };
-    const auto& neighbours { m_forest->adj[from] };
-    // choose first for now
-    return (neighbours.empty()? std::make_pair(from, path::Action::move): neighbours.front());
-}
-
 void Navigator::Navigate(const float dt) {
+    if( m_mode == Mode::pursue ) {
+        /// TODO: if player's unit die? is it possible?
+        const auto targetWidth = m_target->getContentSize().width / 2.f; 
+        const auto unitWidth = m_unit->getContentSize().width / 2.f; 
+        const auto dx = m_target->getPosition().x - m_unit->getPosition().x;
+        auto destination { m_target->getPosition().x };
+        if( dx < 0.f ) {
+            // target -> unit
+            destination += targetWidth + unitWidth;
+        } else {
+            // unit -> target
+            destination -= targetWidth + unitWidth;
+        }
+        // invoke move function
+        if(helper::IsEquel(destination, m_unit->getPosition().x, 1.f)) {
+            m_unit->GetMovement().StopXAxisMove();
+        } else if( destination < m_unit->getPosition().x ) {
+            m_unit->GetMovement().MoveLeft();
+        } else {
+            m_unit->GetMovement().MoveRight();
+        }
+        return;
+    }
     // if destination is reached => 
         // search new one
     if(this->ReachedDestination()) {
@@ -63,7 +80,7 @@ void Navigator::Navigate(const float dt) {
     }
     // determine direction where unit should move
     // TODO: temporary only along X-axis
-    const auto dx = (m_forest->waypoints[m_destination].first + 0.5f) * m_tileSize - m_unit->getPosition().x;
+    const auto dx = (m_supplement->waypoints[m_destination].first + 0.5f) * m_tileSize - m_unit->getPosition().x;
     // invoke move function
     if( dx < 0.f ) {
         m_unit->GetMovement().MoveLeft();
@@ -72,13 +89,37 @@ void Navigator::Navigate(const float dt) {
     }
 }
 
+std::pair<size_t, path::Action> Navigator::FindDestination(size_t from) {
+    const auto start { m_supplement->waypoints[from] };
+    const auto& neighbours { m_supplement->adj[from] };
+    // choose first for now
+    return (neighbours.empty()? std::make_pair(from, path::Action::move): neighbours.front());
+}
+
 bool Navigator::ReachedDestination() const noexcept {
-    const float width { m_tileSize / 10.f };
-    const cocos2d::Rect sensor { m_unit->getPosition(), { width, width }  };
-    const auto destinationTile { m_forest->waypoints[m_destination] };
-    const auto coords { this->AsInvertedTilemapCoords(destinationTile.first, destinationTile.second) };
-    const auto destinationPoint {
-        m_tileSize * (coords + cocos2d::Vec2{ 0.5f, 0.f })
-    };
-    return fabs(destinationPoint.x - m_unit->getPosition().x) <= 8.f;// sensor.containsPoint( destinationPoint );
+    cocos2d::Vec2 destination {};
+    if( m_mode == Mode::patrol ) {
+        destination = this->AsInvertedTilemapCoords(
+            m_supplement->waypoints[m_destination].first, 
+            m_supplement->waypoints[m_destination].second
+        );
+        destination.x += 0.5f; // tile's bottom mid
+        destination *= m_tileSize; // from tiles to real coordinates where {0,0} is left-bot of the tilemap
+    }
+    else { // Mode::pursue
+        /// TODO: if player's unit (i.e. out target) is dead? Is i possible?
+        destination = m_target->getPosition(); // bot-mid
+    }
+    
+    return fabs(destination.x - m_unit->getPosition().x) <= 8.f;// sensor.containsPoint( destinationPoint );
+}
+
+void Navigator::Pursue(Unit * const target) noexcept {
+    m_mode = Mode::pursue;
+    m_target = target;
+}
+
+void Navigator::Patrol() noexcept {
+    m_mode = Mode::patrol;
+    m_target = nullptr;
 }
