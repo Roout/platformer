@@ -65,6 +65,8 @@ list(APPEND GAME_SOURCE
      Classes/AppDelegate.cpp
      Classes/LevelScene.cpp
      Classes/Unit.cpp
+     Classes/Player.cpp
+     Classes/Influence.cpp
      Classes/Navigator.cpp
      Classes/Enemy.cpp
      Classes/PathNodes.cpp
@@ -83,7 +85,9 @@ list(APPEND GAME_HEADER
      Classes/AppDelegate.h
      Classes/LevelScene.hpp
      Classes/Unit.hpp
+     Classes/Player.hpp
      Classes/Enemy.hpp
+     Classes/Influence.hpp
      Classes/PathNodes.hpp
      Classes/Navigator.hpp
      Classes/UnitMovement.hpp
