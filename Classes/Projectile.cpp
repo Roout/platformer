@@ -67,10 +67,11 @@ Projectile::Projectile (
     // body->setCollisionBitmask(interactWith);
     body->setContactTestBitmask(interactWith);
 
-    /**
-     * Anchor point is choosen same as unit it's attached to.
-     */
-    this->setAnchorPoint(cocos2d::Vec2::ANCHOR_MIDDLE_BOTTOM);
     this->setContentSize(size);
     this->addComponent(body);
+}
+
+void Projectile::SetContactTestBitmask(size_t mask) noexcept {
+    const auto body = this->getPhysicsBody();
+    body->setContactTestBitmask(mask);
 }

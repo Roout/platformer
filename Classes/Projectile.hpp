@@ -36,8 +36,10 @@ public:
     }
 
     float GetDamage() const noexcept {
-        return m_damage;
+        return static_cast<float>(m_damage);
     }
+
+    void SetContactTestBitmask(size_t mask) noexcept;
 
 private:
     
