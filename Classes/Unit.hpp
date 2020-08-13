@@ -56,10 +56,14 @@ public:
         m_curses.RemoveCurse(id);
     }
 
-    bool LookLeft() const noexcept {
+    bool IsLookingLeft() const noexcept {
         return m_currentState.m_side == Side::left;
     }
     
+    void Turn() noexcept {
+        m_previousState.m_side = m_currentState.m_side;
+        m_currentState.m_side = (m_currentState.m_side == Side::left? Side::right: Side::left);
+    }
     /// Types
 protected:
     enum class Act {

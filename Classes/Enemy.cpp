@@ -65,17 +65,17 @@ bool Enemies::Warrior::init() {
 }
 
 void Enemies::Warrior::UpdateState(const float dt) noexcept {
-    const auto direction { this->getPhysicsBody()->getVelocity() };
+    // const auto direction { this->getPhysicsBody()->getVelocity() };
     constexpr float EPS { 0.00001f };
 
     m_previousState = m_currentState;
 
-    // update character direction
-    if( helper::IsPositive(direction.x, EPS) ) {
-        m_currentState.m_side = Side::right;
-    } else if( helper::IsNegative(direction.x, EPS) ) {
-        m_currentState.m_side = Side::left;
-    }
+    // // update character direction
+    // if( helper::IsPositive(direction.x, EPS) ) {
+    //     m_currentState.m_side = Side::right;
+    // } else if( helper::IsNegative(direction.x, EPS) ) {
+    //     m_currentState.m_side = Side::left;
+    // }
 
     // update character state
     if( m_currentState.m_act == Act::attack ) {
@@ -103,7 +103,7 @@ Enemies::Warrior::Warrior(const cocos2d::Size& size, size_t id):
     m_weapon = std::make_unique<Axe>( damage, range, reloadTime );
 }
 
-bool Enemies::Warrior::NeedAttack() const noexcept {
+bool Enemies::Warrior::NeedAttack() noexcept {
     const auto attackIsReady = m_influence.EnemyDetected() && m_weapon->CanAttack();
     const auto target = dynamic_cast<Unit*>(this->getParent()->getChildByName(Player::NAME));
     const auto enemyIsClose = [this, target]() { 
@@ -123,22 +123,38 @@ bool Enemies::Warrior::NeedAttack() const noexcept {
         }
         return false;
     };
-    auto lookAtEnemy { false };
-    if( target->getPosition().x < this->getPosition().x  && this->LookLeft() ) {
-        lookAtEnemy = true;
-    } else if( target->getPosition().x > this->getPosition().x && !this->LookLeft() ) {
-        lookAtEnemy = true;
-    }
-    return attackIsReady && lookAtEnemy && enemyIsClose();
+    return attackIsReady && enemyIsClose();
 }
 
 void Enemies::Warrior::update(float dt) {
-    m_influence.Update();
-    if( this->NeedAttack() ) {
+    this->UpdateCurses(dt);
+    this->UpdateWeapon(dt);
+    m_influence.Update(); // detect player
+    if( this->NeedAttack() ) { // attack if possible
+        auto lookAtEnemy { false };
+        const auto target = dynamic_cast<Unit*>(this->getParent()->getChildByName(Player::NAME));
+        if( target->getPosition().x < this->getPosition().x && this->IsLookingLeft() ) {
+            lookAtEnemy = true;
+        } else if( target->getPosition().x > this->getPosition().x && !this->IsLookingLeft() ) {
+            lookAtEnemy = true;
+        }
+        if( !lookAtEnemy ) {
+            this->Turn();
+        }
         this->Attack();
+        m_movement.StopXAxisMove();
+    } 
+    if(m_currentState.m_act != Act::attack ) {
+        m_navigator->Navigate(dt); // move if needed
+        this->UpdatePosition(dt); 
     }
-    m_navigator->Navigate(dt);    
-    Unit::update(dt);
+    this->UpdateAnimation(); 
+    this->UpdateState(dt);
+
+    // Debug >> Update state:
+    const auto stateLabel = dynamic_cast<cocos2d::Label*>(this->getChildByName("state"));
+    if( !stateLabel ) throw "can't find label!";
+    stateLabel->setString(CreateAnimationName(m_currentState.m_act));
 }
 
 void Enemies::Warrior::AttachNavigator(

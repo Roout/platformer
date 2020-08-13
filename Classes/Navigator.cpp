@@ -48,7 +48,6 @@ size_t Navigator::FindClosestWaypoint(const cocos2d::Vec2& p) const {
 
 void Navigator::Navigate(const float dt) {
     if( m_mode == Mode::pursue ) {
-        /// TODO: if player's unit die? is it possible?
         const auto targetWidth = m_target->getContentSize().width / 2.f; 
         const auto unitWidth = m_unit->getContentSize().width / 2.f; 
         const auto dx = m_target->getPosition().x - m_unit->getPosition().x;
@@ -65,8 +64,14 @@ void Navigator::Navigate(const float dt) {
             m_unit->GetMovement().StopXAxisMove();
         } else if( destination < m_unit->getPosition().x ) {
             m_unit->GetMovement().MoveLeft();
+            if(!m_unit->IsLookingLeft()) {
+                m_unit->Turn();
+            }
         } else {
             m_unit->GetMovement().MoveRight();
+            if(m_unit->IsLookingLeft()) {
+                m_unit->Turn();
+            }
         }
         return;
     }
@@ -84,8 +89,10 @@ void Navigator::Navigate(const float dt) {
     // invoke move function
     if( dx < 0.f ) {
         m_unit->GetMovement().MoveLeft();
+        if(!m_unit->IsLookingLeft()) m_unit->Turn();
     } else {
         m_unit->GetMovement().MoveRight();
+        if(m_unit->IsLookingLeft()) m_unit->Turn();
     }
 }
 

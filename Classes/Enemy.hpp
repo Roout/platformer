@@ -42,7 +42,7 @@ namespace Enemies {
         
         void UpdateState(const float dt) noexcept override;
 
-        bool NeedAttack() const noexcept;
+        bool NeedAttack() noexcept;
 
     private:
 
