@@ -103,7 +103,7 @@ Enemies::Warrior::Warrior(const cocos2d::Size& size, size_t id):
     m_weapon = std::make_unique<Axe>( damage, range, reloadTime );
 }
 
-bool Enemies::Warrior::NeedAttack() noexcept {
+bool Enemies::Warrior::NeedAttack() const noexcept {
     const auto attackIsReady = m_influence.EnemyDetected() && m_weapon->CanAttack();
     const auto target = dynamic_cast<Unit*>(this->getParent()->getChildByName(Player::NAME));
     const auto enemyIsClose = [this, target]() { 
@@ -126,13 +126,10 @@ bool Enemies::Warrior::NeedAttack() noexcept {
     return attackIsReady && enemyIsClose();
 }
 
-void Enemies::Warrior::update(float dt) {
-    this->UpdateCurses(dt);
-    this->UpdateWeapon(dt);
-    m_influence.Update(); // detect player
+void Enemies::Warrior::TryAttack() {
     if( this->NeedAttack() ) { // attack if possible
         auto lookAtEnemy { false };
-        const auto target = dynamic_cast<Unit*>(this->getParent()->getChildByName(Player::NAME));
+        const auto target = this->getParent()->getChildByName(Player::NAME);
         if( target->getPosition().x < this->getPosition().x && this->IsLookingLeft() ) {
             lookAtEnemy = true;
         } else if( target->getPosition().x > this->getPosition().x && !this->IsLookingLeft() ) {
@@ -144,10 +141,21 @@ void Enemies::Warrior::update(float dt) {
         this->Attack();
         m_movement.StopXAxisMove();
     } 
+}
+
+void Enemies::Warrior::UpdatePosition(const float dt) noexcept {
     if(m_currentState.m_act != Act::attack ) {
-        m_navigator->Navigate(dt); // move if needed
-        this->UpdatePosition(dt); 
+        m_navigator->Navigate(dt); // update direction/target if needed
+        m_movement.Update(dt);  // apply forces
     }
+}
+
+void Enemies::Warrior::update(float dt) {
+    this->UpdateCurses(dt);
+    this->UpdateWeapon(dt);
+    m_influence.Update(); // detect players
+    this->TryAttack();
+    this->UpdatePosition(dt); 
     this->UpdateAnimation(); 
     this->UpdateState(dt);
 

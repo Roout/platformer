@@ -102,7 +102,7 @@ protected:
     /// Update functions
     void UpdateWeapon(const float dt) noexcept;
     
-    void UpdatePosition(const float dt) noexcept;
+    virtual void UpdatePosition(const float dt) noexcept;
 
     virtual void UpdateState(const float dt) noexcept;
 
