@@ -31,14 +31,12 @@ bool Enemies::Warrior::init() {
     );
     body->setCollisionBitmask(
         Utils::CreateMask(
-            // core::CategoryBits::HERO, 
             core::CategoryBits::BOUNDARY, 
             core::CategoryBits::PLATFORM 
         )
     );
     body->setContactTestBitmask(
         Utils::CreateMask(
-    //        core::CategoryBits::GROUND_SENSOR,
             core::CategoryBits::TRAP,
             core::CategoryBits::PLATFORM,
             core::CategoryBits::PROJECTILE
@@ -55,7 +53,6 @@ bool Enemies::Warrior::init() {
     );
     sensor->setContactTestBitmask(
         Utils::CreateMask(
-        //    core::CategoryBits::HERO,
             core::CategoryBits::BOUNDARY,
             core::CategoryBits::PLATFORM
         )
@@ -65,18 +62,8 @@ bool Enemies::Warrior::init() {
 }
 
 void Enemies::Warrior::UpdateState(const float dt) noexcept {
-    // const auto direction { this->getPhysicsBody()->getVelocity() };
     constexpr float EPS { 0.00001f };
-
     m_previousState = m_currentState;
-
-    // // update character direction
-    // if( helper::IsPositive(direction.x, EPS) ) {
-    //     m_currentState.m_side = Side::right;
-    // } else if( helper::IsNegative(direction.x, EPS) ) {
-    //     m_currentState.m_side = Side::left;
-    // }
-
     // update character state
     if( m_currentState.m_act == Act::attack ) {
         m_attackTime -= dt;
@@ -107,8 +94,8 @@ bool Enemies::Warrior::NeedAttack() const noexcept {
     const auto attackIsReady = m_influence.EnemyDetected() && m_weapon->CanAttack();
     const auto target = dynamic_cast<Unit*>(this->getParent()->getChildByName(Player::NAME));
     const auto enemyIsClose = [this, target]() { 
-        // use some simple algorithm to determine whether player is close enough to
-        // perform an attack
+        // use some simple algorithm to determine whether ф player is close enough to the target
+        // to perform an attack
         if( target ) {
             const auto radius = static_cast<float>(m_weapon->GetRange());
             const cocos2d::Rect lhs { 
@@ -145,8 +132,8 @@ void Enemies::Warrior::TryAttack() {
 
 void Enemies::Warrior::UpdatePosition(const float dt) noexcept {
     if(m_currentState.m_act != Act::attack ) {
-        m_navigator->Navigate(dt); // update direction/target if needed
-        m_movement.Update(dt);  // apply forces
+        m_navigator->Navigate(dt);  // update direction/target if needed
+        m_movement.Update(dt);      // apply forces
     }
 }
 
