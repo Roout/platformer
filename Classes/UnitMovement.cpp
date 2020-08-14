@@ -1,5 +1,6 @@
 #include "UnitMovement.hpp"
 #include "Unit.hpp"
+#include "PhysicsHelper.hpp"
 #include "cocos2d.h"
 
 void Movement::Update(const float dt) noexcept {
@@ -71,6 +72,9 @@ void Movement::Stop() noexcept {
 
 void Movement::StopXAxisMove() noexcept {
     const auto vel { m_unit->getPhysicsBody()->getVelocity() };
+    if(helper::IsEquel(vel.y, 0.f, 0.01f)) {
+        m_unit->getPhysicsBody()->resetForces();
+    }
     m_unit->getPhysicsBody()->setVelocity({ 0.f, vel.y });
 
     m_counter.remainingMoveLeft = m_counter.remainingMoveRight = 0;

@@ -41,7 +41,7 @@ void UserInputHandler::Input::Merge(const Input& input) noexcept {
 UserInputHandler::UserInputHandler(Unit * const player) :
     m_player { player }
 {
-    auto listener = cocos2d::EventListenerKeyboard::create();
+    const auto listener = cocos2d::EventListenerKeyboard::create();
     
     listener->onKeyPressed = [this](WinKeyCode keyCode, cocos2d::Event* event) {
         this->OnKeyPressed(keyCode, event);
@@ -50,7 +50,7 @@ UserInputHandler::UserInputHandler(Unit * const player) :
         this->OnKeyRelease(keyCode, event);
     };
 
-	auto eventDispatcher = cocos2d::Director::getInstance()->getEventDispatcher();
+	const auto eventDispatcher = cocos2d::Director::getInstance()->getEventDispatcher();
 	eventDispatcher->addEventListenerWithSceneGraphPriority(listener, player);
 }
 
@@ -65,9 +65,11 @@ void UserInputHandler::OnKeyPressed(
     }
 
     if( m_lastInput.dx == 1) {
+        m_player->GetMovement().StopXAxisMove();
         m_player->GetMovement().MoveRight();
     }
     else if( m_lastInput.dx == -1) {
+        m_player->GetMovement().StopXAxisMove();
         m_player->GetMovement().MoveLeft();
     }
 
