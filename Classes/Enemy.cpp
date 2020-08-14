@@ -83,10 +83,10 @@ Enemies::Warrior::Warrior(const cocos2d::Size& size, size_t id):
     m_movement.SetMaxSpeed(130.f);
 
     // Create weapon
-    m_maxAttackTime = 0.6f;
+    m_maxAttackTime = 0.68f;
     const int damage { 5 };
     const int range { SizeDeducer::GetInstance().GetAdjustedSize(90) };
-    const float reloadTime { 0.7f };
+    const float reloadTime { 0.8f };
     m_weapon = std::make_unique<Axe>( damage, range, reloadTime );
 }
 
