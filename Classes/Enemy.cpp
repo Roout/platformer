@@ -62,9 +62,13 @@ bool Enemies::Warrior::init() {
 }
 
 void Enemies::Warrior::UpdateState(const float dt) noexcept {
+    if(m_currentState.m_act == Act::dead) {
+        this->removeFromParentAndCleanup(true);
+        return;
+    } 
     constexpr float EPS { 0.00001f };
-    m_previousState = m_currentState;
     // update character state
+    m_previousState = m_currentState;
     if( m_currentState.m_act == Act::attack ) {
         m_attackTime -= dt;
         if( helper::IsPositive(m_attackTime, EPS) ) {
@@ -137,19 +141,30 @@ void Enemies::Warrior::UpdatePosition(const float dt) noexcept {
     }
 }
 
+void Enemies::Warrior::UpdateAnimation() {
+    if( m_currentState.m_act == Act::dead ) {
+        const auto emitter = cocos2d::ParticleSystemQuad::create("particle_texture.plist");
+        emitter->setAutoRemoveOnFinish(true);
+        /// TODO: adjust for the multiresolution
+        emitter->setScale(0.4f);
+        emitter->setPositionType(cocos2d::ParticleSystem::PositionType::RELATIVE);
+        emitter->setPosition(this->getPosition());
+        this->getParent()->addChild(emitter, 9);
+    } 
+    else {
+        Unit::UpdateAnimation();
+    }
+}
+
 void Enemies::Warrior::update(float dt) {
-    this->UpdateCurses(dt);
+    this->UpdateDebugLabel();
     this->UpdateWeapon(dt);
     m_influence.Update(); // detect players
     this->TryAttack();
     this->UpdatePosition(dt); 
+    this->UpdateCurses(dt);
     this->UpdateAnimation(); 
     this->UpdateState(dt);
-
-    // Debug >> Update state:
-    const auto stateLabel = dynamic_cast<cocos2d::Label*>(this->getChildByName("state"));
-    if( !stateLabel ) throw "can't find label!";
-    stateLabel->setString(CreateAnimationName(m_currentState.m_act));
 }
 
 void Enemies::Warrior::AttachNavigator(

@@ -44,6 +44,8 @@ namespace Enemies {
 
         void UpdatePosition(const float dt) noexcept override;
 
+        void UpdateAnimation() override;
+
         void TryAttack();
 
         bool NeedAttack() const noexcept;
