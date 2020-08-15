@@ -132,7 +132,7 @@ void Unit::FlipX(const Unit::Side currentSide) {
 }
 
 void Unit::UpdateAnimation() {
-    auto armatureDisplay = dynamic_cast<dragonBones::CCArmatureDisplay*>(
+    const auto armatureDisplay = dynamic_cast<dragonBones::CCArmatureDisplay*>(
         this->getChildByName("Armature")
     );
     
@@ -153,17 +153,20 @@ void Unit::UpdateAnimation() {
 
 void Unit::update(float dt) {
     // update order is important
+    this->UpdateCurses(dt);
     this->UpdateWeapon(dt);
     this->UpdatePosition(dt);
     this->UpdateAnimation();
+    this->UpdateDebugLabel();
     this->UpdateState(dt);
-    this->UpdateCurses(dt);
+}
 
-    // Debug >> Update state:
+void Unit::UpdateDebugLabel() {
     const auto stateLabel = dynamic_cast<cocos2d::Label*>(this->getChildByName("state"));
     if( !stateLabel ) throw "can't find label!";
     stateLabel->setString(CreateAnimationName(m_currentState.m_act));
 }
+
 
 void Unit::RecieveDamage(int damage) noexcept {
     m_health -= damage;
@@ -215,6 +218,11 @@ bool Unit::IsOnGround() const noexcept {
 }
 
 void Unit::UpdateState(const float dt) noexcept {
+    if( m_currentState.m_act == Act::dead ) {
+        this->removeFromParentAndCleanup(true);
+        return;
+    }
+
     const auto direction { this->getPhysicsBody()->getVelocity() };
     constexpr float EPS { 0.00001f };
 
@@ -252,5 +260,8 @@ void Unit::UpdateCurses(const float dt) noexcept {
         m_previousState.m_act = m_currentState.m_act;
         m_currentState.m_act = Act::dead;
         // Do smth on death
+        this->OnDeath();
     }
 }
+
+void Unit::OnDeath() {}

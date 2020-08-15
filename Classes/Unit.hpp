@@ -106,11 +106,15 @@ protected:
 
     virtual void UpdateState(const float dt) noexcept;
 
-    void UpdateCurses(const float dt) noexcept;
+    virtual void UpdateAnimation();
 
-    void UpdateAnimation();
+    void UpdateDebugLabel();
+
+    void UpdateCurses(const float dt) noexcept;
     
     /// Assisting functions
+    virtual void OnDeath();
+
     void CreateBody(const cocos2d::Size&);
 
     void FlipX(const Side);
