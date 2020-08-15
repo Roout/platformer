@@ -39,9 +39,7 @@ bool Player::init() {
     );
     body->setCollisionBitmask(
         Utils::CreateMask(
-  //          core::CategoryBits::ENEMY, 
             core::CategoryBits::BOUNDARY, 
-  //          core::CategoryBits::PROJECTILE, 
             core::CategoryBits::PLATFORM 
         )
     );
@@ -63,7 +61,6 @@ bool Player::init() {
     );
     sensor->setContactTestBitmask(
         Utils::CreateMask(
-    //        core::CategoryBits::ENEMY,
             core::CategoryBits::BOUNDARY,
             core::CategoryBits::PLATFORM
         )
