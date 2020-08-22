@@ -70,11 +70,11 @@ bool PauseNode::init() {
     const auto size = this->getContentSize();
 
     restartButton->setAnchorPoint(cocos2d::Vec2::ANCHOR_MIDDLE);
-    const cocos2d::Vec2 restartShift{ 0.f, restartButton->getContentSize().height / 2.f};
+    const cocos2d::Vec2 restartShift{ 0.f, restartButton->getContentSize().height / 3.f};
     restartButton->setPosition( restartShift + size / 2.f );
 
     resumeButton->setAnchorPoint(cocos2d::Vec2::ANCHOR_MIDDLE);
-    const cocos2d::Vec2 resumeShift{ 0.f, -restartButton->getContentSize().height / 2.f};
+    const cocos2d::Vec2 resumeShift{ 0.f, -restartButton->getContentSize().height / 3.f};
     resumeButton->setPosition( resumeShift + size / 2.f );
 
     return true;
