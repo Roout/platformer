@@ -13,6 +13,7 @@
 #include "SizeDeducer.hpp"
 #include "Enemy.hpp"
 #include "Player.hpp"
+#include "PauseNode.hpp"
 
 LevelScene::LevelScene(int id): 
     m_id{ id } 
@@ -280,7 +281,7 @@ bool LevelScene::init() {
     this->addChild(tileMap);
     this->InitTileMapObjects(tileMap);
    
-    const auto player { dynamic_cast<Player*>(tileMap->getChildByName("Player"))};
+    const auto player { dynamic_cast<Player*>(tileMap->getChildByName(Player::NAME))};
     m_inputHandler  = std::make_unique<UserInputHandler>(player);
 
     const auto visibleSize = cocos2d::Director::getInstance()->getVisibleSize();
@@ -296,6 +297,27 @@ bool LevelScene::init() {
     shapeContactListener->onContactBegin = helper::OnContactBegin;
     shapeContactListener->onContactSeparate = helper::OnContactSeparate;
     this->getEventDispatcher()->addEventListenerWithSceneGraphPriority(shapeContactListener, this);
+
+    const auto listener = cocos2d::EventListenerKeyboard::create();
+    listener->onKeyPressed = [this](cocos2d::EventKeyboard::KeyCode code, cocos2d::Event* event) {
+        if(code == cocos2d::EventKeyboard::KeyCode::KEY_ESCAPE) {
+            const auto visibleSize = cocos2d::Director::getInstance()->getVisibleSize();
+	        const auto origin = cocos2d::Director::getInstance()->getVisibleOrigin();
+
+            const auto node = PauseNode::create(2);
+            node->setAnchorPoint(cocos2d::Vec2::ANCHOR_MIDDLE);
+            node->setPosition(visibleSize / 2.f);
+            this->addChild(node);
+        }
+        return true;
+    };
+    listener->onKeyReleased = [this](cocos2d::EventKeyboard::KeyCode code, cocos2d::Event* event) {
+        if(code == cocos2d::EventKeyboard::KeyCode::KEY_ESCAPE) {
+            
+        }
+        return true;
+    };
+    this->getEventDispatcher()->addEventListenerWithSceneGraphPriority(listener, this);
 
     return true;
 }

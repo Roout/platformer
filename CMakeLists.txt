@@ -84,6 +84,7 @@ list(APPEND GAME_SOURCE
 list(APPEND GAME_HEADER
      Classes/AppDelegate.h
      Classes/LevelScene.hpp
+     Classes/PauseNode.hpp
      Classes/Unit.hpp
      Classes/Player.hpp
      Classes/Enemy.hpp
