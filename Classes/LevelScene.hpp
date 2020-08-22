@@ -21,6 +21,11 @@ public:
 
 	void update(float dt) override;
 
+    void pause() override;
+
+    void resume() override;
+
+    /// Lifecycle
 	~LevelScene() = default;
 
     LevelScene(const LevelScene&) = delete;

@@ -7,6 +7,9 @@
 #include <memory>
 #include <limits>
 
+#include "dragonBones/DragonBonesHeaders.h"
+#include "dragonBones/cocos2dx/CCDragonBonesHeaders.h"
+
 Enemies::Warrior* Enemies::Warrior::create(const cocos2d::Size& size, size_t id) {
     auto pRet { new (std::nothrow) Warrior(size, id) };
     if( pRet && pRet->init()) {
@@ -165,6 +168,30 @@ void Enemies::Warrior::update(float dt) {
     this->UpdateCurses(dt);
     this->UpdateAnimation(); 
     this->UpdateState(dt);
+}
+
+void Enemies::Warrior::pause() {
+    cocos2d::Node::pause();
+    // pause dragonbones
+    const auto armatureDisplay = dynamic_cast<dragonBones::CCArmatureDisplay*>(
+        this->getChildByName("Armature")
+    );
+    const auto animation = armatureDisplay->getAnimation();
+    if(animation->isPlaying()) {
+        animation->stop(animation->getLastAnimationName());
+    }
+}
+
+void Enemies::Warrior::resume() {
+    cocos2d::Node::resume();
+    // resume dragonbones
+    const auto armatureDisplay = dynamic_cast<dragonBones::CCArmatureDisplay*>(
+        this->getChildByName("Armature")
+    );
+    const auto animation = armatureDisplay->getAnimation();
+    if(!animation->isPlaying()) {
+        animation->play(animation->getLastAnimationName(), -1);
+    }
 }
 
 void Enemies::Warrior::AttachNavigator(

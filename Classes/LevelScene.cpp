@@ -217,6 +217,110 @@ namespace helper {
 
 };
 
+bool LevelScene::init() {
+	if (!cocos2d::Scene::init()) {
+		return false;
+	}
+
+	this->scheduleUpdate();
+    
+    const auto tmxFile { cocos2d::StringUtils::format("Map/level_%d.tmx", m_id) };
+    const auto tileMap { cocos2d::FastTMXTiledMap::create(tmxFile) };
+    tileMap->setName("Map");
+    this->addChild(tileMap);
+    this->InitTileMapObjects(tileMap);
+   
+    const auto player { dynamic_cast<Player*>(tileMap->getChildByName(Player::NAME))};
+    m_inputHandler  = std::make_unique<UserInputHandler>(player);
+
+    const auto visibleSize = cocos2d::Director::getInstance()->getVisibleSize();
+	const auto origin = cocos2d::Director::getInstance()->getVisibleOrigin();
+    const auto mapShift { player->getPosition() 
+        - cocos2d::Vec2{ visibleSize.width / 2.f, visibleSize.height / 3.f } 
+        - origin 
+    };
+    tileMap->setPosition(-mapShift);
+
+    // Add physics body contact listener
+    const auto shapeContactListener = cocos2d::EventListenerPhysicsContact::create();
+    shapeContactListener->onContactBegin = helper::OnContactBegin;
+    shapeContactListener->onContactSeparate = helper::OnContactSeparate;
+    this->getEventDispatcher()->addEventListenerWithSceneGraphPriority(shapeContactListener, this);
+
+    // Add test access to the pause node
+    const auto listener = cocos2d::EventListenerKeyboard::create();
+    listener->onKeyPressed = [this](cocos2d::EventKeyboard::KeyCode code, cocos2d::Event* event) {
+        if(code == cocos2d::EventKeyboard::KeyCode::KEY_ESCAPE) {
+            const auto visibleSize = cocos2d::Director::getInstance()->getVisibleSize();
+	        const auto origin = cocos2d::Director::getInstance()->getVisibleOrigin();
+
+            constexpr int id { 2 };
+            const auto node = PauseNode::create(id);
+            node->setAnchorPoint(cocos2d::Vec2::ANCHOR_MIDDLE);
+            node->setPosition(visibleSize / 2.f);
+
+            const auto ui = this->getParent()->getChildByName("Interface");
+            ui->addChild(node);
+
+            this->pause();
+        }
+        return true;
+    };
+    this->getEventDispatcher()->addEventListenerWithSceneGraphPriority(listener, this);
+    return true;
+}
+
+void LevelScene::pause() {
+    // pause for this target
+    // - event system
+    // - scheduler
+    // - actions
+    cocos2d::Node::pause();
+    const auto map = this->getChildByName("Map");
+    map->pause();
+    for(auto& child: map->getChildren()) {
+        child->pause();
+    }
+    // pause physic world
+    const auto runningScene { cocos2d::Director::getInstance()->getRunningScene() };
+    runningScene->getPhysicsWorld()->setSpeed(0.f);
+    // reset player's input
+    m_inputHandler->Reset();
+    // TODO: probably pause dragonbones animation for each target
+}
+
+void LevelScene::resume() {
+    // resume for this target
+    // - event system
+    // - scheduler
+    // - actions
+    cocos2d::Node::resume();
+    // resume all children of the tilemap
+    const auto map = this->getChildByName("Map");
+    for(const auto child: map->getChildren()) {
+        child->resume();
+    }
+    map->resume();
+    // resume physic world
+    const auto runningScene { cocos2d::Director::getInstance()->getRunningScene() };
+    runningScene->getPhysicsWorld()->setSpeed(1.0);
+    // TODO: resume dragonbones animation
+};
+
+
+void LevelScene::menuCloseCallback(cocos2d::Ref* pSender) {
+    //Close the cocos2d-x game scene and quit the application
+    cocos2d::Director::getInstance()->end();
+    /*To navigate back to native iOS screen(if present) without quitting the application  ,do not use Director::getInstance()->end() as given above,instead trigger a custom event created in RootViewController.mm as below*/
+    //EventCustom customEndEvent("game_scene_close_event");
+    //_eventDispatcher->dispatchEvent(&customEndEvent);
+}
+
+void LevelScene::update(float dt) {
+    // static unsigned int x { 0 };
+    // cocos2d::log("Update: %0.4f, %d", dt, x++);
+}
+
 void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
     { // make doc local to this block
         auto doc = m_supplement.Load(m_id);
@@ -281,75 +385,4 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
             }
         }
     }
-}
-
-bool LevelScene::init() {
-	if (!cocos2d::Scene::init()) {
-		return false;
-	}
-
-	this->scheduleUpdate();
-    
-    const auto tmxFile { cocos2d::StringUtils::format("Map/level_%d.tmx", m_id) };
-    const auto tileMap { cocos2d::FastTMXTiledMap::create(tmxFile) };
-    tileMap->setName("Map");
-    this->addChild(tileMap);
-    this->InitTileMapObjects(tileMap);
-   
-    const auto player { dynamic_cast<Player*>(tileMap->getChildByName(Player::NAME))};
-    m_inputHandler  = std::make_unique<UserInputHandler>(player);
-
-    const auto visibleSize = cocos2d::Director::getInstance()->getVisibleSize();
-	const auto origin = cocos2d::Director::getInstance()->getVisibleOrigin();
-    const auto mapShift { player->getPosition() 
-        - cocos2d::Vec2{ visibleSize.width / 2.f, visibleSize.height / 3.f } 
-        - origin 
-    };
-    tileMap->setPosition(-mapShift);
-
-    // Add physics body contact listener
-    const auto shapeContactListener = cocos2d::EventListenerPhysicsContact::create();
-    shapeContactListener->onContactBegin = helper::OnContactBegin;
-    shapeContactListener->onContactSeparate = helper::OnContactSeparate;
-    this->getEventDispatcher()->addEventListenerWithSceneGraphPriority(shapeContactListener, this);
-
-    // Add test access to the pause node
-    const auto listener = cocos2d::EventListenerKeyboard::create();
-    listener->onKeyPressed = [this](cocos2d::EventKeyboard::KeyCode code, cocos2d::Event* event) {
-        if(code == cocos2d::EventKeyboard::KeyCode::KEY_ESCAPE) {
-            const auto visibleSize = cocos2d::Director::getInstance()->getVisibleSize();
-	        const auto origin = cocos2d::Director::getInstance()->getVisibleOrigin();
-
-            constexpr int id { 2 };
-            const auto node = PauseNode::create(id);
-            node->setAnchorPoint(cocos2d::Vec2::ANCHOR_MIDDLE);
-            node->setPosition(visibleSize / 2.f);
-
-            const auto ui = this->getParent()->getChildByName("Interface");
-            ui->addChild(node);
-        }
-        return true;
-    };
-    listener->onKeyReleased = [this](cocos2d::EventKeyboard::KeyCode code, cocos2d::Event* event) {
-        if(code == cocos2d::EventKeyboard::KeyCode::KEY_ESCAPE) {
-
-        }
-        return true;
-    };
-    this->getEventDispatcher()->addEventListenerWithSceneGraphPriority(listener, this);
-
-    return true;
-}
-
-void LevelScene::menuCloseCallback(cocos2d::Ref* pSender) {
-    //Close the cocos2d-x game scene and quit the application
-    cocos2d::Director::getInstance()->end();
-    /*To navigate back to native iOS screen(if present) without quitting the application  ,do not use Director::getInstance()->end() as given above,instead trigger a custom event created in RootViewController.mm as below*/
-    //EventCustom customEndEvent("game_scene_close_event");
-    //_eventDispatcher->dispatchEvent(&customEndEvent);
-}
-
-void LevelScene::update(float dt) {
-    // static unsigned int x { 0 };
-    // cocos2d::log("Update: %0.4f, %d", dt, x++);
 }

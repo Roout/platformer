@@ -18,6 +18,10 @@ namespace Enemies {
         
         void update(float dt) override;
 
+        void pause() override;
+
+        void resume() override;
+
         inline size_t GetId() const noexcept;
 
         void AttachNavigator(
