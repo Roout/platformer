@@ -29,13 +29,9 @@ public:
     // Some esoteric attempts to check
     [[nodiscard]] bool IsOnGround() const noexcept;
 
-    [[nodiscard]] Movement& GetMovement() noexcept {
-        return m_movement;
-    }
+    [[nodiscard]] inline Movement& GetMovement() noexcept;
 
-    [[nodiscard]] int GetHealth() const noexcept {
-        return m_health;
-    }
+    [[nodiscard]] inline int GetHealth() const noexcept;
     /**
      * Invoked from event listener on contact between sensor attached to 
      * unit's physics body and ground (e.g. platform).
@@ -43,27 +39,17 @@ public:
      * @param[in] hasContactWithGround
      *      Variable indicate whether unit's sensor is in contact with froun or not.
      */
-    void HasContactWithGround(bool hasContactWithGround) noexcept {
-        m_hasContactWithGround = hasContactWithGround;
-    }
+    inline void HasContactWithGround(bool hasContactWithGround) noexcept;
 
     template<Curses::CurseType type, class ...Args>
-    void AddCurse(size_t id, Args&&... args) noexcept {
-        m_curses.AddCurse<type>(id, std::forward<Args>(args)...);
-    }
+    void AddCurse(size_t id, Args&&... args) noexcept;
 
-    void RemoveCurse(size_t id) noexcept {
-        m_curses.RemoveCurse(id);
-    }
+    inline void RemoveCurse(size_t id) noexcept;
 
-    bool IsLookingLeft() const noexcept {
-        return m_currentState.m_side == Side::left;
-    }
+    inline bool IsLookingLeft() const noexcept;
     
-    void Turn() noexcept {
-        m_previousState.m_side = m_currentState.m_side;
-        m_currentState.m_side = (m_currentState.m_side == Side::left? Side::right: Side::left);
-    }
+    inline void Turn() noexcept;
+
     /// Types
 protected:
     enum class Act {
@@ -145,5 +131,35 @@ protected:
     
     float m_attackTime { m_maxAttackTime };
 };
+
+inline Movement& Unit::GetMovement() noexcept {
+    return m_movement;
+}
+
+inline int Unit::GetHealth() const noexcept {
+    return m_health;
+}
+
+inline void Unit::HasContactWithGround(bool hasContactWithGround) noexcept {
+    m_hasContactWithGround = hasContactWithGround;
+}
+
+template<Curses::CurseType type, class ...Args>
+void Unit::AddCurse(size_t id, Args&&... args) noexcept {
+    m_curses.AddCurse<type>(id, std::forward<Args>(args)...);
+}
+
+inline void Unit::RemoveCurse(size_t id) noexcept {
+    m_curses.RemoveCurse(id);
+}
+
+inline bool Unit::IsLookingLeft() const noexcept {
+    return m_currentState.m_side == Side::left;
+}
+
+inline void Unit::Turn() noexcept {
+    m_previousState.m_side = m_currentState.m_side;
+    m_currentState.m_side = (m_currentState.m_side == Side::left? Side::right: Side::left);
+}
 
 #endif // UNIT_HPP
