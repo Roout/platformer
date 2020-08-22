@@ -10,6 +10,8 @@ class UserInputHandler;
 class LevelScene final : public cocos2d::Scene {
 public:
 
+    [[nodiscard]] static cocos2d::Scene* createRootScene(int id);
+
     [[nodiscard]] static LevelScene* create(int id);
 
     [[nodiscard]] bool init() override;

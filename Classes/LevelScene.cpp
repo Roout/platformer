@@ -20,6 +20,25 @@ LevelScene::LevelScene(int id):
 {
 }
 
+cocos2d::Scene* LevelScene::createRootScene(int id) {
+    const auto root = cocos2d::Scene::createWithPhysics();
+    const auto world = root->getPhysicsWorld();
+    world->setGravity(cocos2d::Vec2(0, -1000));
+    world->setDebugDrawMask(cocos2d::PhysicsWorld::DEBUGDRAW_ALL);
+
+    const auto level = LevelScene::create(id);
+    const auto uiLayer = cocos2d::Layer::create();
+    
+    level->setName("Level");
+    uiLayer->setName("Interface");
+    
+    root->addChild(level);
+    root->addChild(uiLayer);
+    
+    return root;
+}
+
+
 LevelScene* LevelScene::create(int id) {
     auto *pRet = new(std::nothrow) LevelScene{id};
     if (pRet && pRet->init()) {
@@ -265,13 +284,9 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
 }
 
 bool LevelScene::init() {
-	if (!cocos2d::Scene::initWithPhysics()) {
+	if (!cocos2d::Scene::init()) {
 		return false;
 	}
-
-    const auto world = this->getPhysicsWorld();
-    world->setGravity(cocos2d::Vec2(0, -1000));
-    world->setDebugDrawMask(cocos2d::PhysicsWorld::DEBUGDRAW_ALL);
 
 	this->scheduleUpdate();
     
@@ -298,22 +313,26 @@ bool LevelScene::init() {
     shapeContactListener->onContactSeparate = helper::OnContactSeparate;
     this->getEventDispatcher()->addEventListenerWithSceneGraphPriority(shapeContactListener, this);
 
+    // Add test access to the pause node
     const auto listener = cocos2d::EventListenerKeyboard::create();
     listener->onKeyPressed = [this](cocos2d::EventKeyboard::KeyCode code, cocos2d::Event* event) {
         if(code == cocos2d::EventKeyboard::KeyCode::KEY_ESCAPE) {
             const auto visibleSize = cocos2d::Director::getInstance()->getVisibleSize();
 	        const auto origin = cocos2d::Director::getInstance()->getVisibleOrigin();
 
-            const auto node = PauseNode::create(2);
+            constexpr int id { 2 };
+            const auto node = PauseNode::create(id);
             node->setAnchorPoint(cocos2d::Vec2::ANCHOR_MIDDLE);
             node->setPosition(visibleSize / 2.f);
-            this->addChild(node);
+
+            const auto ui = this->getParent()->getChildByName("Interface");
+            ui->addChild(node);
         }
         return true;
     };
     listener->onKeyReleased = [this](cocos2d::EventKeyboard::KeyCode code, cocos2d::Event* event) {
         if(code == cocos2d::EventKeyboard::KeyCode::KEY_ESCAPE) {
-            
+
         }
         return true;
     };

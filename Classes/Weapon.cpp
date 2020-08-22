@@ -10,7 +10,8 @@ void Sword::Attack(
 ) noexcept {
    
     const auto runningScene { cocos2d::Director::getInstance()->getRunningScene() };
-    const auto map = runningScene->getChildByName("Map");
+    const auto level = runningScene->getChildByName("Level");
+    const auto map = level->getChildByName("Map");
 
     const auto proj = Projectile::create(area.size, velocity, this->GetDamage());
     proj->setPosition(area.origin);
@@ -35,7 +36,8 @@ void Axe::Attack(
 ) noexcept {
 
     const auto runningScene { cocos2d::Director::getInstance()->getRunningScene() };
-    const auto map = runningScene->getChildByName("Map");
+    const auto level = runningScene->getChildByName("Level");
+    const auto map = level->getChildByName("Map");
     
     const auto proj = Projectile::create(area.size, velocity, this->GetDamage());
     proj->setPosition(area.origin);
