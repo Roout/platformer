@@ -39,6 +39,8 @@ bool PauseNode::init() {
         return false;
     }
     
+    this->setName("Pause");
+
     auto restartButton = cocos2d::ui::Button::create("normal_restart.png", "selected_restart.png", "disabled_restart.png");
     restartButton->setTitleText("Restart");
     restartButton->addTouchEventListener([&](cocos2d::Ref* sender, cocos2d::ui::Widget::TouchEventType type) {
@@ -57,12 +59,14 @@ bool PauseNode::init() {
     resumeButton->setTitleText("Resume");
     resumeButton->addTouchEventListener([&](cocos2d::Ref* sender, cocos2d::ui::Widget::TouchEventType type){
             switch (type) {
-                case cocos2d::ui::Widget::TouchEventType::BEGAN:
-                    break;
-                case cocos2d::ui::Widget::TouchEventType::ENDED:
-                    break;
-                default:
-                    break;
+                case cocos2d::ui::Widget::TouchEventType::BEGAN: break;
+                case cocos2d::ui::Widget::TouchEventType::ENDED: {
+                    const auto scene = cocos2d::Director::getInstance()->getRunningScene();
+                    const auto level = dynamic_cast<cocos2d::Scene*>(scene->getChildByName("Level"));
+                    level->resume();
+                    scene->getChildByName("Interface")->removeChildByName("Pause");
+                } break;
+                default: break;
             }
     });
     this->addChild(resumeButton);
