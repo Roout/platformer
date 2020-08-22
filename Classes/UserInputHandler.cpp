@@ -54,6 +54,13 @@ UserInputHandler::UserInputHandler(Unit * const player) :
 	eventDispatcher->addEventListenerWithSceneGraphPriority(listener, player);
 }
 
+void UserInputHandler::Reset() {
+    m_player->GetMovement().StopXAxisMove();
+    m_lastInput.dx = 0;
+    m_lastInput.jump = false;
+    m_lastInput.attack = false;
+}
+
 void UserInputHandler::OnKeyPressed(
     WinKeyCode keyCode, 
     cocos2d::Event* event

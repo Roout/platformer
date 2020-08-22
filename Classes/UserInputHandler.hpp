@@ -12,8 +12,9 @@ using WinKeyCode = cocos2d::EventKeyboard::KeyCode;
 // used as controller
 // for now it need to live at least as much as player
 class UserInputHandler final {
+    // Lifetime management
 public:
-    // define which unit and which node it listen to.
+    // define which unit&node it listen to.
     UserInputHandler(Unit * const);
     ~UserInputHandler() = default;
 
@@ -22,7 +23,11 @@ public:
 
     UserInputHandler(UserInputHandler&& ) = delete;
     UserInputHandler& operator=(UserInputHandler&& ) = delete;
-    
+
+    /**
+     * Force to release all buttons.
+     */
+    void Reset();
 private:
     // callbacks 
     void OnKeyPressed(WinKeyCode keyCode, cocos2d::Event* event);
