@@ -42,7 +42,11 @@ public:
     [[nodiscard]] auto&& Acquire(CategoryName category) noexcept {
         return std::move(m_parsed[Utils::EnumCast(category)]);
     }
-
+    
+    [[nodiscard]] const auto& Peek(CategoryName category) const noexcept {
+        return m_parsed[Utils::EnumCast(category)];
+    }
+    
 private:
 
     template <CategoryName category>
