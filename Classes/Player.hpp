@@ -18,11 +18,15 @@ public:
 
     void setPosition(const cocos2d::Vec2& position) override;
 
+private:
     void UpdateState(const float dt) noexcept override;
 
-private:
+    void UpdateAnimation() override;
+
     Player(const cocos2d::Size&);
 
+    /// Properties
+private:
     std::unique_ptr<SmoothFollower> m_follower { nullptr };
 };
 

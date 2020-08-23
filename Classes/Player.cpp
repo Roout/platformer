@@ -5,6 +5,7 @@
 #include "Core.hpp"
 #include "SizeDeducer.hpp"
 #include "Weapon.hpp"
+#include "DeathScreen.hpp"
 
 Player* Player::create(const cocos2d::Size& size) {
     auto pRet { new (std::nothrow) Player(size) };
@@ -84,9 +85,37 @@ void Player::update(float dt) {
     this->UpdateState(dt);
 }
 
+void Player::UpdateAnimation() {
+    if( m_currentState.m_act == Act::dead ) {
+        const auto emitter = cocos2d::ParticleSystemQuad::create("particle_texture.plist");
+        emitter->setAutoRemoveOnFinish(true);
+        /// TODO: adjust for the multiresolution
+        emitter->setScale(0.4f);
+        emitter->setPositionType(cocos2d::ParticleSystem::PositionType::RELATIVE);
+        emitter->setPosition(this->getPosition());
+        this->getParent()->addChild(emitter, 9);
+    } 
+    else {
+        Unit::UpdateAnimation();
+    }
+}
+
 void Player::UpdateState(const float dt) noexcept {
     if( m_currentState.m_act == Act::dead ) {
+        m_follower.reset();
         this->removeFromParent();
+        // show death screen:
+        const auto visibleSize = cocos2d::Director::getInstance()->getVisibleSize();
+        const auto origin = cocos2d::Director::getInstance()->getVisibleOrigin();
+
+        const auto node = DeathScreen::create();
+        node->setAnchorPoint(cocos2d::Vec2::ANCHOR_MIDDLE);
+        node->setPosition(origin / 2.f + visibleSize / 2.f );
+
+        const auto scene = cocos2d::Director::getInstance()->getRunningScene();
+        const auto ui = scene->getChildByName("Interface");
+        ui->addChild(node);
+
         return;
     }
 
@@ -104,7 +133,7 @@ void Player::UpdateState(const float dt) noexcept {
     }
 
     const auto velocity { this->getPhysicsBody()->getVelocity() };
-    
+
     if( !this->IsOnGround() ) {
         m_currentState.m_act = Act::jump;
     } else if( helper::IsEquel(velocity.x, 0.f, EPS) ) {
