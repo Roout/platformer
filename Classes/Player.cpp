@@ -1,5 +1,6 @@
 #include "Player.hpp"
 #include "SmoothFollower.hpp"
+#include "PhysicsHelper.hpp"
 #include "Utils.hpp"
 #include "Core.hpp"
 #include "SizeDeducer.hpp"
@@ -74,6 +75,41 @@ void Player::setPosition(const cocos2d::Vec2& position) {
 }
 
 void Player::update(float dt) {
-    Unit::update(dt);
+    this->UpdateDebugLabel();
+    this->UpdateWeapon(dt);
+    this->UpdatePosition(dt); 
     m_follower->UpdateMapPosition(dt);
+    this->UpdateCurses(dt);
+    this->UpdateAnimation(); 
+    this->UpdateState(dt);
+}
+
+void Player::UpdateState(const float dt) noexcept {
+    if( m_currentState.m_act == Act::dead ) {
+        this->removeFromParent();
+        return;
+    }
+
+    m_previousState = m_currentState;
+
+    constexpr float EPS { 0.00001f };
+
+    // update character state
+    if( m_currentState.m_act == Act::attack ) {
+        m_attackTime -= dt;
+        if( helper::IsPositive(m_attackTime, EPS) ) {
+            // exit to not change an attack state
+            return; 
+        }
+    }
+
+    const auto velocity { this->getPhysicsBody()->getVelocity() };
+    
+    if( !this->IsOnGround() ) {
+        m_currentState.m_act = Act::jump;
+    } else if( helper::IsEquel(velocity.x, 0.f, EPS) ) {
+        m_currentState.m_act = Act::idle;
+    } else {
+        m_currentState.m_act = Act::move;
+    }
 }

@@ -18,6 +18,8 @@ public:
 
     void setPosition(const cocos2d::Vec2& position) override;
 
+    void UpdateState(const float dt) noexcept override;
+
 private:
     Player(const cocos2d::Size&);
 

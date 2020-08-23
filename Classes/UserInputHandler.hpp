@@ -3,6 +3,7 @@
 
 #include "CCEventKeyboard.h"
 #include <memory>
+#include <array>
 
 // This is player's avatar
 class Unit; 
@@ -57,6 +58,7 @@ private:
 
     Input m_lastInput {};
     Unit * const m_player { nullptr };
+    std::array<WinKeyCode, 8U> m_validKeys;
 };
 
 #endif // USER_INPUT_H

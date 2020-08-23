@@ -3,6 +3,8 @@
 #include "PhysicsHelper.hpp"
 #include "cocos2d.h"
 
+#include <algorithm> // std::find
+
 UserInputHandler::Input UserInputHandler::Input::Create(WinKeyCode keyCode) noexcept {
     Input input;
     if (keyCode == WinKeyCode::KEY_LEFT_ARROW ||
@@ -39,15 +41,29 @@ void UserInputHandler::Input::Merge(const Input& input) noexcept {
 }  
 
 UserInputHandler::UserInputHandler(Unit * const player) :
-    m_player { player }
+    m_player { player },
+    m_validKeys {
+        WinKeyCode::KEY_LEFT_ARROW,
+        WinKeyCode::KEY_A,
+        WinKeyCode::KEY_RIGHT_ARROW,
+        WinKeyCode::KEY_D,
+        WinKeyCode::KEY_UP_ARROW,
+        WinKeyCode::KEY_W,
+        WinKeyCode::KEY_SPACE,
+        WinKeyCode::KEY_F
+    }
 {
     const auto listener = cocos2d::EventListenerKeyboard::create();
     
     listener->onKeyPressed = [this](WinKeyCode keyCode, cocos2d::Event* event) {
-        this->OnKeyPressed(keyCode, event);
+        if(auto it = std::find(m_validKeys.cbegin(), m_validKeys.cend(), keyCode); it != m_validKeys.cend()) {
+            this->OnKeyPressed(keyCode, event);
+        }
     };
 	listener->onKeyReleased = [this](WinKeyCode keyCode, cocos2d::Event* event) {
-        this->OnKeyRelease(keyCode, event);
+        if(auto it = std::find(m_validKeys.cbegin(), m_validKeys.cend(), keyCode); it != m_validKeys.cend()) {
+            this->OnKeyRelease(keyCode, event);
+        }
     };
 
 	const auto eventDispatcher = cocos2d::Director::getInstance()->getEventDispatcher();
@@ -74,10 +90,16 @@ void UserInputHandler::OnKeyPressed(
     if( m_lastInput.dx == 1) {
         m_player->GetMovement().StopXAxisMove();
         m_player->GetMovement().MoveRight();
+        if(m_player->IsLookingLeft()) {
+            m_player->Turn();
+        }
     }
     else if( m_lastInput.dx == -1) {
         m_player->GetMovement().StopXAxisMove();
         m_player->GetMovement().MoveLeft();
+        if(!m_player->IsLookingLeft()) {
+            m_player->Turn();
+        }
     }
 
     if( m_lastInput.attack) {
