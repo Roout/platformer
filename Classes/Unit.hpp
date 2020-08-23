@@ -50,6 +50,8 @@ public:
     
     inline void Turn() noexcept;
 
+    inline bool IsDead() const noexcept;
+
     /// Types
 protected:
     enum class Act {
@@ -161,5 +163,10 @@ inline void Unit::Turn() noexcept {
     m_previousState.m_side = m_currentState.m_side;
     m_currentState.m_side = (m_currentState.m_side == Side::left? Side::right: Side::left);
 }
+
+inline bool Unit::IsDead() const noexcept {
+    return m_currentState.m_act == Act::dead;
+}
+
 
 #endif // UNIT_HPP
