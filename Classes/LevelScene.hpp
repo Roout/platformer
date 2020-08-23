@@ -3,9 +3,12 @@
 
 #include <memory>
 #include "cocos2d.h"
-#include "PathNodes.hpp"
 
 class UserInputHandler;
+class TileMapParser;
+namespace path {
+    struct Supplement;
+}
 
 class LevelScene final : public cocos2d::Scene {
 public:
@@ -25,6 +28,8 @@ public:
 
     void resume() override;
 
+    void Restart();
+
     /// Lifecycle
 	~LevelScene() = default;
 
@@ -38,9 +43,11 @@ private:
     void InitTileMapObjects(cocos2d::FastTMXTiledMap * map);
 
     // controller:
-    std::unique_ptr<UserInputHandler>   m_inputHandler { nullptr };
+    std::unique_ptr<UserInputHandler> m_inputHandler { nullptr };
 
-    path::Supplement m_supplement;
+    std::unique_ptr<path::Supplement> m_supplement { nullptr };
+
+    std::unique_ptr<TileMapParser> m_parser { nullptr };
 
     // level id. Used to load a map
     const int m_id { -1 }; 

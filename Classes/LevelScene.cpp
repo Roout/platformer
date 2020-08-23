@@ -4,7 +4,6 @@
 #include "Border.hpp"
 #include "Platform.hpp"
 #include "UserInputHandler.hpp"
-#include "TileMapParser.hpp"
 #include "SmoothFollower.hpp"
 #include "PhysicsHelper.hpp"
 #include "Utils.hpp"
@@ -14,6 +13,8 @@
 #include "Enemy.hpp"
 #include "Player.hpp"
 #include "PauseNode.hpp"
+#include "TileMapParser.hpp"
+#include "PathNodes.hpp"
 
 LevelScene::LevelScene(int id): 
     m_id{ id } 
@@ -29,7 +30,6 @@ cocos2d::Scene* LevelScene::createRootScene(int id) {
     const auto level = LevelScene::create(id);
     const auto uiLayer = cocos2d::Layer::create();
     
-    level->setName("Level");
     uiLayer->setName("Interface");
     
     root->addChild(level);
@@ -88,6 +88,7 @@ namespace helper {
             bodies[BODY_A]->getCategoryBitmask(),
             bodies[BODY_B]->getCategoryBitmask()
         };
+
         const bool isPlatform[2] = {
             bodyMasks[BODY_A] == Utils::CreateMask(core::CategoryBits::PLATFORM),
             bodyMasks[BODY_B] == Utils::CreateMask(core::CategoryBits::PLATFORM)
@@ -221,25 +222,21 @@ bool LevelScene::init() {
 	if (!cocos2d::Scene::init()) {
 		return false;
 	}
-
+    
+    this->setName("Level");
 	this->scheduleUpdate();
     
     const auto tmxFile { cocos2d::StringUtils::format("Map/level_%d.tmx", m_id) };
     const auto tileMap { cocos2d::FastTMXTiledMap::create(tmxFile) };
     tileMap->setName("Map");
     this->addChild(tileMap);
-    this->InitTileMapObjects(tileMap);
-   
-    const auto player { dynamic_cast<Player*>(tileMap->getChildByName(Player::NAME))};
-    m_inputHandler  = std::make_unique<UserInputHandler>(player);
 
-    const auto visibleSize = cocos2d::Director::getInstance()->getVisibleSize();
-	const auto origin = cocos2d::Director::getInstance()->getVisibleOrigin();
-    const auto mapShift { player->getPosition() 
-        - cocos2d::Vec2{ visibleSize.width / 2.f, visibleSize.height / 3.f } 
-        - origin 
-    };
-    tileMap->setPosition(-mapShift);
+    // mark untouchable layers:
+    for(auto& child: tileMap->getChildren()) {
+        child->setName("Untouchable");
+    }
+
+    this->Restart();    
 
     // Add physics body contact listener
     const auto shapeContactListener = cocos2d::EventListenerPhysicsContact::create();
@@ -286,7 +283,6 @@ void LevelScene::pause() {
     runningScene->getPhysicsWorld()->setSpeed(0.f);
     // reset player's input
     m_inputHandler->Reset();
-    // TODO: probably pause dragonbones animation for each target
 }
 
 void LevelScene::resume() {
@@ -304,8 +300,35 @@ void LevelScene::resume() {
     // resume physic world
     const auto runningScene { cocos2d::Director::getInstance()->getRunningScene() };
     runningScene->getPhysicsWorld()->setSpeed(1.0);
-    // TODO: resume dragonbones animation
 };
+
+void LevelScene::Restart() {
+    // Tilemap:
+    // - remove children exсept layers and objects.
+    const auto tileMap = dynamic_cast<cocos2d::FastTMXTiledMap*>(this->getChildByName("Map"));
+    std::vector<cocos2d::Node*> scheduledForRemove;
+    scheduledForRemove.reserve(100);
+    for(auto& child: tileMap->getChildren()) {
+        if(child->getName() != "Untouchable") {
+            scheduledForRemove.emplace_back(child);
+        }
+    }
+    for(auto & child : scheduledForRemove) {
+        child->removeFromParent();
+    }
+    this->InitTileMapObjects(tileMap);
+   
+    // - reset position
+    const auto player { tileMap->getChildByName(Player::NAME) };
+
+    const auto visibleSize = cocos2d::Director::getInstance()->getVisibleSize();
+	const auto origin = cocos2d::Director::getInstance()->getVisibleOrigin();
+    const auto mapShift { player->getPosition() 
+        - cocos2d::Vec2{ visibleSize.width / 2.f, visibleSize.height / 3.f } 
+        - origin 
+    };
+    tileMap->setPosition(-mapShift);
+}
 
 
 void LevelScene::menuCloseCallback(cocos2d::Ref* pSender) {
@@ -322,17 +345,20 @@ void LevelScene::update(float dt) {
 }
 
 void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
-    { // make doc local to this block
-        auto doc = m_supplement.Load(m_id);
-        m_supplement.Parse(doc);
-    }
 
-    TileMapParser parser{ map };
-    parser.Parse();
+    if(!m_supplement) {
+        m_supplement = std::make_unique<path::Supplement>();
+        auto doc = m_supplement->Load(m_id);
+        m_supplement->Parse(doc);
+    }
+    if(!m_parser) {
+        m_parser = std::make_unique<TileMapParser>(map);
+        m_parser->Parse();
+    }
     
     for(size_t i = 0; i < Utils::EnumSize<core::CategoryName>(); i++) {
         const auto category { static_cast<core::CategoryName>(i) };
-        const auto parsedForms { parser.Acquire(category) };
+        const auto parsedForms { m_parser->Peek(category) };
         for(const auto& form: parsedForms) {
             if ( form.m_type == core::CategoryName::PLAYER ) {
                 const cocos2d::Size size { 
@@ -344,6 +370,8 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                 hero->setAnchorPoint(cocos2d::Vec2::ANCHOR_BOTTOM_LEFT);
                 hero->setPosition(form.m_botLeft);
                 map->addChild(hero, 10);
+
+                m_inputHandler  = std::make_unique<UserInputHandler>(hero);
             } 
             else if(form.m_type == core::CategoryName::PLATFORM ) {
                 const auto platform = Platform::create(form.m_rect.size);
@@ -376,8 +404,8 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                         const auto warrior { Enemies::Warrior::create(size, form.m_id) };
                         warrior->setName(Enemies::Warrior::NAME);
                         warrior->setPosition(form.m_botLeft);
-                        warrior->AttachNavigator(map->getMapSize(), map->getTileSize().width, &m_supplement);
-                        warrior->AttachInfluenceArea(map->getMapSize(), map->getTileSize().width, &m_supplement);
+                        warrior->AttachNavigator(map->getMapSize(), map->getTileSize().width, m_supplement.get());
+                        warrior->AttachInfluenceArea(map->getMapSize(), map->getTileSize().width, m_supplement.get());
                         map->addChild(warrior, 9);
                     } break;
                     default: break;
