@@ -69,6 +69,7 @@ list(APPEND GAME_SOURCE
      Classes/Influence.cpp
      Classes/Navigator.cpp
      Classes/Enemy.cpp
+     Classes/PauseNode.cpp
      Classes/PathNodes.cpp
      Classes/UnitMovement.cpp
      Classes/SmoothFollower.cpp
