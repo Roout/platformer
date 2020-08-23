@@ -70,6 +70,7 @@ list(APPEND GAME_SOURCE
      Classes/Navigator.cpp
      Classes/Enemy.cpp
      Classes/PauseNode.cpp
+     Classes/DeathScreen.cpp
      Classes/PathNodes.cpp
      Classes/UnitMovement.cpp
      Classes/SmoothFollower.cpp
@@ -87,6 +88,7 @@ list(APPEND GAME_HEADER
      Classes/LevelScene.hpp
      Classes/PauseNode.hpp
      Classes/Unit.hpp
+     Classes/DeathScreen.hpp
      Classes/Player.hpp
      Classes/Enemy.hpp
      Classes/Influence.hpp
