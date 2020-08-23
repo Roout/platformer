@@ -47,6 +47,10 @@ size_t Navigator::FindClosestWaypoint(const cocos2d::Vec2& p) const {
 }
 
 void Navigator::Navigate(const float dt) {
+    if( m_target && m_target->IsDead()) {
+        this->Patrol();
+    }
+
     if( m_mode == Mode::pursue ) {
         const auto targetWidth = m_target->getContentSize().width / 2.f; 
         const auto unitWidth = m_unit->getContentSize().width / 2.f; 
@@ -124,9 +128,11 @@ bool Navigator::ReachedDestination() const noexcept {
 void Navigator::Pursue(Unit * const target) noexcept {
     m_mode = Mode::pursue;
     m_target = target;
+    m_target->retain();
 }
 
 void Navigator::Patrol() noexcept {
     m_mode = Mode::patrol;
+    m_target->release();
     m_target = nullptr;
 }
