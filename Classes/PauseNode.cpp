@@ -1,5 +1,6 @@
 #include "PauseNode.hpp"
 #include "LevelScene.hpp"
+#include "ui/CocosGUI.h"
 
 PauseNode* PauseNode::create(size_t id) {
     auto pRet = new (std::nothrow) PauseNode(id);

@@ -2,7 +2,6 @@
 #define RESTART_SCENE_HPP
 
 #include "cocos2d.h"
-#include "ui/CocosGUI.h"
 
 class PauseNode : public cocos2d::Node {
 public:
