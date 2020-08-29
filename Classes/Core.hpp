@@ -24,7 +24,7 @@ namespace core {
         COUNT
     };
 
-    enum class EnemyType {
+    enum class EnemyClass {
         UNDEFINED,
 
         WARRIOR, // in fact it's axe-warrior

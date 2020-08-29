@@ -143,7 +143,7 @@ namespace helper {
             // damage target if possible
             if(isUnit[projectileIndex ^ 1]) {
                 const auto unit { dynamic_cast<Unit*>(nodes[projectileIndex^1]) };
-                unit->AddCurse<Curses::CurseType::INSTANT>(
+                unit->AddCurse<Curses::CurseClass::INSTANT>(
                     Curses::CurseHub::ignored, 
                     proj->GetDamage()
                 );
@@ -400,7 +400,7 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                     SizeDeducer::GetInstance().GetAdjustedSize(135.f)
                 };
                 switch(form.m_enemyType) {
-                    case core::EnemyType::WARRIOR: {
+                    case core::EnemyClass::WARRIOR: {
                         const auto warrior { Enemies::Warrior::create(size, form.m_id) };
                         warrior->setName(Enemies::Warrior::NAME);
                         warrior->setPosition(form.m_botLeft);

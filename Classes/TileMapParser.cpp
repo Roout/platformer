@@ -2,16 +2,16 @@
 #include "cocos2d.h"
 
 namespace {
-	core::EnemyType AsEnemyType(const std::string& ty) noexcept {
-		auto type { core::EnemyType::UNDEFINED };
+	core::EnemyClass AsEnemyClass(const std::string& ty) noexcept {
+		auto type { core::EnemyClass::UNDEFINED };
 		if( ty == "warrior" ) {
-			type = core::EnemyType::WARRIOR;
+			type = core::EnemyClass::WARRIOR;
 		} 
 		else if ( ty == "archer" ) {
-			type = core::EnemyType::ARCHER;
+			type = core::EnemyClass::ARCHER;
 		}
 		else if ( ty == "spear_man") {
-			type = core::EnemyType::SPEARMAN;
+			type = core::EnemyClass::SPEARMAN;
 		}
 		return type;
 	}
@@ -52,7 +52,7 @@ void TileMapParser::Parse() {
 			}
 			else if ( name == "enemy" ) {
 				form.m_type = core::CategoryName::ENEMY;
-				form.m_enemyType = ::AsEnemyType(type);
+				form.m_enemyClass = ::AsEnemyClass(type);
 				form.m_id = objMap.at("id").asUnsignedInt();
 				this->Get<core::CategoryName::ENEMY>().emplace_back(form);
 			}

@@ -7,7 +7,7 @@ namespace Curses {
 
     static constexpr float UNLIMITED { -100.f };
 
-    enum class CurseType {
+    enum class CurseClass {
         DPS,
         INSTANT,
         SLOW,
@@ -78,16 +78,16 @@ namespace Curses {
      * Some template magic.
      * Help to get Type by enum value.
      */
-    template<CurseType curse_type>
-    struct get_curse_type final {};
+    template<CurseClass curse_type>
+    struct get_curse final {};
 
     template<>
-    struct get_curse_type<CurseType::DPS> {
+    struct get_curse<CurseClass::DPS> {
         using identity = DPS;
     };
 
     template<>
-    struct get_curse_type<CurseType::INSTANT> {
+    struct get_curse<CurseClass::INSTANT> {
         using identity = Instant;
     };
 };

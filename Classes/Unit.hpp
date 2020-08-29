@@ -41,7 +41,7 @@ public:
      */
     inline void HasContactWithGround(bool hasContactWithGround) noexcept;
 
-    template<Curses::CurseType type, class ...Args>
+    template<Curses::CurseClass type, class ...Args>
     void AddCurse(size_t id, Args&&... args) noexcept;
 
     inline void RemoveCurse(size_t id) noexcept;
@@ -146,7 +146,7 @@ inline void Unit::HasContactWithGround(bool hasContactWithGround) noexcept {
     m_hasContactWithGround = hasContactWithGround;
 }
 
-template<Curses::CurseType type, class ...Args>
+template<Curses::CurseClass type, class ...Args>
 void Unit::AddCurse(size_t id, Args&&... args) noexcept {
     m_curses.AddCurse<type>(id, std::forward<Args>(args)...);
 }

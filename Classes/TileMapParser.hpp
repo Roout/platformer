@@ -15,7 +15,7 @@ namespace details {
     
     struct Form final {
         core::CategoryName  m_type { core::CategoryName::UNDEFINED };
-        core::EnemyType     m_enemyType { core::EnemyType::UNDEFINED };
+        core::EnemyClass    m_enemyClass { core::EnemyClass::UNDEFINED };
         std::pair<int,int>  m_position;
         size_t              m_id { 0 };
         cocos2d::Vec2       m_botLeft;

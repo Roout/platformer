@@ -67,7 +67,7 @@ namespace Traps {
         }
 
         void CurseTarget(Unit * const unit) override {
-            unit->AddCurse<Curses::CurseType::DPS>(this->GetId(), m_damage, Curses::UNLIMITED);
+            unit->AddCurse<Curses::CurseClass::DPS>(this->GetId(), m_damage, Curses::UNLIMITED);
         };
 
     private:

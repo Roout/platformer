@@ -16,7 +16,7 @@ namespace Curses {
      * 
      * @note
      * Unit can have only one type of curse at one time. 
-     * Adding new one of the same type (if it's already exist) is impossible.
+     * Adding new one of the same type (if it's already exist) will break a logic.
      */
     class CurseHub final {
     public:
@@ -31,9 +31,13 @@ namespace Curses {
 
         void Update(const float dt);
 
-        template<CurseType type, class ...Args>
-        void AddCurse(size_t trapId, Args&&... args) noexcept {
-            using identity = typename get_curse_type<type>::identity;
+        /**
+         * Linear complexity: perform a search for the first free space 
+         * in the curse holder array
+         */
+        template<CurseClass type, class ...Args>
+        void AddCurse(size_t trapId, Args&&... args) {
+            using identity = typename get_curse<type>::identity;
 
             for(size_t i = 0; i < MAX_SIZE; i++) {
                 if(!m_curses[i]) {
