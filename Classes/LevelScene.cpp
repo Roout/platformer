@@ -399,7 +399,7 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                     SizeDeducer::GetInstance().GetAdjustedSize(80.f), 
                     SizeDeducer::GetInstance().GetAdjustedSize(135.f)
                 };
-                switch(form.m_enemyType) {
+                switch(form.m_enemyClass) {
                     case core::EnemyClass::WARRIOR: {
                         const auto warrior { Enemies::Warrior::create(size, form.m_id) };
                         warrior->setName(Enemies::Warrior::NAME);
