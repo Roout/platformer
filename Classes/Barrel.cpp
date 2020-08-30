@@ -2,8 +2,9 @@
 #include "Core.hpp"
 #include "SizeDeducer.hpp"
 #include "Utils.hpp"
+#include <string_view>
 
-#include "ResourceManagement.hpp"
+#include "DragonBonesAnimator.hpp"
 
 Barrel * Barrel::create() {
     auto pRet = new (std::nothrow) Barrel();
@@ -23,50 +24,35 @@ bool Barrel::init() {
     }
     this->scheduleUpdate(); 
 
-    // load animation data and build the armature
-    const auto armatureDisplay = Resource::BuildArmatureDisplay("barrel");
-
-    // TODO: scale factor depends on device resolution so it can'be predefined constant.
-    constexpr auto designedScaleFactor { 0.2f };
-    const auto adjustedScaleFactor { 
-        SizeDeducer::GetInstance().GetAdjustedSize(designedScaleFactor) 
-    };
-    armatureDisplay->setName("BarrelArmature");
+    // setup animator
+    m_animator = dragonBones::Animator::create("barrel"); 
+    m_animator->InitializeAnimations({
+        std::make_pair<std::size_t, std::string>(Utils::EnumCast(State::idle), "idle"),
+        std::make_pair<std::size_t, std::string>(Utils::EnumCast(State::exploded), "strike")
+    });
+    (void) m_animator->Play(Utils::EnumCast(State::idle), dragonBones::Animator::INFINITY_LOOP);
+    this->addChild(m_animator);
     
-    this->addChild(armatureDisplay);
-
-    // adjust animation
-    armatureDisplay->setScale( adjustedScaleFactor );
-    armatureDisplay->getAnimation()->play("idle");
-
-    // add state lable:
+    this->AddPhysicsBody(m_animator->getContentSize());
+  
+    // debug state lable:
     auto state = cocos2d::Label::createWithTTF("state", "fonts/arial.ttf", 25);
     state->setName("state");
     state->setString("idle");
-    const auto height { SizeDeducer::GetInstance().GetAdjustedSize(m_height + 30.f) };
+    const auto height { SizeDeducer::GetInstance().GetAdjustedSize(m_animator->getContentSize().height + 30.f) };
     state->setPosition(0.f, height);
     this->addChild(state);
 
     return true;
 }
 
-void Barrel::update(float dt) {
-    if(m_isExploded) {
-        m_timeBeforeErasure -= dt;
-        if(m_timeBeforeErasure <= 0.f ) {
-            this->removeFromParentAndCleanup(true);
-        }
-    }
-}
-
 void Barrel::Explode() {
-    m_isExploded = true;
-
-    // update animation
-    auto armatureDisplay = dynamic_cast<dragonBones::CCArmatureDisplay*>(
-        this->getChildByName("BarrelArmature")
-    );
-    armatureDisplay->getAnimation()->play("strike", 1);
+    m_animator->Play(Utils::EnumCast(State::exploded), 1).EndWith([this]() {
+        // note: can't use `this->removeFromParent()` cuz it well be execute from this 
+        // function and invalidate Animator instance.
+        // Approach with action makes sure it will be executed from the parent node. 
+        this->runAction(cocos2d::RemoveSelf::create(true));
+    });
 
     this->removeComponent(this->getPhysicsBody());
 
@@ -76,17 +62,10 @@ void Barrel::Explode() {
     stateLabel->setString("exploded");
 }
 
-Barrel::Barrel() {
-    const auto bodySize { 
-        cocos2d::Size(
-            SizeDeducer::GetInstance().GetAdjustedSize(m_width),
-            SizeDeducer::GetInstance().GetAdjustedSize(m_height)
-        ) 
-    };
-
-    auto body = cocos2d::PhysicsBody::createBox(bodySize,
+void Barrel::AddPhysicsBody(const cocos2d::Size& size) {
+    auto body = cocos2d::PhysicsBody::createBox(size,
         cocos2d::PhysicsMaterial(1.f, 0.f, 0.f), 
-        {0.f, bodySize.height / 2.f}
+        {0.f, size.height / 2.f}
     );
     body->setDynamic(false);
     body->setCategoryBitmask(
@@ -107,4 +86,14 @@ Barrel::Barrel() {
         ) 
     );
     this->addComponent(body);
+}
+
+void Barrel::pause() {
+    cocos2d::Node::pause();
+    m_animator->pause();
+}
+    
+void Barrel::resume() {
+    cocos2d::Node::resume();
+    m_animator->resume();
 }

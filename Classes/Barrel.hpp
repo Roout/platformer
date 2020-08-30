@@ -2,6 +2,11 @@
 #define BARREL_HPP
 
 #include "cocos2d.h"
+#include <cstdint> // std::uint8_t
+
+namespace dragonBones {
+    class Animator;
+}
 
 class Barrel final : public cocos2d::Node {
 public:
@@ -10,26 +15,27 @@ public:
 
     bool init() override;
 
-    void update(float dt) override;
+    void pause() override;
+    
+    void resume() override;
 
     void Explode();
 
 private:
     
-    Barrel();
+    enum class State : std::uint8_t {
+        idle = 0,
+        exploded,
+        COUNT
+    };
 
-     /**
-     * Time which shows how long will the BarrelView exist 
-     * since model was destroyed and @m_model pointer is dangling. 
-     */
-    float m_timeBeforeErasure { 0.485f };
-
-    bool m_isExploded { false };
+    dragonBones::Animator * m_animator { nullptr };
 
 private:
 
-    static constexpr float m_width { 55.f };
-    static constexpr float m_height { 120.f };
+    Barrel() = default;
+
+    void AddPhysicsBody(const cocos2d::Size& size);
 };
 
 #endif // BARREL_HPP
