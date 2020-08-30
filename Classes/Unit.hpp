@@ -32,6 +32,7 @@ public:
     [[nodiscard]] inline Movement& GetMovement() noexcept;
 
     [[nodiscard]] inline int GetHealth() const noexcept;
+    
     /**
      * Invoked from event listener on contact between sensor attached to 
      * unit's physics body and ground (e.g. platform).
@@ -39,7 +40,7 @@ public:
      * @param[in] hasContactWithGround
      *      Variable indicate whether unit's sensor is in contact with froun or not.
      */
-    inline void HasContactWithGround(bool hasContactWithGround) noexcept;
+    inline void SetContactWithGround(bool hasContactWithGround) noexcept;
 
     template<Curses::CurseClass type, class ...Args>
     void AddCurse(size_t id, Args&&... args) noexcept;
@@ -142,7 +143,7 @@ inline int Unit::GetHealth() const noexcept {
     return m_health;
 }
 
-inline void Unit::HasContactWithGround(bool hasContactWithGround) noexcept {
+inline void Unit::SetContactWithGround(bool hasContactWithGround) noexcept {
     m_hasContactWithGround = hasContactWithGround;
 }
 

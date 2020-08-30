@@ -78,7 +78,7 @@ namespace helper {
         // i.e. basicaly it's unit and other collidable body
         if (nodes[BODY_A] && nodes[BODY_B] && (isUnitSensor[BODY_A] || isUnitSensor[BODY_B]) ) {
             Unit * unit { dynamic_cast<Unit*>(isUnitSensor[BODY_A]? nodes[BODY_A] : nodes[BODY_B]) };
-            unit->HasContactWithGround(true);
+            unit->SetContactWithGround(true);
 
             return true;
         } 
@@ -194,7 +194,7 @@ namespace helper {
                     helper::IsEquel(bodies[BODY_A]->getVelocity().y, 0.f, 0.000001f):
                     helper::IsEquel(bodies[BODY_B]->getVelocity().y, 0.f, 0.000001f)
             };
-            heroView->HasContactWithGround(onGround);
+            heroView->SetContactWithGround(onGround);
             return true;
         }
 
