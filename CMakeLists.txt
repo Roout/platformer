@@ -70,6 +70,7 @@ list(APPEND GAME_SOURCE
      Classes/Navigator.cpp
      Classes/Enemy.cpp
      Classes/PauseNode.cpp
+     Classes/DragonBonesAnimator.cpp
      Classes/DeathScreen.cpp
      Classes/PathNodes.cpp
      Classes/UnitMovement.cpp
@@ -96,6 +97,7 @@ list(APPEND GAME_HEADER
      Classes/Navigator.hpp
      Classes/UnitMovement.hpp
      Classes/ResourceManagement.hpp
+     Classes/DragonBonesAnimator.hpp
      Classes/UserInputHandler.hpp
      Classes/TileMapParser.hpp
      Classes/Weapon.hpp
