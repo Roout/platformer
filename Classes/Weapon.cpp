@@ -4,18 +4,20 @@
 #include "Player.hpp"
 #include "Core.hpp"
 
-void Sword::Attack(
-    const cocos2d::Rect& area,
-    const cocos2d::Vec2& velocity
-) noexcept {
-   
+/**
+ * TODO: 
+ * - remove run-time dependency on UI. It shouldn't be attached to the scene here,
+ * this is model!
+ * - remove code repetition: everything except mask is the same!
+ */
+
+void Sword::OnAttack() {
     const auto runningScene { cocos2d::Director::getInstance()->getRunningScene() };
     const auto level = runningScene->getChildByName("Level");
     const auto map = level->getChildByName("Map");
 
-    const auto proj = Projectile::create(area.size, velocity, this->GetDamage());
-    proj->setPosition(area.origin);
-    /// TODO: this solution isn't correct when sword is equiped by the AI
+    const auto proj = Projectile::create(m_projectile.size, m_velocity, this->GetDamage());
+    proj->setPosition(m_projectile.origin);
     const auto mask {
         Utils::CreateMask(
             core::CategoryBits::ENEMY, 
@@ -25,22 +27,16 @@ void Sword::Attack(
         )
     };
     proj->SetContactTestBitmask(mask);
-    map->addChild(proj);
-
-    this->ForceReload();
+    map->addChild(proj); 
 }
 
-void Axe::Attack(
-    const cocos2d::Rect& area,
-    const cocos2d::Vec2& velocity
-) noexcept {
-
+void Axe::OnAttack() {
     const auto runningScene { cocos2d::Director::getInstance()->getRunningScene() };
     const auto level = runningScene->getChildByName("Level");
     const auto map = level->getChildByName("Map");
     
-    const auto proj = Projectile::create(area.size, velocity, this->GetDamage());
-    proj->setPosition(area.origin);
+    const auto proj = Projectile::create(m_projectile.size, m_velocity, this->GetDamage());
+    proj->setPosition(m_projectile.origin);
     const auto mask {
         Utils::CreateMask(
             core::CategoryBits::HERO, 
@@ -51,6 +47,4 @@ void Axe::Attack(
     };
     proj->SetContactTestBitmask(mask);
     map->addChild(proj);
-
-    this->ForceReload();
 }

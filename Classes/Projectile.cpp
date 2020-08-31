@@ -5,7 +5,7 @@
 Projectile * Projectile::create(
     const cocos2d::Size& size,
     const cocos2d::Vec2& velocity,
-    const int damage
+    const float damage
 ) {
     auto pRet = new (std::nothrow) Projectile(size, velocity, damage);
     if (pRet && pRet->init()) {
@@ -32,14 +32,15 @@ void Projectile::update(float dt) {
         m_lifeTime -= dt;
     }
     if(m_lifeTime <= 0.f) {
-        this->removeFromParentAndCleanup(true);
+        this->removeComponent(this->getPhysicsBody());
+        this->runAction(cocos2d::RemoveSelf::create(true));
     }
 }
 
 Projectile::Projectile (
     const cocos2d::Size& size,
     const cocos2d::Vec2& velocity,
-    const int damage
+    const float damage
 ) : 
     m_lifeTime { 0.15f },
     m_damage { damage }
@@ -50,28 +51,15 @@ Projectile::Projectile (
     body->setGravityEnable(true);
     body->setRotationEnable(false);
     body->setCategoryBitmask(
-        Utils::CreateMask(
-            core::CategoryBits::PROJECTILE
-        )
+        Utils::CreateMask(core::CategoryBits::PROJECTILE)
     );
-    const auto interactWith { 
-        Utils::CreateMask(
-            core::CategoryBits::ENEMY, 
-            /// TODO: add this when unit will be inherit as HERO or ENEMY and define categoty it collide with
-            // core::CategoryBits::HERO,  
-            core::CategoryBits::BARREL, 
-            core::CategoryBits::BOUNDARY, 
-            core::CategoryBits::PROJECTILE 
-        )
-    };
-    // body->setCollisionBitmask(interactWith);
-    body->setContactTestBitmask(interactWith);
-
     this->setContentSize(size);
     this->addComponent(body);
 }
 
 void Projectile::SetContactTestBitmask(size_t mask) noexcept {
     const auto body = this->getPhysicsBody();
-    body->setContactTestBitmask(mask);
+    if(body) {
+        body->setContactTestBitmask(mask);
+    }
 }

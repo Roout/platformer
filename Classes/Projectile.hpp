@@ -8,7 +8,7 @@ public:
     static Projectile * create(
         const cocos2d::Size& size,
         const cocos2d::Vec2& velocity,
-        const int damage
+        const float damage
     );
 
     bool init() override;
@@ -36,7 +36,7 @@ public:
     }
 
     float GetDamage() const noexcept {
-        return static_cast<float>(m_damage);
+        return m_damage;
     }
 
     void SetContactTestBitmask(size_t mask) noexcept;
@@ -46,7 +46,7 @@ private:
     Projectile(
         const cocos2d::Size& size,
         const cocos2d::Vec2& velocity,
-        const int damage
+        const float damage
     );
     /**
      * Keep track of projectile lifetime. When 'm_lifeTime' <= 0.f
@@ -54,7 +54,7 @@ private:
      */
     float m_lifeTime { 0.f };
 
-    const int m_damage { 0 };
+    const float m_damage { 0 };
 };
 
 #endif // PROJECTILE_HPP
