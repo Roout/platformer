@@ -6,6 +6,7 @@
 #include <optional>
 #include <initializer_list>
 #include <functional>
+#include <limits>
 
 #include "cocos2d.h"
 
@@ -46,13 +47,22 @@ namespace dragonBones {
 
         void InitializeAnimations(std::initializer_list<std::pair<std::size_t, std::string>> animations);
 
+        bool IsPlaying() const noexcept;
+
+        bool IsPlaying(std::size_t type) const noexcept;
+
+        float GetDuration(std::size_t type) const noexcept;
+
     private:
 
         Animator(std::string&& armatureCacheName) noexcept;
 
     private:
+        static constexpr std::size_t NONE { std::numeric_limits<std::size_t>::max() };
+
         CCArmatureDisplay *m_armatureDisplay { nullptr };
         AnimationState *m_lastAnimationState { nullptr };
+        std::size_t m_lastAnimationId { NONE };
         std::optional<std::function<void()>> m_completionHandler {};
 
         std::string m_armatureName;

@@ -23,17 +23,6 @@ namespace dragonBones {
         }
         this->scheduleUpdate();
         m_armatureDisplay = Resource::BuildArmatureDisplay(m_armatureName); 
-
-        // TODO: scale factor depends on device resolution so it can'be predefined constant.
-        constexpr auto designedScaleFactor { 0.2f };
-        const auto adjustedScaleFactor { 
-            SizeDeducer::GetInstance().GetAdjustedSize(designedScaleFactor) 
-        };
-        m_armatureDisplay->setScale(adjustedScaleFactor);
-        this->setContentSize(
-            SizeDeducer::GetInstance().GetAdjustedSize(m_armatureDisplay->getBoundingBox().size)
-        );
-
         this->addChild(m_armatureDisplay);
         return true;
     }
@@ -61,13 +50,29 @@ namespace dragonBones {
         }
     }
 
+    bool Animator::IsPlaying() const noexcept {
+        return m_lastAnimationState && m_lastAnimationState->isPlaying();
+    }
+
+    bool Animator::IsPlaying(std::size_t type) const noexcept {
+        return this->IsPlaying() && type == m_lastAnimationId;
+    }
+
+    float Animator::GetDuration(std::size_t type) const noexcept {
+        const auto& name = m_animations.at(type);
+        const auto& animations = m_armatureDisplay->getAnimation()->getAnimations();
+        const auto data = animations.at(name);
+        return (data? data->duration : 0.f);
+    }
+
     void Animator::FlipX() {
         const auto armature = m_armatureDisplay->getArmature();
         armature->setFlipX(!armature->getFlipX());
     }
 
-    Animator& Animator::Play(std::size_t state, int times) {
-        m_lastAnimationState = m_armatureDisplay->getAnimation()->play(m_animations.at(state), times);
+    Animator& Animator::Play(std::size_t id, int times) {
+        m_lastAnimationId = id;
+        m_lastAnimationState = m_armatureDisplay->getAnimation()->play(m_animations.at(id), times);
         return *this;
     }
 
