@@ -56,12 +56,16 @@ UserInputHandler::UserInputHandler(Unit * const player) :
     const auto listener = cocos2d::EventListenerKeyboard::create();
     
     listener->onKeyPressed = [this](WinKeyCode keyCode, cocos2d::Event* event) {
-        if(auto it = std::find(m_validKeys.cbegin(), m_validKeys.cend(), keyCode); it != m_validKeys.cend()) {
+        if(auto it = std::find(m_validKeys.cbegin(), m_validKeys.cend(), keyCode); 
+            it != m_validKeys.cend() && !m_player->IsDead()
+        ) {
             this->OnKeyPressed(keyCode, event);
         }
     };
 	listener->onKeyReleased = [this](WinKeyCode keyCode, cocos2d::Event* event) {
-        if(auto it = std::find(m_validKeys.cbegin(), m_validKeys.cend(), keyCode); it != m_validKeys.cend()) {
+        if(auto it = std::find(m_validKeys.cbegin(), m_validKeys.cend(), keyCode); 
+            it != m_validKeys.cend() && !m_player->IsDead()
+        ) {
             this->OnKeyRelease(keyCode, event);
         }
     };
@@ -71,7 +75,7 @@ UserInputHandler::UserInputHandler(Unit * const player) :
 }
 
 void UserInputHandler::Reset() {
-    m_player->GetMovement().StopXAxisMove();
+    m_player->Stop();
     m_lastInput.dx = 0;
     m_lastInput.jump = false;
     m_lastInput.attack = false;
@@ -84,19 +88,19 @@ void UserInputHandler::OnKeyPressed(
     m_lastInput.Merge(Input::Create(keyCode));
 
     if(m_lastInput.jump && m_player->IsOnGround() ) {
-        m_player->GetMovement().Jump();
+        m_player->Jump();
     }
 
     if( m_lastInput.dx == 1) {
-        m_player->GetMovement().StopXAxisMove();
-        m_player->GetMovement().MoveRight();
+        m_player->Stop();
+        m_player->MoveRight();
         if(m_player->IsLookingLeft()) {
             m_player->Turn();
         }
     }
     else if( m_lastInput.dx == -1) {
-        m_player->GetMovement().StopXAxisMove();
-        m_player->GetMovement().MoveLeft();
+        m_player->Stop();
+        m_player->MoveLeft();
         if(!m_player->IsLookingLeft()) {
             m_player->Turn();
         }
@@ -114,7 +118,7 @@ void UserInputHandler::OnKeyRelease(
     const Input released { Input::Create(keyCode) };
     // TODO: release up and left/right is ongoing!
     if(released.dx && released.dx == m_lastInput.dx) {
-        m_player->GetMovement().StopXAxisMove();
+        m_player->Stop();
         m_lastInput.dx = 0;
     }
 
