@@ -22,6 +22,12 @@ public:
     void Explode();
 
 private:
+
+    Barrel() = default;
+
+    void AddPhysicsBody(const cocos2d::Size& size);
+
+private:
     
     enum class State : std::uint8_t {
         idle = 0,
@@ -30,12 +36,8 @@ private:
     };
 
     dragonBones::Animator * m_animator { nullptr };
-
-private:
-
-    Barrel() = default;
-
-    void AddPhysicsBody(const cocos2d::Size& size);
+    
+    cocos2d::Size m_designedSize { 60.f, 135.f };
 };
 
 #endif // BARREL_HPP

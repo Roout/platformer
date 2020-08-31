@@ -2,7 +2,7 @@
 #include "Core.hpp"
 #include "SizeDeducer.hpp"
 #include "Utils.hpp"
-#include <string_view>
+#include <algorithm>
 
 #include "DragonBonesAnimator.hpp"
 
@@ -33,13 +33,15 @@ bool Barrel::init() {
     (void) m_animator->Play(Utils::EnumCast(State::idle), dragonBones::Animator::INFINITY_LOOP);
     this->addChild(m_animator);
     
-    this->AddPhysicsBody(m_animator->getContentSize());
-  
+    m_animator->setScale(0.2f); // TODO: introduce multi-resolution scaling
+    this->AddPhysicsBody(m_designedSize);
+    this->setContentSize(m_designedSize);
+    
     // debug state lable:
     auto state = cocos2d::Label::createWithTTF("state", "fonts/arial.ttf", 25);
     state->setName("state");
     state->setString("idle");
-    const auto height { SizeDeducer::GetInstance().GetAdjustedSize(m_animator->getContentSize().height + 30.f) };
+    const auto height { SizeDeducer::GetInstance().GetAdjustedSize(m_designedSize.height + 30.f) };
     state->setPosition(0.f, height);
     this->addChild(state);
 
