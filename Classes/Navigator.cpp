@@ -47,7 +47,7 @@ size_t Navigator::FindClosestWaypoint(const cocos2d::Vec2& p) const {
 }
 
 void Navigator::Navigate(const float dt) {
-    if( m_target && m_target->IsDead()) {
+    if(m_target && m_target->IsDead()) {
         this->Patrol();
     }
 
@@ -59,20 +59,23 @@ void Navigator::Navigate(const float dt) {
         if( dx < 0.f ) {
             // target -> unit
             destination += targetWidth + unitWidth;
-        } else {
+        } 
+        else {
             // unit -> target
             destination -= targetWidth + unitWidth;
         }
         // invoke move function
         if(helper::IsEquel(destination, m_unit->getPosition().x, 1.f)) {
-            m_unit->GetMovement().StopXAxisMove();
-        } else if( destination < m_unit->getPosition().x ) {
-            m_unit->GetMovement().MoveLeft();
+            m_unit->Stop();
+        } 
+        else if( destination < m_unit->getPosition().x ) {
+            m_unit->MoveLeft();
             if(!m_unit->IsLookingLeft()) {
                 m_unit->Turn();
             }
-        } else {
-            m_unit->GetMovement().MoveRight();
+        } 
+        else {
+            m_unit->MoveRight();
             if(m_unit->IsLookingLeft()) {
                 m_unit->Turn();
             }
@@ -85,17 +88,18 @@ void Navigator::Navigate(const float dt) {
         // make current destination point as new start
         m_start = m_destination;
         std::tie(m_destination, m_action) = this->FindDestination(m_start);
-        m_unit->GetMovement().StopXAxisMove();
+        m_unit->Stop();
     }
     // determine direction where unit should move
     // TODO: temporary only along X-axis
     const auto dx = (m_supplement->waypoints[m_destination].first + 0.5f) * m_tileSize - m_unit->getPosition().x;
     // invoke move function
     if( dx < 0.f ) {
-        m_unit->GetMovement().MoveLeft();
+        m_unit->MoveLeft();
         if(!m_unit->IsLookingLeft()) m_unit->Turn();
-    } else {
-        m_unit->GetMovement().MoveRight();
+    } 
+    else {
+        m_unit->MoveRight();
         if(m_unit->IsLookingLeft()) m_unit->Turn();
     }
 }
