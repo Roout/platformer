@@ -12,7 +12,7 @@ namespace Enemies {
     public:
         static constexpr char * const NAME = "Warrior";
 
-        static Warrior* create(const cocos2d::Size&, size_t id);
+        static Warrior* create(size_t id);
 
         [[nodiscard]] bool init() override;
         
@@ -42,13 +42,17 @@ namespace Enemies {
 
     private:
     
-        Warrior(const cocos2d::Size&, size_t id);
+        Warrior(size_t id);
         
         void UpdateState(const float dt) noexcept override;
 
-        void UpdatePosition(const float dt) noexcept override;
-
         void UpdateAnimation() override;
+
+        void AddPhysicsBody(const cocos2d::Size&) override;
+
+        void AddAnimator() override;
+
+        void UpdatePosition(const float dt) noexcept override;
 
         void TryAttack();
 

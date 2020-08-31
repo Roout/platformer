@@ -4,17 +4,17 @@
 #include "Player.hpp"
 #include "Core.hpp"
 #include "Weapon.hpp"
+#include "DragonBonesAnimator.hpp"
 #include <memory>
 #include <limits>
+#include <algorithm>
 
-#include "dragonBones/DragonBonesHeaders.h"
-#include "dragonBones/cocos2dx/CCDragonBonesHeaders.h"
-
-Enemies::Warrior* Enemies::Warrior::create(const cocos2d::Size& size, size_t id) {
-    auto pRet { new (std::nothrow) Warrior(size, id) };
+Enemies::Warrior* Enemies::Warrior::create(size_t id) {
+    auto pRet { new (std::nothrow) Warrior(id) };
     if( pRet && pRet->init()) {
         pRet->autorelease();
-    } else {
+    } 
+    else {
         delete pRet;
         pRet = nullptr;
     }
@@ -25,9 +25,28 @@ bool Enemies::Warrior::init() {
     if( !Unit::init()) {
         return false; 
     }
+    m_movement.SetMaxSpeed(130.f);
 
+    // Create weapon
+    const auto damage { 25.f };
+    const auto range { 60.f };
+    const auto preparationTime { 0.f };
+    const auto attackDuration { m_animator->GetDuration(Utils::EnumCast(Act::attack)) };
+    const auto reloadTime { 0.5f };
+    m_weapon = std::make_unique<Axe>(
+        damage, 
+        range, 
+        preparationTime,
+        attackDuration,
+        reloadTime 
+    );
+    return true;
+}
+
+void Enemies::Warrior::AddPhysicsBody(const cocos2d::Size& size) {
+    Unit::AddPhysicsBody(size);
     // change masks for physics body
-    const auto body { this->getPhysicsBody() };
+    auto body { this->getPhysicsBody() };
     body->setMass(2000.f);
     body->setCategoryBitmask(
         Utils::CreateMask(core::CategoryBits::ENEMY)
@@ -60,51 +79,50 @@ bool Enemies::Warrior::init() {
             core::CategoryBits::PLATFORM
         )
     );
+}
 
-    return true;
+void Enemies::Warrior::pause() {
+    cocos2d::Node::pause();
+    m_animator->pause();
+}
+
+void Enemies::Warrior::resume() {
+    cocos2d::Node::resume();
+    m_animator->resume();
 }
 
 void Enemies::Warrior::UpdateState(const float dt) noexcept {
-    if(m_currentState.m_act == Act::dead) {
-        this->removeFromParentAndCleanup(true);
-        return;
-    } 
-    constexpr float EPS { 0.00001f };
-    // update character state
     m_previousState = m_currentState;
-    if( m_currentState.m_act == Act::attack ) {
-        m_attackTime -= dt;
-        if( helper::IsPositive(m_attackTime, EPS) ) {
-            // exit to not change an attack state
-            return; 
-        }
+    if( m_health <= 0 ) {
+        m_currentState.m_act = Act::dead;
     }
-
-    m_currentState.m_act = Act::move;
+    else if( m_weapon->IsAttacking() ) {
+        m_currentState.m_act = Act::attack;
+    }
+    else {
+        m_currentState.m_act = Act::move;
+    }
 }
 
-Enemies::Warrior::Warrior(const cocos2d::Size& size, size_t id): 
-    Unit{ size, "warrior" },
+Enemies::Warrior::Warrior(size_t id): 
+    Unit{ "warrior" },
     m_id { id }
 {
-    m_movement.SetMaxSpeed(130.f);
-
-    // Create weapon
-    m_maxAttackTime = 0.68f;
-    const int damage { 5 };
-    const int range { SizeDeducer::GetInstance().GetAdjustedSize(90) };
-    const float reloadTime { 0.8f };
-    m_weapon = std::make_unique<Axe>( damage, range, reloadTime );
+    m_designedSize = cocos2d::Size{ 80.f, 135.f };
 }
 
 bool Enemies::Warrior::NeedAttack() const noexcept {
-    const auto attackIsReady = m_influence.EnemyDetected() && m_weapon->CanAttack();
-    const auto target = dynamic_cast<Unit*>(this->getParent()->getChildByName(Player::NAME));
-    const auto enemyIsClose = [this, target]() { 
+    bool attackIsReady {
+        !this->IsDead() && 
+        m_influence.EnemyDetected() && 
+        m_weapon->IsReady()
+    };
+    auto enemyIsClose = [this]() { 
+        const auto target = dynamic_cast<Unit*>(this->getParent()->getChildByName(Player::NAME));
         // use some simple algorithm to determine whether ф player is close enough to the target
         // to perform an attack
         if( target ) {
-            const auto radius = static_cast<float>(m_weapon->GetRange());
+            const auto radius = m_weapon->GetRange();
             const cocos2d::Rect lhs { 
                 target->getPosition() - cocos2d::Vec2{ target->getContentSize().width / 2.f, 0.f },
                 target->getContentSize()
@@ -120,20 +138,33 @@ bool Enemies::Warrior::NeedAttack() const noexcept {
     return attackIsReady && enemyIsClose();
 }
 
+void Enemies::Warrior::AddAnimator() {
+    std::string chachedArmatureName = m_dragonBonesName;
+    m_animator = dragonBones::Animator::create(std::move(chachedArmatureName));
+    m_animator->InitializeAnimations({
+        std::make_pair(Utils::EnumCast(Act::attack), "attack"),
+        std::make_pair(Utils::EnumCast(Act::dead), "dead"),
+        std::make_pair(Utils::EnumCast(Act::move), "walk")
+    });
+    this->addChild(m_animator);
+    m_animator->setScale(0.2f); // TODO: introduce multi-resolution scaling
+}
+
 void Enemies::Warrior::TryAttack() {
     if( this->NeedAttack() ) { // attack if possible
         auto lookAtEnemy { false };
         const auto target = this->getParent()->getChildByName(Player::NAME);
         if( target->getPosition().x < this->getPosition().x && this->IsLookingLeft() ) {
             lookAtEnemy = true;
-        } else if( target->getPosition().x > this->getPosition().x && !this->IsLookingLeft() ) {
+        } 
+        else if( target->getPosition().x > this->getPosition().x && !this->IsLookingLeft() ) {
             lookAtEnemy = true;
         }
         if( !lookAtEnemy ) {
             this->Turn();
         }
+        this->Stop();
         this->Attack();
-        m_movement.StopXAxisMove();
     } 
 }
 
@@ -145,17 +176,30 @@ void Enemies::Warrior::UpdatePosition(const float dt) noexcept {
 }
 
 void Enemies::Warrior::UpdateAnimation() {
-    if( m_currentState.m_act == Act::dead ) {
-        const auto emitter = cocos2d::ParticleSystemQuad::create("particle_texture.plist");
-        emitter->setAutoRemoveOnFinish(true);
-        /// TODO: adjust for the multiresolution
-        emitter->setScale(0.4f);
-        emitter->setPositionType(cocos2d::ParticleSystem::PositionType::RELATIVE);
-        emitter->setPosition(this->getPosition());
-        this->getParent()->addChild(emitter, 9);
-    } 
-    else {
-        Unit::UpdateAnimation();
+    if( m_currentState.m_act != m_previousState.m_act ) {
+        if( m_currentState.m_act == Act::dead ) {
+            // emit particles
+            const auto emitter = cocos2d::ParticleSystemQuad::create("particle_texture.plist");
+            emitter->setAutoRemoveOnFinish(true);
+            /// TODO: adjust for the multiresolution
+            emitter->setScale(0.4f);
+            emitter->setPositionType(cocos2d::ParticleSystem::PositionType::RELATIVE);
+            emitter->setPosition(this->getPosition());
+            this->getParent()->addChild(emitter, 9);
+            // remove physics body
+            this->removeComponent(this->getPhysicsBody());
+            // remove from screen
+            this->runAction(cocos2d::RemoveSelf::create());
+        } 
+        else {
+            int repeatTimes { dragonBones::Animator::INFINITY_LOOP };
+            if( m_currentState.m_act == Act::attack || 
+                m_currentState.m_act == Act::dead
+            ) {
+                repeatTimes = 1;
+            }
+            m_animator->Play(Utils::EnumCast(m_currentState.m_act), repeatTimes);
+        }
     }
 }
 
@@ -163,35 +207,11 @@ void Enemies::Warrior::update(float dt) {
     this->UpdateDebugLabel();
     this->UpdateWeapon(dt);
     m_influence.Update(); // detect players
-    this->TryAttack();
     this->UpdatePosition(dt); 
     this->UpdateCurses(dt);
-    this->UpdateAnimation(); 
+    this->TryAttack();
     this->UpdateState(dt);
-}
-
-void Enemies::Warrior::pause() {
-    cocos2d::Node::pause();
-    // pause dragonbones
-    const auto armatureDisplay = dynamic_cast<dragonBones::CCArmatureDisplay*>(
-        this->getChildByName("Armature")
-    );
-    const auto animation = armatureDisplay->getAnimation();
-    if(animation->isPlaying()) {
-        animation->stop(animation->getLastAnimationName());
-    }
-}
-
-void Enemies::Warrior::resume() {
-    cocos2d::Node::resume();
-    // resume dragonbones
-    const auto armatureDisplay = dynamic_cast<dragonBones::CCArmatureDisplay*>(
-        this->getChildByName("Armature")
-    );
-    const auto animation = armatureDisplay->getAnimation();
-    if(!animation->isPlaying()) {
-        animation->play(animation->getLastAnimationName(), -1);
-    }
+    this->UpdateAnimation(); 
 }
 
 void Enemies::Warrior::AttachNavigator(
