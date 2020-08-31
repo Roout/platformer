@@ -26,11 +26,11 @@ public:
 private:
     Unit * const m_unit { nullptr };
 
-    float  m_desiredVelocity { 550.f };
+    float m_desiredVelocity { 550.f };
     // static constexpr float  m_jumpHeight { 255.f };
     // static constexpr float  m_timeToJumpApex { 0.55 };
 
-    static constexpr int    m_timeStepsToCompletion { 6 };
+    static constexpr int m_timeStepsToCompletion { 6 };
 
     struct Counter {
         int remainingJumpSteps { 0 };
