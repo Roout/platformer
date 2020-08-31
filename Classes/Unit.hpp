@@ -6,15 +6,15 @@
 #include <memory>
 #include "cocos2d.h"
 
+namespace dragonBones {
+    class Animator;
+}
 class Weapon;
 
 class Unit : public cocos2d::Node { 
 public:
-    static Unit* create(const cocos2d::Size& size);
 
     [[nodiscard]] bool init() override;
-
-    void update(float dt) override;
 
     /**
      * Used by curses to lower health value. 
@@ -22,7 +22,7 @@ public:
     void RecieveDamage(int damage) noexcept;
 
     /**
-     * This function initiate a melee attack. 
+     * This function initiate an attack. 
      */
     virtual void Attack();
 
@@ -32,7 +32,7 @@ public:
     [[nodiscard]] inline Movement& GetMovement() noexcept;
 
     [[nodiscard]] inline int GetHealth() const noexcept;
-    
+
     /**
      * Invoked from event listener on contact between sensor attached to 
      * unit's physics body and ground (e.g. platform).
@@ -49,9 +49,17 @@ public:
 
     inline bool IsLookingLeft() const noexcept;
     
-    inline void Turn() noexcept;
-
     inline bool IsDead() const noexcept;
+
+    void Stop() noexcept;
+
+    void MoveLeft() noexcept;
+
+    void MoveRight() noexcept;
+
+    void Jump() noexcept;
+
+    void Turn() noexcept;
 
     /// Types
 protected:
@@ -83,40 +91,42 @@ protected:
 
 protected:
 
-    Unit(
-        const cocos2d::Size& size, 
-        const std::string& dragonBonesName
-    );
+    Unit(const std::string& dragonBonesName);
 
     /// Update functions
-    void UpdateWeapon(const float dt) noexcept;
+
+    virtual void UpdateState(const float dt) noexcept = 0;
     
+    virtual void UpdateAnimation() = 0;
+
+    virtual void UpdateWeapon(const float dt) noexcept;
+
     virtual void UpdatePosition(const float dt) noexcept;
 
-    virtual void UpdateState(const float dt) noexcept;
+    virtual void UpdateCurses(const float dt) noexcept;
 
-    virtual void UpdateAnimation();
-
-    void UpdateDebugLabel();
-
-    void UpdateCurses(const float dt) noexcept;
+    virtual void UpdateDebugLabel();
     
-    /// Assisting functions
-    virtual void OnDeath();
+    /// Assisting methods
 
-    void CreateBody(const cocos2d::Size&);
+    virtual void AddPhysicsBody(const cocos2d::Size&);
 
-    void FlipX(const Side);
+    virtual void AddAnimator() = 0;
+
+    void FlipX();
 
     std::string CreateAnimationName(Act state);
 
     /// Properties
 protected:
+    // retain when add as child
+    dragonBones::Animator *m_animator { nullptr };
+
     Curses::CurseHub m_curses { this };
 
     int m_health { 100 };
 
-    Movement m_movement;
+    Movement m_movement { this };
     
     State m_currentState {};
 
@@ -127,17 +137,11 @@ protected:
     std::unique_ptr<Weapon> m_weapon { nullptr };
 
     const std::string m_dragonBonesName {};
-    /**
-     * The duration of attack animation
-     */
-    float m_maxAttackTime { 0.5f };
-    
-    float m_attackTime { m_maxAttackTime };
+
+    cocos2d::Size m_designedSize {};
 };
 
-inline Movement& Unit::GetMovement() noexcept {
-    return m_movement;
-}
+/// Implementation
 
 inline int Unit::GetHealth() const noexcept {
     return m_health;
@@ -158,11 +162,6 @@ inline void Unit::RemoveCurse(size_t id) noexcept {
 
 inline bool Unit::IsLookingLeft() const noexcept {
     return m_currentState.m_side == Side::left;
-}
-
-inline void Unit::Turn() noexcept {
-    m_previousState.m_side = m_currentState.m_side;
-    m_currentState.m_side = (m_currentState.m_side == Side::left? Side::right: Side::left);
 }
 
 inline bool Unit::IsDead() const noexcept {
