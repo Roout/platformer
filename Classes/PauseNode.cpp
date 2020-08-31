@@ -22,7 +22,6 @@ bool PauseNode::init() {
     this->setName("Pause");
 
     auto restartButton = cocos2d::ui::Button::create("normal_restart.png", "selected_restart.png", "disabled_restart.png");
-    restartButton->setTitleText("Restart");
     restartButton->addTouchEventListener([&](cocos2d::Ref* sender, cocos2d::ui::Widget::TouchEventType type) {
             switch (type) {
                 case cocos2d::ui::Widget::TouchEventType::BEGAN: break;
@@ -39,7 +38,6 @@ bool PauseNode::init() {
     this->addChild(restartButton);
 
     const auto resumeButton = cocos2d::ui::Button::create("normal_resume.png", "selected_resume.png", "disabled_resume.png");
-    resumeButton->setTitleText("Resume");
     resumeButton->addTouchEventListener([&](cocos2d::Ref* sender, cocos2d::ui::Widget::TouchEventType type){
             switch (type) {
                 case cocos2d::ui::Widget::TouchEventType::BEGAN: break;

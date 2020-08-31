@@ -30,7 +30,6 @@ bool DeathScreen::init() {
         "selected_restart.png", 
         "disabled_restart.png"
     );
-    restartButton->setTitleText("Restart");
     restartButton->addTouchEventListener([&](cocos2d::Ref* sender, cocos2d::ui::Widget::TouchEventType type) {
             switch (type) {
                 case cocos2d::ui::Widget::TouchEventType::BEGAN: break;
