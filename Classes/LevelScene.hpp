@@ -42,9 +42,6 @@ private:
 
     void InitTileMapObjects(cocos2d::FastTMXTiledMap * map);
 
-    // controller:
-    std::unique_ptr<UserInputHandler> m_inputHandler { nullptr };
-
     std::unique_ptr<path::Supplement> m_supplement { nullptr };
 
     std::unique_ptr<TileMapParser> m_parser { nullptr };

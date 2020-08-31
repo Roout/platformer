@@ -38,7 +38,6 @@ cocos2d::Scene* LevelScene::createRootScene(int id) {
     return root;
 }
 
-
 LevelScene* LevelScene::create(int id) {
     auto *pRet = new(std::nothrow) LevelScene{id};
     if (pRet && pRet->init()) {
@@ -281,8 +280,6 @@ void LevelScene::pause() {
     // pause physic world
     const auto runningScene { cocos2d::Director::getInstance()->getRunningScene() };
     runningScene->getPhysicsWorld()->setSpeed(0.f);
-    // reset player's input
-    m_inputHandler->Reset();
 }
 
 void LevelScene::resume() {
@@ -361,17 +358,11 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
         const auto parsedForms { m_parser->Peek(category) };
         for(const auto& form: parsedForms) {
             if ( form.m_type == core::CategoryName::PLAYER ) {
-                const cocos2d::Size size { 
-                    SizeDeducer::GetInstance().GetAdjustedSize(80.f), 
-                    SizeDeducer::GetInstance().GetAdjustedSize(135.f)
-                };
-                const auto hero { Player::create(size) };
+                const auto hero { Player::create() };
                 hero->setName(Player::NAME);
                 hero->setAnchorPoint(cocos2d::Vec2::ANCHOR_BOTTOM_LEFT);
                 hero->setPosition(form.m_botLeft);
                 map->addChild(hero, 10);
-
-                m_inputHandler  = std::make_unique<UserInputHandler>(hero);
             } 
             else if(form.m_type == core::CategoryName::PLATFORM ) {
                 const auto platform = Platform::create(form.m_rect.size);
@@ -391,17 +382,13 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
             else if(form.m_type == core::CategoryName::BARREL) {
                 const auto barrel { Barrel::create() };
                 barrel->setPosition(form.m_botLeft);
+                barrel->setAnchorPoint(cocos2d::Vec2::ANCHOR_BOTTOM_LEFT);
                 map->addChild(barrel);
             }
             else if(form.m_type == core::CategoryName::ENEMY) {
-                /// TODO: cleanup size variable
-                const cocos2d::Size size { 
-                    SizeDeducer::GetInstance().GetAdjustedSize(80.f), 
-                    SizeDeducer::GetInstance().GetAdjustedSize(135.f)
-                };
                 switch(form.m_enemyClass) {
                     case core::EnemyClass::WARRIOR: {
-                        const auto warrior { Enemies::Warrior::create(size, form.m_id) };
+                        const auto warrior { Enemies::Warrior::create(form.m_id) };
                         warrior->setName(Enemies::Warrior::NAME);
                         warrior->setPosition(form.m_botLeft);
                         warrior->AttachNavigator(map->getMapSize(), map->getTileSize().width, m_supplement.get());
