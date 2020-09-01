@@ -10,7 +10,6 @@
 
 Unit::Unit(const std::string& dragonBonesName) :
     m_curses { this },
-    m_movement { this },
     m_dragonBonesName { dragonBonesName }
 {   
 }
@@ -24,6 +23,8 @@ bool Unit::init() {
     this->AddAnimator();
     this->AddPhysicsBody(m_designedSize);
     this->setContentSize(m_designedSize);
+
+    m_movement = std::make_unique<Movement>(this->getPhysicsBody());
 
     /// TODO: move somewhere
     static constexpr float healthBarShift { 15.f };
@@ -79,19 +80,19 @@ void Unit::AddPhysicsBody(const cocos2d::Size& size) {
 }
 
 void Unit::Stop() noexcept {
-    m_movement.StopXAxisMove();
+    m_movement->Stop();
 }
 
 void Unit::MoveLeft() noexcept {
-    m_movement.MoveLeft();
+    m_movement->MoveLeft();
 }
 
 void Unit::MoveRight() noexcept {
-    m_movement.MoveRight();
+    m_movement->MoveRight();
 }
 
 void Unit::Jump() noexcept {
-    m_movement.Jump();
+    m_movement->Jump();
 }
 
 void Unit::Turn() noexcept {
@@ -146,7 +147,7 @@ void Unit::UpdateWeapon(const float dt) noexcept {
 
 void Unit::UpdatePosition(const float dt) noexcept {
     if(!this->IsDead()) {
-        m_movement.Update(dt);
+        m_movement->Update(dt);
     }
 }
 

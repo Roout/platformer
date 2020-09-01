@@ -25,7 +25,7 @@ bool Enemies::Warrior::init() {
     if( !Unit::init()) {
         return false; 
     }
-    m_movement.SetMaxSpeed(130.f);
+    m_movement->SetMaxSpeed(130.f);
 
     // Create weapon
     const auto damage { 25.f };
@@ -171,7 +171,7 @@ void Enemies::Warrior::TryAttack() {
 void Enemies::Warrior::UpdatePosition(const float dt) noexcept {
     if(m_currentState.m_act != Act::attack ) {
         m_navigator->Navigate(dt);  // update direction/target if needed
-        m_movement.Update(dt);      // apply forces
+        m_movement->Update(dt);      // apply forces
     }
 }
 

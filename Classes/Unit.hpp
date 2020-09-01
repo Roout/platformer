@@ -29,8 +29,6 @@ public:
     // Some esoteric attempts to check
     [[nodiscard]] bool IsOnGround() const noexcept;
 
-    [[nodiscard]] inline Movement& GetMovement() noexcept;
-
     [[nodiscard]] inline int GetHealth() const noexcept;
 
     /**
@@ -87,8 +85,6 @@ protected:
         Side m_side { Side::left };
     };
 
-    friend class Movement;
-
 protected:
 
     Unit(const std::string& dragonBonesName);
@@ -125,8 +121,6 @@ protected:
     Curses::CurseHub m_curses { this };
 
     int m_health { 100 };
-
-    Movement m_movement { this };
     
     State m_currentState {};
 
@@ -134,6 +128,8 @@ protected:
 
     bool m_hasContactWithGround { false };
 
+    std::unique_ptr<Movement> m_movement { nullptr };
+    
     std::unique_ptr<Weapon> m_weapon { nullptr };
 
     const std::string m_dragonBonesName {};

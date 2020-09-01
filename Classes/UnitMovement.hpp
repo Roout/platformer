@@ -1,13 +1,19 @@
 #ifndef UNIT_MOVEMENT_HPP
 #define UNIT_MOVEMENT_HPP
 
-class Unit;
+namespace cocos2d {
+    class PhysicsBody;
+}
 
+/**
+ * Wrapper around physics body.
+ * Provide interface for simple movement 
+ */
 class Movement final {
 public:
-    Movement ( Unit * const unit ):
-        m_unit { unit } 
-    {}
+    Movement(cocos2d::PhysicsBody * const body);
+    
+    ~Movement();
 
     void Update(const float dt) noexcept;
 
@@ -17,12 +23,12 @@ public:
 
     void MoveLeft() noexcept;
 
-    void StopXAxisMove() noexcept;
+    void Stop() noexcept;
 
     void SetMaxSpeed(float speed) noexcept;
     
 private:
-    Unit * const m_unit { nullptr };
+    cocos2d::PhysicsBody * const m_body { nullptr };
 
     float m_desiredVelocity { 550.f };
     // static constexpr float  m_jumpHeight { 255.f };
