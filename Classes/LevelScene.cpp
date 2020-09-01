@@ -68,6 +68,10 @@ namespace helper {
             bodies[BODY_B]->getNode() 
         };
         
+        if( !nodes[BODY_A] || !nodes[BODY_B] ) {
+            return false;
+        }
+
         const bool isUnitSensor[2] = { 
             shapes[BODY_A]->getCategoryBitmask() == Utils::CreateMask(core::CategoryBits::GROUND_SENSOR),
             shapes[BODY_B]->getCategoryBitmask() == Utils::CreateMask(core::CategoryBits::GROUND_SENSOR)
@@ -75,7 +79,7 @@ namespace helper {
 
         // There are nodes one of which is with unit sensor attached 
         // i.e. basicaly it's unit and other collidable body
-        if (nodes[BODY_A] && nodes[BODY_B] && (isUnitSensor[BODY_A] || isUnitSensor[BODY_B]) ) {
+        if ( isUnitSensor[BODY_A] || isUnitSensor[BODY_B] ) {
             Unit * unit { dynamic_cast<Unit*>(isUnitSensor[BODY_A]? nodes[BODY_A] : nodes[BODY_B]) };
             unit->SetContactWithGround(true);
 
@@ -175,6 +179,10 @@ namespace helper {
             bodies[BODY_A]->getNode(),
             bodies[BODY_B]->getNode() 
         };
+
+        if( !nodes[BODY_A] || !nodes[BODY_B] ) {
+            return false;
+        }
 
         const int bodyMasks[2] = {
             bodies[BODY_A]->getCategoryBitmask(),

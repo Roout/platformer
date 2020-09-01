@@ -111,7 +111,7 @@ void Player::setPosition(const cocos2d::Vec2& position) {
 
 void Player::UpdatePosition(const float dt) noexcept {
     if(!this->IsDead()) {
-        m_movement.Update(dt);
+        m_movement->Update(dt);
         m_follower->UpdateMapPosition(dt);
     }
 }
