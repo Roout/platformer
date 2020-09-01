@@ -17,8 +17,6 @@ public:
 
     void MoveLeft() noexcept;
 
-    void Stop() noexcept;
-    
     void StopXAxisMove() noexcept;
 
     void SetMaxSpeed(float speed) noexcept;
@@ -32,16 +30,11 @@ private:
 
     static constexpr int m_timeStepsToCompletion { 6 };
 
-    struct Counter {
-        int remainingJumpSteps { 0 };
-        int remainingMoveLeft { 0 };
-        int remainingMoveRight { 0 };
+    int m_remainingJumpSteps { 0 };
 
-        void Clear() {
-            remainingJumpSteps = remainingMoveLeft = remainingMoveRight = 0;
-        }
+    bool m_isMovingLeft { false };
 
-    } m_counter;
+    bool m_isMovingRight { false };
 };
 
 #endif // UNIT_MOVEMENT_HPP
