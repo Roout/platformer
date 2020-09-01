@@ -1,22 +1,43 @@
 #include "Influence.hpp"
 #include "Enemy.hpp"
-#include "Unit.hpp"
 #include "Player.hpp"
 
-void WarriorInfluence::OnEnter() {
-    const auto target = m_warrior->getParent()->getChildByName(Player::NAME);
-    const auto unit = dynamic_cast<Unit*>(target);
-    m_warrior->Pursue(unit);
+Influence* Influence::create(
+    Enemies::Bot* bot, 
+    const cocos2d::Rect& zone
+) {
+    auto pRet = new(std::nothrow) Influence(bot, zone);
+    if(pRet && pRet->init()) {
+        pRet->autorelease();
+    }
+    else {
+        delete pRet;
+        pRet = nullptr;
+    }
+    return pRet;
+}
+
+Influence::Influence(
+    Enemies::Bot* bot, 
+    const cocos2d::Rect& zone
+) :
+    m_bot{ bot },
+    m_zone{ zone }
+{
+}
+
+void Influence::OnIntrusion() {
+    m_bot->EnemyDetected();
     m_detected = true;
 }
 
-void WarriorInfluence::OnExit() {
-    m_warrior->Patrol();
+void Influence::OnLeave() {
+    m_bot->EnemyLeave();
     m_detected = false;
 }
 
-void WarriorInfluence::Update() {
-    if( m_warrior ) {
+void Influence::update() {
+    if( m_bot && !m_bot->IsDead() ) {
         const auto target = m_warrior->getParent()->getChildByName(Player::NAME);
         if( target ) { // exist, is alive and kicking
             const auto height { target->getContentSize().height / 2.f };
@@ -25,9 +46,10 @@ void WarriorInfluence::Update() {
             };
             const auto isInside { m_zone.containsPoint(point) };
             if( !m_detected && isInside) {
-                this->OnEnter();
-            } else if( m_detected && !isInside) {
-                this->OnExit();
+                this->OnIntrusion();
+            } 
+            else if( m_detected && !isInside) {
+                this->OnLeave();
             }
         }
         else {

@@ -1,57 +1,41 @@
-#ifndef AGRO_ZONE_HPP
-#define AGRO_ZONE_HPP
+#ifndef INFLUENCE_ZONE_HPP
+#define INFLUENCE_ZONE_HPP
 
 #include "cocos2d.h"
 
 namespace Enemies {
-    class Warrior;
+    class Bot;
 }
 
-class Influence {
+class Influence : public cocos2d::Component {
 public:
+    static Influence* create(
+        Enemies::Bot* bot, 
+        const cocos2d::Rect& zone
+    );
 
-    virtual ~Influence() = default;
+    void update() override;
 
-    virtual void OnEnter() = 0;
+private:
 
-    virtual void OnExit() = 0;
+    Influence(
+        Enemies::Bot* bot, 
+        const cocos2d::Rect& zone
+    );
 
-    virtual void Update() = 0;
+    // target intrude into the influence zone
+    void OnIntrusion();
 
-    bool EnemyDetected() const noexcept {
-        return m_detected;
-    }
+    // target leave the influence zone
+    void OnLeave();
 
-protected:
+    /// Properties
+private:
     cocos2d::Rect m_zone {};
     
     bool m_detected { false };
+
+    Enemies::Bot * m_bot { nullptr };
 };
 
-class WarriorInfluence final : public Influence {
-public:
-
-    inline void Attach(
-        Enemies::Warrior * warrior, 
-        const cocos2d::Rect& zone
-    ) noexcept;
-
-    void Update() override;
-
-private:
-    void OnEnter() override;
-
-    void OnExit() override;
-
-    Enemies::Warrior * m_warrior { nullptr };
-};
-
-inline void WarriorInfluence::Attach(
-    Enemies::Warrior * warrior, 
-    const cocos2d::Rect & zone
-) noexcept {
-    m_warrior = warrior;
-    m_zone = zone;
-}
-
-#endif // AGRO_ZONE_HPP
+#endif // INFLUENCE_ZONE_HPP
