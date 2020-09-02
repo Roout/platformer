@@ -48,15 +48,4 @@ void path::Supplement::Parse(rapidjson::Document& doc) {
         }
         vertexIndex++;
     }
-    
-    const auto influence = doc["influence"].GetArray();
-    areas.resize(influence.Size());
-    size_t pointIndex { 0 };
-    for(const auto& rect: influence) {
-        const auto p { rect.GetArray() };
-        for(size_t i = 0; i < 4; i++) {
-            areas[pointIndex][i] = p[i].GetInt();
-        }
-        pointIndex++;
-    }
 }

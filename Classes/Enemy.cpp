@@ -223,48 +223,11 @@ void Enemies::Bot::AttachNavigator(
     m_navigator->Init(this, supplement);
 }
 
-void Enemies::Bot::AttachInfluenceArea(
-    const cocos2d::Size& mapSize, 
-    float tileSize,
-    path::Supplement * const supplement
-) {
-    const auto mapHeight { static_cast<int> (mapSize.height) };
-    const auto warriorTilePosition { this->getPosition() / tileSize };
-    
-    auto CoordsFromTile = [&mapHeight](int x, int y) {
-        return cocos2d::Vec2 {
-            static_cast<float>(x),
-            static_cast<float>(mapHeight - y - 1)
-        };
-    };
-    // Find closest area to this unit
-    size_t rectDataIndex { 0 };
-    size_t closest { std::numeric_limits<size_t>::max() };
-    float minDistance { std::numeric_limits<float>::max() };  
-    for(const auto& rectData: supplement->areas) {
-        // Extract 2 tiles coordinates in Tiled program system: bot left & top right
-        const auto coords { CoordsFromTile (rectData[0], rectData[1]) };
-        const auto distance = fabs(warriorTilePosition.x - coords.x) + fabs(warriorTilePosition.y - coords.y);
-        if( minDistance > distance ) {
-            minDistance = distance;
-            closest = rectDataIndex;
-        }
-        rectDataIndex++;
-    }
-    // Create from them a rectangular
-    if( closest != std::numeric_limits<size_t>::max() ) {
-        const auto& rectData = supplement->areas[closest];
-        const auto pointA { CoordsFromTile (rectData[0], rectData[1]) };
-        const auto pointB { CoordsFromTile (rectData[2], rectData[3]) };
-        const cocos2d::Rect rect {
-            { pointA.x * tileSize, pointA.y * tileSize },
-            { (pointB.x - pointA.x + 1) * tileSize, (pointB.y - pointA.y + 1) * tileSize }
-        };
-        // Attach influence
-        auto component = Influence::create(this, rect);
-        component->setName("Influence");
-        this->addComponent(component);
-    }
+void Enemies::Bot::AttachInfluenceArea(const cocos2d::Rect& area) {
+    // Attach influence
+    auto influence = Influence::create(this, area);
+    influence->setName("Influence");
+    this->addComponent(influence);
 }
 
 void Enemies::Bot::Pursue(Unit * target) noexcept {

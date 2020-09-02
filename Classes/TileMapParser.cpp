@@ -24,11 +24,11 @@ TileMapParser::TileMapParser(const cocos2d::FastTMXTiledMap * tileMap):
 	this->Get<core::CategoryName::BORDER>().reserve(100);
 	this->Get<core::CategoryName::BARREL>().reserve(10);
 	this->Get<core::CategoryName::ENEMY>().reserve(30);
+	this->Get<core::CategoryName::INFLUENCE>().reserve(30);
 	this->Get<core::CategoryName::SPIKES>().reserve(10);
 }
 
 void TileMapParser::Parse() {
-    // read player position from the map
     const auto group = m_tileMap->getObjectGroup("objects");
 	if (group) {
 		const auto& allObjects = group->getObjects();
@@ -42,19 +42,29 @@ void TileMapParser::Parse() {
 			details::Form form;
 			form.m_botLeft = cocos2d::Vec2{x, y};
 
-			if ( name == "player" ) {
+			if( name == "player" ) {
 				form.m_type = core::CategoryName::PLAYER;
 				this->Get<core::CategoryName::PLAYER>().emplace_back(form);
 			}
-			else if ( name == "barrel" ) {
+			else if( name == "barrel" ) {
 				form.m_type = core::CategoryName::BARREL;
 				this->Get<core::CategoryName::BARREL>().emplace_back(form);
 			}
-			else if ( name == "enemy" ) {
+			else if( name == "enemy" ) {
 				form.m_type = core::CategoryName::ENEMY;
 				form.m_enemyClass = ::AsEnemyClass(type);
 				form.m_id = objMap.at("id").asUnsignedInt();
 				this->Get<core::CategoryName::ENEMY>().emplace_back(form);
+			}
+			else if( name == "Influence" ) {
+				form.m_type = core::CategoryName::INFLUENCE;
+				form.m_id = objMap.at("owner-id").asUnsignedInt();
+				cocos2d::Size size {
+					objMap.at("width").asFloat(),
+					objMap.at("height").asFloat()
+				};
+				form.m_rect = cocos2d::Rect{ form.m_botLeft, size };
+				this->Get<core::CategoryName::INFLUENCE>().emplace_back(form);
 			}
 		}
 	}
@@ -65,7 +75,6 @@ void TileMapParser::Parse() {
 		const auto mapSize { obstaclesLayer->getLayerSize() };
 		const auto width { static_cast<int>(mapSize.width) };
 		const auto height { static_cast<int>(mapSize.height) };
-
 		// check whether the tile was already visited
 		// for now I don't need it.
     	std::vector<std::vector<char>> isVisited (height, std::vector<char>(width, false));
