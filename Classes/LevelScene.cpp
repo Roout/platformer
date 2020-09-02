@@ -396,8 +396,8 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
             else if(form.m_type == core::CategoryName::ENEMY) {
                 switch(form.m_enemyClass) {
                     case core::EnemyClass::WARRIOR: {
-                        const auto warrior { Enemies::Warrior::create(form.m_id) };
-                        warrior->setName(Enemies::Warrior::NAME);
+                        const auto warrior { Enemies::Bot::create(form.m_id) };
+                        warrior->setName(Enemies::Bot::NAME);
                         warrior->setPosition(form.m_botLeft);
                         warrior->AttachNavigator(map->getMapSize(), map->getTileSize().width, m_supplement.get());
                         warrior->AttachInfluenceArea(map->getMapSize(), map->getTileSize().width, m_supplement.get());

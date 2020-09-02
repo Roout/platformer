@@ -27,18 +27,18 @@ Influence::Influence(
 }
 
 void Influence::OnIntrusion() {
-    m_bot->EnemyDetected();
+    m_bot->OnEnemyIntrusion();
     m_detected = true;
 }
 
 void Influence::OnLeave() {
-    m_bot->EnemyLeave();
+    m_bot->OnEnemyLeave();
     m_detected = false;
 }
 
-void Influence::update() {
+void Influence::update(float dt) {
     if( m_bot && !m_bot->IsDead() ) {
-        const auto target = m_warrior->getParent()->getChildByName(Player::NAME);
+        const auto target = m_bot->getParent()->getChildByName(Player::NAME);
         if( target ) { // exist, is alive and kicking
             const auto height { target->getContentSize().height / 2.f };
             const auto point { 

@@ -9,8 +9,8 @@
 #include <limits>
 #include <algorithm>
 
-Enemies::Warrior* Enemies::Warrior::create(size_t id) {
-    auto pRet { new (std::nothrow) Warrior(id) };
+Enemies::Bot* Enemies::Bot::create(size_t id) {
+    auto pRet { new (std::nothrow) Bot(id) };
     if( pRet && pRet->init()) {
         pRet->autorelease();
     } 
@@ -21,7 +21,7 @@ Enemies::Warrior* Enemies::Warrior::create(size_t id) {
     return pRet;
 }
 
-bool Enemies::Warrior::init() {
+bool Enemies::Bot::init() {
     if( !Unit::init()) {
         return false; 
     }
@@ -43,7 +43,7 @@ bool Enemies::Warrior::init() {
     return true;
 }
 
-void Enemies::Warrior::AddPhysicsBody(const cocos2d::Size& size) {
+void Enemies::Bot::AddPhysicsBody(const cocos2d::Size& size) {
     Unit::AddPhysicsBody(size);
     // change masks for physics body
     auto body { this->getPhysicsBody() };
@@ -81,17 +81,17 @@ void Enemies::Warrior::AddPhysicsBody(const cocos2d::Size& size) {
     );
 }
 
-void Enemies::Warrior::pause() {
+void Enemies::Bot::pause() {
     cocos2d::Node::pause();
     m_animator->pause();
 }
 
-void Enemies::Warrior::resume() {
+void Enemies::Bot::resume() {
     cocos2d::Node::resume();
     m_animator->resume();
 }
 
-void Enemies::Warrior::UpdateState(const float dt) noexcept {
+void Enemies::Bot::UpdateState(const float dt) noexcept {
     m_previousState = m_currentState;
     if( m_health <= 0 ) {
         m_currentState.m_act = Act::dead;
@@ -104,17 +104,17 @@ void Enemies::Warrior::UpdateState(const float dt) noexcept {
     }
 }
 
-Enemies::Warrior::Warrior(size_t id): 
+Enemies::Bot::Bot(size_t id): 
     Unit{ "warrior" },
     m_id { id }
 {
     m_designedSize = cocos2d::Size{ 80.f, 135.f };
 }
 
-bool Enemies::Warrior::NeedAttack() const noexcept {
+bool Enemies::Bot::NeedAttack() const noexcept {
     bool attackIsReady {
         !this->IsDead() && 
-        m_influence.EnemyDetected() && 
+        m_detectEnemy && 
         m_weapon->IsReady()
     };
     auto enemyIsClose = [this]() { 
@@ -138,7 +138,7 @@ bool Enemies::Warrior::NeedAttack() const noexcept {
     return attackIsReady && enemyIsClose();
 }
 
-void Enemies::Warrior::AddAnimator() {
+void Enemies::Bot::AddAnimator() {
     std::string chachedArmatureName = m_dragonBonesName;
     m_animator = dragonBones::Animator::create(std::move(chachedArmatureName));
     m_animator->InitializeAnimations({
@@ -150,7 +150,7 @@ void Enemies::Warrior::AddAnimator() {
     m_animator->setScale(0.2f); // TODO: introduce multi-resolution scaling
 }
 
-void Enemies::Warrior::TryAttack() {
+void Enemies::Bot::TryAttack() {
     if( this->NeedAttack() ) { // attack if possible
         auto lookAtEnemy { false };
         const auto target = this->getParent()->getChildByName(Player::NAME);
@@ -168,14 +168,14 @@ void Enemies::Warrior::TryAttack() {
     } 
 }
 
-void Enemies::Warrior::UpdatePosition(const float dt) noexcept {
+void Enemies::Bot::UpdatePosition(const float dt) noexcept {
     if(m_currentState.m_act != Act::attack ) {
         m_navigator->Navigate(dt);  // update direction/target if needed
         m_movement->Update(dt);      // apply forces
     }
 }
 
-void Enemies::Warrior::UpdateAnimation() {
+void Enemies::Bot::UpdateAnimation() {
     if( m_currentState.m_act != m_previousState.m_act ) {
         if( m_currentState.m_act == Act::dead ) {
             // emit particles
@@ -203,10 +203,10 @@ void Enemies::Warrior::UpdateAnimation() {
     }
 }
 
-void Enemies::Warrior::update(float dt) {
+void Enemies::Bot::update(float dt) {
+    cocos2d::Node::update(dt);
     this->UpdateDebugLabel();
     this->UpdateWeapon(dt);
-    m_influence.Update(); // detect players
     this->UpdatePosition(dt); 
     this->UpdateCurses(dt);
     this->TryAttack();
@@ -214,7 +214,7 @@ void Enemies::Warrior::update(float dt) {
     this->UpdateAnimation(); 
 }
 
-void Enemies::Warrior::AttachNavigator(
+void Enemies::Bot::AttachNavigator(
     const cocos2d::Size& mapSize, 
     float tileSize,
     path::Supplement * const supplement
@@ -223,7 +223,7 @@ void Enemies::Warrior::AttachNavigator(
     m_navigator->Init(this, supplement);
 }
 
-void Enemies::Warrior::AttachInfluenceArea(
+void Enemies::Bot::AttachInfluenceArea(
     const cocos2d::Size& mapSize, 
     float tileSize,
     path::Supplement * const supplement
@@ -261,14 +261,27 @@ void Enemies::Warrior::AttachInfluenceArea(
             { (pointB.x - pointA.x + 1) * tileSize, (pointB.y - pointA.y + 1) * tileSize }
         };
         // Attach influence
-        m_influence.Attach(this, rect);
+        auto component = Influence::create(this, rect);
+        component->setName("Influence");
+        this->addComponent(component);
     }
 }
 
-void Enemies::Warrior::Pursue(Unit * target) noexcept {
+void Enemies::Bot::Pursue(Unit * target) noexcept {
     m_navigator->Pursue(target);
 }
 
-void Enemies::Warrior::Patrol() noexcept {
+void Enemies::Bot::Patrol() noexcept {
     m_navigator->Patrol();
+}
+
+void Enemies::Bot::OnEnemyIntrusion() {
+    m_detectEnemy = true;
+    auto target = dynamic_cast<Unit*>(this->getParent()->getChildByName(Player::NAME));
+    this->Pursue(target);
+}
+
+void Enemies::Bot::OnEnemyLeave() {
+    m_detectEnemy = false;
+    this->Patrol();
 }

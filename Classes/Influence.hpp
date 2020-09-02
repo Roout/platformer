@@ -13,8 +13,8 @@ public:
         Enemies::Bot* bot, 
         const cocos2d::Rect& zone
     );
-
-    void update() override;
+    
+    void update(float [[maybe_unused]] dt) override;
 
 private:
 

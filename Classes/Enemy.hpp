@@ -8,11 +8,11 @@
 
 namespace Enemies {
 
-    class Warrior final: public Unit {
+    class Bot final: public Unit {
     public:
         static constexpr char * const NAME = "Warrior";
 
-        static Warrior* create(size_t id);
+        static Bot* create(size_t id);
 
         [[nodiscard]] bool init() override;
         
@@ -40,9 +40,13 @@ namespace Enemies {
 
         void Patrol() noexcept;
 
+        void OnEnemyIntrusion();
+
+        void OnEnemyLeave();
+
     private:
     
-        Warrior(size_t id);
+        Bot(size_t id);
         
         void UpdateState(const float dt) noexcept override;
 
@@ -62,12 +66,12 @@ namespace Enemies {
 
         std::unique_ptr<Navigator> m_navigator { nullptr };
 
-        WarriorInfluence m_influence;
+        bool m_detectEnemy { false };
 
         const size_t m_id { 0 };
     };
 
-    inline size_t Warrior::GetId() const noexcept {
+    inline size_t Bot::GetId() const noexcept {
         return m_id;
     }
 }
