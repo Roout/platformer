@@ -16,6 +16,8 @@
 #include "TileMapParser.hpp"
 #include "PathNodes.hpp"
 
+#include <unordered_map>
+
 LevelScene::LevelScene(int id): 
     m_id{ id } 
 {
@@ -361,6 +363,11 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
         m_parser->Parse();
     }
     
+    std::unordered_map<size_t, cocos2d::Rect> influences;
+    std::unordered_map<size_t, Enemies::Warrior*> warriors;
+    influences.reserve(100);
+    warriors.reserve(100);
+
     for(size_t i = 0; i < Utils::EnumSize<core::CategoryName>(); i++) {
         const auto category { static_cast<core::CategoryName>(i) };
         const auto parsedForms { m_parser->Peek(category) };
@@ -400,12 +407,21 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                         warrior->setName(Enemies::Warrior::NAME);
                         warrior->setPosition(form.m_botLeft);
                         warrior->AttachNavigator(map->getMapSize(), map->getTileSize().width, m_supplement.get());
-                        warrior->AttachInfluenceArea(map->getMapSize(), map->getTileSize().width, m_supplement.get());
                         map->addChild(warrior, 9);
+                        // save warrior pointer
+                        warriors.emplace(form.m_id, warrior);
                     } break;
                     default: break;
                 }
             }
+            else if(form.m_type == core::CategoryName::INFLUENCE) {
+                // save component data
+                influences.emplace(form.m_id, form.m_rect);
+            }
         }
     }
+    // attach influence to warriors
+    for(auto& [id, warrior]: warriors) {
+        warrior->AttachInfluenceArea(influences.at(id));
+    } 
 }

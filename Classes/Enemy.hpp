@@ -30,11 +30,7 @@ namespace Enemies {
             path::Supplement * const
         );
 
-        void AttachInfluenceArea(
-            const cocos2d::Size& mapSize, 
-            float tileSize,
-            path::Supplement * const
-        );
+        void AttachInfluenceArea(const cocos2d::Rect& area);
 
         void Pursue(Unit * target) noexcept;
 
