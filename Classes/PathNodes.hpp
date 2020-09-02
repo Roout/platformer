@@ -2,7 +2,6 @@
 #define PATH_NODES_HPP
 
 #include <vector>
-#include <array>
 #include "cocos2d.h" 
 
 #include "rapidjson/document.h"
@@ -20,13 +19,10 @@ namespace path {
 	 * It also keeps adjacency matrix which indicates where unit can move/jump 
 	 * from certain position.
 	 * As the graph isn't connected, it's just number of trees i.e. forest.  
-	 * 
-	 * The area of influence was also added.
 	 */
 	struct Supplement {
 		std::vector<std::pair<int,int>> waypoints;
 		std::vector<std::vector<std::pair<int, Action>>> adj;
-		std::vector<std::array<int, 4U>> areas;
 
 		rapidjson::Document Load(size_t id);
 

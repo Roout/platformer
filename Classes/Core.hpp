@@ -20,6 +20,7 @@ namespace core {
         PLAYER,
         ENEMY,
         SPIKES,
+        INFLUENCE,
         
         COUNT
     };

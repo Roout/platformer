@@ -223,46 +223,9 @@ void Enemies::Warrior::AttachNavigator(
     m_navigator->Init(this, supplement);
 }
 
-void Enemies::Warrior::AttachInfluenceArea(
-    const cocos2d::Size& mapSize, 
-    float tileSize,
-    path::Supplement * const supplement
-) {
-    const auto mapHeight { static_cast<int> (mapSize.height) };
-    const auto warriorTilePosition { this->getPosition() / tileSize };
-    
-    auto CoordsFromTile = [&mapHeight](int x, int y) {
-        return cocos2d::Vec2 {
-            static_cast<float>(x),
-            static_cast<float>(mapHeight - y - 1)
-        };
-    };
-    // Find closest area to this unit
-    size_t rectDataIndex { 0 };
-    size_t closest { std::numeric_limits<size_t>::max() };
-    float minDistance { std::numeric_limits<float>::max() };  
-    for(const auto& rectData: supplement->areas) {
-        // Extract 2 tiles coordinates in Tiled program system: bot left & top right
-        const auto coords { CoordsFromTile (rectData[0], rectData[1]) };
-        const auto distance = fabs(warriorTilePosition.x - coords.x) + fabs(warriorTilePosition.y - coords.y);
-        if( minDistance > distance ) {
-            minDistance = distance;
-            closest = rectDataIndex;
-        }
-        rectDataIndex++;
-    }
-    // Create from them a rectangular
-    if( closest != std::numeric_limits<size_t>::max() ) {
-        const auto& rectData = supplement->areas[closest];
-        const auto pointA { CoordsFromTile (rectData[0], rectData[1]) };
-        const auto pointB { CoordsFromTile (rectData[2], rectData[3]) };
-        const cocos2d::Rect rect {
-            { pointA.x * tileSize, pointA.y * tileSize },
-            { (pointB.x - pointA.x + 1) * tileSize, (pointB.y - pointA.y + 1) * tileSize }
-        };
-        // Attach influence
-        m_influence.Attach(this, rect);
-    }
+void Enemies::Warrior::AttachInfluenceArea(const cocos2d::Rect& area) {
+    // Attach influence
+    m_influence.Attach(this, area);
 }
 
 void Enemies::Warrior::Pursue(Unit * target) noexcept {
