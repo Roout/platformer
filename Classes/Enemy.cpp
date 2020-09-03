@@ -26,25 +26,11 @@ bool Enemies::Bot::init() {
         return false; 
     }
     m_movement->SetMaxSpeed(130.f);
-
-    // Create weapon
-    const auto damage { 25.f };
-    const auto range { 60.f };
-    const auto preparationTime { 0.f };
-    const auto attackDuration { m_animator->GetDuration(Utils::EnumCast(Act::attack)) };
-    const auto reloadTime { 0.5f };
-    m_weapon = std::make_unique<Axe>(
-        damage, 
-        range, 
-        preparationTime,
-        attackDuration,
-        reloadTime 
-    );
     return true;
 }
 
-void Enemies::Bot::AddPhysicsBody(const cocos2d::Size& size) {
-    Unit::AddPhysicsBody(size);
+void Enemies::Bot::AddPhysicsBody() {
+    Unit::AddPhysicsBody();
     // change masks for physics body
     auto body { this->getPhysicsBody() };
     body->setMass(2000.f);
@@ -81,27 +67,19 @@ void Enemies::Bot::AddPhysicsBody(const cocos2d::Size& size) {
     );
 }
 
-void Enemies::Bot::pause() {
-    cocos2d::Node::pause();
-    m_animator->pause();
-}
-
-void Enemies::Bot::resume() {
-    cocos2d::Node::resume();
-    m_animator->resume();
-}
-
-void Enemies::Bot::UpdateState(const float dt) noexcept {
-    m_previousState = m_currentState;
-    if( m_health <= 0 ) {
-        m_currentState.m_act = Act::dead;
-    }
-    else if( m_weapon->IsAttacking() ) {
-        m_currentState.m_act = Act::attack;
-    }
-    else {
-        m_currentState.m_act = Act::move;
-    }
+void Enemies::Bot::AddWeapon() {
+    const auto damage { 25.f };
+    const auto range { 60.f };
+    const auto preparationTime { 0.f };
+    const auto attackDuration { m_animator->GetDuration(Utils::EnumCast(State::ATTACK)) };
+    const auto reloadTime { 0.5f };
+    m_weapon = std::make_unique<Axe>(
+        damage, 
+        range, 
+        preparationTime,
+        attackDuration,
+        reloadTime 
+    );
 }
 
 Enemies::Bot::Bot(size_t id): 
@@ -139,15 +117,13 @@ bool Enemies::Bot::NeedAttack() const noexcept {
 }
 
 void Enemies::Bot::AddAnimator() {
-    std::string chachedArmatureName = m_dragonBonesName;
-    m_animator = dragonBones::Animator::create(std::move(chachedArmatureName));
+    Unit::AddAnimator();
     m_animator->InitializeAnimations({
-        std::make_pair(Utils::EnumCast(Act::attack), "attack"),
-        std::make_pair(Utils::EnumCast(Act::dead), "dead"),
-        std::make_pair(Utils::EnumCast(Act::move), "walk")
+        std::make_pair(Utils::EnumCast(State::ATTACK), GetStateName(State::ATTACK)),
+        std::make_pair(Utils::EnumCast(State::PURSUIT), GetStateName(State::PURSUIT)),
+        std::make_pair(Utils::EnumCast(State::PATROL), GetStateName(State::PATROL)),
+        std::make_pair(Utils::EnumCast(State::DEATH), GetStateName(State::DEATH))
     });
-    this->addChild(m_animator);
-    m_animator->setScale(0.2f); // TODO: introduce multi-resolution scaling
 }
 
 void Enemies::Bot::TryAttack() {
@@ -168,43 +144,55 @@ void Enemies::Bot::TryAttack() {
     } 
 }
 
+void Enemies::Bot::UpdateState(const float dt) noexcept {
+    m_previousState = m_currentState;
+
+    if( m_health <= 0 ) {
+        m_currentState = State::DEATH;
+    }
+    else if( m_weapon->IsAttacking() ) {
+        m_currentState = State::ATTACK;
+    }
+    else if( m_detectEnemy ) {
+        m_currentState = State::PURSUIT;
+    }
+    else {
+        m_currentState = State::PATROL;
+    }
+} 
+
 void Enemies::Bot::UpdatePosition(const float dt) noexcept {
-    if(m_currentState.m_act != Act::attack ) {
+    if(m_currentState != State::ATTACK ) {
         m_navigator->Navigate(dt);  // update direction/target if needed
         m_movement->Update(dt);      // apply forces
     }
 }
 
 void Enemies::Bot::UpdateAnimation() {
-    if( m_currentState.m_act != m_previousState.m_act ) {
-        if( m_currentState.m_act == Act::dead ) {
-            // emit particles
-            const auto emitter = cocos2d::ParticleSystemQuad::create("particle_texture.plist");
-            emitter->setAutoRemoveOnFinish(true);
-            /// TODO: adjust for the multiresolution
-            emitter->setScale(0.4f);
-            emitter->setPositionType(cocos2d::ParticleSystem::PositionType::RELATIVE);
-            emitter->setPosition(this->getPosition());
-            this->getParent()->addChild(emitter, 9);
-            // remove physics body
-            this->removeComponent(this->getPhysicsBody());
-            // remove from screen
-            this->runAction(cocos2d::RemoveSelf::create());
-        } 
-        else {
-            int repeatTimes { dragonBones::Animator::INFINITY_LOOP };
-            if( m_currentState.m_act == Act::attack || 
-                m_currentState.m_act == Act::dead
-            ) {
-                repeatTimes = 1;
-            }
-            m_animator->Play(Utils::EnumCast(m_currentState.m_act), repeatTimes);
-        }
+    if( this->IsDead() ) {
+        // emit particles
+        const auto emitter = cocos2d::ParticleSystemQuad::create("particle_texture.plist");
+        emitter->setAutoRemoveOnFinish(true);
+        /// TODO: adjust for the multiresolution
+        emitter->setScale(0.4f);
+        emitter->setPositionType(cocos2d::ParticleSystem::PositionType::RELATIVE);
+        emitter->setPosition(this->getPosition());
+        this->getParent()->addChild(emitter, 9);
+        // remove physics body
+        this->removeComponent(this->getPhysicsBody());
+        // remove from screen
+        this->runAction(cocos2d::RemoveSelf::create());
+    } 
+    else if(m_currentState != m_previousState) {
+        auto repeatTimes { m_currentState == State::ATTACK? 1 : dragonBones::Animator::INFINITY_LOOP };
+        m_animator->Play(Utils::EnumCast(m_currentState), repeatTimes);
     }
 }
 
 void Enemies::Bot::update(float dt) {
+    // update components
     cocos2d::Node::update(dt);
+    // custom updates
     this->UpdateDebugLabel();
     this->UpdateWeapon(dt);
     this->UpdatePosition(dt); 
@@ -212,6 +200,22 @@ void Enemies::Bot::update(float dt) {
     this->TryAttack();
     this->UpdateState(dt);
     this->UpdateAnimation(); 
+}
+
+std::string  Enemies::Bot::GetStateName(Bot::State state) {
+    static std::unordered_map<Bot::State, std::string> mapped {
+        { Bot::State::PATROL, "walk" },
+        { Bot::State::ATTACK, "attack" },
+        { Bot::State::PURSUIT, "walk" },
+        { Bot::State::DEATH, "death" }
+    };
+    auto it = mapped.find(state);
+    return (it != mapped.cend()? it->second: "");        
+}
+
+void Enemies::Bot::UpdateDebugLabel() noexcept {
+    auto state = dynamic_cast<cocos2d::Label*>(this->getChildByName("state"));
+    state->setString(this->GetStateName(m_currentState));
 }
 
 void Enemies::Bot::AttachNavigator(

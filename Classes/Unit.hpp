@@ -16,6 +16,10 @@ public:
 
     [[nodiscard]] bool init() override;
 
+    void pause() override;
+
+    void resume() override;
+
     /**
      * Used by curses to lower health value. 
      */
@@ -49,6 +53,8 @@ public:
     
     inline bool IsDead() const noexcept;
 
+    /// Movement interface
+
     void Stop() noexcept;
 
     void MoveLeft() noexcept;
@@ -59,32 +65,6 @@ public:
 
     void Turn() noexcept;
 
-    /// Types
-protected:
-    enum class Act {
-        idle,
-        move,
-        jump,
-        attack,
-        dead
-    };
-
-    enum class Side { 
-        left, 
-        right 
-    };
-
-    struct State final {
-        /**
-         * Indicate what the unit is doing now 
-         */
-        Act m_act { Act::idle };
-        /**
-         * Indicate where the unit is looking now
-         */
-        Side m_side { Side::left };
-    };
-
 protected:
 
     Unit(const std::string& dragonBonesName);
@@ -93,6 +73,9 @@ protected:
 
     virtual void UpdateState(const float dt) noexcept = 0;
     
+    /**
+     * Update animation according to the current state of Unit  
+     */
     virtual void UpdateAnimation() = 0;
 
     virtual void UpdateWeapon(const float dt) noexcept;
@@ -101,40 +84,58 @@ protected:
 
     virtual void UpdateCurses(const float dt) noexcept;
 
-    virtual void UpdateDebugLabel();
+    /**
+     * Update a debug label above the unit head.
+     * Usually used to show unit's current state.
+     */
+    virtual void UpdateDebugLabel() noexcept {};
     
     /// Assisting methods
 
-    virtual void AddPhysicsBody(const cocos2d::Size&);
+    /**
+     * Create and add physics body as component to the node.
+     * Inheritor need to provide collision&contact masks.
+     */
+    virtual void AddPhysicsBody();
 
-    virtual void AddAnimator() = 0;
+    /**
+     * Create and prepare a dragon bones animator. 
+     * Inheritor need to initialize it with required animations.
+     * 
+     * @note call this method at the begining of the overriden one
+     */
+    virtual void AddAnimator();
 
-    void FlipX();
-
-    std::string CreateAnimationName(Act state);
+    /**
+     * Create a weapon with desired parameters 
+     */
+    virtual void AddWeapon() = 0;
 
     /// Properties
 protected:
-    // retain when add as child
-    dragonBones::Animator *m_animator { nullptr };
+    enum class Side { 
+        LEFT, 
+        RIGHT 
+    };
 
-    Curses::CurseHub m_curses { this };
+    Side m_side { Side::LEFT };
 
     int m_health { 100 };
-    
-    State m_currentState {};
 
-    State m_previousState {};
-
-    bool m_hasContactWithGround { false };
+    Curses::CurseHub m_curses { this };
 
     std::unique_ptr<Movement> m_movement { nullptr };
     
     std::unique_ptr<Weapon> m_weapon { nullptr };
 
+    // retain when add as child
+    dragonBones::Animator *m_animator { nullptr };
+
     const std::string m_dragonBonesName {};
 
     cocos2d::Size m_designedSize {};
+    
+    bool m_hasContactWithGround { false };
 };
 
 /// Implementation
@@ -157,11 +158,11 @@ inline void Unit::RemoveCurse(size_t id) noexcept {
 }
 
 inline bool Unit::IsLookingLeft() const noexcept {
-    return m_currentState.m_side == Side::left;
+    return m_side == Side::LEFT;
 }
 
 inline bool Unit::IsDead() const noexcept {
-    return m_currentState.m_act == Act::dead;
+    return m_health <= 0;
 }
 
 

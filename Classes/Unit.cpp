@@ -21,10 +21,10 @@ bool Unit::init() {
     this->scheduleUpdate();
 
     this->AddAnimator();
-    this->AddPhysicsBody(m_designedSize);
-    this->setContentSize(m_designedSize);
-
+    this->AddPhysicsBody();
     m_movement = std::make_unique<Movement>(this->getPhysicsBody());
+    this->AddWeapon();
+    this->setContentSize(m_designedSize);
 
     /// TODO: move somewhere
     static constexpr float healthBarShift { 15.f };
@@ -41,42 +41,14 @@ bool Unit::init() {
     return true;
 }
 
-std::string Unit::CreateAnimationName(Act act) {
-    std::string animationName { "walk" };
-    switch (act) {
-        case Act::idle: animationName = "idle"; break;
-        case Act::jump: animationName = "jump"; break;
-        case Act::move: animationName = "walk"; break;
-        case Act::attack: animationName = "attack"; break; 
-        case Act::dead: animationName = "dead"; break; 
-        default: break;
-    }
-    return animationName;
+void Unit::pause() {
+    cocos2d::Node::pause();
+    m_animator->pause();
 }
 
-void Unit::AddPhysicsBody(const cocos2d::Size& size) {
-    const auto body = cocos2d::PhysicsBody::createBox(
-        size,
-        cocos2d::PhysicsMaterial(1.f, 0.f, 0.f), 
-        {0.f, size.height / 2.f}
-    );
-    body->setMass(25.f);
-    body->setDynamic(true);
-    body->setGravityEnable(true);
-    body->setRotationEnable(false);
-    
-    const cocos2d::Size sensorShapeSize { size.width * 0.9f, 8.f };
-    const auto sensorShape = cocos2d::PhysicsShapeBox::create(
-        sensorShapeSize, 
-        cocos2d::PHYSICSSHAPE_MATERIAL_DEFAULT
-    );
-    sensorShape->setSensor(true);
-    sensorShape->setTag(
-        Utils::CreateMask(core::CategoryBits::GROUND_SENSOR)
-    );
-    body->addShape(sensorShape, false);
-
-    this->addComponent(body);
+void Unit::resume() {
+    cocos2d::Node::resume();
+    m_animator->resume();
 }
 
 void Unit::Stop() noexcept {
@@ -96,45 +68,29 @@ void Unit::Jump() noexcept {
 }
 
 void Unit::Turn() noexcept {
-    m_currentState.m_side = (m_currentState.m_side == Side::left? Side::right: Side::left);
-    this->FlipX();
-}
-
-void Unit::FlipX() {
+    m_side = (m_side == Side::LEFT? Side::RIGHT: Side::LEFT);
     m_animator->FlipX();
-}
-
-void Unit::UpdateDebugLabel() {
-    const auto stateLabel = dynamic_cast<cocos2d::Label*>(this->getChildByName("state"));
-    if( !stateLabel ) throw "can't find label!";
-    stateLabel->setString(CreateAnimationName(m_currentState.m_act));
 }
 
 void Unit::RecieveDamage(int damage) noexcept {
     m_health -= damage;
-    cocos2d::log(" >>> unit recieve %d damage. Current health is %d.", damage, m_health);
 }
 
 void Unit::Attack() {
     if(m_weapon->IsReady() && !this->IsDead()) {
         const auto attackRange { m_weapon->GetRange() };
-        
+
         auto position = this->getPosition();
-        if(m_currentState.m_side == Side::right) {
+        if(m_side == Side::RIGHT) {
             position.x += this->getContentSize().width / 2.f;
         }
         else {
             position.x -= this->getContentSize().width / 2.f + attackRange;
         }
-
-        static int x { 0 };
-        cocos2d::log(" >>> unit attack with sword: %d", ++x );
-
         const cocos2d::Rect attackedArea {
             position,
             cocos2d::Size{ attackRange, this->getContentSize().height }
         };
-
         m_weapon->LaunchAttack(attackedArea, this->getPhysicsBody()->getVelocity());
     }
 }
@@ -159,4 +115,36 @@ bool Unit::IsOnGround() const noexcept {
     const auto velocity { this->getPhysicsBody()->getVelocity() };
     constexpr float EPS { 0.000001f };  
     return helper::IsEquel(velocity.y, 0.f, EPS) && m_hasContactWithGround;
+}
+
+
+void Unit::AddPhysicsBody() {
+    const auto body = cocos2d::PhysicsBody::createBox(
+        m_designedSize,
+        cocos2d::PhysicsMaterial(1.f, 0.f, 0.f), 
+        {0.f, m_designedSize.height / 2.f}
+    );
+    body->setMass(25.f);
+    body->setDynamic(true);
+    body->setGravityEnable(true);
+    body->setRotationEnable(false);
+    
+    const cocos2d::Size sensorShapeSize { m_designedSize.width * 0.9f, 8.f };
+    const auto sensorShape = cocos2d::PhysicsShapeBox::create(
+        sensorShapeSize, 
+        cocos2d::PHYSICSSHAPE_MATERIAL_DEFAULT
+    );
+    sensorShape->setSensor(true);
+    sensorShape->setTag(
+        Utils::CreateMask(core::CategoryBits::GROUND_SENSOR)
+    );
+    body->addShape(sensorShape, false);
+    this->addComponent(body);
+}
+
+void Unit::AddAnimator() {
+    std::string chachedArmatureName = m_dragonBonesName;
+    m_animator = dragonBones::Animator::create(std::move(chachedArmatureName));
+    this->addChild(m_animator);
+    m_animator->setScale(0.2f); // TODO: introduce multi-resolution scaling
 }

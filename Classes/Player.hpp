@@ -21,18 +21,32 @@ public:
     
     void pause() override;
 
-    void resume() override;
-
 private:
-    void UpdateState(const float dt) noexcept override;
+    enum class State {
+        IDLE,
+        WALK,
+        JUMP,
+        ATTACK,
+        DEATH,
+        COUNT
+    };
+
+    std::string GetStateName(Player::State state);
+
+    void UpdateDebugLabel() noexcept;
 
     void UpdateAnimation() override;
 
-    void AddPhysicsBody(const cocos2d::Size&) override;
+    void UpdatePosition(const float dt) noexcept override;
+
+    void UpdateState(const float dt) noexcept override;
+
+ 
+    void AddPhysicsBody() override;
+
+    void AddWeapon() override;
 
     void AddAnimator() override;
-
-    void UpdatePosition(const float dt) noexcept override;
 
     Player();
 
@@ -42,6 +56,11 @@ private:
 
     // controller:
     std::unique_ptr<UserInputHandler> m_inputHandler { nullptr };
+
+    State m_currentState  { State::IDLE };
+
+    State m_previousState { State::IDLE };
 };
+
 
 #endif // PLAYER_HPP
