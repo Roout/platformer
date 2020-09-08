@@ -9,6 +9,17 @@
 #include <limits>
 #include <algorithm>
 
+std::string  Enemies::GetStateName(State state) {
+    static std::unordered_map<State, std::string> mapped {
+        { State::PATROL, "walk" },
+        { State::ATTACK, "attack" },
+        { State::PURSUIT, "walk" },
+        { State::DEATH, "death" }
+    };
+    auto it = mapped.find(state);
+    return (it != mapped.cend()? it->second: "");        
+}
+
 Enemies::Bot* Enemies::Bot::create(size_t id) {
     auto pRet { new (std::nothrow) Bot(id) };
     if( pRet && pRet->init()) {
@@ -202,20 +213,9 @@ void Enemies::Bot::update(float dt) {
     this->UpdateAnimation(); 
 }
 
-std::string  Enemies::Bot::GetStateName(Bot::State state) {
-    static std::unordered_map<Bot::State, std::string> mapped {
-        { Bot::State::PATROL, "walk" },
-        { Bot::State::ATTACK, "attack" },
-        { Bot::State::PURSUIT, "walk" },
-        { Bot::State::DEATH, "death" }
-    };
-    auto it = mapped.find(state);
-    return (it != mapped.cend()? it->second: "");        
-}
-
 void Enemies::Bot::UpdateDebugLabel() noexcept {
     auto state = dynamic_cast<cocos2d::Label*>(this->getChildByName("state"));
-    state->setString(this->GetStateName(m_currentState));
+    state->setString(GetStateName(m_currentState));
 }
 
 void Enemies::Bot::AttachNavigator(std::unique_ptr<Navigator> && navigator) {

@@ -3,12 +3,29 @@
 
 #include <unordered_map>
 
-#include "Unit.hpp"
 #include "cocos2d.h"
+
+#include "Unit.hpp"
 #include "Navigator.hpp"
 #include "Influence.hpp"
 
 namespace Enemies {
+
+    /**
+     * States bots can possibly have depending on their type 
+     */
+     enum class State {
+        UNDEFINED,
+        
+        PATROL,
+        PURSUIT,
+        ATTACK,
+        DEATH,
+
+        COUNT
+    };
+
+    std::string GetStateName(State state);
 
     class Bot final: public Unit {
     public:
@@ -35,18 +52,6 @@ namespace Enemies {
         void OnEnemyLeave();
 
     private:
-        enum class State {
-            UNDEFINED,
-            
-            PATROL,
-            PURSUIT,
-            ATTACK,
-            DEATH,
-
-            COUNT
-        };
-
-        std::string GetStateName(State state);
 
         Bot(size_t id);
 
