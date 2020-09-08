@@ -164,7 +164,7 @@ void Enemies::Bot::UpdateState(const float dt) noexcept {
 void Enemies::Bot::UpdatePosition(const float dt) noexcept {
     if(m_currentState != State::ATTACK ) {
         m_navigator->Navigate(dt);  // update direction/target if needed
-        m_movement->Update(dt);      // apply forces
+        m_movement->Update(dt);     // apply forces
     }
 }
 
@@ -218,13 +218,9 @@ void Enemies::Bot::UpdateDebugLabel() noexcept {
     state->setString(this->GetStateName(m_currentState));
 }
 
-void Enemies::Bot::AttachNavigator(
-    const cocos2d::Size& mapSize, 
-    float tileSize,
-    path::Supplement * const supplement
-) {
-    m_navigator = std::make_unique<Navigator>(mapSize, tileSize);
-    m_navigator->Init(this, supplement);
+void Enemies::Bot::AttachNavigator(std::unique_ptr<Navigator> && navigator) {
+    m_navigator = std::move(navigator);
+    this->Patrol();
 }
 
 void Enemies::Bot::AttachInfluenceArea(const cocos2d::Rect& area) {

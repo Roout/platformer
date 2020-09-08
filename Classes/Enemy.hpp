@@ -22,11 +22,7 @@ namespace Enemies {
 
         inline size_t GetId() const noexcept;
 
-        void AttachNavigator(
-            const cocos2d::Size& mapSize, 
-            float tileSize,
-            path::Supplement * const
-        );
+        void AttachNavigator(std::unique_ptr<Navigator> && navigator);
 
         void AttachInfluenceArea(const cocos2d::Rect& area);
 
@@ -41,10 +37,12 @@ namespace Enemies {
     private:
         enum class State {
             UNDEFINED,
+            
             PATROL,
             PURSUIT,
             ATTACK,
             DEATH,
+
             COUNT
         };
 

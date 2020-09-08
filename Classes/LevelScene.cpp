@@ -15,6 +15,7 @@
 #include "PauseNode.hpp"
 #include "TileMapParser.hpp"
 #include "PathNodes.hpp"
+#include "PathExtractor.hpp"
 
 #include <unordered_map>
 
@@ -353,15 +354,17 @@ void LevelScene::update(float dt) {
 
 void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
 
-    if(!m_supplement) {
-        m_supplement = std::make_unique<path::Supplement>();
-        auto doc = m_supplement->Load(m_id);
-        m_supplement->Parse(doc);
+    if(!m_pathes) {
+        m_pathes = std::make_unique<path::PathSet>();
+        auto doc = m_pathes->Load(m_id);
+        m_pathes->Parse(doc);
     }
     if(!m_parser) {
         m_parser = std::make_unique<TileMapParser>(map);
         m_parser->Parse();
     }
+
+    path::PathExtractor pathExtractor{ m_pathes.get(), map };
     
     std::unordered_map<size_t, cocos2d::Rect> influences;
     std::unordered_map<size_t, Enemies::Bot*> warriors;
@@ -406,7 +409,6 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                         const auto warrior { Enemies::Bot::create(form.m_id) };
                         warrior->setName(Enemies::Bot::NAME);
                         warrior->setPosition(form.m_botLeft);
-                        warrior->AttachNavigator(map->getMapSize(), map->getTileSize().width, m_supplement.get());
                         map->addChild(warrior, 9);
                         // save warrior pointer
                         warriors.emplace(form.m_id, warrior);
@@ -423,5 +425,11 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
     // attach influence to warriors
     for(auto& [id, warrior]: warriors) {
         warrior->AttachInfluenceArea(influences.at(id));
+        warrior->AttachNavigator(
+            std::make_unique<Navigator>(
+                warrior, 
+                pathExtractor.ExtractPathFor(warrior)
+            )
+        );
     } 
 }
