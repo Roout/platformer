@@ -67,6 +67,7 @@ list(APPEND GAME_SOURCE
      Classes/Unit.cpp
      Classes/Player.cpp
      Classes/Influence.cpp
+     Classes/PathExtractor.cpp
      Classes/Navigator.cpp
      Classes/Enemy.cpp
      Classes/PauseNode.cpp
@@ -94,6 +95,7 @@ list(APPEND GAME_HEADER
      Classes/Enemy.hpp
      Classes/Influence.hpp
      Classes/PathNodes.hpp
+     Classes/PathExtractor.hpp
      Classes/Navigator.hpp
      Classes/UnitMovement.hpp
      Classes/ResourceManagement.hpp
