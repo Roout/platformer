@@ -48,3 +48,25 @@ void Axe::OnAttack() {
     proj->SetContactTestBitmask(mask);
     map->addChild(proj);
 }
+
+
+void Bow::OnAttack() {
+    const auto runningScene { cocos2d::Director::getInstance()->getRunningScene() };
+    const auto level = runningScene->getChildByName("Level");
+    const auto map = level->getChildByName("Map");
+    
+    const auto proj = Projectile::create(m_projectile.size, m_velocity, this->GetDamage());
+    proj->setPosition(m_projectile.origin);
+    const auto mask {
+        Utils::CreateMask(
+            core::CategoryBits::HERO, 
+            core::CategoryBits::BARREL, 
+            core::CategoryBits::BOUNDARY, 
+            core::CategoryBits::PROJECTILE,
+            core::CategoryBits::PLATFORM
+        )
+    };
+    proj->SetContactTestBitmask(mask);
+    proj->SetLifetime(3.f);
+    map->addChild(proj);
+}

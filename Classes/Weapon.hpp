@@ -177,4 +177,11 @@ public:
     void OnAttack() override;
 };
 
+class Bow final : public Weapon {
+public:
+    using Weapon::Weapon;
+
+    void OnAttack() override;
+};
+
 #endif // WEAPON_SYSTEM_HPP
