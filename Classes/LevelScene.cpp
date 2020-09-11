@@ -1,17 +1,20 @@
 #include "LevelScene.hpp"
+
 #include "Unit.hpp"
+#include "Enemy.hpp"
+#include "Warrior.hpp"
+#include "Player.hpp"
+
+#include "Platform.hpp"
 #include "Barrel.hpp"
 #include "Border.hpp"
-#include "Platform.hpp"
-#include "UserInputHandler.hpp"
-#include "SmoothFollower.hpp"
+
 #include "PhysicsHelper.hpp"
+#include "UserInputHandler.hpp"
 #include "Utils.hpp"
 #include "Projectile.hpp"
 #include "Traps.hpp"
 #include "SizeDeducer.hpp"
-#include "Enemy.hpp"
-#include "Player.hpp"
 #include "PauseNode.hpp"
 #include "TileMapParser.hpp"
 #include "PathNodes.hpp"
@@ -367,7 +370,7 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
     path::PathExtractor pathExtractor{ m_pathes.get(), map };
     
     std::unordered_map<size_t, cocos2d::Rect> influences;
-    std::unordered_map<size_t, Enemies::Bot*> warriors;
+    std::unordered_map<size_t, Enemies::Warrior*> warriors;
     influences.reserve(100);
     warriors.reserve(100);
 
@@ -406,8 +409,8 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
             else if(form.m_type == core::CategoryName::ENEMY) {
                 switch(form.m_enemyClass) {
                     case core::EnemyClass::WARRIOR: {
-                        const auto warrior { Enemies::Bot::create(form.m_id) };
-                        warrior->setName(Enemies::Bot::NAME);
+                        const auto warrior { Enemies::Warrior::create(form.m_id) };
+                        warrior->setName(Enemies::Warrior::NAME);
                         warrior->setPosition(form.m_botLeft);
                         map->addChild(warrior, 9);
                         // save warrior pointer
@@ -425,11 +428,6 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
     // attach influence to warriors
     for(auto& [id, warrior]: warriors) {
         warrior->AttachInfluenceArea(influences.at(id));
-        warrior->AttachNavigator(
-            std::make_unique<Navigator>(
-                warrior, 
-                pathExtractor.ExtractPathFor(warrior)
-            )
-        );
+        warrior->AttachNavigator(pathExtractor.ExtractPathFor(warrior));
     } 
 }

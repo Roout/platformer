@@ -1,97 +1,69 @@
 #ifndef ENEMY_HPP
 #define ENEMY_HPP
 
-#include <unordered_map>
-
 #include "cocos2d.h"
 
 #include "Unit.hpp"
-#include "Navigator.hpp"
 #include "Influence.hpp"
 
 namespace Enemies {
 
-    /**
-     * States bots can possibly have depending on their type 
-     */
-     enum class State {
-        UNDEFINED,
-        
-        PATROL,
-        PURSUIT,
-        ATTACK,
-        DEATH,
+/**
+ * States bots can possibly have depending on their type 
+ */
+enum class State {
+    UNDEFINED,
+    
+    PATROL,
+    PURSUIT,
+    ATTACK,
+    DEATH,
 
-        COUNT
-    };
+    COUNT
+};
 
-    std::string GetStateName(State state);
+std::string GetStateName(State state);
 
-    class Bot final: public Unit {
-    public:
-        static constexpr char * const NAME = "Warrior";
+class Bot : public Unit {
+public:
 
-        static Bot* create(size_t id);
+    [[nodiscard]] bool init() override;
+    
+    inline size_t GetId() const noexcept;
 
-        [[nodiscard]] bool init() override;
-        
-        void update(float dt) override;
+    void AttachInfluenceArea(const cocos2d::Rect& area);
 
-        inline size_t GetId() const noexcept;
+    virtual void OnEnemyIntrusion() = 0;
 
-        void AttachNavigator(std::unique_ptr<Navigator> && navigator);
+    virtual void OnEnemyLeave() = 0;
 
-        void AttachInfluenceArea(const cocos2d::Rect& area);
+protected:
 
-        void Pursue(Unit * target) noexcept;
+    Bot(size_t id, const char* dragonBonesName);
+    
+    void UpdateDebugLabel() noexcept override;
 
-        void Patrol() noexcept;
+    virtual void TryAttack();
 
-        void OnEnemyIntrusion();
+    virtual bool NeedAttack() const noexcept;
 
-        void OnEnemyLeave();
+    /// Properties:
+protected:
 
-    private:
+    State m_currentState  { State::UNDEFINED };
 
-        Bot(size_t id);
+    State m_previousState { State::UNDEFINED };
 
-        
-        void UpdateState(const float dt) noexcept override;
+    bool m_detectEnemy { false };
 
-        void UpdatePosition(const float dt) noexcept override;
+private:
+    const size_t m_id { 0 };
+};
 
-        void UpdateAnimation() override;
-
-        void UpdateDebugLabel() noexcept override;
-
-
-        void AddPhysicsBody() override;
-
-        void AddAnimator() override;
-
-        void AddWeapon() override;
-
-
-        void TryAttack();
-
-        bool NeedAttack() const noexcept;
-
-    private:
-
-        std::unique_ptr<Navigator> m_navigator { nullptr };
-
-        State m_currentState  { State::UNDEFINED };
-
-        State m_previousState { State::UNDEFINED };
-
-        bool m_detectEnemy { false };
-
-        const size_t m_id { 0 };
-    };
-
-    inline size_t Bot::GetId() const noexcept {
-        return m_id;
-    }
-
+inline size_t Bot::GetId() const noexcept {
+    return m_id;
 }
+
+} // namespace Enemies;
+
 #endif // ENEMY_HPP

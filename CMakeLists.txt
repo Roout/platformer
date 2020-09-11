@@ -70,6 +70,7 @@ list(APPEND GAME_SOURCE
      Classes/PathExtractor.cpp
      Classes/Navigator.cpp
      Classes/Enemy.cpp
+     Classes/Warrior.cpp
      Classes/PauseNode.cpp
      Classes/DragonBonesAnimator.cpp
      Classes/DeathScreen.cpp
@@ -93,6 +94,7 @@ list(APPEND GAME_HEADER
      Classes/DeathScreen.hpp
      Classes/Player.hpp
      Classes/Enemy.hpp
+     Classes/Warrior.hpp
      Classes/Influence.hpp
      Classes/PathNodes.hpp
      Classes/PathExtractor.hpp
