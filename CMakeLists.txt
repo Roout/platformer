@@ -71,6 +71,7 @@ list(APPEND GAME_SOURCE
      Classes/Navigator.cpp
      Classes/Bot.cpp
      Classes/Warrior.cpp
+     Classes/Archer.cpp
      Classes/PauseNode.cpp
      Classes/DragonBonesAnimator.cpp
      Classes/DeathScreen.cpp
@@ -95,6 +96,7 @@ list(APPEND GAME_HEADER
      Classes/Player.hpp
      Classes/Bot.hpp
      Classes/Warrior.hpp
+     Classes/Archer.hpp
      Classes/Influence.hpp
      Classes/PathNodes.hpp
      Classes/PathExtractor.hpp
