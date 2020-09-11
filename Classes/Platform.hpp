@@ -32,15 +32,15 @@ private:
         body->setCollisionBitmask(
             Utils::CreateMask(
                 core::CategoryBits::HERO,
-                core::CategoryBits::ENEMY, 
-                core::CategoryBits::PROJECTILE
+                core::CategoryBits::ENEMY
             )
         );
         body->setContactTestBitmask(
             Utils::CreateMask(
                 core::CategoryBits::GROUND_SENSOR,
                 core::CategoryBits::HERO,
-                core::CategoryBits::ENEMY
+                core::CategoryBits::ENEMY,
+                core::CategoryBits::PROJECTILE
             )
         );
         this->addComponent(body);
