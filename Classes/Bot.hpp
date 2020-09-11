@@ -16,6 +16,7 @@ enum class State {
     
     PATROL,
     PURSUIT,
+    IDLE,
     ATTACK,
     DEATH,
 
