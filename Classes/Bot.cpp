@@ -1,4 +1,4 @@
-#include "Enemy.hpp"
+#include "Bot.hpp"
 #include "PhysicsHelper.hpp"
 #include "SizeDeducer.hpp"
 #include "Player.hpp"

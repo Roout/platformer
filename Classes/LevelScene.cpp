@@ -1,7 +1,7 @@
 #include "LevelScene.hpp"
 
 #include "Unit.hpp"
-#include "Enemy.hpp"
+#include "Bot.hpp"
 #include "Warrior.hpp"
 #include "Player.hpp"
 

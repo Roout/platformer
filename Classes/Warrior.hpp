@@ -4,7 +4,7 @@
 #include <memory>
 
 #include "Navigator.hpp"
-#include "Enemy.hpp"
+#include "Bot.hpp"
 
 namespace Enemies {
 

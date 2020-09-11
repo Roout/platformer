@@ -1,7 +1,7 @@
 #include "Navigator.hpp"
 #include "Unit.hpp"
 #include "PhysicsHelper.hpp"
-#include "Enemy.hpp"
+#include "Bot.hpp"
 
 #include <utility>
 #include <tuple>

@@ -5,7 +5,7 @@
 #include <cassert>
 #include <limits>
 
-#include "Enemy.hpp"
+#include "Bot.hpp"
 
 using namespace path;
 

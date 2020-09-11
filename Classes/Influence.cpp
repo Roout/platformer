@@ -1,5 +1,5 @@
 #include "Influence.hpp"
-#include "Enemy.hpp"
+#include "Bot.hpp"
 #include "Player.hpp"
 
 Influence* Influence::create(
