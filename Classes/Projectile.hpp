@@ -39,6 +39,10 @@ public:
         return m_damage;
     }
 
+    void SetLifetime(float time) noexcept {
+        m_lifeTime = time;
+    }
+
     void SetContactTestBitmask(size_t mask) noexcept;
 
 private:
