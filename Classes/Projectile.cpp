@@ -47,8 +47,8 @@ Projectile::Projectile (
 {    
     const auto body = cocos2d::PhysicsBody::createBox(size);
     body->setVelocity(velocity);
-    body->setDynamic(false);
-    body->setGravityEnable(true);
+    body->setDynamic(true);
+    body->setGravityEnable(false);
     body->setRotationEnable(false);
     body->setCategoryBitmask(
         Utils::CreateMask(core::CategoryBits::PROJECTILE)
