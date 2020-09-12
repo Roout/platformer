@@ -64,7 +64,7 @@ void Archer::UpdateState(const float dt) noexcept {
     if( m_health <= 0 ) {
         m_currentState = State::DEATH;
     }
-    else if( m_weapon->IsPreparing() || m_detectEnemy ) {
+    else if( m_weapon->IsPreparing() ) {
         m_currentState = State::PREPARE_ATTACK;
     }
     else if( m_weapon->IsAttacking() ) {
@@ -90,8 +90,12 @@ void Archer::UpdateAnimation() {
         // remove from screen
         this->runAction(cocos2d::RemoveSelf::create());
     } 
-    else if(m_currentState != m_previousState && m_currentState != State::ATTACK) {
-        auto repeatTimes { m_currentState == State::PREPARE_ATTACK? 1 : dragonBones::Animator::INFINITY_LOOP };
+    else if(m_currentState != m_previousState) {
+        auto isOneTimeAttack { 
+            m_currentState == State::PREPARE_ATTACK || 
+            m_currentState == State::ATTACK 
+        };
+        auto repeatTimes { isOneTimeAttack ? 1 : dragonBones::Animator::INFINITY_LOOP };
         m_animator->Play(Utils::EnumCast(m_currentState), repeatTimes);
     }
 }
@@ -138,7 +142,7 @@ void Archer::AddAnimator() {
     Unit::AddAnimator();
     m_animator->InitializeAnimations({
         std::make_pair(Utils::EnumCast(State::PREPARE_ATTACK),  GetStateName(State::ATTACK)), /// TODO: mismatch, update animation!
-        std::make_pair(Utils::EnumCast(State::ATTACK),          GetStateName(State::ATTACK)),
+        std::make_pair(Utils::EnumCast(State::ATTACK),          GetStateName(State::IDLE)), /// TODO: mismatch, update animation!
         std::make_pair(Utils::EnumCast(State::IDLE),            GetStateName(State::IDLE)),
         std::make_pair(Utils::EnumCast(State::DEATH),           GetStateName(State::DEATH))
     });
