@@ -45,6 +45,8 @@ public:
 
     void SetContactTestBitmask(size_t mask) noexcept;
 
+    void AddImage(const char* imagePath);
+
 private:
     
     Projectile(

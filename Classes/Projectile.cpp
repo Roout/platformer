@@ -63,3 +63,15 @@ void Projectile::SetContactTestBitmask(size_t mask) noexcept {
         body->setContactTestBitmask(mask);
     }
 }
+
+void Projectile::AddImage(const char* imagePath) {
+    auto textureCache = cocos2d::Director::getInstance()->getTextureCache();
+    auto texture = textureCache->getTextureForKey(imagePath);
+    if (texture == nullptr) {
+        texture = textureCache->addImage(imagePath);
+    }
+    auto sprite = cocos2d::Sprite::createWithTexture(texture);
+    sprite->setScale(0.4f);
+    sprite->setAnchorPoint({0.0f, 0.0f});
+    this->addChild(sprite, 10); /// TODO: organize Z-order!
+}
