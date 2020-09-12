@@ -7,7 +7,7 @@
 class UserInputHandler;
 class TileMapParser;
 namespace path {
-    struct Supplement;
+    struct PathSet;
 }
 
 class LevelScene final : public cocos2d::Scene {
@@ -42,7 +42,7 @@ private:
 
     void InitTileMapObjects(cocos2d::FastTMXTiledMap * map);
 
-    std::unique_ptr<path::Supplement> m_supplement { nullptr };
+    std::unique_ptr<path::PathSet> m_pathes { nullptr };
 
     std::unique_ptr<TileMapParser> m_parser { nullptr };
 

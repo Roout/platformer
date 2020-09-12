@@ -1,20 +1,25 @@
 #include "LevelScene.hpp"
+
 #include "Unit.hpp"
+#include "Bot.hpp"
+#include "Warrior.hpp"
+#include "Archer.hpp"
+#include "Player.hpp"
+
+#include "Platform.hpp"
 #include "Barrel.hpp"
 #include "Border.hpp"
-#include "Platform.hpp"
-#include "UserInputHandler.hpp"
-#include "SmoothFollower.hpp"
+
 #include "PhysicsHelper.hpp"
+#include "UserInputHandler.hpp"
 #include "Utils.hpp"
 #include "Projectile.hpp"
 #include "Traps.hpp"
 #include "SizeDeducer.hpp"
-#include "Enemy.hpp"
-#include "Player.hpp"
 #include "PauseNode.hpp"
 #include "TileMapParser.hpp"
 #include "PathNodes.hpp"
+#include "PathExtractor.hpp"
 
 #include <unordered_map>
 
@@ -98,7 +103,14 @@ namespace helper {
             bodyMasks[BODY_A] == Utils::CreateMask(core::CategoryBits::PLATFORM),
             bodyMasks[BODY_B] == Utils::CreateMask(core::CategoryBits::PLATFORM)
         };
-        if( isPlatform[BODY_A] || isPlatform[BODY_B] ) {
+
+        const auto unitMask { Utils::CreateMask(core::CategoryBits::HERO, core::CategoryBits::ENEMY) };
+        const bool isUnit[2] = {
+            (bodyMasks[BODY_A] & unitMask) > 0,
+            (bodyMasks[BODY_B] & unitMask) > 0
+        };
+
+        if( (isPlatform[BODY_A] || isPlatform[BODY_B]) && (isUnit[BODY_A] || isUnit[BODY_B]) ) {
             const auto platformIndex { isPlatform[BODY_A]? BODY_A: BODY_B };
             const auto moveUpwards { helper::IsGreater(bodies[platformIndex ^ 1]->getVelocity().y, 0.f, 0.000001f) };
 
@@ -135,11 +147,6 @@ namespace helper {
             bodyMasks[BODY_B] == Utils::CreateMask(core::CategoryBits::PROJECTILE)
         };
 
-        const auto unitMask { Utils::CreateMask(core::CategoryBits::HERO, core::CategoryBits::ENEMY) };
-        const bool isUnit[2] = {
-            (bodyMasks[BODY_A] & unitMask) > 0,
-            (bodyMasks[BODY_B] & unitMask) > 0
-        };
         if( isProjectile[BODY_A] || isProjectile[BODY_B] ) {
             const auto projectileIndex { isProjectile[BODY_A]? BODY_A: BODY_B };
 
@@ -353,20 +360,24 @@ void LevelScene::update(float dt) {
 
 void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
 
-    if(!m_supplement) {
-        m_supplement = std::make_unique<path::Supplement>();
-        auto doc = m_supplement->Load(m_id);
-        m_supplement->Parse(doc);
+    if(!m_pathes) {
+        m_pathes = std::make_unique<path::PathSet>();
+        auto doc = m_pathes->Load(m_id);
+        m_pathes->Parse(doc);
     }
     if(!m_parser) {
         m_parser = std::make_unique<TileMapParser>(map);
         m_parser->Parse();
     }
+
+    path::PathExtractor pathExtractor{ m_pathes.get(), map };
     
     std::unordered_map<size_t, cocos2d::Rect> influences;
     std::unordered_map<size_t, Enemies::Warrior*> warriors;
+    std::unordered_map<size_t, Enemies::Archer*> archers;
     influences.reserve(100);
     warriors.reserve(100);
+    archers.reserve(100);
 
     for(size_t i = 0; i < Utils::EnumSize<core::CategoryName>(); i++) {
         const auto category { static_cast<core::CategoryName>(i) };
@@ -406,10 +417,17 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                         const auto warrior { Enemies::Warrior::create(form.m_id) };
                         warrior->setName(Enemies::Warrior::NAME);
                         warrior->setPosition(form.m_botLeft);
-                        warrior->AttachNavigator(map->getMapSize(), map->getTileSize().width, m_supplement.get());
                         map->addChild(warrior, 9);
                         // save warrior pointer
                         warriors.emplace(form.m_id, warrior);
+                    } break;
+                     case core::EnemyClass::ARCHER: {
+                        const auto archer { Enemies::Archer::create(form.m_id) };
+                        archer->setName(Enemies::Archer::NAME);
+                        archer->setPosition(form.m_botLeft);
+                        map->addChild(archer, 9);
+                        // save warrior pointer
+                        archers.emplace(form.m_id, archer);
                     } break;
                     default: break;
                 }
@@ -423,5 +441,9 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
     // attach influence to warriors
     for(auto& [id, warrior]: warriors) {
         warrior->AttachInfluenceArea(influences.at(id));
+        warrior->AttachNavigator(pathExtractor.ExtractPathFor(warrior));
+    } 
+    for(auto& [id, archer]: archers) {
+        archer->AttachInfluenceArea(influences.at(id));
     } 
 }

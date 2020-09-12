@@ -11,6 +11,12 @@ public:
         const float damage
     );
 
+    static Projectile * create(
+        const char * imagePath,
+        const cocos2d::Vec2& velocity,
+        const float damage
+    );
+
     bool init() override;
 
     /**
@@ -39,12 +45,24 @@ public:
         return m_damage;
     }
 
+    void SetLifetime(float time) noexcept {
+        m_lifeTime = time;
+    }
+
     void SetContactTestBitmask(size_t mask) noexcept;
+
+    cocos2d::Sprite* AddImage(const char* imagePath);
 
 private:
     
     Projectile(
         const cocos2d::Size& size,
+        const cocos2d::Vec2& velocity,
+        const float damage
+    );
+
+    Projectile(
+        const char* imagePath,
         const cocos2d::Vec2& velocity,
         const float damage
     );

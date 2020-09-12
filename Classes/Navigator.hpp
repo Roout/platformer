@@ -7,18 +7,18 @@
 #include "PathNodes.hpp"
 
 class Unit;
+namespace Enemies {
+    class Bot;
+}
 
 class Navigator {
 public:
     enum class Mode {
-        patrol,
-        pursue
+        PATROL,
+        PURSUIT
     };
 
-    // mapSize in tiles
-    Navigator(const cocos2d::Size& mapSize, float tileSize);
-
-    void Init(Unit* const unit, path::Supplement * const);
+    Navigator(Enemies::Bot * owner, path::Path&& path);
 
     void Navigate(const float dt);
 
@@ -30,7 +30,7 @@ public:
 private:
 
     // @p is tile's coordinates 
-    size_t FindClosestWaypoint(const cocos2d::Vec2& p) const;
+    size_t FindClosestPoint(const cocos2d::Vec2& p) const;
 
     // get your destination if possible
     // assume that the point always exist
@@ -38,22 +38,17 @@ private:
 
     bool ReachedDestination() const noexcept;
     
-    cocos2d::Vec2 AsInvertedTilemapCoords(int x, int y) const noexcept;
-
 private:
     /// external data
-    Unit * m_unit { nullptr };
+    Enemies::Bot * m_owner { nullptr };
+    const path::Path m_path;
     Unit * m_target { nullptr }; // target of the pursuit if exist
-    path::Supplement * m_supplement { nullptr };
-
-    size_t m_mapHeight { 0 }; // number of tiles
-    float m_tileSize { 0.f };
 
     /// internal data
     size_t m_start;
     size_t m_destination;
-    path::Action m_action { path::Action::move };
-    Mode m_mode { Mode::patrol };
+    path::Action m_action { path::Action::MOVE };
+    Mode m_mode { Mode::PATROL };
 
     static constexpr size_t failure { std::numeric_limits<size_t>::max() };
 };

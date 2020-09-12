@@ -10,7 +10,7 @@
 #include <string>
 #include <cstring>
 
-rapidjson::Document path::Supplement::Load(size_t id) {
+rapidjson::Document path::PathSet::Load(size_t id) {
     rapidjson::Document doc;
 
     const auto filepath { cocos2d::StringUtils::format(pathTemplate, id) };
@@ -24,27 +24,31 @@ rapidjson::Document path::Supplement::Load(size_t id) {
         if(doc.HasParseError()) {
             /// TODO: fail to parse json
         }
-    } else {
+    } 
+    else {
         ///TODO: fail to find file
     }
     return doc;
 }
 
-void path::Supplement::Parse(rapidjson::Document& doc) {
+void path::PathSet::Parse(rapidjson::Document& doc) {
     waypoints.reserve(100);
     const auto& points = doc["waypoints"].GetArray(); 
     for(const auto& p: points) {
-        waypoints.emplace_back(p[0].GetInt(), p[1].GetInt());
+        waypoints.emplace_back(
+            static_cast<float>(p[0].GetInt()), 
+            static_cast<float>(p[1].GetInt())
+        );
     }
 
-    adj.resize(waypoints.size());
+    adjacency.resize(waypoints.size());
     size_t vertexIndex { 0 };
     const auto& trees = doc["trees"].GetArray();
     for(const auto& tree: trees) {
         const auto neighbours { tree.GetArray() };
         for(const auto& neighbour: neighbours) {
-            const auto action { !strcmp(neighbour["action"].GetString(), "move")? Action::move: Action::jump };
-            adj[vertexIndex].emplace_back( neighbour["vert"].GetInt(), action );
+            const auto action { !strcmp(neighbour["action"].GetString(), "move")? Action::MOVE: Action::JUMP };
+            adjacency[vertexIndex].emplace_back( neighbour["vert"].GetInt(), action );
         }
         vertexIndex++;
     }
