@@ -31,12 +31,14 @@ private:
             Utils::CreateMask(
                 core::CategoryBits::ENEMY, 
                 core::CategoryBits::HERO, 
-                core::CategoryBits::PROJECTILE, 
                 core::CategoryBits::PLATFORM
             )
         );
         body->setContactTestBitmask(
-            Utils::CreateMask(core::CategoryBits::GROUND_SENSOR)
+            Utils::CreateMask(
+                core::CategoryBits::GROUND_SENSOR, 
+                core::CategoryBits::PROJECTILE
+            )
         );
 
         this->addComponent(body);
