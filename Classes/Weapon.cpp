@@ -68,5 +68,6 @@ void Bow::OnAttack() {
     };
     proj->SetContactTestBitmask(mask);
     proj->SetLifetime(3.f);
+    proj->AddImage("archer/library/arrow.png");
     map->addChild(proj);
 }
