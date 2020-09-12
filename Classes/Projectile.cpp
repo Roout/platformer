@@ -84,7 +84,7 @@ Projectile::Projectile(
     this->AddImage(imagePath);
 
     const auto image = this->getChildByName("arrow");
-    const auto size { image->getContentSize() };
+    const auto size { this->getContentSize() };
     const auto body = cocos2d::PhysicsBody::createBox(size);
     body->setVelocity(velocity);
     body->setDynamic(true);
@@ -114,8 +114,9 @@ void Projectile::AddImage(const char* imagePath) {
 
     const auto scaleFactor { 0.4f };
     sprite->setScale(scaleFactor);
-    sprite->setContentSize(sprite->getContentSize() * scaleFactor);
     sprite->setAnchorPoint({0.0f, 0.0f});
     sprite->setName("arrow");
+    
+    this->setContentSize(sprite->getContentSize() * scaleFactor);
     this->addChild(sprite, 10); /// TODO: organize Z-order!
 }
