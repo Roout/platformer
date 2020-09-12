@@ -55,7 +55,7 @@ void Bow::OnAttack() {
     const auto level = runningScene->getChildByName("Level");
     const auto map = level->getChildByName("Map");
     
-    const auto proj = Projectile::create(m_projectile.size, m_velocity, this->GetDamage());
+    const auto proj = Projectile::create("archer/library/arrow.png", m_velocity, this->GetDamage());
     proj->setPosition(m_projectile.origin);
     const auto mask {
         Utils::CreateMask(
@@ -68,6 +68,5 @@ void Bow::OnAttack() {
     };
     proj->SetContactTestBitmask(mask);
     proj->SetLifetime(3.f);
-    proj->AddImage("archer/library/arrow.png");
     map->addChild(proj);
 }
