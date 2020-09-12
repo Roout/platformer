@@ -81,10 +81,12 @@ Projectile::Projectile(
     m_lifeTime { 0.15f },
     m_damage { damage }
 {   
-    this->AddImage(imagePath);
-
-    const auto image = this->getChildByName("arrow");
+    const auto image = this->AddImage(imagePath);
     const auto size { this->getContentSize() };
+    if(velocity.x > 0.f) {
+        image->setFlippedX(true);
+    }
+
     const auto body = cocos2d::PhysicsBody::createBox(size);
     body->setVelocity(velocity);
     body->setDynamic(true);
@@ -104,7 +106,7 @@ void Projectile::SetContactTestBitmask(size_t mask) noexcept {
     }
 }
 
-void Projectile::AddImage(const char* imagePath) {
+cocos2d::Sprite* Projectile::AddImage(const char* imagePath) {
     auto textureCache = cocos2d::Director::getInstance()->getTextureCache();
     auto texture = textureCache->getTextureForKey(imagePath);
     if (texture == nullptr) {
@@ -119,4 +121,6 @@ void Projectile::AddImage(const char* imagePath) {
     
     this->setContentSize(sprite->getContentSize() * scaleFactor);
     this->addChild(sprite, 10); /// TODO: organize Z-order!
+    
+    return sprite;
 }

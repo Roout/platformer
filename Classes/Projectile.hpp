@@ -51,7 +51,7 @@ public:
 
     void SetContactTestBitmask(size_t mask) noexcept;
 
-    void AddImage(const char* imagePath);
+    cocos2d::Sprite* AddImage(const char* imagePath);
 
 private:
     

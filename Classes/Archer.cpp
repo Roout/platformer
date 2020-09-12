@@ -181,7 +181,7 @@ void Archer::Attack() {
         }
         position.y += this->getContentSize().height / 2.f;
 
-        const cocos2d::Rect attackedArea {position, arrowSize };
+        const cocos2d::Rect attackedArea {position, arrowSize};
         m_weapon->LaunchAttack(attackedArea, velocity);
     }
 }
