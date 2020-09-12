@@ -11,6 +11,12 @@ public:
         const float damage
     );
 
+    static Projectile * create(
+        const char * imagePath,
+        const cocos2d::Vec2& velocity,
+        const float damage
+    );
+
     bool init() override;
 
     /**
@@ -51,6 +57,12 @@ private:
     
     Projectile(
         const cocos2d::Size& size,
+        const cocos2d::Vec2& velocity,
+        const float damage
+    );
+
+    Projectile(
+        const char* imagePath,
         const cocos2d::Vec2& velocity,
         const float damage
     );
