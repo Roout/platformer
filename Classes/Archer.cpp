@@ -64,7 +64,10 @@ void Archer::UpdateState(const float dt) noexcept {
     if( m_health <= 0 ) {
         m_currentState = State::DEATH;
     }
-    else if( m_weapon->IsAttacking() || m_detectEnemy ) {
+    else if( m_weapon->IsPreparing() || m_detectEnemy ) {
+        m_currentState = State::PREPARE_ATTACK;
+    }
+    else if( m_weapon->IsAttacking() ) {
         m_currentState = State::ATTACK;
     }
     else {
@@ -87,8 +90,8 @@ void Archer::UpdateAnimation() {
         // remove from screen
         this->runAction(cocos2d::RemoveSelf::create());
     } 
-    else if(m_currentState != m_previousState) {
-        auto repeatTimes { m_currentState == State::ATTACK? 1 : dragonBones::Animator::INFINITY_LOOP };
+    else if(m_currentState != m_previousState && m_currentState != State::ATTACK) {
+        auto repeatTimes { m_currentState == State::PREPARE_ATTACK? 1 : dragonBones::Animator::INFINITY_LOOP };
         m_animator->Play(Utils::EnumCast(m_currentState), repeatTimes);
     }
 }
@@ -134,19 +137,20 @@ void Archer::AddPhysicsBody() {
 void Archer::AddAnimator() {
     Unit::AddAnimator();
     m_animator->InitializeAnimations({
-        std::make_pair(Utils::EnumCast(State::ATTACK),  GetStateName(State::ATTACK)),
-        std::make_pair(Utils::EnumCast(State::IDLE),    GetStateName(State::IDLE)), /// TODO: change
-        std::make_pair(Utils::EnumCast(State::DEATH),   GetStateName(State::DEATH))
+        std::make_pair(Utils::EnumCast(State::PREPARE_ATTACK),  GetStateName(State::ATTACK)), /// TODO: mismatch, update animation!
+        std::make_pair(Utils::EnumCast(State::ATTACK),          GetStateName(State::ATTACK)),
+        std::make_pair(Utils::EnumCast(State::IDLE),            GetStateName(State::IDLE)),
+        std::make_pair(Utils::EnumCast(State::DEATH),           GetStateName(State::DEATH))
     });
 }
 
 void Archer::AddWeapon() {
     const auto damage { 5.f };
-    const auto range { 40.f };
+    const auto range { 50.f };
     // TODO: Here a strange mess of durations needed to be fixed
     // The projectile need to be created only when the attack-animation ends
-    const auto preparationTime { 0.f };
-    const auto attackDuration { m_animator->GetDuration(Utils::EnumCast(State::ATTACK)) };
+    const auto preparationTime { m_animator->GetDuration(Utils::EnumCast(State::ATTACK)) }; /// TODO: update animation!
+    const auto attackDuration { 0.1f };
     const auto reloadTime { 0.5f };
     m_weapon = std::make_unique<Bow>(
         damage, 

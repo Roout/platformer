@@ -14,11 +14,12 @@ namespace Enemies {
 
 std::string  GetStateName(State state) {
     static std::unordered_map<State, std::string> mapped {
-        { State::PATROL,    "walk" },
-        { State::ATTACK,    "attack" },
-        { State::PURSUIT,   "walk" },
-        { State::IDLE,      "idle" },
-        { State::DEATH,     "death" }
+        { State::PATROL,            "walk" },
+        { State::PURSUIT,           "walk" },
+        { State::IDLE,              "idle" },
+        { State::PREPARE_ATTACK,    "prepare_attack" },
+        { State::ATTACK,            "attack" },
+        { State::DEATH,             "death" }
     };
     auto it = mapped.find(state);
     return (it != mapped.cend()? it->second: "");        
