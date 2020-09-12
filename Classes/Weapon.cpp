@@ -68,5 +68,5 @@ void Bow::OnAttack() {
     };
     proj->SetContactTestBitmask(mask);
     proj->SetLifetime(3.f);
-    map->addChild(proj);
+    map->addChild(proj, 100); /// TODO: clean up this mess with Z-order!
 }
