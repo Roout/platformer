@@ -61,7 +61,7 @@ std::string  Player::GetStateName(Player::State state) {
         { Player::State::ATTACK, "attack" },
         { Player::State::JUMP, "jump" },
         { Player::State::WALK, "walk" },
-        { Player::State::DEATH, "death" }
+        { Player::State::DEAD, "dead" }
     };
     auto it = mapped.find(state);
     return (it != mapped.cend()? it->second: "");        
@@ -71,7 +71,7 @@ void Player::AddAnimator() {
     Unit::AddAnimator();
     m_animator->InitializeAnimations({
         std::make_pair(Utils::EnumCast(State::ATTACK), "attack"),
-        std::make_pair(Utils::EnumCast(State::DEATH), "death"),
+        std::make_pair(Utils::EnumCast(State::DEAD), "dead"),
         std::make_pair(Utils::EnumCast(State::IDLE), "idle"),
         std::make_pair(Utils::EnumCast(State::JUMP), "jump"),
         std::make_pair(Utils::EnumCast(State::WALK), "walk")
@@ -194,7 +194,7 @@ void Player::UpdateState(const float dt) noexcept {
     static constexpr float EPS { 0.00001f };
 
     if( m_health <= 0 ) {
-        m_currentState = State::DEATH;
+        m_currentState = State::DEAD;
     }
     else if( m_weapon->IsAttacking() ) {
         m_currentState = State::ATTACK;

@@ -80,7 +80,7 @@ void Warrior::UpdateState(const float dt) noexcept {
     m_previousState = m_currentState;
 
     if( m_health <= 0 ) {
-        m_currentState = State::DEATH;
+        m_currentState = State::DEAD;
     }
     else if( m_weapon->IsAttacking() ) {
         m_currentState = State::ATTACK;
@@ -101,23 +101,21 @@ void Warrior::UpdatePosition(const float dt) noexcept {
 }
 
 void Warrior::UpdateAnimation() {
-    if( this->IsDead() ) {
-        // emit particles
-        const auto emitter = cocos2d::ParticleSystemQuad::create("particle_texture.plist");
-        emitter->setAutoRemoveOnFinish(true);
-        /// TODO: adjust for the multiresolution
-        emitter->setScale(0.4f);
-        emitter->setPositionType(cocos2d::ParticleSystem::PositionType::RELATIVE);
-        emitter->setPosition(this->getPosition());
-        this->getParent()->addChild(emitter, 9);
-        // remove physics body
-        this->removeComponent(this->getPhysicsBody());
-        // remove from screen
-        this->runAction(cocos2d::RemoveSelf::create());
-    } 
-    else if(m_currentState != m_previousState) {
-        auto repeatTimes { m_currentState == State::ATTACK? 1 : dragonBones::Animator::INFINITY_LOOP };
-        m_animator->Play(Utils::EnumCast(m_currentState), repeatTimes);
+    if(m_currentState != m_previousState) {
+        auto isOneTimeAttack { 
+            m_currentState == State::ATTACK || 
+            m_currentState == State::DEAD
+        };
+        auto repeatTimes { isOneTimeAttack ? 1 : dragonBones::Animator::INFINITY_LOOP };
+        auto& animator = m_animator->Play(Utils::EnumCast(m_currentState), repeatTimes);
+        if(this->IsDead()) {
+            this->removeComponent(this->getPhysicsBody());
+            // this->getChildByName("state")->removeFromParent();
+            this->getChildByName("health")->removeFromParent();
+            animator.EndWith([this](){
+                this->runAction(cocos2d::RemoveSelf::create(true));
+            });
+        }
     }
 }
 
@@ -165,7 +163,7 @@ void Warrior::AddAnimator() {
         std::make_pair(Utils::EnumCast(State::ATTACK),  GetStateName(State::ATTACK)),
         std::make_pair(Utils::EnumCast(State::PURSUIT), GetStateName(State::PURSUIT)),
         std::make_pair(Utils::EnumCast(State::PATROL),  GetStateName(State::PATROL)),
-        std::make_pair(Utils::EnumCast(State::DEATH),   GetStateName(State::DEATH))
+        std::make_pair(Utils::EnumCast(State::DEAD),   GetStateName(State::DEAD))
     });
 }
 

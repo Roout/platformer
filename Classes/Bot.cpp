@@ -19,7 +19,7 @@ std::string  GetStateName(State state) {
         { State::IDLE,              "idle" },
         { State::PREPARE_ATTACK,    "prepare_attack" },
         { State::ATTACK,            "attack" },
-        { State::DEATH,             "death" }
+        { State::DEAD,              "dead" }
     };
     auto it = mapped.find(state);
     return (it != mapped.cend()? it->second: "");        

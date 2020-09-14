@@ -27,7 +27,7 @@ private:
         WALK,
         JUMP,
         ATTACK,
-        DEATH,
+        DEAD,
         COUNT
     };
 

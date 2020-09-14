@@ -19,7 +19,7 @@ enum class State {
     IDLE,
     PREPARE_ATTACK,
     ATTACK,
-    DEATH,
+    DEAD,
 
     COUNT
 };

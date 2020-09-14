@@ -29,6 +29,7 @@ bool Unit::init() {
     /// TODO: move somewhere
     static constexpr float healthBarShift { 15.f };
     const auto bar = HealthBar::create(this);
+    bar->setName("health");
     bar->setPosition(-this->getContentSize().width / 2.f, this->getContentSize().height + healthBarShift);
     this->addChild(bar);
 
