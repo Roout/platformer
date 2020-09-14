@@ -1,6 +1,7 @@
 #include "Influence.hpp"
 #include "Bot.hpp"
 #include "Player.hpp"
+#include "Core.hpp"
 
 Influence* Influence::create(
     Enemies::Bot* bot, 
@@ -38,7 +39,7 @@ void Influence::OnLeave() {
 
 void Influence::update(float dt) {
     if( m_bot && !m_bot->IsDead() ) {
-        const auto target = m_bot->getParent()->getChildByName(Player::NAME);
+        const auto target = m_bot->getParent()->getChildByName(core::EntityNames::PLAYER);
         if( target ) { // exist, is alive and kicking
             const auto height { target->getContentSize().height / 2.f };
             const auto point { 

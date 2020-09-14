@@ -8,9 +8,8 @@
 
 namespace Enemies {
 
-class Warrior final : public Bot {
+class Warrior : public Bot {
 public:
-    static constexpr char * const NAME = "warrior";
 
     static Warrior* create(size_t id);
 

@@ -333,7 +333,7 @@ void LevelScene::Restart() {
     this->InitTileMapObjects(tileMap);
    
     // - reset position
-    const auto player { tileMap->getChildByName(Player::NAME) };
+    const auto player { tileMap->getChildByName(core::EntityNames::PLAYER) };
 
     const auto visibleSize = cocos2d::Director::getInstance()->getVisibleSize();
 	const auto origin = cocos2d::Director::getInstance()->getVisibleOrigin();
@@ -385,7 +385,7 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
         for(const auto& form: parsedForms) {
             if ( form.m_type == core::CategoryName::PLAYER ) {
                 const auto hero { Player::create() };
-                hero->setName(Player::NAME);
+                hero->setName(core::EntityNames::PLAYER);
                 hero->setAnchorPoint(cocos2d::Vec2::ANCHOR_BOTTOM_LEFT);
                 hero->setPosition(form.m_botLeft);
                 map->addChild(hero, 10);
@@ -415,7 +415,7 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                 switch(form.m_enemyClass) {
                     case core::EnemyClass::WARRIOR: {
                         const auto warrior { Enemies::Warrior::create(form.m_id) };
-                        warrior->setName(Enemies::Warrior::NAME);
+                        warrior->setName(core::EntityNames::WARRIOR);
                         warrior->setPosition(form.m_botLeft);
                         map->addChild(warrior, 9);
                         // save warrior pointer
@@ -423,7 +423,7 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                     } break;
                      case core::EnemyClass::ARCHER: {
                         const auto archer { Enemies::Archer::create(form.m_id) };
-                        archer->setName(Enemies::Archer::NAME);
+                        archer->setName(core::EntityNames::ARCHER);
                         archer->setPosition(form.m_botLeft);
                         map->addChild(archer, 9);
                         // save warrior pointer

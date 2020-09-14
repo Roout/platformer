@@ -66,7 +66,7 @@ void Warrior::Patrol() noexcept {
 /// Bot interface
 void Warrior::OnEnemyIntrusion() {
     m_detectEnemy = true;
-    auto target = dynamic_cast<Unit*>(this->getParent()->getChildByName(Player::NAME));
+    auto target = dynamic_cast<Unit*>(this->getParent()->getChildByName(core::EntityNames::PLAYER));
     this->Pursue(target);
 }
 

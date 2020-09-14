@@ -5,7 +5,7 @@
 
 class DeathScreen : public cocos2d::Node {
 public:
-    static constexpr char* const NAME { "DEATH_SCREEN" };
+    static inline const char* const NAME { "DEATH_SCREEN" };
 
     static DeathScreen* create();
 

@@ -4,6 +4,7 @@
 #include "Player.hpp"
 #include "Weapon.hpp"
 #include "DragonBonesAnimator.hpp"
+#include "Core.hpp"
 
 #include <memory>
 #include <limits>
@@ -46,7 +47,7 @@ bool Bot::NeedAttack() const noexcept {
         m_weapon->IsReady()
     };
     auto enemyIsClose = [this]() { 
-        const auto target = dynamic_cast<Unit*>(this->getParent()->getChildByName(Player::NAME));
+        const auto target = dynamic_cast<Unit*>(this->getParent()->getChildByName(core::EntityNames::PLAYER));
         // use some simple algorithm to determine whether ф player is close enough to the target
         // to perform an attack
         if( target ) {
@@ -69,7 +70,7 @@ bool Bot::NeedAttack() const noexcept {
 void Bot::TryAttack() {
     if( this->NeedAttack() ) { // attack if possible
         auto lookAtEnemy { false };
-        const auto target = this->getParent()->getChildByName(Player::NAME);
+        const auto target = this->getParent()->getChildByName(core::EntityNames::PLAYER);
         if( target->getPosition().x < this->getPosition().x && this->IsLookingLeft() ) {
             lookAtEnemy = true;
         } 

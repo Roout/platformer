@@ -35,6 +35,13 @@ namespace core {
         COUNT
     };
 
+    namespace EntityNames {
+        const char* const WARRIOR   = "warrior";
+        const char* const ARCHER    = "archer";
+        const char* const SPEARMAN  = "spear-man";
+        const char* const PLAYER    = "player";
+    }
+
     inline CategoryName CategoryFromString(const std::string& str) noexcept {
         CategoryName category { core::CategoryName::UNDEFINED };
 

@@ -7,7 +7,6 @@ namespace Enemies {
 
 class Archer final : public Bot {
 public:
-    static constexpr char * const NAME = "archer";
 
     static Archer* create(size_t id);
 

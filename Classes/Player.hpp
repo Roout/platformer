@@ -9,7 +9,6 @@ class UserInputHandler;
 
 class Player final : public Unit {
 public:
-    static constexpr char * const NAME = "Player";
 
     static Player* create();
 
