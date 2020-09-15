@@ -23,7 +23,7 @@ Archer* Archer::create(size_t id) {
 }
 
 Archer::Archer(size_t id) :
-    Bot{ id, "archer" }
+    Bot{ id, core::EntityNames::ARCHER }
 {
     m_designedSize = cocos2d::Size{ 80.f, 135.f };
 }

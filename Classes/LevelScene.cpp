@@ -4,6 +4,7 @@
 #include "Bot.hpp"
 #include "Warrior.hpp"
 #include "Archer.hpp"
+#include "Spearman.hpp"
 #include "Player.hpp"
 
 #include "Platform.hpp"
@@ -412,20 +413,29 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                 map->addChild(barrel);
             }
             else if(form.m_type == core::CategoryName::ENEMY) {
+                const auto zOrder { 10 };
                 switch(form.m_enemyClass) {
                     case core::EnemyClass::WARRIOR: {
                         const auto warrior { Enemies::Warrior::create(form.m_id) };
                         warrior->setName(core::EntityNames::WARRIOR);
                         warrior->setPosition(form.m_botLeft);
-                        map->addChild(warrior, 9);
+                        map->addChild(warrior, zOrder);
                         // save warrior pointer
                         warriors.emplace(form.m_id, warrior);
                     } break;
-                     case core::EnemyClass::ARCHER: {
+                    case core::EnemyClass::SPEARMAN: {
+                        const auto spearman { Enemies::Spearman::create(form.m_id) };
+                        spearman->setName(core::EntityNames::SPEARMAN);
+                        spearman->setPosition(form.m_botLeft);
+                        map->addChild(spearman, zOrder);
+                        // save spearman pointer
+                        warriors.emplace(form.m_id, spearman);
+                    } break;
+                    case core::EnemyClass::ARCHER: {
                         const auto archer { Enemies::Archer::create(form.m_id) };
                         archer->setName(core::EntityNames::ARCHER);
                         archer->setPosition(form.m_botLeft);
-                        map->addChild(archer, 9);
+                        map->addChild(archer, zOrder);
                         // save warrior pointer
                         archers.emplace(form.m_id, archer);
                     } break;

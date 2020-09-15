@@ -4,13 +4,13 @@
 namespace {
 	core::EnemyClass AsEnemyClass(const std::string& ty) noexcept {
 		auto type { core::EnemyClass::UNDEFINED };
-		if( ty == "warrior" ) {
+		if( ty == core::EntityNames::WARRIOR ) {
 			type = core::EnemyClass::WARRIOR;
 		} 
-		else if ( ty == "archer" ) {
+		else if ( ty == core::EntityNames::ARCHER ) {
 			type = core::EnemyClass::ARCHER;
 		}
-		else if ( ty == "spear_man") {
+		else if ( ty == core::EntityNames::SPEARMAN ) {
 			type = core::EnemyClass::SPEARMAN;
 		}
 		return type;

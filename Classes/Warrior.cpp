@@ -10,7 +10,7 @@
 namespace Enemies {
 
 Warrior* Warrior::create(size_t id) {
-    auto pRet { new (std::nothrow) Warrior(id) };
+    auto pRet { new (std::nothrow) Warrior(id, core::EntityNames::WARRIOR) };
     if( pRet && pRet->init()) {
         pRet->autorelease();
     } 
@@ -21,8 +21,8 @@ Warrior* Warrior::create(size_t id) {
     return pRet;
 }
 
-Warrior::Warrior(size_t id) :
-    Bot{ id, "warrior" }
+Warrior::Warrior(size_t id, const char* dragonBonesName) :
+    Bot{ id, dragonBonesName }
 {
     m_designedSize = cocos2d::Size{ 80.f, 135.f };
 }

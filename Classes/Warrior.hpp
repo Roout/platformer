@@ -27,8 +27,12 @@ public:
 
     void OnEnemyLeave() override;
 
+protected:
+    Warrior(size_t id, const char* dragonBonesName);
+
+    void AddWeapon() override;
+
 private:
-    Warrior(size_t id);
 
 /// Unique to warrior
 
@@ -48,8 +52,6 @@ private:
     void AddPhysicsBody() override;
 
     void AddAnimator() override;
-
-    void AddWeapon() override;
 
 /// Properties
 private:

@@ -177,6 +177,13 @@ public:
     void OnAttack() override;
 };
 
+class Spear final : public Weapon {
+public:
+    using Weapon::Weapon;
+
+    void OnAttack() override;
+};
+
 class Bow final : public Weapon {
 public:
     using Weapon::Weapon;

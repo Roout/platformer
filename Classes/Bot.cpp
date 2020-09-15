@@ -56,7 +56,7 @@ bool Bot::NeedAttack() const noexcept {
                 target->getPosition() - cocos2d::Vec2{ target->getContentSize().width / 2.f, 0.f },
                 target->getContentSize()
             };
-            const cocos2d::Rect rhs {
+            const cocos2d::Rect rhs { // check attack in both directions
                 this->getPosition() - cocos2d::Vec2 { this->getContentSize().width / 2.f + radius, 0.f },
                 this->getContentSize() + cocos2d::Size { 2.f * radius, 0.f }
             };
