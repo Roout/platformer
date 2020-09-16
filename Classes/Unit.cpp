@@ -88,9 +88,11 @@ void Unit::Attack() {
         else {
             position.x -= this->getContentSize().width / 2.f + attackRange;
         }
+        // shift a little bit higher to avoid immediate collision with the ground
+        position.y += this->getContentSize().height * 0.05f;
         const cocos2d::Rect attackedArea {
             position,
-            cocos2d::Size{ attackRange, this->getContentSize().height }
+            cocos2d::Size{ attackRange, this->getContentSize().height * 0.9f }
         };
         m_weapon->LaunchAttack(attackedArea, this->getPhysicsBody()->getVelocity());
     }
