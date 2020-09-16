@@ -28,6 +28,10 @@ public:
 
     void resume() override;
 
+    void onEnter() override;
+
+    void onExit() override;
+
     void Restart();
 
     /// Lifecycle
@@ -48,6 +52,7 @@ private:
 
     // level id. Used to load a map
     const int m_id { -1 }; 
+
 };
 
 #endif // LEVEL_SCENE_HPP

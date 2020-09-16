@@ -17,7 +17,7 @@
 #include "Projectile.hpp"
 #include "Traps.hpp"
 #include "SizeDeducer.hpp"
-#include "PauseNode.hpp"
+#include "Interface.hpp"
 #include "TileMapParser.hpp"
 #include "PathNodes.hpp"
 #include "PathExtractor.hpp"
@@ -35,13 +35,11 @@ cocos2d::Scene* LevelScene::createRootScene(int id) {
     world->setGravity(cocos2d::Vec2(0, -1000));
     world->setDebugDrawMask(cocos2d::PhysicsWorld::DEBUGDRAW_ALL);
 
+    const auto uInterface = Interface::create();
     const auto level = LevelScene::create(id);
-    const auto uiLayer = cocos2d::Layer::create();
-    
-    uiLayer->setName("Interface");
     
     root->addChild(level);
-    root->addChild(uiLayer);
+    root->addChild(uInterface, level->getLocalZOrder() + 1);
     
     return root;
 }
@@ -255,33 +253,21 @@ bool LevelScene::init() {
 
     this->Restart();    
 
+    return true;
+}
+
+void LevelScene::onEnter() {
+    cocos2d::Node::onEnter();
     // Add physics body contact listener
     const auto shapeContactListener = cocos2d::EventListenerPhysicsContact::create();
     shapeContactListener->onContactBegin = helper::OnContactBegin;
     shapeContactListener->onContactSeparate = helper::OnContactSeparate;
     this->getEventDispatcher()->addEventListenerWithSceneGraphPriority(shapeContactListener, this);
+}
 
-    // Add test access to the pause node
-    const auto listener = cocos2d::EventListenerKeyboard::create();
-    listener->onKeyPressed = [this](cocos2d::EventKeyboard::KeyCode code, cocos2d::Event* event) {
-        if(code == cocos2d::EventKeyboard::KeyCode::KEY_ESCAPE) {
-            const auto visibleSize = cocos2d::Director::getInstance()->getVisibleSize();
-	        const auto origin = cocos2d::Director::getInstance()->getVisibleOrigin();
-
-            constexpr int id { 2 };
-            const auto node = PauseNode::create(id);
-            node->setAnchorPoint(cocos2d::Vec2::ANCHOR_MIDDLE);
-            node->setPosition(visibleSize / 2.f);
-
-            const auto ui = this->getParent()->getChildByName("Interface");
-            ui->addChild(node);
-
-            this->pause();
-        }
-        return true;
-    };
-    this->getEventDispatcher()->addEventListenerWithSceneGraphPriority(listener, this);
-    return true;
+void LevelScene::onExit() {
+    cocos2d::Node::onExit();
+    this->getEventDispatcher()->removeAllEventListeners();
 }
 
 void LevelScene::pause() {
