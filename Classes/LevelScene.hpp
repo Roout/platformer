@@ -22,8 +22,6 @@ public:
     // a selector callback
     void menuCloseCallback(cocos2d::Ref* pSender);
 
-	void update(float dt) override;
-
     void pause() override;
 
     void resume() override;

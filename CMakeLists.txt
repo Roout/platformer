@@ -64,6 +64,7 @@ endif()
 list(APPEND GAME_SOURCE
      Classes/AppDelegate.cpp
      Classes/LevelScene.cpp
+     Classes/ContactHandler.cpp
      Classes/Unit.cpp
      Classes/Player.cpp
      Classes/Influence.cpp
@@ -91,6 +92,7 @@ list(APPEND GAME_SOURCE
 list(APPEND GAME_HEADER
      Classes/AppDelegate.h
      Classes/LevelScene.hpp
+     Classes/ContactHandler.hpp
      Classes/PauseNode.hpp
      Classes/Unit.hpp
      Classes/DeathScreen.hpp
