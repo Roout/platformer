@@ -40,6 +40,7 @@ private:
 
     void UpdateState(const float dt) noexcept override;
 
+    void OnDeath() override;
  
     void AddPhysicsBody() override;
 

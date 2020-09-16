@@ -102,21 +102,24 @@ void Warrior::UpdatePosition(const float dt) noexcept {
 
 void Warrior::UpdateAnimation() {
     if(m_currentState != m_previousState) {
-        auto isOneTimeAttack { 
+        const auto isOneTimeAttack { 
             m_currentState == State::ATTACK || 
             m_currentState == State::DEAD
         };
-        auto repeatTimes { isOneTimeAttack ? 1 : dragonBones::Animator::INFINITY_LOOP };
-        auto& animator = m_animator->Play(Utils::EnumCast(m_currentState), repeatTimes);
+        const auto repeatTimes { isOneTimeAttack ? 1 : dragonBones::Animator::INFINITY_LOOP };
+        (void) m_animator->Play(Utils::EnumCast(m_currentState), repeatTimes);
         if(this->IsDead()) {
-            this->removeComponent(this->getPhysicsBody());
-            // this->getChildByName("state")->removeFromParent();
-            this->getChildByName("health")->removeFromParent();
-            animator.EndWith([this](){
-                this->runAction(cocos2d::RemoveSelf::create(true));
-            });
+            this->OnDeath();
         }
     }
+}
+
+void Warrior::OnDeath() {
+    this->removeComponent(this->getPhysicsBody());
+    this->getChildByName("health")->removeFromParent();
+    m_animator->EndWith([this](){
+        this->runAction(cocos2d::RemoveSelf::create(true));
+    });
 }
 
 void Warrior::AddPhysicsBody() {

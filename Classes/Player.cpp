@@ -152,24 +152,8 @@ void Player::UpdateDebugLabel() noexcept {
 }
 
 void Player::UpdateAnimation() {
-    if( this->IsDead() ) {
-        // emit particles
-        const auto emitter = cocos2d::ParticleSystemQuad::create("particle_texture.plist");
-        emitter->setAutoRemoveOnFinish(true);
-        /// TODO: adjust for the multiresolution
-        emitter->setScale(0.4f);
-        emitter->setPositionType(cocos2d::ParticleSystem::PositionType::RELATIVE);
-        emitter->setPosition(this->getPosition());
-        this->getParent()->addChild(emitter, 9);
-        // remove physics body
-        this->removeComponent(this->getPhysicsBody());
-
-        // create a death screen
-        cocos2d::EventCustom event(DeathScreen::EVENT_NAME);
-        this->getEventDispatcher()->dispatchEvent(&event);
-        
-        // remove from screen
-        this->runAction(cocos2d::RemoveSelf::create());
+    if(this->IsDead()) {
+        this->OnDeath();
     } 
     else if( m_currentState != m_previousState ) {
         int repeatTimes { dragonBones::Animator::INFINITY_LOOP };
@@ -179,6 +163,26 @@ void Player::UpdateAnimation() {
         m_animator->Play(Utils::EnumCast(m_currentState), repeatTimes);
     }
 }
+
+void Player::OnDeath() {
+    // emit particles
+    const auto emitter = cocos2d::ParticleSystemQuad::create("particle_texture.plist");
+    emitter->setAutoRemoveOnFinish(true);
+    /// TODO: adjust for the multiresolution
+    emitter->setScale(0.4f);
+    emitter->setPositionType(cocos2d::ParticleSystem::PositionType::RELATIVE);
+    emitter->setPosition(this->getPosition());
+    this->getParent()->addChild(emitter, 9);
+
+    // remove physics body
+    this->removeComponent(this->getPhysicsBody());
+    // create a death screen
+    cocos2d::EventCustom event(DeathScreen::EVENT_NAME);
+    this->getEventDispatcher()->dispatchEvent(&event);
+    // remove player from screen
+    this->runAction(cocos2d::RemoveSelf::create());
+};
+
 
 void Player::UpdateState(const float dt) noexcept {
     m_previousState = m_currentState;

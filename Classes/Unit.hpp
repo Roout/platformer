@@ -90,7 +90,7 @@ protected:
      */
     virtual void UpdateDebugLabel() noexcept {};
     
-    /// Assisting methods
+    virtual void OnDeath() = 0;
 
     /**
      * Create and add physics body as component to the node.

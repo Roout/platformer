@@ -85,14 +85,18 @@ void Archer::UpdateAnimation() {
         auto repeatTimes { isOneTimeAttack ? 1 : dragonBones::Animator::INFINITY_LOOP };
         auto& animator = m_animator->Play(Utils::EnumCast(m_currentState), repeatTimes);
         if(this->IsDead()) {
-            this->removeComponent(this->getPhysicsBody());
-            // this->getChildByName("state")->removeFromParent();
-            this->getChildByName("health")->removeFromParent();
-            animator.EndWith([this](){
-                this->runAction(cocos2d::RemoveSelf::create(true));
-            });
+            this->OnDeath();
         }
     }
+}
+
+
+void Archer::OnDeath() {
+    this->removeComponent(this->getPhysicsBody());
+    this->getChildByName("health")->removeFromParent();
+    m_animator->EndWith([this](){
+        this->runAction(cocos2d::RemoveSelf::create(true));
+    });
 }
 
 void Archer::AddPhysicsBody() {

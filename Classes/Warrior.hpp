@@ -48,6 +48,7 @@ private:
 
     void UpdateAnimation() override;
 
+    void OnDeath() override;
     
     void AddPhysicsBody() override;
 
