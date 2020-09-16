@@ -4,6 +4,7 @@
 #include "cocos2d.h"
 
 #include "PauseNode.hpp"
+#include "DeathScreen.hpp"
 
 /**
  * Responsibility:
@@ -35,6 +36,9 @@ public:
 
     void onEnter() override {
         cocos2d::Node::onEnter();
+        
+        const auto dispatcher = this->getEventDispatcher();
+        // Listen keyboard events
         const auto listener = cocos2d::EventListenerKeyboard::create();
         listener->onKeyPressed = [this](cocos2d::EventKeyboard::KeyCode code, cocos2d::Event* event) {
             if(code == cocos2d::EventKeyboard::KeyCode::KEY_ESCAPE && this->OnPressedButton()) {
@@ -46,7 +50,14 @@ public:
             }
             return true;
         };
-        this->getEventDispatcher()->addEventListenerWithSceneGraphPriority(listener, this);
+        dispatcher->addEventListenerWithSceneGraphPriority(listener, this);
+
+        // Listen custom events
+        auto callback = [this](cocos2d::EventCustom* event) { 
+            this->OnDeathEvent();            
+        };
+        const auto customEventListener = cocos2d::EventListenerCustom::create(DeathScreen::EVENT_NAME, callback);
+        dispatcher->addEventListenerWithSceneGraphPriority(customEventListener, this);
     }
 
     void onExit() override {
@@ -55,6 +66,17 @@ public:
     }
 
 private:
+
+    void OnDeathEvent() {
+        const auto visibleSize = cocos2d::Director::getInstance()->getVisibleSize();
+        const auto origin = cocos2d::Director::getInstance()->getVisibleOrigin();
+
+        const auto node = DeathScreen::create();
+        node->setAnchorPoint(cocos2d::Vec2::ANCHOR_MIDDLE);
+        node->setPosition(visibleSize / 2.f);
+
+        this->addChild(node);
+    }
 
     bool OnPressedButton() {
         if(this->getChildrenCount() == 0U) {

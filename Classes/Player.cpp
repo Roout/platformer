@@ -165,16 +165,9 @@ void Player::UpdateAnimation() {
         this->removeComponent(this->getPhysicsBody());
 
         // create a death screen
-        const auto visibleSize = cocos2d::Director::getInstance()->getVisibleSize();
-        const auto origin = cocos2d::Director::getInstance()->getVisibleOrigin();
-
-        const auto node = DeathScreen::create();
-        node->setAnchorPoint(cocos2d::Vec2::ANCHOR_MIDDLE);
-        node->setPosition(visibleSize / 2.f);
-
-        const auto ui = cocos2d::Director::getInstance()->getRunningScene()->getChildByName("Interface");
-        ui->addChild(node);
-
+        cocos2d::EventCustom event(DeathScreen::EVENT_NAME);
+        this->getEventDispatcher()->dispatchEvent(&event);
+        
         // remove from screen
         this->runAction(cocos2d::RemoveSelf::create());
     } 
