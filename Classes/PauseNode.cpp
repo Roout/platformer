@@ -2,8 +2,8 @@
 #include "LevelScene.hpp"
 #include "ui/CocosGUI.h"
 
-PauseNode* PauseNode::create(size_t id) {
-    auto pRet = new (std::nothrow) PauseNode(id);
+PauseNode* PauseNode::create() {
+    auto pRet = new (std::nothrow) PauseNode();
     if( pRet && pRet->init() ) {
         pRet->autorelease();
     }
@@ -30,7 +30,7 @@ bool PauseNode::init() {
                     const auto level = scene->getChildByName("Level");
                     level->resume();
                     dynamic_cast<LevelScene*>(level)->Restart();
-                    scene->getChildByName("Interface")->removeChildByName("Pause");
+                    scene->getChildByName("Interface")->removeAllChildren();
                 } break;
                 default: break;
             }
@@ -38,14 +38,14 @@ bool PauseNode::init() {
     this->addChild(restartButton);
 
     const auto resumeButton = cocos2d::ui::Button::create("normal_resume.png", "selected_resume.png", "disabled_resume.png");
-    resumeButton->addTouchEventListener([&](cocos2d::Ref* sender, cocos2d::ui::Widget::TouchEventType type){
+    resumeButton->addTouchEventListener([&](cocos2d::Ref* sender, cocos2d::ui::Widget::TouchEventType type) {
             switch (type) {
                 case cocos2d::ui::Widget::TouchEventType::BEGAN: break;
                 case cocos2d::ui::Widget::TouchEventType::ENDED: {
                     const auto scene = cocos2d::Director::getInstance()->getRunningScene();
                     const auto level = scene->getChildByName("Level");
                     level->resume();
-                    scene->getChildByName("Interface")->removeChildByName("Pause");
+                    scene->getChildByName("Interface")->removeAllChildren();
                 } break;
                 default: break;
             }
@@ -63,15 +63,5 @@ bool PauseNode::init() {
     resumeButton->setPosition( resumeShift + size / 2.f );
 
     return true;
-}
-
-
-PauseNode::PauseNode(size_t id) :
-    m_id { id }
-{
-}
-
-PauseNode::~PauseNode()
-{
 }
 
