@@ -94,7 +94,7 @@ void Warrior::UpdateState(const float dt) noexcept {
 }
 
 void Warrior::UpdatePosition(const float dt) noexcept {
-    if(m_currentState != State::ATTACK ) {
+    if(!this->IsDead() && m_currentState != State::ATTACK ) {
         m_navigator->Navigate(dt);  // update direction/target if needed
         m_movement->Update(dt);     // apply forces
     }
