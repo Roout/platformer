@@ -25,7 +25,7 @@ void Movement::Update(const float dt) noexcept {
         m_remainingJumpSteps--;
     }
 
-    const auto jumpSideMoveMultiplier { m_remainingJumpSteps? 0.6f : 0.8f };
+    const auto jumpSideMoveMultiplier { m_remainingJumpSteps? 0.5f : 0.7f };
 
     if( m_isMovingLeft || m_isMovingRight ) {
         // F = mv / t
@@ -42,8 +42,8 @@ void Movement::Update(const float dt) noexcept {
         ),
         cocos2d::clampf(
             currentVelocity.y, 
-            -m_desiredVelocity, 
-            m_desiredVelocity
+            -m_desiredVelocity * 1.2f, 
+            m_desiredVelocity * 1.2f
         )
     });
 }

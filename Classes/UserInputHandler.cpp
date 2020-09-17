@@ -91,14 +91,14 @@ void UserInputHandler::OnKeyPressed(
         m_player->Jump();
     }
 
-    if( m_lastInput.dx == 1) {
+    if(m_lastInput.dx == 1) {
         m_player->Stop();
         m_player->MoveRight();
         if(m_player->IsLookingLeft()) {
             m_player->Turn();
         }
     }
-    else if( m_lastInput.dx == -1) {
+    else if(m_lastInput.dx == -1) {
         m_player->Stop();
         m_player->MoveLeft();
         if(!m_player->IsLookingLeft()) {
@@ -106,7 +106,7 @@ void UserInputHandler::OnKeyPressed(
         }
     }
 
-    if( m_lastInput.attack) {
+    if(m_lastInput.attack) {
         m_player->Attack();
     }
 }

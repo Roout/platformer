@@ -35,7 +35,7 @@ bool Player::init() {
     }    
     m_follower = std::make_unique<SmoothFollower>(this);
     m_inputHandler = std::make_unique<UserInputHandler>(this);
-    
+    m_movement->SetMaxSpeed(450.f);
     return true;
 }
 
@@ -190,7 +190,21 @@ void Player::UpdateState(const float dt) noexcept {
     const auto velocity { this->getPhysicsBody()->getVelocity() };
     static constexpr float EPS { 0.00001f };
 
-    if( m_health <= 0 ) {
+    // check whether we're out of level bounds
+    const cocos2d::Rect boundary {
+        this->getParent()->getPosition() - this->getContentSize(),
+        this->getParent()->getContentSize() + this->getContentSize() * 2.f 
+    };
+    const cocos2d::Rect player {
+        this->getParent()->getPosition() + this->getPosition(),
+        this->getContentSize()
+    };
+    
+    if(!player.intersectsRect(boundary)) { // out of level boundaries
+        m_currentState = State::DEAD;
+        m_health = 0;
+    }
+    else if( m_health <= 0 ) {
         m_currentState = State::DEAD;
     }
     else if( m_weapon->IsAttacking() ) {
