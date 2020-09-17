@@ -22,7 +22,8 @@ public:
 private:
 
     Border(const cocos2d::Size& size) {   
-        cocos2d::PhysicsBody * const body = cocos2d::PhysicsBody::createBox(size);
+        const cocos2d::PhysicsMaterial material { 1.f, 0.f, 0.1f };
+        const auto body = cocos2d::PhysicsBody::createBox(size, material);
         body->setDynamic(false);
         body->setCategoryBitmask(
             Utils::CreateMask( core::CategoryBits::BOUNDARY )

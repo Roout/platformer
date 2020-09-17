@@ -124,7 +124,7 @@ bool Unit::IsOnGround() const noexcept {
 void Unit::AddPhysicsBody() {
     const auto body = cocos2d::PhysicsBody::createBox(
         m_designedSize,
-        cocos2d::PhysicsMaterial(1.f, 0.f, 0.f), 
+        cocos2d::PhysicsMaterial(1.f, 0.f, 0.2f), 
         {0.f, m_designedSize.height / 2.f}
     );
     body->setMass(25.f);
