@@ -13,6 +13,9 @@ namespace {
 		else if ( ty == core::EntityNames::SPEARMAN ) {
 			type = core::EnemyClass::SPEARMAN;
 		}
+		else if ( ty == core::EntityNames::SPIDER ) {
+			type = core::EnemyClass::SPIDER;
+		}
 		return type;
 	}
 }

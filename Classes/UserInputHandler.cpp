@@ -75,7 +75,7 @@ UserInputHandler::UserInputHandler(Unit * const player) :
 }
 
 void UserInputHandler::Reset() {
-    m_player->Stop();
+    m_player->MoveAlong(0.f, 0.f);
     m_lastInput.dx = 0;
     m_lastInput.jump = false;
     m_lastInput.attack = false;
@@ -88,19 +88,19 @@ void UserInputHandler::OnKeyPressed(
     m_lastInput.Merge(Input::Create(keyCode));
 
     if(m_lastInput.jump && m_player->IsOnGround() ) {
-        m_player->Jump();
+        m_player->MoveAlong(0.f, 1.f);
     }
 
     if(m_lastInput.dx == 1) {
-        m_player->Stop();
-        m_player->MoveRight();
+        m_player->MoveAlong(0.f, 0.f);
+        m_player->MoveAlong(1.f, 0.f);
         if(m_player->IsLookingLeft()) {
             m_player->Turn();
         }
     }
     else if(m_lastInput.dx == -1) {
-        m_player->Stop();
-        m_player->MoveLeft();
+        m_player->MoveAlong(0.f, 0.f);
+        m_player->MoveAlong(-1.f, 0.f);
         if(!m_player->IsLookingLeft()) {
             m_player->Turn();
         }
@@ -118,7 +118,7 @@ void UserInputHandler::OnKeyRelease(
     const Input released { Input::Create(keyCode) };
     // TODO: release up and left/right is ongoing!
     if(released.dx && released.dx == m_lastInput.dx) {
-        m_player->Stop();
+        m_player->MoveAlong(0.f, 0.f);
         m_lastInput.dx = 0;
     }
 

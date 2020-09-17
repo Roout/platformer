@@ -1,6 +1,9 @@
 #ifndef UNIT_MOVEMENT_HPP
 #define UNIT_MOVEMENT_HPP
 
+#include <array>
+#include "Utils.hpp"
+
 namespace cocos2d {
     class PhysicsBody;
 }
@@ -17,16 +20,18 @@ public:
 
     void Update(const float dt) noexcept;
 
-    void Jump() noexcept;
+    void MoveUp() noexcept;
+
+    void MoveDown() noexcept;
 
     void MoveRight() noexcept;
 
     void MoveLeft() noexcept;
 
     void Stop() noexcept;
-
-    void SetMaxSpeed(float speed) noexcept;
     
+    void SetMaxSpeed(float speed) noexcept;
+
 private:
     cocos2d::PhysicsBody * const m_body { nullptr };
 
@@ -36,11 +41,12 @@ private:
 
     static constexpr int m_timeStepsToCompletion { 6 };
 
-    int m_remainingJumpSteps { 0 };
+    int m_remainingAirSteps { 0 };
 
-    bool m_isMovingLeft { false };
+    enum class Direction { LEFT, RIGHT, UP, DOWN, COUNT };
+    
+    std::array<bool, Utils::EnumSize<Direction>()> m_indicators;
 
-    bool m_isMovingRight { false };
 };
 
 #endif // UNIT_MOVEMENT_HPP

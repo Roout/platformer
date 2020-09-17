@@ -103,7 +103,7 @@ void Archer::AddPhysicsBody() {
     Unit::AddPhysicsBody();
     // change masks for physics body
     auto body { this->getPhysicsBody() };
-    body->setMass(2000.f);
+    body->setMass(25.f);
     body->setCategoryBitmask(
         Utils::CreateMask(core::CategoryBits::ENEMY)
     );

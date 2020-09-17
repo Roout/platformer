@@ -52,16 +52,16 @@ void Navigator::Navigate(const float dt) {
         }
         // invoke move function
         if(helper::IsEquel(destination, m_owner->getPosition().x, 1.f)) {
-            m_owner->Stop();
+            m_owner->MoveAlong(0.f, 0.f);
         } 
         else if( destination < m_owner->getPosition().x ) {
-            m_owner->MoveLeft();
+            m_owner->MoveAlong(-1.f, 0.f);
             if(!m_owner->IsLookingLeft()) {
                 m_owner->Turn();
             }
         } 
         else {
-            m_owner->MoveRight();
+            m_owner->MoveAlong(1.f, 0.f);
             if(m_owner->IsLookingLeft()) {
                 m_owner->Turn();
             }
@@ -73,20 +73,20 @@ void Navigator::Navigate(const float dt) {
         // make current destination point as new start
         m_start = m_destination;
         std::tie(m_destination, m_action) = this->FindDestination(m_start);
-        m_owner->Stop();
+        m_owner->MoveAlong(0.f, 0.f);
     }
     // determine direction where unit should move
     // TODO: temporary only along X-axis
     const auto dx = m_path.m_waypoints[m_destination].x - m_owner->getPosition().x;
     // invoke move function
     if( dx < 0.f ) {
-        m_owner->MoveLeft();
+        m_owner->MoveAlong(-1.f, 0.f);
         if(!m_owner->IsLookingLeft()) {
             m_owner->Turn();
         }
     } 
     else {
-        m_owner->MoveRight();
+        m_owner->MoveAlong(1.f, 0.f);
         if(m_owner->IsLookingLeft()) {
             m_owner->Turn();
         }

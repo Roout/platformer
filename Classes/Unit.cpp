@@ -52,20 +52,26 @@ void Unit::resume() {
     m_animator->resume();
 }
 
-void Unit::Stop() noexcept {
-    m_movement->Stop();
+void Unit::MoveAlong(const cocos2d::Vec2& direction) noexcept {
+    return this->MoveAlong(direction.x, direction.y);
 }
 
-void Unit::MoveLeft() noexcept {
-    m_movement->MoveLeft();
-}
-
-void Unit::MoveRight() noexcept {
-    m_movement->MoveRight();
-}
-
-void Unit::Jump() noexcept {
-    m_movement->Jump();
+void Unit::MoveAlong(float x, float y) noexcept {
+    if(x == -1.f) {
+        m_movement->MoveLeft();
+    }
+    else if(x == 1.f) {
+        m_movement->MoveRight();
+    }
+    else if(y == -1.f) {
+        m_movement->MoveDown();
+    }
+    else if(y == 1.f) {
+        m_movement->MoveUp();
+    }
+    else {
+        m_movement->Stop();
+    }
 }
 
 void Unit::Turn() noexcept {

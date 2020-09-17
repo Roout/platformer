@@ -81,7 +81,7 @@ void Bot::TryAttack() {
         if( !lookAtEnemy ) {
             this->Turn();
         }
-        this->Stop();
+        this->MoveAlong(0.f, 0.f);
         this->Attack();
     } 
 }

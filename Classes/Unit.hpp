@@ -55,13 +55,19 @@ public:
 
     /// Movement interface
 
-    void Stop() noexcept;
+    /**
+     * @param direction define the direction of movement by unit vector
+     * Possible values are: { 1, 0 }, {-1, 0 }, { 0, 1 }, { 0, -1 }, { 0, 0 };
+     * { 0, 0 } - means to stop movement 
+     */
+    void MoveAlong(const cocos2d::Vec2& direction) noexcept;
 
-    void MoveLeft() noexcept;
-
-    void MoveRight() noexcept;
-
-    void Jump() noexcept;
+    /**
+     * @param x define the horizontal direction of movement by unit vector
+     * Possible values are: { 1, 0 }, {-1, 0 }, { 0, 1 }, { 0, -1 }, { 0, 0 };
+     * { 0, 0 } - means to stop movement 
+     */
+    void MoveAlong(float x, float y) noexcept;
 
     void Turn() noexcept;
 
