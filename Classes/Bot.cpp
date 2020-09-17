@@ -68,10 +68,11 @@ bool Bot::NeedAttack() const noexcept {
 }
 
 void Bot::TryAttack() {
-    if( this->NeedAttack() ) { // attack if possible
+    const auto target = this->getParent()->getChildByName(core::EntityNames::PLAYER);
+    if( target && this->NeedAttack() ) { // attack if possible
         auto lookAtEnemy { false };
-        const auto target = this->getParent()->getChildByName(core::EntityNames::PLAYER);
-        if( target->getPosition().x < this->getPosition().x && this->IsLookingLeft() ) {
+
+        if(target->getPosition().x < this->getPosition().x && this->IsLookingLeft() ) {
             lookAtEnemy = true;
         } 
         else if( target->getPosition().x > this->getPosition().x && !this->IsLookingLeft() ) {
