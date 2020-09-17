@@ -58,7 +58,7 @@ void Player::AddWeapon() {
 std::string  Player::GetStateName(Player::State state) {
     static std::unordered_map<Player::State, std::string> mapped {
         { Player::State::IDLE, "idle" },
-        { Player::State::ATTACK, "attack" },
+        { Player::State::ATTACK, "attack_1" },
         { Player::State::JUMP, "jump" },
         { Player::State::WALK, "walk" },
         { Player::State::DEAD, "dead" }
@@ -70,7 +70,7 @@ std::string  Player::GetStateName(Player::State state) {
 void Player::AddAnimator() {
     Unit::AddAnimator();
     m_animator->InitializeAnimations({
-        std::make_pair(Utils::EnumCast(State::ATTACK), "attack"),
+        std::make_pair(Utils::EnumCast(State::ATTACK), "attack_1"),
         std::make_pair(Utils::EnumCast(State::DEAD), "dead"),
         std::make_pair(Utils::EnumCast(State::IDLE), "idle"),
         std::make_pair(Utils::EnumCast(State::JUMP), "jump"),
