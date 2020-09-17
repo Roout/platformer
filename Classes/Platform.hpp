@@ -22,7 +22,8 @@ public:
 private: 
 
     Platform( const cocos2d::Size& size ) {
-        auto body { cocos2d::PhysicsBody::createBox(size) };
+        const cocos2d::PhysicsMaterial material { 1.f, 0.f, 0.f };
+        const auto body = cocos2d::PhysicsBody::createBox(size, material);
         body->setDynamic(false);
         body->setCategoryBitmask(
             Utils::CreateMask(
