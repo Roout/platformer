@@ -193,7 +193,7 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                 const auto hero { Player::create() };
                 hero->setName(core::EntityNames::PLAYER);
                 hero->setAnchorPoint(cocos2d::Vec2::ANCHOR_BOTTOM_LEFT);
-                hero->setPosition(form.m_botLeft);
+                hero->setPosition(form.m_points.front());
                 map->addChild(hero, 100);
             } 
             else if(form.m_type == core::CategoryName::PLATFORM ) {
@@ -213,7 +213,7 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
             }
             else if(form.m_type == core::CategoryName::BARREL) {
                 const auto barrel { Barrel::create() };
-                barrel->setPosition(form.m_botLeft);
+                barrel->setPosition(form.m_points.front());
                 barrel->setAnchorPoint(cocos2d::Vec2::ANCHOR_BOTTOM_LEFT);
                 map->addChild(barrel);
             }
@@ -223,7 +223,7 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                     case core::EnemyClass::WARRIOR: {
                         const auto warrior { Enemies::Warrior::create(form.m_id) };
                         warrior->setName(core::EntityNames::WARRIOR);
-                        warrior->setPosition(form.m_botLeft);
+                        warrior->setPosition(form.m_points.front());
                         map->addChild(warrior, zOrder);
                         // save warrior pointer
                         warriors.emplace(form.m_id, warrior);
@@ -231,7 +231,7 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                     case core::EnemyClass::SPEARMAN: {
                         const auto spearman { Enemies::Spearman::create(form.m_id) };
                         spearman->setName(core::EntityNames::SPEARMAN);
-                        spearman->setPosition(form.m_botLeft);
+                        spearman->setPosition(form.m_points.front());
                         map->addChild(spearman, zOrder);
                         // save spearman pointer
                         warriors.emplace(form.m_id, spearman);
@@ -239,7 +239,7 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                     case core::EnemyClass::ARCHER: {
                         const auto archer { Enemies::Archer::create(form.m_id) };
                         archer->setName(core::EntityNames::ARCHER);
-                        archer->setPosition(form.m_botLeft);
+                        archer->setPosition(form.m_points.front());
                         map->addChild(archer, zOrder);
                         // save warrior pointer
                         archers.emplace(form.m_id, archer);
@@ -249,13 +249,12 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
             }
             else if(form.m_type == core::CategoryName::INFLUENCE) {
                 // save component data
-                influences.emplace(form.m_id, form.m_rect);
+                influences.emplace(form.m_ownerId, form.m_rect);
             }
         }
     }
     // attach influence to warriors
     for(auto& [id, warrior]: warriors) {
-        warrior->AttachInfluenceArea(influences.at(id));
         warrior->AttachNavigator(pathExtractor.ExtractPathFor(warrior));
     } 
     for(auto& [id, archer]: archers) {

@@ -16,9 +16,17 @@ namespace details {
     struct Form final {
         core::CategoryName  m_type { core::CategoryName::UNDEFINED };
         core::EnemyClass    m_enemyClass { core::EnemyClass::UNDEFINED };
-        std::pair<int,int>  m_position;
         size_t              m_id { 0 };
-        cocos2d::Vec2       m_botLeft;
+        size_t              m_pathId { 0 };
+        size_t              m_ownerId { 0 };
+        /**
+         * Front point always defines a position
+         * If it's a Polygon than it contains all points of the figure
+         */
+        std::vector<cocos2d::Vec2> m_points;
+        /**
+         * Define rect object 
+         */
         cocos2d::Rect       m_rect;
     };
 }
@@ -48,6 +56,14 @@ public:
     }
     
 private:
+
+    void ParseUnits();
+
+    void ParseProps();
+    
+    void ParsePaths();
+
+    void ParseInfluences();
 
     template <CategoryName category>
     [[nodiscard]] auto& Get() noexcept {

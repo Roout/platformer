@@ -27,12 +27,14 @@ TileMapParser::TileMapParser(const cocos2d::FastTMXTiledMap * tileMap):
 	this->Get<core::CategoryName::BORDER>().reserve(100);
 	this->Get<core::CategoryName::BARREL>().reserve(10);
 	this->Get<core::CategoryName::ENEMY>().reserve(30);
+	this->Get<core::CategoryName::PATH>().reserve(30);
 	this->Get<core::CategoryName::INFLUENCE>().reserve(30);
 	this->Get<core::CategoryName::SPIKES>().reserve(10);
 }
 
-void TileMapParser::Parse() {
-    const auto group = m_tileMap->getObjectGroup("objects");
+
+void TileMapParser::ParseUnits() {
+	const auto group = m_tileMap->getObjectGroup("units");
 	if (group) {
 		const auto& allObjects = group->getObjects();
 		for (const auto& object : allObjects) {
@@ -43,34 +45,101 @@ void TileMapParser::Parse() {
 			const auto y = objMap.at("y").asFloat();
 
 			details::Form form;
-			form.m_botLeft = cocos2d::Vec2{x, y};
+			form.m_points.emplace_back(x, y);
+			form.m_id = objMap.at("id").asUnsignedInt();
 
-			if( name == "player" ) {
+			if(name == "player") {
 				form.m_type = core::CategoryName::PLAYER;
 				this->Get<core::CategoryName::PLAYER>().emplace_back(form);
 			}
-			else if( name == "barrel" ) {
-				form.m_type = core::CategoryName::BARREL;
-				this->Get<core::CategoryName::BARREL>().emplace_back(form);
-			}
-			else if( name == "enemy" ) {
+			else if(name == "enemy") {
 				form.m_type = core::CategoryName::ENEMY;
+				form.m_pathId = objMap.at("path-id").asUnsignedInt();
 				form.m_enemyClass = ::AsEnemyClass(type);
-				form.m_id = objMap.at("id").asUnsignedInt();
 				this->Get<core::CategoryName::ENEMY>().emplace_back(form);
-			}
-			else if( name == "Influence" ) {
-				form.m_type = core::CategoryName::INFLUENCE;
-				form.m_id = objMap.at("owner-id").asUnsignedInt();
-				cocos2d::Size size {
-					objMap.at("width").asFloat(),
-					objMap.at("height").asFloat()
-				};
-				form.m_rect = cocos2d::Rect{ form.m_botLeft, size };
-				this->Get<core::CategoryName::INFLUENCE>().emplace_back(form);
 			}
 		}
 	}
+}
+
+void TileMapParser::ParseProps() {
+	const auto group = m_tileMap->getObjectGroup("props");
+	if (group) {
+		const auto& allObjects = group->getObjects();
+		for (const auto& object : allObjects) {
+			const auto& objMap = object.asValueMap();
+			const auto type = objMap.at("type").asString();
+			const auto name = objMap.at("name").asString();
+			const auto x = objMap.at("x").asFloat();
+			const auto y = objMap.at("y").asFloat();
+
+			details::Form form;
+			form.m_points.emplace_back(x, y);
+			form.m_id = objMap.at("id").asUnsignedInt();
+
+			if(name == "barrel") {
+				form.m_type = core::CategoryName::BARREL;
+				this->Get<core::CategoryName::BARREL>().emplace_back(form);
+			}
+		}
+	}
+}
+
+void TileMapParser::ParsePaths() {
+	const auto group = m_tileMap->getObjectGroup("paths");
+	if (group) {
+		const auto& allObjects = group->getObjects();
+		for (const auto& object : allObjects) {
+			const auto& objMap = object.asValueMap();
+			const auto type = objMap.at("type").asString();
+			const auto name = objMap.at("name").asString();
+			const auto x = objMap.at("x").asFloat();
+			const auto y = objMap.at("y").asFloat();
+
+			details::Form form;
+			const auto& points { objMap.at("polylinePoints").asValueVector() };
+			form.m_points.reserve(points.size());
+			for(const auto& pointValue: points) {
+				const auto& pointMap = pointValue.asValueMap();
+				form.m_points.emplace_back(pointMap.at("x").asFloat() + x, pointMap.at("y").asFloat() + y);
+			}
+			form.m_id = objMap.at("id").asUnsignedInt();
+			form.m_type = core::CategoryName::PATH;
+		}
+	}
+}
+
+void TileMapParser::ParseInfluences() {
+	const auto group = m_tileMap->getObjectGroup("influences");
+	if (group) {
+		const auto& allObjects = group->getObjects();
+		for (const auto& object : allObjects) {
+			const auto& objMap = object.asValueMap();
+			const auto type = objMap.at("type").asString();
+			const auto name = objMap.at("name").asString();
+			const auto x = objMap.at("x").asFloat();
+			const auto y = objMap.at("y").asFloat();
+
+			details::Form form;
+			form.m_points.emplace_back(x, y);
+			form.m_id = objMap.at("id").asUnsignedInt();
+			form.m_ownerId = objMap.at("owner-id").asUnsignedInt();
+			form.m_type = core::CategoryName::INFLUENCE;
+			cocos2d::Size size {
+				objMap.at("width").asFloat(),
+				objMap.at("height").asFloat()
+			};
+			form.m_rect = cocos2d::Rect{ form.m_points.front(), size };
+			this->Get<core::CategoryName::INFLUENCE>().emplace_back(form);
+		}
+	}
+}
+
+void TileMapParser::Parse() {
+    this->ParseUnits();
+    this->ParseProps();
+    this->ParsePaths();
+    this->ParseInfluences();
 
     const auto obstaclesLayer = m_tileMap->getLayer("ground");
 	if (obstaclesLayer) {
@@ -149,7 +218,6 @@ void TileMapParser::Parse() {
 							cocos2d::Vec2{ x * tileSize.width, (height - y - 1) * tileSize.height }, 
 							cocos2d::Size{ tileSize.width * (col - x), tileSize.height }
 						};
-						form.m_position = { x, y };
 						form.m_type = category;
 
 						this->Get(category).emplace_back(form);
@@ -205,7 +273,6 @@ void TileMapParser::Parse() {
 								cocos2d::Vec2{ x * tileSize.width, (height - topRow - 1.f) * tileSize.height }, 
 								cocos2d::Size{ tileSize.width, tileSize.height * (topRow - lowRow + 1.f) }
 							};
-							form.m_position = { x, lowRow };
 							form.m_type = category;
 							this->Get(category).emplace_back(form);
 						}

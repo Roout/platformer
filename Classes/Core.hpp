@@ -21,6 +21,7 @@ namespace core {
         ENEMY,
         SPIKES,
         INFLUENCE,
+        PATH,
         
         COUNT
     };
@@ -47,18 +48,29 @@ namespace core {
     inline CategoryName CategoryFromString(const std::string& str) noexcept {
         CategoryName category { core::CategoryName::UNDEFINED };
 
-        if( str == "platform" ) {
+        if(str == "platform" ) {
             category = CategoryName::PLATFORM;
-        } else if(str == "border") {
+        } 
+        else if(str == "border") {
             category = CategoryName::BORDER;
-        } else if(str == "spikes") {
+        } 
+        else if(str == "spikes") {
             category = CategoryName::SPIKES;
-        } else if(str == "player") {
+        } 
+        else if(str == "player") {
             category = CategoryName::PLAYER;
-        } else if(str == "barrel") {
+        } 
+        else if(str == "barrel") {
             category = CategoryName::BARREL;
-        } else if(str == "enemy") {
+        } 
+        else if(str == "enemy") {
             category = CategoryName::ENEMY;
+        }
+        else if(str == "path") {
+            category = CategoryName::PATH;
+        }
+        else if(str == "influence") {
+            category = CategoryName::INFLUENCE;
         }
 
         return category;
