@@ -18,8 +18,7 @@
 #include "SizeDeducer.hpp"
 #include "Interface.hpp"
 #include "TileMapParser.hpp"
-#include "PathNodes.hpp"
-#include "PathExtractor.hpp"
+#include "Path.hpp"
 #include "ContactHandler.hpp"
 
 #include <unordered_map>
@@ -166,22 +165,21 @@ void LevelScene::menuCloseCallback(cocos2d::Ref* pSender) {
 
 void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
 
-    if(!m_pathes) {
-        m_pathes = std::make_unique<path::PathSet>();
-        auto doc = m_pathes->Load(m_id);
-        m_pathes->Parse(doc);
-    }
     if(!m_parser) {
         m_parser = std::make_unique<TileMapParser>(map);
         m_parser->Parse();
     }
 
-    path::PathExtractor pathExtractor{ m_pathes.get(), map };
-    
+    /// TODO: get rid of this shitty maps
+    std::unordered_map<size_t, Path> paths;
+    std::unordered_map<size_t, size_t> pathIdByUnitId;
     std::unordered_map<size_t, cocos2d::Rect> influences;
     std::unordered_map<size_t, Enemies::Warrior*> warriors;
     std::unordered_map<size_t, Enemies::Archer*> archers;
+
     influences.reserve(100);
+    paths.reserve(100);
+    pathIdByUnitId.reserve(100);
     warriors.reserve(100);
     archers.reserve(100);
 
@@ -189,14 +187,14 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
         const auto category { static_cast<core::CategoryName>(i) };
         const auto parsedForms { m_parser->Peek(category) };
         for(const auto& form: parsedForms) {
-            if ( form.m_type == core::CategoryName::PLAYER ) {
+            if(form.m_type == core::CategoryName::PLAYER) {
                 const auto hero { Player::create() };
                 hero->setName(core::EntityNames::PLAYER);
                 hero->setAnchorPoint(cocos2d::Vec2::ANCHOR_BOTTOM_LEFT);
                 hero->setPosition(form.m_points.front());
                 map->addChild(hero, 100);
             } 
-            else if(form.m_type == core::CategoryName::PLATFORM ) {
+            else if(form.m_type == core::CategoryName::PLATFORM) {
                 const auto platform = Platform::create(form.m_rect.size);
                 platform->setPosition(form.m_rect.origin + form.m_rect.size / 2.f);
                 map->addChild(platform);
@@ -217,6 +215,12 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                 barrel->setAnchorPoint(cocos2d::Vec2::ANCHOR_BOTTOM_LEFT);
                 map->addChild(barrel);
             }
+            else if(form.m_type == core::CategoryName::PATH) {
+                Path path{};
+                path.m_waypoints = form.m_points;
+                path.m_id = form.m_id;
+                paths.emplace(form.m_id, std::move(path));
+            }
             else if(form.m_type == core::CategoryName::ENEMY) {
                 const auto zOrder { 10 };
                 switch(form.m_enemyClass) {
@@ -227,6 +231,7 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                         map->addChild(warrior, zOrder);
                         // save warrior pointer
                         warriors.emplace(form.m_id, warrior);
+                        pathIdByUnitId.emplace(form.m_id, form.m_pathId);
                     } break;
                     case core::EnemyClass::SPEARMAN: {
                         const auto spearman { Enemies::Spearman::create(form.m_id) };
@@ -235,6 +240,7 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                         map->addChild(spearman, zOrder);
                         // save spearman pointer
                         warriors.emplace(form.m_id, spearman);
+                        pathIdByUnitId.emplace(form.m_id, form.m_pathId);
                     } break;
                     case core::EnemyClass::ARCHER: {
                         const auto archer { Enemies::Archer::create(form.m_id) };
@@ -255,7 +261,11 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
     }
     // attach influence to warriors
     for(auto& [id, warrior]: warriors) {
-        warrior->AttachNavigator(pathExtractor.ExtractPathFor(warrior));
+        const auto pathId { pathIdByUnitId.at(id) };
+        warrior->AttachNavigator(std::move(paths.at(pathId)));
+        if(auto it = influences.find(id); it != influences.end()) {
+            warrior->AttachInfluenceArea(it->second);
+        }
     } 
     for(auto& [id, archer]: archers) {
         archer->AttachInfluenceArea(influences.at(id));

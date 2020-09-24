@@ -4,11 +4,7 @@
 #include <memory>
 #include "cocos2d.h"
 
-class UserInputHandler;
 class TileMapParser;
-namespace path {
-    struct PathSet;
-}
 
 class LevelScene final : public cocos2d::Scene {
 public:
@@ -43,8 +39,6 @@ private:
 	LevelScene(int id);
 
     void InitTileMapObjects(cocos2d::FastTMXTiledMap * map);
-
-    std::unique_ptr<path::PathSet> m_pathes { nullptr };
 
     std::unique_ptr<TileMapParser> m_parser { nullptr };
 
