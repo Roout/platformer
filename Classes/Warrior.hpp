@@ -5,6 +5,7 @@
 
 #include "Navigator.hpp"
 #include "Bot.hpp"
+#include "Path.hpp"
 
 namespace Enemies {
 
@@ -19,7 +20,7 @@ public:
 
 /// Unique to warrior
 
-    void AttachNavigator(path::Path&& path);
+    void AttachNavigator(Path&& path);
     
 /// Bot interface
 
@@ -36,7 +37,7 @@ private:
 
 /// Unique to warrior
 
-    void Pursue(Unit * target) noexcept;
+    void Pursue(cocos2d::Node * target) noexcept;
 
     void Patrol() noexcept;
 

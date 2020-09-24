@@ -4,51 +4,45 @@
 #include <limits>
 
 #include "cocos2d.h"
-#include "PathNodes.hpp"
+#include "Path.hpp"
 
-class Unit;
 namespace Enemies {
     class Bot;
 }
 
 class Navigator {
 public:
-    enum class Mode {
-        PATROL,
-        PURSUIT
-    };
 
-    Navigator(Enemies::Bot * owner, path::Path&& path);
+    Navigator(Enemies::Bot * owner, Path&& path);
 
-    void Navigate(const float dt);
+    void Update(float dt);
 
-    void Pursue(Unit * const target) noexcept;
+    void VisitCustomPoint(const cocos2d::Vec2& destination);
 
-    void Patrol() noexcept;
+    void FollowPath();
 
     /// helper methods
 private:
+   
+    void MoveTo(const cocos2d::Vec2& destination);
 
-    // @p is tile's coordinates 
-    size_t FindClosestPoint(const cocos2d::Vec2& p) const;
+    size_t FindClosestPathPoint(const cocos2d::Vec2& p) const;
 
     // get your destination if possible
     // assume that the point always exist
-    std::pair<size_t, path::Action> FindDestination(size_t from);
+    size_t FindDestination(size_t from);
 
-    bool ReachedDestination() const noexcept;
-    
+    std::pair<bool, bool> ReachedDestination() const noexcept;
+
 private:
     /// external data
-    Enemies::Bot * m_owner { nullptr };
-    const path::Path m_path;
-    Unit * m_target { nullptr }; // target of the pursuit if exist
+    Enemies::Bot * const    m_owner { nullptr };
+    cocos2d::Vec2           m_customTarget {0.f, 0.f};
+    const Path              m_path;
 
     /// internal data
-    size_t m_start;
-    size_t m_destination;
-    path::Action m_action { path::Action::MOVE };
-    Mode m_mode { Mode::PATROL };
+    size_t                  m_choosenWaypointIndex { 0 };
+    bool                    m_isFollowingPath { true };
 
     static constexpr size_t failure { std::numeric_limits<size_t>::max() };
 };

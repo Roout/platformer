@@ -4,6 +4,7 @@
 #include "Core.hpp"
 #include "DragonBonesAnimator.hpp"
 #include "Weapon.hpp"
+#include "Influence.hpp"
 
 #include "cocos2d.h"
 
@@ -50,23 +51,71 @@ void Warrior::update(float dt) {
 }
 
 /// Unique to warrior
-void Warrior::AttachNavigator(path::Path&& path) {
+void Warrior::AttachNavigator(Path&& path) {
+    // process a default paths waypoints to avoid jumping:
+    // align them with own Y-axis position
+    for(auto& point: path.m_waypoints) {
+        point.y = this->getPosition().y;
+    }
     m_navigator = std::make_unique<Navigator>(this, std::move(path));
     this->Patrol();
 }
 
-void Warrior::Pursue(Unit * target) noexcept {
-    m_navigator->Pursue(target);
+void Warrior::Pursue(cocos2d::Node * target) noexcept {
+    if(!this->IsDead() && target) {
+        const auto shift { 
+            target->getContentSize().width / 2.f    // shift to bottom left\right corner
+            + m_weapon->GetRange() * 0.8f           // shift by weapon length (not 1.0f to be able to reach the target by attack!)
+            + this->getContentSize().width / 2.f    
+        };
+        // possible destinations (bottom middle of this unit)
+        const float xTargets[2] = { 
+            target->getPosition().x + shift,
+            target->getPosition().x - shift,
+        };
+        // choose the closest target in out influence field!
+        const float xDistances[2] = {
+            fabs(xTargets[0] - this->getPosition().x),
+            fabs(xTargets[1] - this->getPosition().x)
+        };
+        const float xShift { this->getContentSize().width * 0.4f };
+        // -xShift for left-bottom corner of this unit 
+        // +xShift for right-bottom corner of this unit 
+        // So if influence contains either of these corners than the unit won't fall down for sure!
+        const bool acceptable[2] = {
+            m_influence->Contains({ xTargets[0] - xShift, this->getPosition().y }) || 
+            m_influence->Contains({ xTargets[0] + xShift, this->getPosition().y }),
+
+            m_influence->Contains({ xTargets[1] - xShift, this->getPosition().y }) || 
+            m_influence->Contains({ xTargets[1] + xShift, this->getPosition().y })
+        };
+        // find the closest point from the ones where unit won't fall down
+        int choosenIndex { -1 };
+        float xDistance { xDistances[0] };
+        for(int i = 0; i < 2; i++) {
+            if(acceptable[i] &&  xDistances[i] <= xDistance) {
+                choosenIndex = i;
+                xDistance = xDistances[i];
+            }
+        }
+        auto destination = this->getPosition();
+        if(choosenIndex != -1) { // every target lead to falling down or other shit
+            destination.x = xTargets[choosenIndex];
+        }
+        // move to target along X-axis;
+        // Pass own Y-axis coordinate to not move along Y-axis
+        m_navigator->VisitCustomPoint(destination);
+    }
 }
 
 void Warrior::Patrol() noexcept {
-    m_navigator->Patrol();
+    m_navigator->FollowPath();
 }
 
 /// Bot interface
 void Warrior::OnEnemyIntrusion() {
     m_detectEnemy = true;
-    auto target = dynamic_cast<Unit*>(this->getParent()->getChildByName(core::EntityNames::PLAYER));
+    auto target = this->getParent()->getChildByName(core::EntityNames::PLAYER);
     this->Pursue(target);
 }
 
@@ -74,7 +123,6 @@ void Warrior::OnEnemyLeave() {
     m_detectEnemy = false;
     this->Patrol();
 }
-
 
 void Warrior::UpdateState(const float dt) noexcept {
     m_previousState = m_currentState;
@@ -94,9 +142,15 @@ void Warrior::UpdateState(const float dt) noexcept {
 }
 
 void Warrior::UpdatePosition(const float dt) noexcept {
-    if(!this->IsDead() && m_currentState != State::ATTACK ) {
-        m_navigator->Navigate(dt);  // update direction/target if needed
-        m_movement->Update(dt);     // apply forces
+    auto initiateAttack { m_weapon->IsAttacking() || m_weapon->IsPreparing() };
+    if(!this->IsDead() && !initiateAttack) {
+        if(m_detectEnemy) { // update target
+            auto target = this->getParent()->getChildByName(core::EntityNames::PLAYER);
+            this->Pursue(target);
+        }
+        // update
+        m_navigator->Update(dt);
+        m_movement->Update(dt);
     }
 }
 
@@ -171,7 +225,7 @@ void Warrior::AddAnimator() {
 }
 
 void Warrior::AddWeapon() {
-    const auto damage { 25.f };
+    const auto damage { 2.f };
     const auto range { 60.f };
     const auto preparationTime { 0.f };
     const auto attackDuration { m_animator->GetDuration(Utils::EnumCast(State::ATTACK)) };
