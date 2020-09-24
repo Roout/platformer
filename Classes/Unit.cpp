@@ -57,19 +57,22 @@ void Unit::MoveAlong(const cocos2d::Vec2& direction) noexcept {
 }
 
 void Unit::MoveAlong(float x, float y) noexcept {
+    // Horizontal move
     if(x == -1.f) {
         m_movement->MoveLeft();
     }
     else if(x == 1.f) {
         m_movement->MoveRight();
     }
-    else if(y == -1.f) {
+    // Vertical move
+    if(y == -1.f) {
         m_movement->MoveDown();
     }
     else if(y == 1.f) {
         m_movement->MoveUp();
     }
-    else {
+    // Stop
+    if( x == 0.f && y == 0.f) {
         m_movement->Stop();
     }
 }
@@ -77,6 +80,17 @@ void Unit::MoveAlong(float x, float y) noexcept {
 void Unit::Turn() noexcept {
     m_side = (m_side == Side::LEFT? Side::RIGHT: Side::LEFT);
     m_animator->FlipX();
+}
+
+void Unit::LookAt(const cocos2d::Vec2& point) noexcept {
+    bool targetIsOnLeft { point.x < this->getPosition().x };
+    bool needTurnAround {
+        ( targetIsOnLeft && !this->IsLookingLeft() ) ||
+        ( !targetIsOnLeft && this->IsLookingLeft() )
+    };
+    if(needTurnAround) {
+        this->Turn();
+    }
 }
 
 void Unit::RecieveDamage(int damage) noexcept {

@@ -1,4 +1,5 @@
 #include "Bot.hpp"
+#include "Influence.hpp"
 #include "PhysicsHelper.hpp"
 #include "SizeDeducer.hpp"
 #include "Player.hpp"
@@ -47,7 +48,7 @@ bool Bot::NeedAttack() const noexcept {
         m_weapon->IsReady()
     };
     auto enemyIsClose = [this]() { 
-        const auto target = dynamic_cast<Unit*>(this->getParent()->getChildByName(core::EntityNames::PLAYER));
+        const auto target = this->getParent()->getChildByName(core::EntityNames::PLAYER);
         // use some simple algorithm to determine whether ф player is close enough to the target
         // to perform an attack
         if( target ) {
@@ -70,17 +71,7 @@ bool Bot::NeedAttack() const noexcept {
 void Bot::TryAttack() {
     const auto target = this->getParent()->getChildByName(core::EntityNames::PLAYER);
     if( target && this->NeedAttack() ) { // attack if possible
-        auto lookAtEnemy { false };
-
-        if(target->getPosition().x < this->getPosition().x && this->IsLookingLeft() ) {
-            lookAtEnemy = true;
-        } 
-        else if( target->getPosition().x > this->getPosition().x && !this->IsLookingLeft() ) {
-            lookAtEnemy = true;
-        }
-        if( !lookAtEnemy ) {
-            this->Turn();
-        }
+        this->LookAt(target->getPosition());
         this->MoveAlong(0.f, 0.f);
         this->Attack();
     } 
@@ -93,9 +84,9 @@ void Bot::UpdateDebugLabel() noexcept {
 
 void Bot::AttachInfluenceArea(const cocos2d::Rect& area) {
     // Attach influence
-    auto influence = Influence::create(this, area);
-    influence->setName("Influence");
-    this->addComponent(influence);
+    m_influence = Influence::create(this, area);
+    m_influence->setName("Influence");
+    this->addComponent(m_influence);
 }
 
 } // namespace Enemies

@@ -57,19 +57,22 @@ public:
 
     /**
      * @param direction define the direction of movement by unit vector
-     * Possible values are: { 1, 0 }, {-1, 0 }, { 0, 1 }, { 0, -1 }, { 0, 0 };
+     * Possible values are: { 1, 0 }, {-1, 0 }, { 0, 1 }, { 0, -1 }, { 0, 0 }, { 1, 1 }, {-1, -1 }
      * { 0, 0 } - means to stop movement 
      */
     void MoveAlong(const cocos2d::Vec2& direction) noexcept;
 
     /**
-     * @param x define the horizontal direction of movement by unit vector
-     * Possible values are: { 1, 0 }, {-1, 0 }, { 0, 1 }, { 0, -1 }, { 0, 0 };
+     * @param x defines the horizontal direction of movement by unit vector
+     * @param y defines the vectical direction of movement by unit vector
+     * Possible values are: { 1, 0 }, {-1, 0 }, { 0, 1 }, { 0, -1 }, { 0, 0 }, { 1, 1 }, {-1, -1 }
      * { 0, 0 } - means to stop movement 
      */
     void MoveAlong(float x, float y) noexcept;
 
     void Turn() noexcept;
+
+    void LookAt(const cocos2d::Vec2& point) noexcept;
 
 protected:
 
