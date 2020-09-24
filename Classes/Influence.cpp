@@ -53,8 +53,8 @@ void Influence::update(float dt) {
                 this->OnLeave();
             }
         }
-        else {
-            m_detected = false;
+        else if(m_detected) {
+            this->OnLeave();
         }
     } 
 }
