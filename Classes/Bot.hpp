@@ -4,7 +4,8 @@
 #include "cocos2d.h"
 
 #include "Unit.hpp"
-#include "Influence.hpp"
+
+class Influence;
 
 namespace Enemies {
 
@@ -57,6 +58,8 @@ protected:
     State m_previousState { State::UNDEFINED };
 
     bool m_detectEnemy { false };
+
+    Influence * m_influence { nullptr };
 
 private:
     const size_t m_id { 0 };
