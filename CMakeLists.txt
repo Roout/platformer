@@ -68,16 +68,15 @@ list(APPEND GAME_SOURCE
      Classes/Unit.cpp
      Classes/Player.cpp
      Classes/Influence.cpp
-     Classes/PathExtractor.cpp
      Classes/Navigator.cpp
      Classes/Bot.cpp
      Classes/Warrior.cpp
      Classes/Archer.cpp
+     Classes/Spider.cpp
      Classes/Spearman.cpp
      Classes/PauseNode.cpp
      Classes/DragonBonesAnimator.cpp
      Classes/DeathScreen.cpp
-     Classes/PathNodes.cpp
      Classes/UnitMovement.cpp
      Classes/SmoothFollower.cpp
      Classes/UserInputHandler.cpp
@@ -100,10 +99,10 @@ list(APPEND GAME_HEADER
      Classes/Bot.hpp
      Classes/Warrior.hpp
      Classes/Archer.hpp
+     Classes/Spider.hpp
      Classes/Spearman.hpp
      Classes/Influence.hpp
-     Classes/PathNodes.hpp
-     Classes/PathExtractor.hpp
+     "Classes/Path.hpp"
      Classes/Navigator.hpp
      Classes/UnitMovement.hpp
      Classes/ResourceManagement.hpp

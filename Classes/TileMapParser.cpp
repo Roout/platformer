@@ -105,6 +105,7 @@ void TileMapParser::ParsePaths() {
 			}
 			form.m_id = objMap.at("id").asUnsignedInt();
 			form.m_type = core::CategoryName::PATH;
+			this->Get<core::CategoryName::PATH>().emplace_back(form);
 		}
 	}
 }
