@@ -15,6 +15,9 @@ Movement::~Movement() {
 }
 
 void Movement::Update(const float dt) noexcept {    
+    // Fix #24: avoid applying infinity force due to 0-division!
+    if(dt <= 0.f) return; 
+
     const auto airSideMoveMultiplier { m_remainingAirSteps? 0.5f : 0.7f };
     const auto force { //  F = mv / t
         ( m_body->getMass() * m_desiredVelocity * 1.5f ) / 
