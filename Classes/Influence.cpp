@@ -41,11 +41,12 @@ void Influence::update(float dt) {
     if( m_bot && !m_bot->IsDead() ) {
         const auto target = m_bot->getParent()->getChildByName(core::EntityNames::PLAYER);
         if( target ) { // exist, is alive and kicking
-            const auto height { target->getContentSize().height / 2.f };
-            const auto point { 
-                target->getPosition() + cocos2d::Vec2{ 0.f, height } 
+            const auto targetSize { target->getContentSize() };
+            const cocos2d::Rect boundingBox { 
+                target->getPosition() - cocos2d::Vec2{ targetSize.width / 2.f, 0.f }, // left-bottom corner
+                targetSize
             };
-            const auto isInside { m_zone.containsPoint(point) };
+            const auto isInside { m_zone.intersectsRect(boundingBox) };
             if( !m_detected && isInside) {
                 this->OnIntrusion();
             } 
