@@ -27,6 +27,10 @@ Influence::Influence(
 {
 }
 
+bool Influence::Contains(const cocos2d::Vec2& point) const noexcept {
+    return m_zone.containsPoint(point);
+}
+
 void Influence::OnIntrusion() {
     m_bot->OnEnemyIntrusion();
     m_detected = true;

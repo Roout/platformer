@@ -16,6 +16,8 @@ public:
     
     void update(float [[maybe_unused]] dt) override;
 
+    bool Contains(const cocos2d::Vec2& point) const noexcept;
+
 private:
 
     Influence(
