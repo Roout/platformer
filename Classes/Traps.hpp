@@ -6,6 +6,8 @@
 #include "Utils.hpp"
 #include "Curses.hpp"
 
+#include <limits>
+
 namespace Traps {
 
     /**
@@ -49,7 +51,10 @@ namespace Traps {
     private:
         const size_t m_id { 0 };
 
-        inline static Utils::LinearGenerator m_generator {};
+        /// TODO: parse traps from Tiled as special object. This will provide a unique ID
+        inline static Utils::LinearGenerator m_generator { 
+            std::numeric_limits<size_t>::max() >> 2 
+        };
     };
 
     class Spikes : public Trap {

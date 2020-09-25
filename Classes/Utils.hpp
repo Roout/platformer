@@ -31,7 +31,9 @@ namespace Utils {
      */
     class LinearGenerator final {
     public:
-    
+        LinearGenerator(size_t value = 0U) : 
+            m_value { value } {}
+
         size_t Next() const noexcept {
             return ++m_value;
         }
