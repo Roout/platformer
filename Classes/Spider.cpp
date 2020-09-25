@@ -33,11 +33,41 @@ bool Spider::init() {
     return true;
 };
 
+void Spider::onEnter() {
+    cocos2d::Node::onEnter();
+}
+
+void Spider::onExit() {
+    if(m_web) {
+        m_web->removeFromParent();
+        m_web = nullptr;
+    }
+
+    cocos2d::Node::onExit();
+}
+
+void Spider::CreateWebAt(const cocos2d::Vec2& start) {
+    m_webStart = start;
+    
+    constexpr float lineWidth { 18.f }; 
+    m_web = cocos2d::DrawNode::create(lineWidth);
+    this->getParent()->addChild(m_web, this->getLocalZOrder() - 1);
+}
+
+void Spider::UpdateWeb() {
+    if(m_web) {
+        m_web->clear();
+        auto destination = this->getPosition() + cocos2d::Vec2{ 0.f, this->getContentSize().height / 2.f}; 
+        m_web->drawLine(m_webStart, destination, cocos2d::Color4F::WHITE);        
+    }
+}
+
 void Spider::update(float dt) {
     cocos2d::Node::update(dt);
     // custom updates
     this->UpdateDebugLabel();
-    this->UpdatePosition(dt); 
+    this->UpdatePosition(dt);
+    this->UpdateWeb(); 
     this->UpdateCurses(dt);
     this->UpdateState(dt);
     this->UpdateAnimation(); 

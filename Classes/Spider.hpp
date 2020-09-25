@@ -25,21 +25,28 @@ public:
     
     void update(float dt) override;
 
+    void onEnter() override;
+
+    void onExit() override;
+
     void OnEnemyIntrusion() override;
 
     void OnEnemyLeave() override;
 
-    /// Unique to warrior
+    /// Unique to Spider
     void AttachNavigator(Path&& path);
+
+    void CreateWebAt(const cocos2d::Vec2& start);
 
 private: 
     Spider(size_t id, const char* dragonBonesName);
+
+    void UpdateWeb();
+    /// Bot interface
     
     void TryAttack();
 
     bool NeedAttack() const noexcept;
-
-    /// Bot interface
    
     void UpdateState(const float dt) noexcept override;
 
@@ -56,6 +63,9 @@ private:
     /// Properties
 private:
     std::unique_ptr<Navigator> m_navigator { nullptr };
+
+    cocos2d::Vec2 m_webStart {};
+    cocos2d::DrawNode * m_web { nullptr };
 };
 
 } // namespace Enemies
