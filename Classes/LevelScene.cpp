@@ -4,6 +4,7 @@
 #include "Bot.hpp"
 #include "Warrior.hpp"
 #include "Archer.hpp"
+#include "Spider.hpp"
 #include "Spearman.hpp"
 #include "Player.hpp"
 
@@ -176,12 +177,14 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
     std::unordered_map<size_t, cocos2d::Rect> influences;
     std::unordered_map<size_t, Enemies::Warrior*> warriors;
     std::unordered_map<size_t, Enemies::Archer*> archers;
+    std::unordered_map<size_t, Enemies::Spider*> spiders;
 
     influences.reserve(100);
     paths.reserve(100);
     pathIdByUnitId.reserve(100);
     warriors.reserve(100);
     archers.reserve(100);
+    spiders.reserve(100);
 
     for(size_t i = 0; i < Utils::EnumSize<core::CategoryName>(); i++) {
         const auto category { static_cast<core::CategoryName>(i) };
@@ -250,6 +253,15 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                         // save warrior pointer
                         archers.emplace(form.m_id, archer);
                     } break;
+                    case core::EnemyClass::SPIDER: {
+                        const auto spider { Enemies::Spider::create(form.m_id) };
+                        spider->setName(core::EntityNames::SPIDER);
+                        spider->setPosition(form.m_points.front());
+                        map->addChild(spider, zOrder);
+                        // save warrior pointer
+                        spiders.emplace(form.m_id, spider);
+                        pathIdByUnitId.emplace(form.m_id, form.m_pathId);
+                    } break;
                     default: break;
                 }
             }
@@ -266,6 +278,10 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
         if(auto it = influences.find(id); it != influences.end()) {
             warrior->AttachInfluenceArea(it->second);
         }
+    } 
+    for(auto& [id, spider]: spiders) {
+        const auto pathId { pathIdByUnitId.at(id) };
+        spider->AttachNavigator(std::move(paths.at(pathId)));
     } 
     for(auto& [id, archer]: archers) {
         archer->AttachInfluenceArea(influences.at(id));

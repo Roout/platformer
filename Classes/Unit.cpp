@@ -171,3 +171,5 @@ void Unit::AddAnimator() {
     this->addChild(m_animator);
     m_animator->setScale(0.2f); // TODO: introduce multi-resolution scaling
 }
+
+void Unit::AddWeapon() {};
