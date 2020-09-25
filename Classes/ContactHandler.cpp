@@ -5,6 +5,8 @@
 #include "Utils.hpp"
 #include "Core.hpp"
 #include "Unit.hpp"
+#include "Bot.hpp"
+#include "Player.hpp"
 #include "PhysicsHelper.hpp"
 #include "Traps.hpp"
 #include "Barrel.hpp"
@@ -95,6 +97,16 @@ bool OnContactBegin(cocos2d::PhysicsContact& contact) {
         return false;
     }
 
+    /// Unit & Unit
+    if(isUnit[BODY_A] && isUnit[BODY_B]) {
+        const auto enemyMask { Utils::CreateMask(core::CategoryBits::ENEMY) };
+        const auto playerIndex { (bodyMasks[BODY_A] & enemyMask) ? BODY_B: BODY_A };
+        const auto player { dynamic_cast<Unit*>(nodes[playerIndex]) };
+        const auto enemy { dynamic_cast<Enemies::Bot*>(nodes[playerIndex^1]) };
+        player->AddCurse<Curses::CurseClass::DPS>(enemy->GetId(), Player::DAMAGE_ON_CONTACT, Curses::UNLIMITED);
+        return false;
+    }
+
     /// Projectile & (Unit or Barrel)
     const bool isProjectile[2] = {
         bodyMasks[BODY_A] == Utils::CreateMask(core::CategoryBits::PROJECTILE),
@@ -113,7 +125,8 @@ bool OnContactBegin(cocos2d::PhysicsContact& contact) {
                 Curses::CurseHub::ignored, 
                 proj->GetDamage()
             );
-        } else if( bodyMasks[projectileIndex ^ 1] == Utils::CreateMask(core::CategoryBits::BARREL)) {
+        } 
+        else if( bodyMasks[projectileIndex ^ 1] == Utils::CreateMask(core::CategoryBits::BARREL)) {
             const auto barrel { dynamic_cast<Barrel*>(nodes[projectileIndex^1]) };
             barrel->Explode();
         }
@@ -183,6 +196,23 @@ bool OnContactSeparate(cocos2d::PhysicsContact& contact) {
 
         return false;
     }
+
+    /// Unit & Unit
+    const auto unitMask { Utils::CreateMask(core::CategoryBits::HERO, core::CategoryBits::ENEMY) };
+    const bool isUnit[2] = {
+        (bodyMasks[BODY_A] & unitMask) > 0,
+        (bodyMasks[BODY_B] & unitMask) > 0
+    };
+    if(isUnit[BODY_A] && isUnit[BODY_B]) {
+        const auto enemyMask { Utils::CreateMask(core::CategoryBits::ENEMY) };
+        const auto playerIndex { (bodyMasks[BODY_A] & enemyMask) > 0 ? BODY_B: BODY_A };
+        const auto player { dynamic_cast<Unit*>(nodes[playerIndex]) };
+        const auto enemy { dynamic_cast<Enemies::Bot*>(nodes[playerIndex^1]) };
+        player->RemoveCurse(enemy->GetId());
+        return false;
+    }
+
+
     return true;
 }
 

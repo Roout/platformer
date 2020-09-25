@@ -118,7 +118,7 @@ protected:
     /**
      * Create a weapon with desired parameters 
      */
-    virtual void AddWeapon() = 0;
+    virtual void AddWeapon();
 
     /// Properties
 protected:

@@ -95,7 +95,8 @@ void Player::AddPhysicsBody() {
         Utils::CreateMask(
             core::CategoryBits::PROJECTILE,
             core::CategoryBits::TRAP,
-            core::CategoryBits::PLATFORM
+            core::CategoryBits::PLATFORM,
+            core::CategoryBits::ENEMY
         )
     );
     const auto sensor { 

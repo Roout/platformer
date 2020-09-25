@@ -98,12 +98,12 @@ void TileMapParser::ParsePaths() {
 
 			details::Form form;
 			const auto& points { objMap.at("polylinePoints").asValueVector() };
+			form.m_id = objMap.at("id").asUnsignedInt();
 			form.m_points.reserve(points.size());
 			for(const auto& pointValue: points) {
 				const auto& pointMap = pointValue.asValueMap();
-				form.m_points.emplace_back(pointMap.at("x").asFloat() + x, pointMap.at("y").asFloat() + y);
+				form.m_points.emplace_back(pointMap.at("x").asFloat() + x, y - pointMap.at("y").asFloat());
 			}
-			form.m_id = objMap.at("id").asUnsignedInt();
 			form.m_type = core::CategoryName::PATH;
 			this->Get<core::CategoryName::PATH>().emplace_back(form);
 		}

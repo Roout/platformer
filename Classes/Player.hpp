@@ -10,6 +10,8 @@ class UserInputHandler;
 class Player final : public Unit {
 public:
 
+    inline static constexpr float DAMAGE_ON_CONTACT { 3.f }; 
+
     static Player* create();
 
     [[nodiscard]] bool init() override;
