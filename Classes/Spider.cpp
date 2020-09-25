@@ -38,11 +38,7 @@ void Spider::onEnter() {
 }
 
 void Spider::onExit() {
-    if(m_web) {
-        m_web->removeFromParent();
-        m_web = nullptr;
-    }
-
+    m_web = nullptr;
     cocos2d::Node::onExit();
 }
 
@@ -132,6 +128,10 @@ void Spider::UpdateAnimation() {
 };
 
 void Spider::OnDeath() {
+    if(m_web) {
+        m_web->removeFromParent();
+        m_web = nullptr;
+    }
     this->removeComponent(this->getPhysicsBody());
     this->getChildByName("health")->removeFromParent();
     m_animator->EndWith([this](){
