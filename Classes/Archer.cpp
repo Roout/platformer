@@ -26,6 +26,7 @@ Archer::Archer(size_t id) :
     Bot{ id, core::EntityNames::ARCHER }
 {
     m_designedSize = cocos2d::Size{ 80.f, 135.f };
+    m_physicsBodySize = cocos2d::Size{ 70.f, 135.f };
 }
 
 

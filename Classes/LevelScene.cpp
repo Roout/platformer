@@ -258,7 +258,7 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                         spider->setName(core::EntityNames::SPIDER);
                         spider->setPosition(form.m_points.front());
                         map->addChild(spider, zOrder);
-                        spider->CreateWebAt(form.m_points.front() + cocos2d::Vec2{0.f, spider->getContentSize().height * 0.7f });
+                        spider->CreateWebAt(form.m_points.front() + cocos2d::Vec2{0.f, spider->getContentSize().height * 0.8f });
                         // save warrior pointer
                         spiders.emplace(form.m_id, spider);
                         pathIdByUnitId.emplace(form.m_id, form.m_pathId);

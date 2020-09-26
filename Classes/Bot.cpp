@@ -39,6 +39,7 @@ Bot::Bot(size_t id, const char* dragonBonesName):
     m_id { id }
 {
     m_designedSize = cocos2d::Size{ 80.f, 135.f };
+    m_physicsBodySize = cocos2d::Size{ 70.f, 135.f };
 }
 
 bool Bot::NeedAttack() const noexcept {

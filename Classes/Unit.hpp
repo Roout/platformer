@@ -144,6 +144,8 @@ protected:
 
     cocos2d::Size m_designedSize {};
     
+    cocos2d::Size m_physicsBodySize {};
+    
     bool m_hasContactWithGround { false };
 };
 

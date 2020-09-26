@@ -65,6 +65,7 @@ private:
     std::unique_ptr<Navigator> m_navigator { nullptr };
 
     cocos2d::Vec2 m_webStart {};
+    cocos2d::Size m_physicsBodySize {};
     cocos2d::DrawNode * m_web { nullptr };
 };
 

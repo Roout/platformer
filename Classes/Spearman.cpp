@@ -32,6 +32,7 @@ Spearman::Spearman(size_t id, const char * name) :
     Warrior{ id, name }
 {
     m_designedSize = cocos2d::Size{ 80.f, 135.f };
+    m_physicsBodySize = cocos2d::Size{ 70.f, 135.f };
 }
 
 void Spearman::AddWeapon() {

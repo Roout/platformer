@@ -22,21 +22,23 @@ bool Unit::init() {
 
     this->AddAnimator();
     this->AddPhysicsBody();
-    m_movement = std::make_unique<Movement>(this->getPhysicsBody());
+    const auto body { this->getPhysicsBody() };
+    m_movement = std::make_unique<Movement>(body);
     this->AddWeapon();
     this->setContentSize(m_designedSize);
 
     /// TODO: move somewhere
-    static constexpr float healthBarShift { 15.f };
+    static constexpr float healthBarShift { 5.f };
     const auto bar = HealthBar::create(this);
+    const auto shiftY { m_designedSize.height };
     bar->setName("health");
-    bar->setPosition(-this->getContentSize().width / 2.f, this->getContentSize().height + healthBarShift);
+    bar->setPosition(-m_designedSize.width / 2.f, shiftY + healthBarShift);
     this->addChild(bar);
 
     // add state lable:
     const auto state = cocos2d::Label::createWithTTF("state", "fonts/arial.ttf", 25);
     state->setName("state");
-    state->setPosition(0.f, this->getContentSize().height + 60.f);
+    state->setPosition(0.f, bar->getPositionY() + bar->getContentSize().height + 15.f);
     this->addChild(state);
     
     return true;
@@ -143,7 +145,7 @@ bool Unit::IsOnGround() const noexcept {
 
 void Unit::AddPhysicsBody() {
     const auto body = cocos2d::PhysicsBody::createBox(
-        m_designedSize,
+        m_physicsBodySize,
         cocos2d::PhysicsMaterial(1.f, 0.f, 0.2f), 
         {0.f, m_designedSize.height / 2.f}
     );
@@ -152,7 +154,7 @@ void Unit::AddPhysicsBody() {
     body->setGravityEnable(true);
     body->setRotationEnable(false);
     
-    const cocos2d::Size sensorShapeSize { m_designedSize.width * 0.9f, 8.f };
+    const cocos2d::Size sensorShapeSize { m_physicsBodySize.width * 0.9f, 8.f };
     const auto sensorShape = cocos2d::PhysicsShapeBox::create(
         sensorShapeSize, 
         cocos2d::PHYSICSSHAPE_MATERIAL_DEFAULT

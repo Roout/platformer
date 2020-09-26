@@ -22,7 +22,10 @@ Spider* Spider::create(size_t id) {
 Spider::Spider(size_t id, const char* dragonBonesName) :
     Bot{ id, dragonBonesName }
 {
-    m_designedSize = cocos2d::Size{ 80.f, 130.f };
+    // define size of the graphical content
+    m_designedSize = cocos2d::Size { 90.f, 125.f };
+    // define size of the physics body
+    m_physicsBodySize = cocos2d::Size{ 70.f, 80.f };
 }
 
 bool Spider::init() {
@@ -30,6 +33,9 @@ bool Spider::init() {
         return false; 
     }
     m_movement->SetMaxSpeed(80.f);
+    // override content size because the body is with offset and smaller than the 
+    // graph content
+    this->setContentSize(m_designedSize);
     return true;
 };
 
@@ -53,8 +59,9 @@ void Spider::CreateWebAt(const cocos2d::Vec2& start) {
 void Spider::UpdateWeb() {
     if(m_web) {
         m_web->clear();
-        auto destination = this->getPosition() + cocos2d::Vec2{ 0.f, this->getContentSize().height / 2.f}; 
-        m_web->drawLine(m_webStart, destination, cocos2d::Color4F::WHITE);        
+        const auto shiftY { this->getContentSize().height * 0.8f };
+        auto middleOfAss = this->getPosition() + cocos2d::Vec2{ 0.f, shiftY}; 
+        m_web->drawLine(m_webStart, middleOfAss, cocos2d::Color4F::WHITE);        
     }
 }
 
@@ -144,10 +151,13 @@ void Spider::AddPhysicsBody() {
     // NOTE: instead of using Unit::AddPhysicsBody I ended with own `body`
     // as there is no need to create a sensor or other shapes
     const auto body = cocos2d::PhysicsBody::createBox(
-        m_designedSize,
-        cocos2d::PhysicsMaterial(1.f, 0.f, 0.2f), 
-        {0.f, m_designedSize.height / 2.f}
+        m_physicsBodySize,
+        cocos2d::PhysicsMaterial(1.f, 0.f, 0.2f)
     );
+    // explicitly define the offset rather than in constructor of the body
+    // because in constructor offset is added to the shape!
+    const auto yOffset { m_designedSize.height * 0.65f };
+    body->setPositionOffset({0.f, yOffset});
     body->setMass(25.f);
     body->setDynamic(true);
     body->setGravityEnable(true);
