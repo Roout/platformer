@@ -42,7 +42,7 @@ bool HealthBar::init() {
         cocos2d::Color4F::RED
     );
     this->addChild(health, 0);
-
+    this->setContentSize(barSize);
     m_maxHealth = m_unit->GetHealth();
     return true;
 }
