@@ -22,7 +22,7 @@ Spider* Spider::create(size_t id) {
 Spider::Spider(size_t id, const char* dragonBonesName) :
     Bot{ id, dragonBonesName }
 {
-    m_designedSize = cocos2d::Size{ 60.f, 60.f };
+    m_designedSize = cocos2d::Size{ 80.f, 130.f };
 }
 
 bool Spider::init() {
@@ -45,7 +45,7 @@ void Spider::onExit() {
 void Spider::CreateWebAt(const cocos2d::Vec2& start) {
     m_webStart = start;
     
-    constexpr float lineWidth { 18.f }; 
+    constexpr float lineWidth { 25.f }; 
     m_web = cocos2d::DrawNode::create(lineWidth);
     this->getParent()->addChild(m_web, this->getLocalZOrder() - 1);
 }
@@ -170,6 +170,7 @@ void Spider::AddPhysicsBody() {
 
 void Spider::AddAnimator() {
     Unit::AddAnimator();
+    m_animator->setScale(0.4f); // override scale
     m_animator->InitializeAnimations({
         std::make_pair(Utils::EnumCast(State::PATROL),  GetStateName(State::PATROL)),
         std::make_pair(Utils::EnumCast(State::DEAD),    GetStateName(State::DEAD))
