@@ -128,13 +128,14 @@ void Spider::UpdateAnimation() {
 };
 
 void Spider::OnDeath() {
-    if(m_web) {
-        m_web->removeFromParent();
-        m_web = nullptr;
-    }
-    this->removeComponent(this->getPhysicsBody());
     this->getChildByName("health")->removeFromParent();
-    m_animator->EndWith([this](){
+    this->MoveAlong(0.f, -1.f); // fall down!
+    m_animator->EndWith([this]() {
+        if(this->m_web) {
+            this->m_web->removeFromParent();
+            this->m_web = nullptr;
+        }
+        this->removeComponent(this->getPhysicsBody());
         this->runAction(cocos2d::RemoveSelf::create(true));
     });
 };
