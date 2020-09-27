@@ -8,6 +8,10 @@ public:
     static PauseNode* create();
 
     bool init() override;
+
+    void onEnter() override;
+    
+    void onExit() override;
 };
 
 #endif // RESTART_SCENE_HPP

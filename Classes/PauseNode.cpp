@@ -28,9 +28,8 @@ bool PauseNode::init() {
                 case cocos2d::ui::Widget::TouchEventType::ENDED: {
                     const auto scene = cocos2d::Director::getInstance()->getRunningScene();
                     const auto level = scene->getChildByName("Level");
-                    level->resume();
                     dynamic_cast<LevelScene*>(level)->Restart();
-                    scene->getChildByName("Interface")->removeAllChildren();
+                    this->removeFromParent();
                 } break;
                 default: break;
             }
@@ -42,10 +41,7 @@ bool PauseNode::init() {
             switch (type) {
                 case cocos2d::ui::Widget::TouchEventType::BEGAN: break;
                 case cocos2d::ui::Widget::TouchEventType::ENDED: {
-                    const auto scene = cocos2d::Director::getInstance()->getRunningScene();
-                    const auto level = scene->getChildByName("Level");
-                    level->resume();
-                    scene->getChildByName("Interface")->removeAllChildren();
+                    this->removeFromParent();
                 } break;
                 default: break;
             }
@@ -65,3 +61,22 @@ bool PauseNode::init() {
     return true;
 }
 
+void PauseNode::onEnter() {
+    cocos2d::Node::onEnter();
+    // pause level scene on enter
+    auto scene = cocos2d::Director::getInstance()->getRunningScene();
+    auto level = scene->getChildByName("Level");
+    if(level) {
+        level->pause();
+    }
+};
+
+void PauseNode::onExit() {
+    cocos2d::Node::onExit();
+    // resume level scene on exit
+    auto scene = cocos2d::Director::getInstance()->getRunningScene();
+    auto level = scene->getChildByName("Level");
+    if(level) {
+        level->resume();
+    }
+};

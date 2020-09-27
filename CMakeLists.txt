@@ -75,6 +75,7 @@ list(APPEND GAME_SOURCE
      Classes/Spider.cpp
      Classes/Spearman.cpp
      Classes/PauseNode.cpp
+     Classes/DebugScreen.cpp
      Classes/DragonBonesAnimator.cpp
      Classes/DeathScreen.cpp
      Classes/UnitMovement.cpp
@@ -93,6 +94,7 @@ list(APPEND GAME_HEADER
      Classes/LevelScene.hpp
      Classes/ContactHandler.hpp
      Classes/PauseNode.hpp
+     Classes/DebugScreen.hpp
      Classes/Unit.hpp
      Classes/DeathScreen.hpp
      Classes/Player.hpp
