@@ -5,6 +5,7 @@
 
 #include "PauseNode.hpp"
 #include "DeathScreen.hpp"
+#include "DebugScreen.hpp"
 
 /**
  * Responsibility:
@@ -41,11 +42,17 @@ public:
         // Listen keyboard events
         const auto listener = cocos2d::EventListenerKeyboard::create();
         listener->onKeyPressed = [this](cocos2d::EventKeyboard::KeyCode code, cocos2d::Event* event) {
-            if(code == cocos2d::EventKeyboard::KeyCode::KEY_ESCAPE && this->OnPressedButton()) {
-                const auto scene = cocos2d::Director::getInstance()->getRunningScene();
-                const auto level = scene->getChildByName("Level");
-                if(level) {
-                    level->pause();
+            /// TODO: Pause level `onEnter`
+            if(code == cocos2d::EventKeyboard::KeyCode::KEY_ESCAPE) {
+                (void) this->LaunchPauseScreen();
+            }
+            else if(code == cocos2d::EventKeyboard::KeyCode::KEY_TAB) {
+                if(this->m_lastDisplayedScreen == Display::DEBUG) {
+                    this->removeChildByName(screen::DebugScreen::NAME);
+                    this->m_lastDisplayedScreen = Display::NOTHING;
+                }
+                else {
+                    (void) this->LaunchDebugScreen();
                 }
             }
             return true;
@@ -54,7 +61,7 @@ public:
 
         // Listen custom events
         auto callback = [this](cocos2d::EventCustom* event) { 
-            this->OnDeathEvent();            
+            this->LaunchDeathScreen();            
         };
         const auto customEventListener = cocos2d::EventListenerCustom::create(DeathScreen::EVENT_NAME, callback);
         dispatcher->addEventListenerWithSceneGraphPriority(customEventListener, this);
@@ -66,8 +73,7 @@ public:
     }
 
 private:
-
-    void OnDeathEvent() {
+    void LaunchDeathScreen() {
         const auto visibleSize = cocos2d::Director::getInstance()->getVisibleSize();
         const auto origin = cocos2d::Director::getInstance()->getVisibleOrigin();
 
@@ -76,20 +82,54 @@ private:
         node->setPosition(visibleSize / 2.f);
 
         this->addChild(node);
+        m_lastDisplayedScreen = Display::DEATH;
     }
 
-    bool OnPressedButton() {
+    bool LaunchDebugScreen() {
         if(this->getChildrenCount() == 0U) {
-            auto node = PauseNode::create();
             const auto visibleSize = cocos2d::Director::getInstance()->getVisibleSize();
             const auto origin = cocos2d::Director::getInstance()->getVisibleOrigin();
+
+            const auto node = screen::DebugScreen::create();
             node->setAnchorPoint(cocos2d::Vec2::ANCHOR_MIDDLE);
             node->setPosition(visibleSize / 2.f);
+
             this->addChild(node);
+            m_lastDisplayedScreen = Display::DEBUG;
             return true;
         }
         return false;
     }
+
+    bool LaunchPauseScreen() {
+        if(this->getChildrenCount() == 0U) {
+            const auto visibleSize = cocos2d::Director::getInstance()->getVisibleSize();
+            const auto origin = cocos2d::Director::getInstance()->getVisibleOrigin();
+            
+            auto node = PauseNode::create();
+            node->setAnchorPoint(cocos2d::Vec2::ANCHOR_MIDDLE);
+            node->setPosition(visibleSize / 2.f);
+
+            this->addChild(node);
+            m_lastDisplayedScreen = Display::PAUSE;
+            return true;
+        }
+        return false;
+    }
+
+private:
+
+    enum class Display : uint8_t {
+        NOTHING,
+        DEATH,  // death screen is added here but removed somewhere else 
+        PAUSE,  // pause is added here but removed somewhere else 
+        DEBUG   // added & removed here (Interface class)
+    };
+
+    // It may not be the current displayed screen because some of them are removed without 
+    // notifying interface
+    Display m_lastDisplayedScreen { Display::NOTHING };
+
 };
 
 #endif // LEVEL_INTERFACE_HPP

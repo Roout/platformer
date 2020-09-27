@@ -34,7 +34,7 @@ cocos2d::Scene* LevelScene::createRootScene(int id) {
     const auto world = root->getPhysicsWorld();
     world->setGravity(cocos2d::Vec2(0, -1000));
     world->setSubsteps(2);
-    world->setDebugDrawMask(cocos2d::PhysicsWorld::DEBUGDRAW_ALL);
+    world->setDebugDrawMask(cocos2d::PhysicsWorld::DEBUGDRAW_NONE);
 
     const auto uInterface = Interface::create();
     const auto level = LevelScene::create(id);
