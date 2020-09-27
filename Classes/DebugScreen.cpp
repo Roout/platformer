@@ -28,7 +28,7 @@ bool DebugScreen::init() {
     if(world) {
         m_physicsWorldMask = world->getDebugDrawMask();
         m_caption = cocos2d::Label::createWithTTF("Physics debug ", "fonts/arial.ttf", 25);
-        m_caption->setTextColor(cocos2d::Color4B::BLACK);
+        m_caption->setTextColor(cocos2d::Color4B::WHITE);
 
         auto checkbox = ui::CheckBox::create(
             "cocosui/check_box_normal.png",
@@ -59,15 +59,23 @@ bool DebugScreen::init() {
         checkbox->setAnchorPoint({0.f, 0.5f});
         
         const auto visibleSize = cocos2d::Director::getInstance()->getVisibleSize();
-        const auto origin = cocos2d::Director::getInstance()->getVisibleOrigin();
 
-        auto shiftY = visibleSize.height / 3.f + origin.y;
+        auto background = cocos2d::DrawNode::create();
+        background->setAnchorPoint(cocos2d::Vec2::ANCHOR_MIDDLE);
+        background->setPositionY(visibleSize.height / 5.f);
+        const cocos2d::Vec2 leftBot { -visibleSize.width * 0.2f, -visibleSize.height * 0.2f }, 
+                            rightTop { visibleSize.width * 0.2f, visibleSize.height * 0.2f };
+        const cocos2d::Color4F color{0.f, 0.f, 0.f, 0.5f};
+        background->drawSolidRect(leftBot, rightTop, color);
+        this->addChild(background);
+
+        auto shiftY { rightTop.y * 0.8f } ;
         m_caption->setPosition({ -checkbox->getContentSize().width / 2.f, shiftY } );
         auto shiftX = m_caption->getPositionX() + m_caption->getContentSize().width / 2.f + 10.f;
         checkbox->setPosition({shiftX, shiftY});
 
-        this->addChild(m_caption);
-        this->addChild(checkbox);
+        background->addChild(m_caption);
+        background->addChild(checkbox);
     }
     return true;
 };
