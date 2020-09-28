@@ -14,11 +14,19 @@ namespace cocos2d {
  */
 class Movement final {
 public:
+    static constexpr float m_jumpHeight { 255.f };     // up to 3 tiles
+    static constexpr float m_timeToJumpApex { 0.30 };  // standart time
+    static constexpr float m_gravity { 
+        -m_jumpHeight / (2 * m_timeToJumpApex * m_timeToJumpApex) 
+    };
+    
     Movement(cocos2d::PhysicsBody * const body);
     
     ~Movement();
 
     void Update(const float dt) noexcept;
+
+    void Jump() noexcept;
 
     void MoveUp() noexcept;
 
@@ -35,18 +43,23 @@ public:
 private:
     cocos2d::PhysicsBody * const m_body { nullptr };
 
-    float m_desiredVelocity { 550.f };
-    // static constexpr float  m_jumpHeight { 255.f };
-    // static constexpr float  m_timeToJumpApex { 0.55 };
+    const float m_maxVelocity { 1550.f };
+    static constexpr int    m_timeStepsToCompletion { 1 };
 
-    static constexpr int m_timeStepsToCompletion { 6 };
+    float m_desiredVelocity { 550.f };
 
     int m_remainingAirSteps { 0 };
-
-    enum class Direction { LEFT, RIGHT, UP, DOWN, COUNT };
     
-    std::array<bool, Utils::EnumSize<Direction>()> m_indicators;
+    enum class Action { 
+        JUMP, 
+        MOVE_LEFT, 
+        MOVE_RIGHT, 
+        MOVE_UP, 
+        MOVE_DOWN, 
+        COUNT 
+    };
 
+    std::array<bool, Utils::EnumSize<Action>()> m_indicators;
 };
 
 #endif // UNIT_MOVEMENT_HPP
