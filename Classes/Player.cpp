@@ -8,6 +8,7 @@
 #include "Weapon.hpp"
 #include "DeathScreen.hpp"
 #include "DragonBonesAnimator.hpp"
+#include "UnitMovement.hpp"
 
 #include <unordered_map>
 #include <algorithm>
@@ -220,5 +221,14 @@ void Player::UpdateState(const float dt) noexcept {
     } 
     else {
         m_currentState = State::WALK;
+    }
+}
+
+void Player::MoveAlong(float x, float y) noexcept {
+    if(y == 1.f) {
+        m_movement->Jump();
+    }
+    else {
+        Unit::MoveAlong(x, y);
     }
 }

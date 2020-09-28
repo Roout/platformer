@@ -7,6 +7,7 @@
 #include "Weapon.hpp"
 #include "Core.hpp"
 #include "DragonBonesAnimator.hpp"
+#include "UnitMovement.hpp"
 
 Unit::Unit(const std::string& dragonBonesName) :
     m_curses { this },
@@ -146,8 +147,8 @@ bool Unit::IsOnGround() const noexcept {
 void Unit::AddPhysicsBody() {
     const auto body = cocos2d::PhysicsBody::createBox(
         m_physicsBodySize,
-        cocos2d::PhysicsMaterial(1.f, 0.f, 0.2f), 
-        {0.f, m_designedSize.height / 2.f}
+        cocos2d::PhysicsMaterial(1.f, 0.f, 0.f), 
+        {0.f, m_physicsBodySize.height / 2.f}
     );
     body->setMass(25.f);
     body->setDynamic(true);

@@ -4,6 +4,7 @@
 #include "DragonBonesAnimator.hpp"
 #include "Core.hpp"
 #include "Weapon.hpp"
+#include "UnitMovement.hpp"
 
 namespace Enemies {
 
@@ -32,7 +33,7 @@ bool Spider::init() {
     if(!Bot::init()) {
         return false; 
     }
-    m_movement->SetMaxSpeed(80.f);
+    m_movement->SetMaxSpeed(130.f);
     // override content size because the body is with offset and smaller than the 
     // graph content
     this->setContentSize(m_designedSize);
@@ -117,8 +118,8 @@ void Spider::UpdatePosition(const float dt) noexcept {
     if(!this->IsDead()) {
         // update
         m_navigator->Update(dt);
-        m_movement->Update(dt);
     }
+    m_movement->Update(dt);
 };
 
 void Spider::UpdateAnimation() {
@@ -136,13 +137,13 @@ void Spider::UpdateAnimation() {
 
 void Spider::OnDeath() {
     this->getChildByName("health")->removeFromParent();
+    this->getPhysicsBody()->setGravityEnable(true);
     this->MoveAlong(0.f, -1.f); // fall down!
     m_animator->EndWith([this]() {
         if(this->m_web) {
             this->m_web->removeFromParent();
             this->m_web = nullptr;
         }
-        this->removeComponent(this->getPhysicsBody());
         this->runAction(cocos2d::RemoveSelf::create(true));
     });
 };
@@ -160,7 +161,7 @@ void Spider::AddPhysicsBody() {
     body->setPositionOffset({0.f, yOffset});
     body->setMass(25.f);
     body->setDynamic(true);
-    body->setGravityEnable(true);
+    body->setGravityEnable(false);
     body->setRotationEnable(false);
 
     // change masks for physics body

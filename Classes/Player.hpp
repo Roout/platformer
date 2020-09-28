@@ -50,6 +50,8 @@ private:
 
     void AddAnimator() override;
 
+    void MoveAlong(float x, float y) noexcept override;
+
     Player();
 
     /// Properties
