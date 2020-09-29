@@ -44,7 +44,7 @@ bool Player::init() {
 void Player::AddWeapon() {
     // create weapon (it should be read from config)
     const auto damage { 25.f };
-    const auto range { 60.f };
+    const auto range { 70.f };
     const auto preparationTime { 0.f };
     const auto attackDuration { m_animator->GetDuration(Utils::EnumCast(State::ATTACK)) };
     const auto reloadTime { 0.1f };

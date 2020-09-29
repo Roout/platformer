@@ -103,7 +103,7 @@ void Unit::Attack() {
         position.y += m_designedSize.height * 0.05f;
         const cocos2d::Rect attackedArea {
             position,
-            cocos2d::Size{ attackRange, m_designedSize.height * 0.9f }
+            cocos2d::Size{ attackRange, m_designedSize.height * 1.05f } // a little bigger than the designed size
         };
         m_weapon->LaunchAttack(attackedArea, this->getPhysicsBody()->getVelocity());
     }
