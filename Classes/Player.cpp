@@ -37,7 +37,7 @@ bool Player::init() {
     }    
     m_follower = std::make_unique<SmoothFollower>(this);
     m_inputHandler = std::make_unique<UserInputHandler>(this);
-    m_movement->SetMaxSpeed(450.f);
+    m_movement->SetMaxSpeed(400.f);
     return true;
 }
 
@@ -221,14 +221,5 @@ void Player::UpdateState(const float dt) noexcept {
     } 
     else {
         m_currentState = State::WALK;
-    }
-}
-
-void Player::MoveAlong(float x, float y) noexcept {
-    if(y == 1.f) {
-        m_movement->Jump();
-    }
-    else {
-        Unit::MoveAlong(x, y);
     }
 }

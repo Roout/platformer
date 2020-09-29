@@ -60,23 +60,11 @@ void Unit::MoveAlong(const cocos2d::Vec2& direction) noexcept {
 }
 
 void Unit::MoveAlong(float x, float y) noexcept {
-    // Horizontal move
-    if(x == -1.f) {
-        m_movement->MoveLeft();
+    if(y == 1.f || y == -1.f) {
+        m_movement->Push(x, y);
     }
-    else if(x == 1.f) {
-        m_movement->MoveRight();
-    }
-    // Vertical move
-    if(y == -1.f) {
-        m_movement->MoveDown();
-    }
-    else if(y == 1.f) {
-        m_movement->MoveUp();
-    }
-    // Stop
-    if( x == 0.f && y == 0.f) {
-        m_movement->Stop();
+    else {
+        m_movement->Move(x, y);
     }
 }
 
@@ -106,16 +94,16 @@ void Unit::Attack() {
 
         auto position = this->getPosition();
         if(m_side == Side::RIGHT) {
-            position.x += this->getContentSize().width / 2.f;
+            position.x += m_designedSize.width / 2.f;
         }
         else {
-            position.x -= this->getContentSize().width / 2.f + attackRange;
+            position.x -= m_designedSize.width / 2.f + attackRange;
         }
         // shift a little bit higher to avoid immediate collision with the ground
-        position.y += this->getContentSize().height * 0.05f;
+        position.y += m_designedSize.height * 0.05f;
         const cocos2d::Rect attackedArea {
             position,
-            cocos2d::Size{ attackRange, this->getContentSize().height * 0.9f }
+            cocos2d::Size{ attackRange, m_designedSize.height * 0.9f }
         };
         m_weapon->LaunchAttack(attackedArea, this->getPhysicsBody()->getVelocity());
     }

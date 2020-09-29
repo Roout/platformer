@@ -1,7 +1,7 @@
 #ifndef UNIT_MOVEMENT_HPP
 #define UNIT_MOVEMENT_HPP
 
-#include <array>
+#include "cocos/math/Vec2.h"
 #include "Utils.hpp"
 
 namespace cocos2d {
@@ -24,17 +24,11 @@ public:
     
     ~Movement();
 
-    void Update(const float dt) noexcept;
+    void Update(float dt) noexcept;
+    
+    void Push(float x, float y) noexcept;
 
-    void Jump() noexcept;
-
-    void MoveUp() noexcept;
-
-    void MoveDown() noexcept;
-
-    void MoveRight() noexcept;
-
-    void MoveLeft() noexcept;
+    void Move(float x, float y) noexcept;
 
     void Stop() noexcept;
     
@@ -44,22 +38,14 @@ private:
     cocos2d::PhysicsBody * const m_body { nullptr };
 
     const float m_maxVelocity { 1550.f };
-    static constexpr int    m_timeStepsToCompletion { 1 };
-
+    const float m_upJumpSpeed { 0.f };
+    const float m_downJumpSpeed { 0.f };
+    
     float m_desiredVelocity { 550.f };
 
-    int m_remainingAirSteps { 0 };
-    
-    enum class Action { 
-        JUMP, 
-        MOVE_LEFT, 
-        MOVE_RIGHT, 
-        MOVE_UP, 
-        MOVE_DOWN, 
-        COUNT 
-    };
+    cocos2d::Vec2 m_force { 0.f, 0.f };
 
-    std::array<bool, Utils::EnumSize<Action>()> m_indicators;
+    cocos2d::Vec2 m_impulse { 0.f, 0.f };
 };
 
 #endif // UNIT_MOVEMENT_HPP
