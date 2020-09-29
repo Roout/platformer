@@ -6,9 +6,9 @@
 
 Movement::Movement(cocos2d::PhysicsBody * const body):
     m_body { body },
-    m_maxVelocity { floorf(sqrtf(2.f * m_jumpHeight * (-m_gravity)) + 1.f ) },
-    m_upJumpSpeed { sqrtf(2.f * m_jumpHeight * (-m_gravity)) },
-    m_downJumpSpeed { -m_gravity * sqrtf(2.f * m_jumpHeight / (-m_gravity)) }
+    m_upJumpSpeed { sqrtf(2.f * JUMP_HEIGHT * (-GRAVITY)) },
+    m_maxVelocity { floorf(m_upJumpSpeed + 1.f) },
+    m_downJumpSpeed { -GRAVITY * sqrtf(2.f * JUMP_HEIGHT / (-GRAVITY)) }
 {
     m_body->retain();
 }

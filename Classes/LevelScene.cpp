@@ -33,7 +33,7 @@ LevelScene::LevelScene(int id):
 cocos2d::Scene* LevelScene::createRootScene(int id) {
     const auto root = cocos2d::Scene::createWithPhysics();
     const auto world = root->getPhysicsWorld();
-    world->setGravity(cocos2d::Vec2(0, Movement::m_gravity));
+    world->setGravity(cocos2d::Vec2(0, Movement::GRAVITY));
     world->setSubsteps(4);
     world->setDebugDrawMask(cocos2d::PhysicsWorld::DEBUGDRAW_NONE);
 

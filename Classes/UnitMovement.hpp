@@ -14,10 +14,10 @@ namespace cocos2d {
  */
 class Movement final {
 public:
-    static constexpr float m_jumpHeight { 255.f };     // up to 3 tiles
-    static constexpr float m_timeToJumpApex { 0.30 };  // standart time
-    static constexpr float m_gravity { 
-        -m_jumpHeight / (2 * m_timeToJumpApex * m_timeToJumpApex) 
+    static constexpr float JUMP_HEIGHT { 255.f };     // up to 3 tiles
+    static constexpr float TIME_OF_APEX_JUMP { 0.30 };  // standart time
+    static constexpr float GRAVITY { 
+        -JUMP_HEIGHT / (2 * TIME_OF_APEX_JUMP * TIME_OF_APEX_JUMP) 
     };
     
     Movement(cocos2d::PhysicsBody * const body);
@@ -37,10 +37,10 @@ public:
 private:
     cocos2d::PhysicsBody * const m_body { nullptr };
 
-    const float m_maxVelocity { 1550.f };
     const float m_upJumpSpeed { 0.f };
+    const float m_maxVelocity { 1550.f };
     const float m_downJumpSpeed { 0.f };
-    
+
     float m_desiredVelocity { 550.f };
 
     cocos2d::Vec2 m_force { 0.f, 0.f };
