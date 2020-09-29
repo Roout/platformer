@@ -36,11 +36,10 @@ namespace helper {
     }
 
     /**
-     * Return indication whether both bectors have components with the same sign.
+     * Return indication whether both vectors have components with the same sign.
      */
     inline bool HaveSameSigns(const cocos2d::Vec2& lhs, const cocos2d::Vec2& rhs) noexcept {
         return HaveSameSigns(lhs.x, rhs.x) && HaveSameSigns(lhs.y, rhs.y);
-    }    
-
+    }
 }
 #endif // PHYSICS_HELPER_HPP
