@@ -17,13 +17,7 @@ Movement::~Movement() {
     m_body->release();
 }
 
-/** 
- * TODO:
- * - [x] fix clamping for jump state
- * - [x] fix horizontal speed update on jump (now if u jumo with non-zero force applied along x-axis)
- * cotangence won't work!
- */
-void Movement::Update(float dt) noexcept {
+void Movement::Update(float [[maybe_unused]] dt) noexcept {
     if(m_impulse.x != 0.f || m_impulse.y != 0.f ) {
         m_body->applyImpulse(m_impulse);
         m_impulse = { 0.f, 0.f };
@@ -47,7 +41,7 @@ void Movement::Update(float dt) noexcept {
 }
 
 
-void Movement::Push(float x, float y) noexcept {
+void Movement::Push(float [[maybe_unused]] x, float y) noexcept {
     float yJumpSpeed = 0.f;
     if(y > 0.f) { // jump
         yJumpSpeed = m_upJumpSpeed;
@@ -71,12 +65,13 @@ void Movement::Move(float x, float y) noexcept {
 }
 
 void Movement::Stop() noexcept {
-    m_force.x = m_force.y = m_impulse.x = 0.f;
     const auto velocity { m_body->getVelocity() };
-    if(helper::IsEquel(velocity.y, 0.f, 0.01f)) {
+    // we either on the ground either using simple move up/down (e.g. spider)
+    if(helper::IsEquel(velocity.y, 0.f, 0.01f) || m_force.y != 0.f) {
         m_body->resetForces();
     }
     m_body->setVelocity({ 0.f, velocity.y });
+    m_force.x = m_force.y = m_impulse.x = 0.f;
 }
 
 void Movement::SetMaxSpeed(float speed) noexcept {
