@@ -1,5 +1,5 @@
 #include "UserInputHandler.hpp"
-#include "Unit.hpp"
+#include "Player.hpp"
 #include "PhysicsHelper.hpp"
 #include "cocos2d.h"
 #include "UnitMovement.hpp"
@@ -8,25 +8,25 @@
 
 UserInputHandler::Input UserInputHandler::Input::Create(WinKeyCode keyCode) noexcept {
     Input input;
-    if (keyCode == WinKeyCode::KEY_LEFT_ARROW ||
+    if(keyCode == WinKeyCode::KEY_LEFT_ARROW ||
         keyCode == WinKeyCode::KEY_A
     ) {
         input.dx = -1;
     }
-    else if (keyCode == WinKeyCode::KEY_RIGHT_ARROW ||
-            keyCode == WinKeyCode::KEY_D
+    else if(keyCode == WinKeyCode::KEY_RIGHT_ARROW ||
+        keyCode == WinKeyCode::KEY_D
     ) {
         input.dx = 1;
     }
     
-    if (keyCode == WinKeyCode::KEY_UP_ARROW ||
+    if(keyCode == WinKeyCode::KEY_UP_ARROW ||
         keyCode == WinKeyCode::KEY_W || 
         keyCode == WinKeyCode::KEY_SPACE
     ) {
         input.jump = true;
     }
     
-    if( keyCode == WinKeyCode::KEY_F ) {
+    if(keyCode == WinKeyCode::KEY_F ) {
         input.attack = true;
     }
     
@@ -41,7 +41,7 @@ void UserInputHandler::Input::Merge(const Input& input) noexcept {
     }
 }  
 
-UserInputHandler::UserInputHandler(Unit * const player) :
+UserInputHandler::UserInputHandler(Player * const player) :
     m_player { player },
     m_validKeys {
         WinKeyCode::KEY_LEFT_ARROW,
@@ -76,9 +76,9 @@ UserInputHandler::UserInputHandler(Unit * const player) :
 }
 
 void UserInputHandler::Reset() {
-    m_player->MoveAlong(0.f, 0.f);
+    m_player->m_movement->ResetForce();
     m_lastInput.dx = 0;
-    m_lastInput.jump = false;
+    m_lastInput.jump = 0;
     m_lastInput.attack = false;
 }
 
@@ -87,20 +87,42 @@ void UserInputHandler::OnKeyPressed(
     cocos2d::Event* event
 ) {
     m_lastInput.Merge(Input::Create(keyCode));
-
-    if(m_lastInput.jump && m_player->IsOnGround() ) {
+    /**
+     * first jump from the ground   - m_lastInput.jump && m_player->IsOnGround()
+     * first jump from the air      - m_lastInput.jump && m_lastInput.jumpCounter < 2
+     * second jump from the air     - /
+     */
+    if(m_player->IsOnGround()) {
+        // player make on the ground (doesn't matter which)
+        // so the counter is reseted
+        m_lastInput.jumpCounter = 0;
+    }
+    
+    if( (m_lastInput.jump && m_player->IsOnGround()) || 
+        (m_lastInput.jump && m_lastInput.jumpCounter < MAX_JUMP_COUNT)
+    ) {
         m_player->MoveAlong(0.f, 1.f);
+
+        if(m_player->IsOnGround()) {
+            m_lastInput.jumpCounter = 1;
+        }
+        else {
+            // jump in the air - first jump or second - doesn't matter
+            m_lastInput.jumpCounter = MAX_JUMP_COUNT;
+        }
     }
 
     if(m_lastInput.dx == 1) {
-        m_player->MoveAlong(0.f, 0.f);
+        // reset only dx!
+        m_player->m_movement->ResetForceX();
         m_player->MoveAlong(1.f, 0.f);
         if(m_player->IsLookingLeft()) {
             m_player->Turn();
         }
     }
     else if(m_lastInput.dx == -1) {
-        m_player->MoveAlong(0.f, 0.f);
+        // reset only dx!
+        m_player->m_movement->ResetForceX();
         m_player->MoveAlong(-1.f, 0.f);
         if(!m_player->IsLookingLeft()) {
             m_player->Turn();
@@ -119,7 +141,8 @@ void UserInputHandler::OnKeyRelease(
     const Input released { Input::Create(keyCode) };
     // TODO: release up and left/right is ongoing!
     if(released.dx && released.dx == m_lastInput.dx) {
-        m_player->MoveAlong(0.f, 0.f);
+        // reset only dx!
+        m_player->m_movement->ResetForceX();
         m_lastInput.dx = 0;
     }
 

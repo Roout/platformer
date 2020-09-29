@@ -144,7 +144,7 @@ void Spider::OnDeath() {
     const auto body = this->getPhysicsBody();
     body->setGravityEnable(true);
     body->setContactTestBitmask(0); // don't cause any damage to player
-    m_movement->Stop(); // reset forces
+    m_movement->ResetForce(); // reset forces
     m_movement->Push(0.f, -0.1f); // push down
     m_animator->EndWith([this]() {
         if(this->m_web) {

@@ -44,7 +44,7 @@ bool Player::init() {
 void Player::AddWeapon() {
     // create weapon (it should be read from config)
     const auto damage { 25.f };
-    const auto range { 60.f };
+    const auto range { 70.f };
     const auto preparationTime { 0.f };
     const auto attackDuration { m_animator->GetDuration(Utils::EnumCast(State::ATTACK)) };
     const auto reloadTime { 0.1f };
@@ -129,6 +129,23 @@ void Player::UpdatePosition(const float dt) noexcept {
         m_follower->UpdateMapPosition(dt);
     }
 }
+
+void Player::MoveAlong(float x, float y) noexcept {
+    if( !helper::IsEquel(y, 0.f, 0.0001f) ) {
+        // need to be called earlier because forces will be reseted 
+        // and method @IsOnGround will fail
+        const auto body { this->getPhysicsBody() };
+        if( !helper::IsEquel(body->getVelocity().y, 0.f, 0.001f) ) {
+            m_hasContactWithGround = false;
+        }
+        m_movement->ResetForceY();
+        m_movement->Push(x, y);
+    }
+    else {
+        m_movement->Move(x, y);
+    }
+}
+
 
 void Player::pause() {
     Unit::pause();

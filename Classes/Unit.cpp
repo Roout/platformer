@@ -60,7 +60,7 @@ void Unit::MoveAlong(const cocos2d::Vec2& direction) noexcept {
 }
 
 void Unit::MoveAlong(float x, float y) noexcept {
-    if(y == 1.f || y == -1.f) {
+    if( !helper::IsEquel(y, 0.f, 0.0001f) ) {
         m_movement->Push(x, y);
     }
     else {
@@ -103,7 +103,7 @@ void Unit::Attack() {
         position.y += m_designedSize.height * 0.05f;
         const cocos2d::Rect attackedArea {
             position,
-            cocos2d::Size{ attackRange, m_designedSize.height * 0.9f }
+            cocos2d::Size{ attackRange, m_designedSize.height * 1.05f } // a little bigger than the designed size
         };
         m_weapon->LaunchAttack(attackedArea, this->getPhysicsBody()->getVelocity());
     }

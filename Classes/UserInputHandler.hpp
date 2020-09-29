@@ -6,7 +6,7 @@
 #include <array>
 
 // This is player's avatar
-class Unit; 
+class Player; 
 
 using WinKeyCode = cocos2d::EventKeyboard::KeyCode;
 
@@ -16,7 +16,7 @@ class UserInputHandler final {
     // Lifetime management
 public:
     // define which unit&node it listen to.
-    UserInputHandler(Unit * const);
+    UserInputHandler(Player * const);
     ~UserInputHandler() = default;
 
     UserInputHandler(const UserInputHandler& ) = delete;
@@ -36,13 +36,16 @@ private:
     void OnKeyRelease(WinKeyCode keyCode, cocos2d::Event* event);
 
 private:
+    static constexpr int MAX_JUMP_COUNT { 2 };
+    
     /** @brief
      * Used to keep track of user's last input
     */
     struct Input final {
-        bool jump { false };
-        bool attack { false };
-        int dx { 0 };
+        int     jumpCounter { 0 };
+        bool    jump { false };
+        bool    attack { false };
+        int     dx { 0 };
 
         Input() = default;
         
@@ -57,7 +60,7 @@ private:
     };
 
     Input m_lastInput {};
-    Unit * const m_player { nullptr };
+    Player * const m_player { nullptr };
     std::array<WinKeyCode, 8U> m_validKeys;
 };
 

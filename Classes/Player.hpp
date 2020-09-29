@@ -5,12 +5,11 @@
 #include <memory>
 
 class SmoothFollower;
-class UserInputHandler;
 
 class Player final : public Unit {
 public:
 
-    inline static constexpr float DAMAGE_ON_CONTACT { 3.f }; 
+    inline static constexpr float DAMAGE_ON_CONTACT { 7.f }; 
 
     static Player* create();
 
@@ -50,6 +49,8 @@ private:
 
     void AddAnimator() override;
 
+    void MoveAlong(float x, float y) noexcept override;
+
     Player();
 
     /// Properties
@@ -57,6 +58,8 @@ private:
     std::unique_ptr<SmoothFollower> m_follower { nullptr };
 
     // controller:
+    friend class UserInputHandler;
+    
     std::unique_ptr<UserInputHandler> m_inputHandler { nullptr };
 
     State m_currentState  { State::IDLE };
