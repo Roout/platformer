@@ -130,6 +130,23 @@ void Player::UpdatePosition(const float dt) noexcept {
     }
 }
 
+void Player::MoveAlong(float x, float y) noexcept {
+    if( !helper::IsEquel(y, 0.f, 0.0001f) ) {
+        // need to be called earlier because forces will be reseted 
+        // and method @IsOnGround will fail
+        const auto body { this->getPhysicsBody() };
+        if( !helper::IsEquel(body->getVelocity().y, 0.f, 0.001f) ) {
+            m_hasContactWithGround = false;
+        }
+        m_movement->ResetForceY();
+        m_movement->Push(x, y);
+    }
+    else {
+        m_movement->Move(x, y);
+    }
+}
+
+
 void Player::pause() {
     Unit::pause();
     if(!this->IsDead()) {
