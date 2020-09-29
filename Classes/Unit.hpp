@@ -2,7 +2,6 @@
 #define UNIT_HPP
 
 #include "CurseHub.hpp"
-#include "UnitMovement.hpp"
 #include <memory>
 #include "cocos2d.h"
 
@@ -10,6 +9,7 @@ namespace dragonBones {
     class Animator;
 }
 class Weapon;
+class Movement;
 
 class Unit : public cocos2d::Node { 
 public:
@@ -68,7 +68,7 @@ public:
      * Possible values are: { 1, 0 }, {-1, 0 }, { 0, 1 }, { 0, -1 }, { 0, 0 }, { 1, 1 }, {-1, -1 }
      * { 0, 0 } - means to stop movement 
      */
-    void MoveAlong(float x, float y) noexcept;
+    virtual void MoveAlong(float x, float y) noexcept;
 
     void Turn() noexcept;
 

@@ -2,103 +2,76 @@
 #include "Unit.hpp"
 #include "PhysicsHelper.hpp"
 #include "cocos2d.h"
+#include <cmath>
 
 Movement::Movement(cocos2d::PhysicsBody * const body):
-    m_body { body } 
+    m_body { body },
+    m_upJumpSpeed { sqrtf(2.f * JUMP_HEIGHT * (-GRAVITY)) },
+    m_maxVelocity { floorf(m_upJumpSpeed + 1.f) },
+    m_downJumpSpeed { -GRAVITY * sqrtf(2.f * JUMP_HEIGHT / (-GRAVITY)) }
 {
     m_body->retain();
-    m_indicators.fill(false);
 }
 
 Movement::~Movement() {
     m_body->release();
 }
 
-void Movement::Update(const float dt) noexcept {    
-    // Fix #24: avoid applying infinity force due to 0-division!
-    if(dt <= 0.f) return; 
-
-    const auto airSideMoveMultiplier { m_remainingAirSteps? 0.5f : 0.7f };
-    const auto force { //  F = mv / t
-        ( m_body->getMass() * m_desiredVelocity * 1.5f ) / 
-        ( dt * m_timeStepsToCompletion ) 
-    };
-    const auto multiplier { (4.f * m_remainingAirSteps + 1.f) / 6.f };
-
-    for(size_t i = 0; i < m_indicators.size(); i++) {
-        if(!m_indicators[i]) continue;
-
-        const auto direction { Utils::EnumCast<Direction>(i) };
-        switch (direction) {
-            case Direction::UP : {
-                m_body->applyForce({ 0.f, force * multiplier });
-                // update state
-                m_indicators[i] = --m_remainingAirSteps > 0;
-            } break;
-            case Direction::DOWN : {
-                m_body->applyForce({ 0.f, -force * multiplier });
-                // update state
-                m_indicators[i] = --m_remainingAirSteps > 0;
-            } break;
-            case Direction::LEFT : {
-                const auto leftForce { -m_body->getMass() * m_desiredVelocity / dt };
-                m_body->applyForce({ leftForce, 0.f });
-            } break;
-            case Direction::RIGHT : {
-                const auto rightForce { m_body->getMass() * m_desiredVelocity / dt };
-                m_body->applyForce({ rightForce, 0.f });
-            } break;
-            default:break;
-        }
+void Movement::Update(float [[maybe_unused]] dt) noexcept {
+    if(m_impulse.x != 0.f || m_impulse.y != 0.f ) {
+        m_body->applyImpulse(m_impulse);
+        m_impulse = { 0.f, 0.f };
+    }
+    
+    if(m_force.x != 0.f || m_force.y != 0.f ) {
+        m_body->applyForce(m_force);
     }
 
     const auto currentVelocity { m_body->getVelocity() };
-    m_body->setVelocity({
-        cocos2d::clampf(
-            currentVelocity.x, 
-            -m_desiredVelocity * airSideMoveMultiplier, 
-            m_desiredVelocity * airSideMoveMultiplier
-        ),
-        cocos2d::clampf(
-            currentVelocity.y, 
-            -m_desiredVelocity * 1.2f, 
-            m_desiredVelocity * 1.2f
-        )
-    });
+    auto xClamp { 
+        cocos2d::clampf(currentVelocity.x, -m_desiredVelocity, m_desiredVelocity) 
+    };
+    auto yClamp { // default clamp for speed limit when jumping
+        cocos2d::clampf(currentVelocity.y, -m_maxVelocity, m_maxVelocity) 
+    };
+    if(m_force.y != 0.f) { // clamp speed for regular movement along Y-axis
+        yClamp = cocos2d::clampf(currentVelocity.y, -m_desiredVelocity, m_desiredVelocity);
+    }
+    m_body->setVelocity({ xClamp, yClamp });
 }
 
-void Movement::MoveUp() noexcept {
-    m_remainingAirSteps = m_timeStepsToCompletion;
-    m_indicators[Utils::EnumCast(Direction::UP)]    = true;
-    m_indicators[Utils::EnumCast(Direction::DOWN)]  = false;
-};
 
-void Movement::MoveDown() noexcept {
-    m_remainingAirSteps = m_timeStepsToCompletion;
-    m_indicators[Utils::EnumCast(Direction::UP)]    = false;
-    m_indicators[Utils::EnumCast(Direction::DOWN)]  = true;
-};
+void Movement::Push(float [[maybe_unused]] x, float y) noexcept {
+    float yJumpSpeed = 0.f;
+    if(y > 0.f) { // jump
+        yJumpSpeed = m_upJumpSpeed;
+    }
+    else if(y < 0.f) { // fall (usefull for spiders on death)
+        yJumpSpeed = m_downJumpSpeed;
+    }
+    const auto jumpImpulse { m_body->getMass() * yJumpSpeed };
+    m_impulse.y = jumpImpulse * y;
+}
 
-void Movement::MoveRight() noexcept {
-    m_indicators[Utils::EnumCast(Direction::LEFT)]  = false;
-    m_indicators[Utils::EnumCast(Direction::RIGHT)] = true;
-};
+void Movement::Move(float x, float y) noexcept {
+    const auto force { m_body->getMass() * m_desiredVelocity * 25.f };
 
-void Movement::MoveLeft() noexcept {
-    m_indicators[Utils::EnumCast(Direction::LEFT)]  = true;
-    m_indicators[Utils::EnumCast(Direction::RIGHT)] = false;
-};
+    if(x == 0.f && y == 0.f) {
+        this->Stop();
+    }
+    else {
+        m_force = { force * x, force * y };
+    }
+}
 
 void Movement::Stop() noexcept {
-    m_indicators[Utils::EnumCast(Direction::LEFT)]  = false;
-    m_indicators[Utils::EnumCast(Direction::RIGHT)] = false;
-
-    const auto vel { m_body->getVelocity() };
-    if(helper::IsEquel(vel.y, 0.f, 0.01f)) {
+    const auto velocity { m_body->getVelocity() };
+    // we either on the ground either using simple move up/down (e.g. spider)
+    if(helper::IsEquel(velocity.y, 0.f, 0.01f) || m_force.y != 0.f) {
         m_body->resetForces();
     }
-    m_body->setVelocity({ 0.f, vel.y });
-
+    m_body->setVelocity({ 0.f, velocity.y });
+    m_force.x = m_force.y = m_impulse.x = 0.f;
 }
 
 void Movement::SetMaxSpeed(float speed) noexcept {

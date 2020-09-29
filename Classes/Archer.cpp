@@ -4,6 +4,7 @@
 #include "Core.hpp"
 #include "DragonBonesAnimator.hpp"
 #include "Weapon.hpp"
+#include "UnitMovement.hpp"
 
 #include "cocos2d.h"
 

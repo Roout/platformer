@@ -3,6 +3,7 @@
 #include "Weapon.hpp"
 #include "DragonBonesAnimator.hpp"
 #include "Core.hpp"
+#include "UnitMovement.hpp"
 
 #include <memory>
 

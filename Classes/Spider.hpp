@@ -33,6 +33,8 @@ public:
 
     void OnEnemyLeave() override;
 
+    void MoveAlong(float x, float y) noexcept override;
+
     /// Unique to Spider
     void AttachNavigator(Path&& path);
 

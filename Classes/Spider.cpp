@@ -4,6 +4,7 @@
 #include "DragonBonesAnimator.hpp"
 #include "Core.hpp"
 #include "Weapon.hpp"
+#include "UnitMovement.hpp"
 
 namespace Enemies {
 
@@ -25,14 +26,14 @@ Spider::Spider(size_t id, const char* dragonBonesName) :
     // define size of the graphical content
     m_designedSize = cocos2d::Size { 90.f, 125.f };
     // define size of the physics body
-    m_physicsBodySize = cocos2d::Size{ 70.f, 80.f };
+    m_physicsBodySize = cocos2d::Size{ 80.f, 80.f };
 }
 
 bool Spider::init() {
     if(!Bot::init()) {
         return false; 
     }
-    m_movement->SetMaxSpeed(80.f);
+    m_movement->SetMaxSpeed(130.f);
     // override content size because the body is with offset and smaller than the 
     // graph content
     this->setContentSize(m_designedSize);
@@ -48,6 +49,11 @@ void Spider::onExit() {
     cocos2d::Node::onExit();
 }
 
+void Spider::MoveAlong(float x, float y) noexcept {
+    m_movement->Move(x, y);
+}
+
+
 void Spider::CreateWebAt(const cocos2d::Vec2& start) {
     m_webStart = start;
     
@@ -59,7 +65,7 @@ void Spider::CreateWebAt(const cocos2d::Vec2& start) {
 void Spider::UpdateWeb() {
     if(m_web) {
         m_web->clear();
-        const auto shiftY { this->getContentSize().height * 0.8f };
+        const auto shiftY { m_designedSize.height * 0.6f };
         auto middleOfAss = this->getPosition() + cocos2d::Vec2{ 0.f, shiftY}; 
         m_web->drawLine(m_webStart, middleOfAss, cocos2d::Color4F::WHITE);        
     }
@@ -103,7 +109,7 @@ bool Spider::NeedAttack() const noexcept{
 /// Bot interface
 
 void Spider::UpdateState(const float dt) noexcept {
-     m_previousState = m_currentState;
+    m_previousState = m_currentState;
 
     if( m_health <= 0 ) {
         m_currentState = State::DEAD;
@@ -115,10 +121,9 @@ void Spider::UpdateState(const float dt) noexcept {
 
 void Spider::UpdatePosition(const float dt) noexcept {
     if(!this->IsDead()) {
-        // update
         m_navigator->Update(dt);
-        m_movement->Update(dt);
     }
+    m_movement->Update(dt);
 };
 
 void Spider::UpdateAnimation() {
@@ -136,13 +141,16 @@ void Spider::UpdateAnimation() {
 
 void Spider::OnDeath() {
     this->getChildByName("health")->removeFromParent();
-    this->MoveAlong(0.f, -1.f); // fall down!
+    const auto body = this->getPhysicsBody();
+    body->setGravityEnable(true);
+    body->setContactTestBitmask(0); // don't cause any damage to player
+    m_movement->Stop(); // reset forces
+    m_movement->Push(0.f, -0.1f); // push down
     m_animator->EndWith([this]() {
         if(this->m_web) {
             this->m_web->removeFromParent();
             this->m_web = nullptr;
         }
-        this->removeComponent(this->getPhysicsBody());
         this->runAction(cocos2d::RemoveSelf::create(true));
     });
 };
@@ -160,7 +168,7 @@ void Spider::AddPhysicsBody() {
     body->setPositionOffset({0.f, yOffset});
     body->setMass(25.f);
     body->setDynamic(true);
-    body->setGravityEnable(true);
+    body->setGravityEnable(false);
     body->setRotationEnable(false);
 
     // change masks for physics body

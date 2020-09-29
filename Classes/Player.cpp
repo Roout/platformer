@@ -8,6 +8,7 @@
 #include "Weapon.hpp"
 #include "DeathScreen.hpp"
 #include "DragonBonesAnimator.hpp"
+#include "UnitMovement.hpp"
 
 #include <unordered_map>
 #include <algorithm>
@@ -36,7 +37,7 @@ bool Player::init() {
     }    
     m_follower = std::make_unique<SmoothFollower>(this);
     m_inputHandler = std::make_unique<UserInputHandler>(this);
-    m_movement->SetMaxSpeed(450.f);
+    m_movement->SetMaxSpeed(400.f);
     return true;
 }
 
