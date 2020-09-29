@@ -2,6 +2,7 @@
 #include "Unit.hpp"
 #include "PhysicsHelper.hpp"
 #include "cocos2d.h"
+#include "chipmunk/chipmunk.h"
 #include <cmath>
 
 Movement::Movement(cocos2d::PhysicsBody * const body):
@@ -57,21 +58,40 @@ void Movement::Move(float x, float y) noexcept {
     const auto force { m_body->getMass() * m_desiredVelocity * 25.f };
 
     if(x == 0.f && y == 0.f) {
-        this->Stop();
+        this->ResetForce();
     }
     else {
         m_force = { force * x, force * y };
     }
 }
 
-void Movement::Stop() noexcept {
-    const auto velocity { m_body->getVelocity() };
-    // we either on the ground either using simple move up/down (e.g. spider)
-    if(helper::IsEquel(velocity.y, 0.f, 0.01f) || m_force.y != 0.f) {
-        m_body->resetForces();
-    }
-    m_body->setVelocity({ 0.f, velocity.y });
-    m_force.x = m_force.y = m_impulse.x = 0.f;
+void Movement::ResetForce() noexcept {
+    auto chipBody { m_body->getCPBody() };
+    m_force.x = m_force.y = m_impulse.x = m_impulse.y = 0.f;
+    cpBodySetForce(chipBody, {0.f, 0.f});
+    cpBodySetVelocity(chipBody, {0.f, 0.f});
+}
+
+void Movement::ResetForceX() noexcept {
+    auto chipBody { m_body->getCPBody() };
+    auto force { cpBodyGetForce(chipBody) };
+    auto velocity { cpBodyGetVelocity(chipBody) };
+    force.x = velocity.x = 0.f;
+    cpBodySetForce(chipBody, force);
+    cpBodySetVelocity(chipBody, velocity);
+    // reset internal settings
+    m_force.x = m_impulse.x = 0.f;
+}
+
+void Movement::ResetForceY() noexcept {
+    auto chipBody { m_body->getCPBody() };
+    auto force { cpBodyGetForce(chipBody) };
+    auto velocity { cpBodyGetVelocity(chipBody) };
+    force.y = velocity.y = 0.f;
+    cpBodySetForce(chipBody, force);
+    cpBodySetVelocity(chipBody, velocity);
+    // reset internal settings
+    m_force.y = m_impulse.y = 0.f;
 }
 
 void Movement::SetMaxSpeed(float speed) noexcept {

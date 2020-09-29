@@ -62,13 +62,13 @@ public:
      */
     void Move(float x, float y) noexcept;
 
-    /**
-     * Stop the movement along X-axis and reset forces 
-     */
-    void Stop() noexcept;
-    
-    void SetMaxSpeed(float speed) noexcept;
+    void ResetForce() noexcept;
 
+    void ResetForceX() noexcept;
+
+    void ResetForceY() noexcept;
+
+    void SetMaxSpeed(float speed) noexcept;
 private:
     cocos2d::PhysicsBody * const m_body { nullptr };
 
