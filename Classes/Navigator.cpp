@@ -18,6 +18,7 @@ void Navigator::Update(float dt) {
     if(m_isFollowingPath) {
         if(const auto [reachedX, reachedY] = this->ReachedDestination(); reachedX && reachedY ) {
             m_choosenWaypointIndex = this->FindDestination(m_choosenWaypointIndex);
+            m_owner->MoveAlong(0.f, 0.f);
         }
         target = m_path.m_waypoints[m_choosenWaypointIndex];
     }
