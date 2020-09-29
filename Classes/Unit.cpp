@@ -60,7 +60,7 @@ void Unit::MoveAlong(const cocos2d::Vec2& direction) noexcept {
 }
 
 void Unit::MoveAlong(float x, float y) noexcept {
-    if(y == 1.f || y == -1.f) {
+    if( !helper::IsEquel(y, 0.f, 0.0001f) ) {
         m_movement->Push(x, y);
     }
     else {
