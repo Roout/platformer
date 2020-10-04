@@ -28,7 +28,7 @@ Player::Player() :
     Unit { "mc" }
 {
     m_designedSize = cocos2d::Size{ 80.f, 135.f };
-    m_physicsBodySize = cocos2d::Size{ 55.f, 135.f };
+    m_physicsBodySize = cocos2d::Size{ 40.f, 135.f };
 }
 
 bool Player::init() {
