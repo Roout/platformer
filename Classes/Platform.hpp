@@ -38,10 +38,11 @@ private:
         );
         body->setContactTestBitmask(
             Utils::CreateMask(
-                core::CategoryBits::GROUND_SENSOR,
-                core::CategoryBits::HERO,
-                core::CategoryBits::ENEMY,
-                core::CategoryBits::PROJECTILE
+                core::CategoryBits::GROUND_SENSOR
+                , core::CategoryBits::HERO
+                , core::CategoryBits::ENEMY
+                , core::CategoryBits::PLAYER_PROJECTILE
+                , core::CategoryBits::ENEMY_PROJECTILE
             )
         );
         this->addComponent(body);

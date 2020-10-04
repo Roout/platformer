@@ -108,9 +108,15 @@ bool OnContactBegin(cocos2d::PhysicsContact& contact) {
     }
 
     /// Projectile & (Unit or Barrel)
+    const auto projectileMask { 
+        Utils::CreateMask(
+            core::CategoryBits::PLAYER_PROJECTILE
+            , core::CategoryBits::ENEMY_PROJECTILE
+        )
+    };
     const bool isProjectile[2] = {
-        bodyMasks[BODY_A] == Utils::CreateMask(core::CategoryBits::PROJECTILE),
-        bodyMasks[BODY_B] == Utils::CreateMask(core::CategoryBits::PROJECTILE)
+        (bodyMasks[BODY_A] & projectileMask) > 0,
+        (bodyMasks[BODY_B] & projectileMask) > 0
     };
 
     if( isProjectile[BODY_A] || isProjectile[BODY_B] ) {

@@ -9,6 +9,8 @@
 #include "DragonBonesAnimator.hpp"
 #include "UnitMovement.hpp"
 
+#include <cmath>
+
 Unit::Unit(const std::string& dragonBonesName) :
     m_curses { this },
     m_dragonBonesName { dragonBonesName }
@@ -26,14 +28,14 @@ bool Unit::init() {
     const auto body { this->getPhysicsBody() };
     m_movement = std::make_unique<Movement>(body);
     this->AddWeapon();
-    this->setContentSize(m_designedSize);
+    this->setContentSize(m_contentSize);
 
     /// TODO: move somewhere
     static constexpr float healthBarShift { 5.f };
     const auto bar = HealthBar::create(this);
-    const auto shiftY { m_designedSize.height };
+    const auto shiftY { m_contentSize.height };
     bar->setName("health");
-    bar->setPosition(-m_designedSize.width / 2.f, shiftY + healthBarShift);
+    bar->setPosition(-m_contentSize.width / 2.f, shiftY + healthBarShift);
     this->addChild(bar);
 
     // add state lable:
@@ -94,16 +96,16 @@ void Unit::Attack() {
 
         auto position = this->getPosition();
         if(m_side == Side::RIGHT) {
-            position.x += m_designedSize.width / 2.f;
+            position.x += m_hitBoxSize.width / 2.f;
         }
         else {
-            position.x -= m_designedSize.width / 2.f + attackRange;
+            position.x -= m_hitBoxSize.width / 2.f + attackRange;
         }
         // shift a little bit higher to avoid immediate collision with the ground
-        position.y += m_designedSize.height * 0.05f;
+        position.y += m_hitBoxSize.height * 0.05f;
         const cocos2d::Rect attackedArea {
             position,
-            cocos2d::Size{ attackRange, m_designedSize.height * 1.05f } // a little bigger than the designed size
+            cocos2d::Size{ attackRange, m_contentSize.height * 1.05f } // a little bigger than the designed size
         };
         m_weapon->LaunchAttack(attackedArea, this->getPhysicsBody()->getVelocity());
     }
@@ -136,23 +138,31 @@ void Unit::AddPhysicsBody() {
     const auto body = cocos2d::PhysicsBody::createBox(
         m_physicsBodySize,
         cocos2d::PhysicsMaterial(1.f, 0.f, 0.f), 
-        {0.f, m_physicsBodySize.height / 2.f}
+        {0.f, floorf(m_physicsBodySize.height / 2.f)}
     );
     body->setMass(25.f);
     body->setDynamic(true);
     body->setGravityEnable(true);
     body->setRotationEnable(false);
     
-    const cocos2d::Size sensorShapeSize { m_physicsBodySize.width * 0.9f, 8.f };
+    const cocos2d::Size sensorShapeSize { floorf(m_physicsBodySize.width * 0.9f), 8.f };
     const auto sensorShape = cocos2d::PhysicsShapeBox::create(
         sensorShapeSize, 
         cocos2d::PHYSICSSHAPE_MATERIAL_DEFAULT
     );
     sensorShape->setSensor(true);
-    sensorShape->setTag(
-        Utils::CreateMask(core::CategoryBits::GROUND_SENSOR)
-    );
+    sensorShape->setTag(Utils::CreateMask(core::CategoryBits::GROUND_SENSOR));
     body->addShape(sensorShape, false);
+
+    const auto hitBoxShape = cocos2d::PhysicsShapeBox::create(
+        m_hitBoxSize, 
+        cocos2d::PHYSICSSHAPE_MATERIAL_DEFAULT,
+        {0.f, floorf(m_physicsBodySize.height / 2.f)}
+    );
+    hitBoxShape->setSensor(true);
+    hitBoxShape->setTag(Utils::CreateMask(core::CategoryBits::HITBOX_SENSOR));
+    body->addShape(hitBoxShape, false);
+    
     this->addComponent(body);
 }
 

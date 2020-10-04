@@ -26,8 +26,9 @@ Warrior* Warrior::create(size_t id) {
 Warrior::Warrior(size_t id, const char* dragonBonesName) :
     Bot{ id, dragonBonesName }
 {
-    m_designedSize = cocos2d::Size{ 80.f, 135.f };
+    m_contentSize = cocos2d::Size{ 80.f, 135.f };
     m_physicsBodySize = cocos2d::Size{ 70.f, 135.f };
+    m_hitBoxSize = m_physicsBodySize;
 }
 
 
@@ -68,28 +69,28 @@ void Warrior::Pursue(cocos2d::Node * target) noexcept {
         const auto shift { 
             target->getContentSize().width / 2.f    // shift to bottom left\right corner
             + m_weapon->GetRange() * 0.8f           // shift by weapon length (not 1.0f to be able to reach the target by attack!)
-            + this->getContentSize().width / 2.f    
+            + m_contentSize.width / 2.f    
         };
         // possible destinations (bottom middle of this unit)
         const float xTargets[2] = { 
-            target->getPosition().x + shift,
-            target->getPosition().x - shift,
+            target->getPositionX() + shift,
+            target->getPositionX() - shift,
         };
         // choose the closest target in out influence field!
         const float xDistances[2] = {
-            fabs(xTargets[0] - this->getPosition().x),
-            fabs(xTargets[1] - this->getPosition().x)
+            fabs(xTargets[0] - this->getPositionX()),
+            fabs(xTargets[1] - this->getPositionX())
         };
-        const float xShift { this->getContentSize().width * 0.4f };
+        const float xShift { floorf(m_contentSize.width * 0.4f) };
         // -xShift for left-bottom corner of this unit 
         // +xShift for right-bottom corner of this unit 
         // So if influence contains either of these corners than the unit won't fall down for sure!
         const bool acceptable[2] = {
-            m_influence->Contains({ xTargets[0] - xShift, this->getPosition().y }) || 
-            m_influence->Contains({ xTargets[0] + xShift, this->getPosition().y }),
+            m_influence->Contains({ xTargets[0] - xShift, this->getPositionY() }) || 
+            m_influence->Contains({ xTargets[0] + xShift, this->getPositionY() }),
 
-            m_influence->Contains({ xTargets[1] - xShift, this->getPosition().y }) || 
-            m_influence->Contains({ xTargets[1] + xShift, this->getPosition().y })
+            m_influence->Contains({ xTargets[1] - xShift, this->getPositionY() }) || 
+            m_influence->Contains({ xTargets[1] + xShift, this->getPositionY() })
         };
         // find the closest point from the ones where unit won't fall down
         int choosenIndex { -1 };
@@ -181,34 +182,33 @@ void Warrior::OnDeath() {
 void Warrior::AddPhysicsBody() {
     Unit::AddPhysicsBody();
     // change masks for physics body
-    auto body { this->getPhysicsBody() };
+    const auto body { this->getPhysicsBody() };
     body->setMass(25.f);
-    body->setCategoryBitmask(
-        Utils::CreateMask(core::CategoryBits::ENEMY)
-    );
+    body->setCategoryBitmask(Utils::CreateMask(core::CategoryBits::ENEMY));
     body->setCollisionBitmask(
         Utils::CreateMask(
             core::CategoryBits::BOUNDARY, 
             core::CategoryBits::PLATFORM 
         )
     );
-    body->setContactTestBitmask(
+
+    const auto hitBoxTag { Utils::EnumCast(core::CategoryBits::HITBOX_SENSOR) };
+    const auto hitBoxSensor { body->getShape(hitBoxTag) };
+    hitBoxSensor->setCollisionBitmask(0);
+    hitBoxSensor->setCategoryBitmask(hitBoxTag);
+    hitBoxSensor->setContactTestBitmask(
         Utils::CreateMask(
             core::CategoryBits::TRAP,
             core::CategoryBits::PLATFORM,
-            core::CategoryBits::PROJECTILE
+            core::CategoryBits::PLAYER_PROJECTILE
         )
     );
-    const auto sensor { 
-        body->getShape(Utils::EnumCast(
-            core::CategoryBits::GROUND_SENSOR)
-        ) 
-    };
-    sensor->setCollisionBitmask(0);
-    sensor->setCategoryBitmask(
-        Utils::CreateMask(core::CategoryBits::GROUND_SENSOR)
-    );
-    sensor->setContactTestBitmask(
+
+    const auto groundSensorTag { Utils::EnumCast(core::CategoryBits::GROUND_SENSOR) };
+    const auto groundSensor { body->getShape(groundSensorTag) };
+    groundSensor->setCollisionBitmask(0);
+    groundSensor->setCategoryBitmask(Utils::CreateMask(core::CategoryBits::GROUND_SENSOR));
+    groundSensor->setContactTestBitmask(
         Utils::CreateMask(
             core::CategoryBits::BOUNDARY,
             core::CategoryBits::PLATFORM
@@ -222,7 +222,7 @@ void Warrior::AddAnimator() {
         std::make_pair(Utils::EnumCast(State::ATTACK),  GetStateName(State::ATTACK)),
         std::make_pair(Utils::EnumCast(State::PURSUIT), GetStateName(State::PURSUIT)),
         std::make_pair(Utils::EnumCast(State::PATROL),  GetStateName(State::PATROL)),
-        std::make_pair(Utils::EnumCast(State::DEAD),   GetStateName(State::DEAD))
+        std::make_pair(Utils::EnumCast(State::DEAD),    GetStateName(State::DEAD))
     });
 }
 

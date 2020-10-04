@@ -37,7 +37,7 @@ private:
 
     dragonBones::Animator * m_animator { nullptr };
     
-    cocos2d::Size m_designedSize { 60.f, 135.f };
+    cocos2d::Size m_contentSize { 60.f, 135.f };
 };
 
 #endif // BARREL_HPP

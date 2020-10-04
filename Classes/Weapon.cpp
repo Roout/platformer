@@ -18,15 +18,19 @@ void Sword::OnAttack() {
 
     const auto proj = Projectile::create(m_projectile.size, m_velocity, this->GetDamage());
     proj->setPosition(m_projectile.origin);
-    const auto mask {
+    const auto testMask {
         Utils::CreateMask(
-            core::CategoryBits::ENEMY, 
-            core::CategoryBits::BARREL, 
-            core::CategoryBits::BOUNDARY, 
-            core::CategoryBits::PROJECTILE 
+            core::CategoryBits::BARREL
+            , core::CategoryBits::BOUNDARY
+            , core::CategoryBits::ENEMY_PROJECTILE 
+            , core::CategoryBits::HITBOX_SENSOR 
         )
     };
-    proj->SetContactTestBitmask(mask);
+    const auto categoryMask {
+        Utils::CreateMask(core::CategoryBits::PLAYER_PROJECTILE)
+    };
+    proj->SetCategoryBitmask(categoryMask);
+    proj->SetContactTestBitmask(testMask);
     map->addChild(proj); 
 }
 
@@ -37,15 +41,19 @@ void Axe::OnAttack() {
     
     const auto proj = Projectile::create(m_projectile.size, m_velocity, this->GetDamage());
     proj->setPosition(m_projectile.origin);
-    const auto mask {
+    const auto testMask {
         Utils::CreateMask(
-            core::CategoryBits::HERO, 
-            core::CategoryBits::BARREL, 
-            core::CategoryBits::BOUNDARY, 
-            core::CategoryBits::PROJECTILE 
+            core::CategoryBits::HITBOX_SENSOR
+            , core::CategoryBits::BARREL
+            , core::CategoryBits::BOUNDARY
+            , core::CategoryBits::PLAYER_PROJECTILE 
         )
     };
-    proj->SetContactTestBitmask(mask);
+    const auto categoryMask {
+        Utils::CreateMask(core::CategoryBits::ENEMY_PROJECTILE)
+    };
+    proj->SetCategoryBitmask(categoryMask);
+    proj->SetContactTestBitmask(testMask);
     map->addChild(proj);
 }
 
@@ -56,15 +64,19 @@ void Spear::OnAttack() {
     
     const auto proj = Projectile::create(m_projectile.size, m_velocity, this->GetDamage());
     proj->setPosition(m_projectile.origin);
-    const auto mask {
+    const auto testMask {
         Utils::CreateMask(
-            core::CategoryBits::HERO, 
-            core::CategoryBits::BARREL, 
-            core::CategoryBits::BOUNDARY, 
-            core::CategoryBits::PROJECTILE 
+            core::CategoryBits::HITBOX_SENSOR
+            , core::CategoryBits::BARREL
+            , core::CategoryBits::BOUNDARY
+            , core::CategoryBits::PLAYER_PROJECTILE 
         )
     };
-    proj->SetContactTestBitmask(mask);
+    const auto categoryMask {
+        Utils::CreateMask(core::CategoryBits::ENEMY_PROJECTILE)
+    };
+    proj->SetCategoryBitmask(categoryMask);
+    proj->SetContactTestBitmask(testMask);
     map->addChild(proj);
 }
 
@@ -75,16 +87,20 @@ void Bow::OnAttack() {
     
     const auto proj = Projectile::create("archer/library/arrow.png", m_velocity, this->GetDamage());
     proj->setPosition(m_projectile.origin);
-    const auto mask {
+    const auto testMask {
         Utils::CreateMask(
-            core::CategoryBits::HERO, 
-            core::CategoryBits::BARREL, 
-            core::CategoryBits::BOUNDARY, 
-            core::CategoryBits::PROJECTILE,
-            core::CategoryBits::PLATFORM
+            core::CategoryBits::HITBOX_SENSOR
+            , core::CategoryBits::BARREL
+            , core::CategoryBits::BOUNDARY
+            , core::CategoryBits::PLAYER_PROJECTILE
+            , core::CategoryBits::PLATFORM
         )
     };
-    proj->SetContactTestBitmask(mask);
+    const auto categoryMask {
+        Utils::CreateMask(core::CategoryBits::ENEMY_PROJECTILE)
+    };
+    proj->SetCategoryBitmask(categoryMask);
+    proj->SetContactTestBitmask(testMask);
     proj->SetLifetime(3.f);
     map->addChild(proj, 100); /// TODO: clean up this mess with Z-order!
 }

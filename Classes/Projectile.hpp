@@ -51,6 +51,8 @@ public:
 
     void SetContactTestBitmask(size_t mask) noexcept;
 
+    void SetCategoryBitmask(size_t mask) noexcept;
+
     cocos2d::Sprite* AddImage(const char* imagePath);
 
 private:

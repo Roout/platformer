@@ -26,19 +26,19 @@ private:
         const auto body = cocos2d::PhysicsBody::createBox(size, material);
         body->setDynamic(false);
         body->setCategoryBitmask(
-            Utils::CreateMask( core::CategoryBits::BOUNDARY )
+            Utils::CreateMask(core::CategoryBits::BOUNDARY)
         );
         body->setCollisionBitmask(
             Utils::CreateMask(
                 core::CategoryBits::ENEMY, 
-                core::CategoryBits::HERO, 
-                core::CategoryBits::PLATFORM
+                core::CategoryBits::HERO
             )
         );
         body->setContactTestBitmask(
             Utils::CreateMask(
-                core::CategoryBits::GROUND_SENSOR, 
-                core::CategoryBits::PROJECTILE
+                core::CategoryBits::GROUND_SENSOR
+                , core::CategoryBits::ENEMY_PROJECTILE
+                , core::CategoryBits::PLAYER_PROJECTILE
             )
         );
 

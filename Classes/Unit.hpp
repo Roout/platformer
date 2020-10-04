@@ -53,6 +53,7 @@ public:
     
     inline bool IsDead() const noexcept;
 
+    inline cocos2d::Size GetHitBox() const noexcept;
     /// Movement interface
 
     /**
@@ -142,7 +143,9 @@ protected:
 
     const std::string m_dragonBonesName {};
 
-    cocos2d::Size m_designedSize {};
+    cocos2d::Size m_contentSize {};
+
+    cocos2d::Size m_hitBoxSize {};
     
     cocos2d::Size m_physicsBodySize {};
     
@@ -174,6 +177,10 @@ inline bool Unit::IsLookingLeft() const noexcept {
 
 inline bool Unit::IsDead() const noexcept {
     return m_health <= 0;
+}
+
+inline cocos2d::Size Unit::GetHitBox() const noexcept {
+    return m_hitBoxSize;
 }
 
 
