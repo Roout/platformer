@@ -18,6 +18,8 @@ public:
 
     bool Contains(const cocos2d::Vec2& point) const noexcept;
 
+    bool ContainsX(float x) const noexcept;
+
 private:
 
     Influence(

@@ -111,8 +111,8 @@ void Archer::AddPhysicsBody() {
     body->setContactTestBitmask(Utils::CreateMask(core::CategoryBits::PLATFORM));
     body->setCollisionBitmask(
         Utils::CreateMask(
-            core::CategoryBits::BOUNDARY, 
-            core::CategoryBits::PLATFORM 
+            core::CategoryBits::BOUNDARY
+            , core::CategoryBits::PLATFORM 
         )
     );
 
@@ -123,8 +123,9 @@ void Archer::AddPhysicsBody() {
     hitBoxSensor->setCategoryBitmask(hitBoxTag);
     hitBoxSensor->setContactTestBitmask(
         Utils::CreateMask(
-            core::CategoryBits::TRAP,
-            core::CategoryBits::PLAYER_PROJECTILE
+            core::CategoryBits::TRAP
+            , core::CategoryBits::PLAYER_PROJECTILE
+            , core::CategoryBits::HITBOX_SENSOR
         )
     );
 

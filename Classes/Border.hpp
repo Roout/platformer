@@ -14,7 +14,7 @@ public:
         }
         else {
             delete pRet;
-            pRet = nullptr;
+            pRet = nullptr; 
         }
         return pRet;
     }
@@ -30,8 +30,8 @@ private:
         );
         body->setCollisionBitmask(
             Utils::CreateMask(
-                core::CategoryBits::ENEMY, 
-                core::CategoryBits::HERO
+                core::CategoryBits::ENEMY 
+                , core::CategoryBits::PLAYER
             )
         );
         body->setContactTestBitmask(

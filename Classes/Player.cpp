@@ -85,12 +85,12 @@ void Player::AddPhysicsBody() {
     Unit::AddPhysicsBody();
     
     const auto body { this->getPhysicsBody() };
-    body->setCategoryBitmask(Utils::CreateMask(core::CategoryBits::HERO));
+    body->setCategoryBitmask(Utils::CreateMask(core::CategoryBits::PLAYER));
     body->setContactTestBitmask(Utils::CreateMask(core::CategoryBits::PLATFORM));
     body->setCollisionBitmask(
         Utils::CreateMask(
-            core::CategoryBits::BOUNDARY, 
-            core::CategoryBits::PLATFORM 
+            core::CategoryBits::BOUNDARY 
+            , core::CategoryBits::PLATFORM 
         )
     );
 
@@ -100,9 +100,9 @@ void Player::AddPhysicsBody() {
     hitBoxSensor->setCategoryBitmask(hitBoxTag);
     hitBoxSensor->setContactTestBitmask(
         Utils::CreateMask(
-            core::CategoryBits::ENEMY_PROJECTILE,
-            core::CategoryBits::TRAP,
-            core::CategoryBits::ENEMY
+            core::CategoryBits::ENEMY_PROJECTILE
+            , core::CategoryBits::TRAP
+            , core::CategoryBits::HITBOX_SENSOR
         )
     );
 
@@ -112,8 +112,8 @@ void Player::AddPhysicsBody() {
     groundSensor->setCategoryBitmask(Utils::CreateMask(core::CategoryBits::GROUND_SENSOR));
     groundSensor->setContactTestBitmask(
         Utils::CreateMask(
-            core::CategoryBits::BOUNDARY,
-            core::CategoryBits::PLATFORM
+            core::CategoryBits::BOUNDARY
+            , core::CategoryBits::PLATFORM
         )
     );
 }

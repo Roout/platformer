@@ -77,7 +77,7 @@ namespace core {
     }
 
     enum class CategoryBits: int {
-        HERO                = 0x0001,
+        PLAYER              = 0x0001,
         ENEMY               = 0x0002,
         BOUNDARY            = 0x0004,
         ENEMY_PROJECTILE    = 0x0008,

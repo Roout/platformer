@@ -188,15 +188,15 @@ void Spider::AddPhysicsBody() {
         //, {0.f, yOffset}
     );
     hitBoxShape->setSensor(true);
-    hitBoxShape->setTag(Utils::CreateMask(core::CategoryBits::HITBOX_SENSOR));
-    hitBoxShape->setCategoryBitmask(Utils::CreateMask(core::CategoryBits::HITBOX_SENSOR));
+    const auto tag { Utils::CreateMask(core::CategoryBits::HITBOX_SENSOR) };
+    hitBoxShape->setTag(tag);
+    hitBoxShape->setCategoryBitmask(tag);
     hitBoxShape->setCollisionBitmask(0);
     hitBoxShape->setContactTestBitmask(
         Utils::CreateMask(
-            core::CategoryBits::TRAP,
-            core::CategoryBits::PLAYER_PROJECTILE,
-            core::CategoryBits::ENEMY,
-            core::CategoryBits::HERO
+            core::CategoryBits::TRAP
+            , core::CategoryBits::PLAYER_PROJECTILE
+            , core::CategoryBits::HITBOX_SENSOR
         )
     );
     body->addShape(hitBoxShape, false);

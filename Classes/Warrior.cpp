@@ -86,11 +86,11 @@ void Warrior::Pursue(cocos2d::Node * target) noexcept {
         // +xShift for right-bottom corner of this unit 
         // So if influence contains either of these corners than the unit won't fall down for sure!
         const bool acceptable[2] = {
-            m_influence->Contains({ xTargets[0] - xShift, this->getPositionY() }) || 
-            m_influence->Contains({ xTargets[0] + xShift, this->getPositionY() }),
+            m_influence->ContainsX(xTargets[0] - xShift) || 
+            m_influence->ContainsX(xTargets[0] + xShift),
 
-            m_influence->Contains({ xTargets[1] - xShift, this->getPositionY() }) || 
-            m_influence->Contains({ xTargets[1] + xShift, this->getPositionY() })
+            m_influence->ContainsX(xTargets[1] - xShift) || 
+            m_influence->ContainsX(xTargets[1] + xShift)
         };
         // find the closest point from the ones where unit won't fall down
         int choosenIndex { -1 };
@@ -184,11 +184,12 @@ void Warrior::AddPhysicsBody() {
     // change masks for physics body
     const auto body { this->getPhysicsBody() };
     body->setMass(25.f);
+    body->setContactTestBitmask(Utils::CreateMask(core::CategoryBits::PLATFORM));
     body->setCategoryBitmask(Utils::CreateMask(core::CategoryBits::ENEMY));
     body->setCollisionBitmask(
         Utils::CreateMask(
-            core::CategoryBits::BOUNDARY, 
-            core::CategoryBits::PLATFORM 
+            core::CategoryBits::BOUNDARY
+            , core::CategoryBits::PLATFORM 
         )
     );
 
@@ -198,9 +199,9 @@ void Warrior::AddPhysicsBody() {
     hitBoxSensor->setCategoryBitmask(hitBoxTag);
     hitBoxSensor->setContactTestBitmask(
         Utils::CreateMask(
-            core::CategoryBits::TRAP,
-            core::CategoryBits::PLATFORM,
-            core::CategoryBits::PLAYER_PROJECTILE
+            core::CategoryBits::TRAP
+            , core::CategoryBits::PLAYER_PROJECTILE
+            , core::CategoryBits::HITBOX_SENSOR
         )
     );
 
@@ -210,8 +211,8 @@ void Warrior::AddPhysicsBody() {
     groundSensor->setCategoryBitmask(Utils::CreateMask(core::CategoryBits::GROUND_SENSOR));
     groundSensor->setContactTestBitmask(
         Utils::CreateMask(
-            core::CategoryBits::BOUNDARY,
-            core::CategoryBits::PLATFORM
+            core::CategoryBits::BOUNDARY
+            , core::CategoryBits::PLATFORM
         )
     );
 }
