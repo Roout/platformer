@@ -32,9 +32,9 @@ bool DeathScreen::init() {
                 case cocos2d::ui::Widget::TouchEventType::BEGAN: break;
                 case cocos2d::ui::Widget::TouchEventType::ENDED: {
                     auto scene = cocos2d::Director::getInstance()->getRunningScene();
-                    auto level = scene->getChildByName("Level");
+                    auto level = scene->getChildByName<LevelScene*>("Level");
                     if(level != nullptr) {
-                        dynamic_cast<LevelScene*>(level)->Restart();
+                        level->Restart();
                     }
                     scene->getChildByName("Interface")->removeAllChildren();
                 } break;

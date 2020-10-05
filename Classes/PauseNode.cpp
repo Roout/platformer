@@ -27,8 +27,8 @@ bool PauseNode::init() {
                 case cocos2d::ui::Widget::TouchEventType::BEGAN: break;
                 case cocos2d::ui::Widget::TouchEventType::ENDED: {
                     const auto scene = cocos2d::Director::getInstance()->getRunningScene();
-                    const auto level = scene->getChildByName("Level");
-                    dynamic_cast<LevelScene*>(level)->Restart();
+                    const auto level = scene->getChildByName<LevelScene*>("Level");
+                    level->Restart();
                     this->removeFromParent();
                 } break;
                 default: break;

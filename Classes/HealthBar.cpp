@@ -21,7 +21,7 @@ bool HealthBar::init() {
     this->scheduleUpdate(); 
 
     const auto size = m_unit->getContentSize();
-    const auto barSize { cocos2d::Size(size.width, 20.f) };
+    const auto barSize { cocos2d::Size(size.width, 15.f) };
 
     const auto boarder = cocos2d::DrawNode::create();
     boarder->drawRect(
@@ -48,8 +48,8 @@ bool HealthBar::init() {
 }
 
 void HealthBar::update(float dt) {
-    /// TODO: add as private property of class to avoid dynamic_cast
-    const auto healthNode { dynamic_cast<cocos2d::DrawNode*>(this->getChildByName("health")) };
+    /// TODO: add as private property of class to avoid cast
+    const auto healthNode { this->getChildByName<cocos2d::DrawNode*>("health") };
     const auto cSize { healthNode->getContentSize() };
     const auto newWidth { m_unit->GetHealth() * cSize.width / m_maxHealth };
 

@@ -131,7 +131,7 @@ void LevelScene::resume() {
 void LevelScene::Restart() {
     // Tilemap:
     // - remove children exсept layers and objects.
-    const auto tileMap = dynamic_cast<cocos2d::FastTMXTiledMap*>(this->getChildByName("Map"));
+    const auto tileMap = this->getChildByName<cocos2d::FastTMXTiledMap*>("Map");
     std::vector<cocos2d::Node*> scheduledForRemove;
     scheduledForRemove.reserve(100);
     for(auto& child: tileMap->getChildren()) {

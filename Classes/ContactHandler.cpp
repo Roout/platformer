@@ -43,7 +43,7 @@ bool OnContactBegin(cocos2d::PhysicsContact& contact) {
     // There are nodes one of which is with unit sensor attached 
     // i.e. basicaly it's unit and other collidable body
     if ( isUnitSensor[BODY_A] || isUnitSensor[BODY_B] ) {
-        Unit * unit { dynamic_cast<Unit*>(isUnitSensor[BODY_A]? nodes[BODY_A] : nodes[BODY_B]) };
+        Unit * unit { static_cast<Unit*>(isUnitSensor[BODY_A]? nodes[BODY_A] : nodes[BODY_B]) };
         unit->SetContactWithGround(true);
 
         return true;
@@ -94,8 +94,8 @@ bool OnContactBegin(cocos2d::PhysicsContact& contact) {
     if( isTrap[BODY_A] || isTrap[BODY_B] ) {
         const auto trapIndex { isTrap[BODY_A]? BODY_A: BODY_B };
 
-        const auto unit { dynamic_cast<Unit*>(nodes[trapIndex^1]) };
-        const auto trap { dynamic_cast<Traps::Trap*>(nodes[trapIndex]) };
+        const auto unit { static_cast<Unit*>(nodes[trapIndex^1]) };
+        const auto trap { static_cast<Traps::Trap*>(nodes[trapIndex]) };
         
         trap->CurseTarget(unit);
 
@@ -106,8 +106,8 @@ bool OnContactBegin(cocos2d::PhysicsContact& contact) {
     if(isUnit[BODY_A] && isUnit[BODY_B]) {
         const auto enemyMask { Utils::CreateMask(core::CategoryBits::ENEMY) };
         const auto playerIndex { (bodyMasks[BODY_A] & enemyMask) ? BODY_B: BODY_A };
-        const auto player { dynamic_cast<Unit*>(nodes[playerIndex]) };
-        const auto enemy { dynamic_cast<Enemies::Bot*>(nodes[playerIndex^1]) };
+        const auto player { static_cast<Unit*>(nodes[playerIndex]) };
+        const auto enemy { static_cast<Enemies::Bot*>(nodes[playerIndex^1]) };
         player->AddCurse<Curses::CurseClass::DPS>(enemy->GetId(), Player::DAMAGE_ON_CONTACT, Curses::UNLIMITED);
         return false;
     }
@@ -127,18 +127,18 @@ bool OnContactBegin(cocos2d::PhysicsContact& contact) {
     if( isProjectile[BODY_A] || isProjectile[BODY_B] ) {
         const auto projectileIndex { isProjectile[BODY_A]? BODY_A: BODY_B };
 
-        const auto proj { dynamic_cast<Projectile*>(nodes[projectileIndex]) };
+        const auto proj { static_cast<Projectile*>(nodes[projectileIndex]) };
         
         // damage target if possible
         if(isUnit[projectileIndex ^ 1]) {
-            const auto unit { dynamic_cast<Unit*>(nodes[projectileIndex^1]) };
+            const auto unit { static_cast<Unit*>(nodes[projectileIndex^1]) };
             unit->AddCurse<Curses::CurseClass::INSTANT>(
                 Curses::CurseHub::ignored, 
                 proj->GetDamage()
             );
         } 
         else if( bodyMasks[projectileIndex ^ 1] == Utils::CreateMask(core::CategoryBits::BARREL)) {
-            const auto barrel { dynamic_cast<Barrel*>(nodes[projectileIndex^1]) };
+            const auto barrel { static_cast<Barrel*>(nodes[projectileIndex^1]) };
             barrel->Explode();
         }
 
@@ -182,13 +182,13 @@ bool OnContactSeparate(cocos2d::PhysicsContact& contact) {
     };
 
     if (nodes[BODY_A] && nodes[BODY_B] && (isUnitSensor[BODY_A] || isUnitSensor[BODY_B]) ) {
-        Unit * heroView { dynamic_cast<Unit*>(isUnitSensor[BODY_A]? nodes[BODY_A] : nodes[BODY_B]) };
+        const auto player { static_cast<Unit*>(isUnitSensor[BODY_A]? nodes[BODY_A] : nodes[BODY_B]) };
         bool onGround {
             isUnitSensor[BODY_A]? 
                 helper::IsEquel(bodies[BODY_A]->getVelocity().y, 0.f, 0.000001f):
                 helper::IsEquel(bodies[BODY_B]->getVelocity().y, 0.f, 0.000001f)
         };
-        heroView->SetContactWithGround(onGround);
+        player->SetContactWithGround(onGround);
         return true;
     }
 
@@ -200,8 +200,8 @@ bool OnContactSeparate(cocos2d::PhysicsContact& contact) {
     if( isTrap[BODY_A] || isTrap[BODY_B] ) {
         const auto trapIndex { isTrap[BODY_A]? BODY_A: BODY_B };
 
-        const auto unit { dynamic_cast<Unit*>(nodes[trapIndex^1]) };
-        const auto trap { dynamic_cast<Traps::Trap*>(nodes[trapIndex]) };
+        const auto unit { static_cast<Unit*>(nodes[trapIndex^1]) };
+        const auto trap { static_cast<Traps::Trap*>(nodes[trapIndex]) };
         
         trap->RemoveCurse(unit);
 
@@ -217,8 +217,8 @@ bool OnContactSeparate(cocos2d::PhysicsContact& contact) {
     if(isUnit[BODY_A] && isUnit[BODY_B]) {
         const auto enemyMask { Utils::CreateMask(core::CategoryBits::ENEMY) };
         const auto playerIndex { (bodyMasks[BODY_A] & enemyMask) > 0 ? BODY_B: BODY_A };
-        const auto player { dynamic_cast<Unit*>(nodes[playerIndex]) };
-        const auto enemy { dynamic_cast<Enemies::Bot*>(nodes[playerIndex^1]) };
+        const auto player { static_cast<Unit*>(nodes[playerIndex]) };
+        const auto enemy { static_cast<Enemies::Bot*>(nodes[playerIndex^1]) };
         player->RemoveCurse(enemy->GetId());
         return false;
     }
