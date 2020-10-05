@@ -57,6 +57,8 @@ namespace dragonBones {
 
         Animator(std::string&& armatureCacheName) noexcept;
 
+        CCArmatureDisplay* BuildArmatureDisplay(const std::string& cacheName) const;
+
     private:
         static constexpr std::size_t NONE { std::numeric_limits<std::size_t>::max() };
 

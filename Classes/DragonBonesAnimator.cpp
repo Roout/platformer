@@ -1,6 +1,8 @@
+#include "dragonBones/DragonBonesHeaders.h"
+#include "dragonBones/cocos2dx/CCDragonBonesHeaders.h"
+
 #include "DragonBonesAnimator.hpp"
 #include "Utils.hpp"
-#include "ResourceManagement.hpp"
 #include "SizeDeducer.hpp"
 
 namespace dragonBones {
@@ -22,7 +24,7 @@ namespace dragonBones {
             return false;
         }
         this->scheduleUpdate();
-        m_armatureDisplay = Resource::BuildArmatureDisplay(m_armatureName); 
+        m_armatureDisplay = BuildArmatureDisplay(m_armatureName); 
         this->addChild(m_armatureDisplay);
         return true;
     }
@@ -90,6 +92,17 @@ namespace dragonBones {
     Animator::Animator(std::string&& armatureCacheName) noexcept 
         : m_armatureName { std::move(armatureCacheName) }
     {
+    }
+
+    CCArmatureDisplay* Animator::BuildArmatureDisplay(const std::string& cacheName) const {
+        const auto factory = CCFactory::getFactory();
+        if(const auto bonesData = factory->getDragonBonesData(cacheName); bonesData == nullptr) {
+            factory->loadDragonBonesData(cacheName + "/" + cacheName + "_ske.json");
+        }
+        if(const auto texture = factory->getTextureAtlasData(cacheName); texture == nullptr) {
+            factory->loadTextureAtlasData(cacheName + "/" + cacheName + "_tex.json");
+        }
+        return factory->buildArmatureDisplay("Armature", cacheName);
     }
 
 }

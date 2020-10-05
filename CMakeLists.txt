@@ -107,7 +107,6 @@ list(APPEND GAME_HEADER
      "Classes/Path.hpp"
      Classes/Navigator.hpp
      Classes/UnitMovement.hpp
-     Classes/ResourceManagement.hpp
      Classes/DragonBonesAnimator.hpp
      Classes/UserInputHandler.hpp
      Classes/TileMapParser.hpp
