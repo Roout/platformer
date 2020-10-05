@@ -38,10 +38,7 @@ namespace Traps {
                 )
             );
             body->setContactTestBitmask(
-                Utils::CreateMask(
-                    core::CategoryBits::ENEMY, 
-                    core::CategoryBits::HERO
-                )
+                Utils::CreateMask(core::CategoryBits::HITBOX_SENSOR)
             );
             // Node part
             this->addComponent(body);

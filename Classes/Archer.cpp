@@ -26,8 +26,9 @@ Archer* Archer::create(size_t id) {
 Archer::Archer(size_t id) :
     Bot{ id, core::EntityNames::ARCHER }
 {
-    m_designedSize = cocos2d::Size{ 80.f, 135.f };
+    m_contentSize = cocos2d::Size{ 80.f, 135.f };
     m_physicsBodySize = cocos2d::Size{ 70.f, 135.f };
+    m_hitBoxSize = m_physicsBodySize;
 }
 
 
@@ -85,7 +86,7 @@ void Archer::UpdateAnimation() {
             m_currentState == State::DEAD
         };
         auto repeatTimes { isOneTimeAttack ? 1 : dragonBones::Animator::INFINITY_LOOP };
-        auto& animator = m_animator->Play(Utils::EnumCast(m_currentState), repeatTimes);
+        (void) m_animator->Play(Utils::EnumCast(m_currentState), repeatTimes);
         if(this->IsDead()) {
             this->OnDeath();
         }
@@ -104,34 +105,36 @@ void Archer::OnDeath() {
 void Archer::AddPhysicsBody() {
     Unit::AddPhysicsBody();
     // change masks for physics body
-    auto body { this->getPhysicsBody() };
+    const auto body { this->getPhysicsBody() };
     body->setMass(25.f);
-    body->setCategoryBitmask(
-        Utils::CreateMask(core::CategoryBits::ENEMY)
-    );
+    body->setCategoryBitmask(Utils::CreateMask(core::CategoryBits::ENEMY));
+    body->setContactTestBitmask(Utils::CreateMask(core::CategoryBits::PLATFORM));
     body->setCollisionBitmask(
         Utils::CreateMask(
-            core::CategoryBits::BOUNDARY, 
-            core::CategoryBits::PLATFORM 
+            core::CategoryBits::BOUNDARY
+            , core::CategoryBits::PLATFORM 
         )
     );
-    body->setContactTestBitmask(
+
+    /// Hit box sensor:
+    const auto hitBoxTag { Utils::EnumCast(core::CategoryBits::HITBOX_SENSOR) };
+    const auto hitBoxSensor { body->getShape(hitBoxTag)};
+    hitBoxSensor->setCollisionBitmask(0);
+    hitBoxSensor->setCategoryBitmask(hitBoxTag);
+    hitBoxSensor->setContactTestBitmask(
         Utils::CreateMask(
-            core::CategoryBits::TRAP,
-            core::CategoryBits::PLATFORM,
-            core::CategoryBits::PROJECTILE
+            core::CategoryBits::TRAP
+            , core::CategoryBits::PLAYER_PROJECTILE
+            , core::CategoryBits::HITBOX_SENSOR
         )
     );
-    const auto sensor { 
-        body->getShape(Utils::EnumCast(
-            core::CategoryBits::GROUND_SENSOR)
-        ) 
-    };
-    sensor->setCollisionBitmask(0);
-    sensor->setCategoryBitmask(
-        Utils::CreateMask(core::CategoryBits::GROUND_SENSOR)
-    );
-    sensor->setContactTestBitmask(
+
+    /// Ground sensor:
+    const auto groundSensorTag { Utils::EnumCast(core::CategoryBits::GROUND_SENSOR) };
+    const auto groundSensor { body->getShape(groundSensorTag) };
+    groundSensor->setCollisionBitmask(0);
+    groundSensor->setCategoryBitmask(Utils::CreateMask(core::CategoryBits::GROUND_SENSOR));
+    groundSensor->setContactTestBitmask(
         Utils::CreateMask(
             core::CategoryBits::BOUNDARY,
             core::CategoryBits::PLATFORM
@@ -142,8 +145,10 @@ void Archer::AddPhysicsBody() {
 void Archer::AddAnimator() {
     Unit::AddAnimator();
     m_animator->InitializeAnimations({
-        std::make_pair(Utils::EnumCast(State::PREPARE_ATTACK),  GetStateName(State::ATTACK)), /// TODO: mismatch, update animation!
-        std::make_pair(Utils::EnumCast(State::ATTACK),          GetStateName(State::IDLE)), /// TODO: mismatch, update animation!
+        /// TODO: mismatch, update animation!
+        std::make_pair(Utils::EnumCast(State::PREPARE_ATTACK),  GetStateName(State::ATTACK)),
+        /// TODO: mismatch, update animation!
+        std::make_pair(Utils::EnumCast(State::ATTACK),          GetStateName(State::IDLE)), 
         std::make_pair(Utils::EnumCast(State::IDLE),            GetStateName(State::IDLE)),
         std::make_pair(Utils::EnumCast(State::DEAD),            GetStateName(State::DEAD))
     });
@@ -173,14 +178,14 @@ void Archer::Attack() {
 
         cocos2d::Vec2 velocity { 600.f, 0.f };
         auto position = this->getPosition();
-        if(m_side == Side::RIGHT) {
-            position.x += this->getContentSize().width / 2.f;
-        }
-        else {
-            position.x -= this->getContentSize().width / 2.f + arrowSize.width;
+        if(IsLookingLeft()) {
+            position.x -= m_contentSize.width / 2.f + arrowSize.width;
             velocity.x *= -1.f;
         }
-        position.y += this->getContentSize().height / 2.f;
+        else {
+            position.x += m_contentSize.width / 2.f;
+        }
+        position.y += m_contentSize.height / 2.f;
 
         const cocos2d::Rect attackedArea {position, arrowSize};
         m_weapon->LaunchAttack(attackedArea, velocity);

@@ -23,7 +23,7 @@ private:
 
     Platform( const cocos2d::Size& size ) {
         const cocos2d::PhysicsMaterial material { 1.f, 0.f, 0.f };
-        const auto body = cocos2d::PhysicsBody::createBox({size.width * 0.93f, size.height * 0.98f }, material);
+        const auto body = cocos2d::PhysicsBody::createBox({floorf(size.width * 0.93f), size.height}, material);
         body->setDynamic(false);
         body->setCategoryBitmask(
             Utils::CreateMask(
@@ -32,16 +32,17 @@ private:
         );
         body->setCollisionBitmask(
             Utils::CreateMask(
-                core::CategoryBits::HERO,
-                core::CategoryBits::ENEMY
+                core::CategoryBits::PLAYER
+                , core::CategoryBits::ENEMY
             )
         );
         body->setContactTestBitmask(
             Utils::CreateMask(
-                core::CategoryBits::GROUND_SENSOR,
-                core::CategoryBits::HERO,
-                core::CategoryBits::ENEMY,
-                core::CategoryBits::PROJECTILE
+                core::CategoryBits::GROUND_SENSOR
+                , core::CategoryBits::PLAYER
+                , core::CategoryBits::ENEMY
+                , core::CategoryBits::PLAYER_PROJECTILE
+                , core::CategoryBits::ENEMY_PROJECTILE
             )
         );
         this->addComponent(body);

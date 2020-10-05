@@ -31,6 +31,10 @@ bool Influence::Contains(const cocos2d::Vec2& point) const noexcept {
     return m_zone.containsPoint(point);
 }
 
+bool Influence::ContainsX(float x) const noexcept {
+    return m_zone.getMinX() <= x && x <= m_zone.getMaxX();
+}
+
 void Influence::OnIntrusion() {
     m_bot->OnEnemyIntrusion();
     m_detected = true;

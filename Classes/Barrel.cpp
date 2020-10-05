@@ -34,14 +34,14 @@ bool Barrel::init() {
     this->addChild(m_animator);
     
     m_animator->setScale(0.2f); // TODO: introduce multi-resolution scaling
-    this->AddPhysicsBody(m_designedSize);
-    this->setContentSize(m_designedSize);
+    this->AddPhysicsBody(m_contentSize);
+    this->setContentSize(m_contentSize);
     
     // debug state lable:
     auto state = cocos2d::Label::createWithTTF("state", "fonts/arial.ttf", 25);
     state->setName("state");
     state->setString("idle");
-    const auto height { SizeDeducer::GetInstance().GetAdjustedSize(m_designedSize.height + 30.f) };
+    const auto height { SizeDeducer::GetInstance().GetAdjustedSize(m_contentSize.height + 30.f) };
     state->setPosition(0.f, height);
     this->addChild(state);
 
@@ -59,7 +59,7 @@ void Barrel::Explode() {
     this->removeComponent(this->getPhysicsBody());
 
     // debug:
-    auto stateLabel = dynamic_cast<cocos2d::Label*>(this->getChildByName("state"));
+    auto stateLabel = this->getChildByName<cocos2d::Label*>("state");
     if( !stateLabel ) throw "can't find label!";
     stateLabel->setString("exploded");
 }
@@ -70,22 +70,17 @@ void Barrel::AddPhysicsBody(const cocos2d::Size& size) {
         {0.f, size.height / 2.f}
     );
     body->setDynamic(false);
-    body->setCategoryBitmask(
-        Utils::CreateMask(
-            core::CategoryBits::BARREL
-        )
-    );
+    body->setCategoryBitmask(Utils::CreateMask(core::CategoryBits::BARREL));
     body->setCollisionBitmask(
         Utils::CreateMask(
-            core::CategoryBits::BOUNDARY, 
-            core::CategoryBits::PROJECTILE
-        )
+            core::CategoryBits::BOUNDARY 
+            , core::CategoryBits::PLAYER_PROJECTILE
+            , core::CategoryBits::ENEMY_PROJECTILE)
     );
     body->setContactTestBitmask(
         Utils::CreateMask(
-            core::CategoryBits::BOUNDARY,
-            core::CategoryBits::PROJECTILE
-        ) 
+            core::CategoryBits::PLAYER_PROJECTILE
+            , core::CategoryBits::ENEMY_PROJECTILE)
     );
     this->addComponent(body);
 }

@@ -32,8 +32,9 @@ bool Spearman::init() {
 Spearman::Spearman(size_t id, const char * name) :
     Warrior{ id, name }
 {
-    m_designedSize = cocos2d::Size{ 80.f, 135.f };
+    m_contentSize = cocos2d::Size{ 80.f, 135.f };
     m_physicsBodySize = cocos2d::Size{ 70.f, 135.f };
+    m_hitBoxSize = m_physicsBodySize;
 }
 
 void Spearman::AddWeapon() {
@@ -57,13 +58,13 @@ void Spearman::Attack() {
         const cocos2d::Size spearSize { attackRange, attackRange / 4.f };
 
         auto position = this->getPosition();
-        if(m_side == Side::RIGHT) {
-            position.x += this->getContentSize().width / 2.f;
+        if(IsLookingLeft()) {
+            position.x -= m_contentSize.width / 2.f + spearSize.width;
         }
         else {
-            position.x -= this->getContentSize().width / 2.f + spearSize.width;
+            position.x += m_contentSize.width / 2.f;
         }
-        position.y += this->getContentSize().height / 2.f - spearSize.height / 2.f;
+        position.y += m_contentSize.height / 2.f - spearSize.height / 2.f;
 
         const cocos2d::Rect attackedArea { position, spearSize };
         m_weapon->LaunchAttack(attackedArea, this->getPhysicsBody()->getVelocity());

@@ -6,6 +6,8 @@
 #include "Weapon.hpp"
 #include "UnitMovement.hpp"
 
+#include <cmath>
+
 namespace Enemies {
 
 Spider* Spider::create(size_t id) {
@@ -24,9 +26,10 @@ Spider::Spider(size_t id, const char* dragonBonesName) :
     Bot{ id, dragonBonesName }
 {
     // define size of the graphical content
-    m_designedSize = cocos2d::Size { 90.f, 125.f };
+    m_contentSize = cocos2d::Size { 90.f, 125.f };
     // define size of the physics body
     m_physicsBodySize = cocos2d::Size{ 80.f, 80.f };
+    m_hitBoxSize = cocos2d::Size{ 90.f, 90.f };
 }
 
 bool Spider::init() {
@@ -36,7 +39,7 @@ bool Spider::init() {
     m_movement->SetMaxSpeed(130.f);
     // override content size because the body is with offset and smaller than the 
     // graph content
-    this->setContentSize(m_designedSize);
+    this->setContentSize(m_contentSize);
     return true;
 };
 
@@ -65,9 +68,9 @@ void Spider::CreateWebAt(const cocos2d::Vec2& start) {
 void Spider::UpdateWeb() {
     if(m_web) {
         m_web->clear();
-        const auto shiftY { m_designedSize.height * 0.6f };
-        auto middleOfAss = this->getPosition() + cocos2d::Vec2{ 0.f, shiftY}; 
-        m_web->drawLine(m_webStart, middleOfAss, cocos2d::Color4F::WHITE);        
+        const auto shiftY { m_contentSize.height * 0.6f };
+        auto assMiddle = this->getPosition() + cocos2d::Vec2{ 0.f, shiftY}; 
+        m_web->drawLine(m_webStart, assMiddle, cocos2d::Color4F::WHITE);        
     }
 }
 
@@ -128,9 +131,7 @@ void Spider::UpdatePosition(const float dt) noexcept {
 
 void Spider::UpdateAnimation() {
     if(m_currentState != m_previousState) {
-        const auto isOneTimeAttack { 
-            m_currentState == State::DEAD
-        };
+        const auto isOneTimeAttack { m_currentState == State::DEAD };
         const auto repeatTimes { isOneTimeAttack ? 1 : dragonBones::Animator::INFINITY_LOOP };
         (void) m_animator->Play(Utils::EnumCast(m_currentState), repeatTimes);
         if(this->IsDead()) {
@@ -140,12 +141,18 @@ void Spider::UpdateAnimation() {
 };
 
 void Spider::OnDeath() {
+    // Interface
     this->getChildByName("health")->removeFromParent();
+    // Physics
     const auto body = this->getPhysicsBody();
+    const auto hitBoxTag { Utils::EnumCast(core::CategoryBits::HITBOX_SENSOR) };
+    const auto hitBoxSensor { body->getShape(hitBoxTag) };
     body->setGravityEnable(true);
-    body->setContactTestBitmask(0); // don't cause any damage to player
+    hitBoxSensor->setContactTestBitmask(0); // don't cause any damage to player
+    // Movement
     m_movement->ResetForce(); // reset forces
     m_movement->Push(0.f, -0.1f); // push down
+    // Animation
     m_animator->EndWith([this]() {
         if(this->m_web) {
             this->m_web->removeFromParent();
@@ -164,7 +171,7 @@ void Spider::AddPhysicsBody() {
     );
     // explicitly define the offset rather than in constructor of the body
     // because in constructor offset is added to the shape!
-    const auto yOffset { m_designedSize.height * 0.65f };
+    const auto yOffset { floorf(m_contentSize.height * 0.65f) };
     body->setPositionOffset({0.f, yOffset});
     body->setMass(25.f);
     body->setDynamic(true);
@@ -172,18 +179,27 @@ void Spider::AddPhysicsBody() {
     body->setRotationEnable(false);
 
     // change masks for physics body
-    body->setCategoryBitmask(
-        Utils::CreateMask(core::CategoryBits::ENEMY)
-    );
+    body->setCategoryBitmask(Utils::CreateMask(core::CategoryBits::ENEMY));
     body->setCollisionBitmask(0); // collide with nothing
-    body->setContactTestBitmask(
+
+    const auto hitBoxShape = cocos2d::PhysicsShapeBox::create(
+        m_hitBoxSize 
+        , cocos2d::PHYSICSSHAPE_MATERIAL_DEFAULT
+        //, {0.f, yOffset}
+    );
+    hitBoxShape->setSensor(true);
+    const auto tag { Utils::CreateMask(core::CategoryBits::HITBOX_SENSOR) };
+    hitBoxShape->setTag(tag);
+    hitBoxShape->setCategoryBitmask(tag);
+    hitBoxShape->setCollisionBitmask(0);
+    hitBoxShape->setContactTestBitmask(
         Utils::CreateMask(
-            core::CategoryBits::TRAP,
-            core::CategoryBits::PROJECTILE,
-            core::CategoryBits::ENEMY,
-            core::CategoryBits::HERO
+            core::CategoryBits::TRAP
+            , core::CategoryBits::PLAYER_PROJECTILE
+            , core::CategoryBits::HITBOX_SENSOR
         )
     );
+    body->addShape(hitBoxShape, false);
     this->addComponent(body);
 };
 

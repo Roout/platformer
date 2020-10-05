@@ -15,7 +15,7 @@
 
 namespace Enemies {
 
-std::string  GetStateName(State state) {
+std::string GetStateName(State state) {
     static std::unordered_map<State, std::string> mapped {
         { State::PATROL,            "walk" },
         { State::PURSUIT,           "walk" },
@@ -39,8 +39,9 @@ Bot::Bot(size_t id, const char* dragonBonesName):
     Unit{ dragonBonesName },
     m_id { id }
 {
-    m_designedSize = cocos2d::Size{ 80.f, 135.f };
+    m_contentSize = cocos2d::Size{ 80.f, 135.f };
     m_physicsBodySize = cocos2d::Size{ 70.f, 135.f };
+    m_hitBoxSize = m_physicsBodySize;
 }
 
 bool Bot::NeedAttack() const noexcept {
@@ -50,18 +51,18 @@ bool Bot::NeedAttack() const noexcept {
         m_weapon->IsReady()
     };
     auto enemyIsClose = [this]() { 
-        const auto target = this->getParent()->getChildByName(core::EntityNames::PLAYER);
-        // use some simple algorithm to determine whether ф player is close enough to the target
+        const auto target = this->getParent()->getChildByName<const Unit*>(core::EntityNames::PLAYER);
+        // use some simple algorithm to determine whether a player is close enough to the target
         // to perform an attack
-        if( target ) {
+        if( target && !target->IsDead() ) {
             const auto radius = m_weapon->GetRange();
             const cocos2d::Rect lhs { 
-                target->getPosition() - cocos2d::Vec2{ target->getContentSize().width / 2.f, 0.f },
-                target->getContentSize()
+                target->getPosition() - cocos2d::Vec2{ target->GetHitBox().width / 2.f, 0.f },
+                target->GetHitBox()
             };
             const cocos2d::Rect rhs { // check attack in both directions
-                this->getPosition() - cocos2d::Vec2 { this->getContentSize().width / 2.f + radius, 0.f },
-                this->getContentSize() + cocos2d::Size { 2.f * radius, 0.f }
+                this->getPosition() - cocos2d::Vec2 { m_hitBoxSize.width / 2.f + radius, 0.f },
+                m_hitBoxSize + cocos2d::Size { 2.f * radius, 0.f }
             };
             return lhs.intersectsRect(rhs);
         }
@@ -80,7 +81,7 @@ void Bot::TryAttack() {
 }
 
 void Bot::UpdateDebugLabel() noexcept {
-    auto state = dynamic_cast<cocos2d::Label*>(this->getChildByName("state"));
+    auto state = this->getChildByName<cocos2d::Label*>("state");
     state->setString(GetStateName(m_currentState));
 }
 

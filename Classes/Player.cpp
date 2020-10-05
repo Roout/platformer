@@ -27,8 +27,9 @@ Player* Player::create() {
 Player::Player() :
     Unit { "mc" }
 {
-    m_designedSize = cocos2d::Size{ 80.f, 135.f };
+    m_contentSize = cocos2d::Size{ 80.f, 135.f };
     m_physicsBodySize = cocos2d::Size{ 40.f, 135.f };
+    m_hitBoxSize = m_contentSize;
 }
 
 bool Player::init() {
@@ -84,36 +85,35 @@ void Player::AddPhysicsBody() {
     Unit::AddPhysicsBody();
     
     const auto body { this->getPhysicsBody() };
-    body->setCategoryBitmask(
-        Utils::CreateMask(core::CategoryBits::HERO)
-    );
+    body->setCategoryBitmask(Utils::CreateMask(core::CategoryBits::PLAYER));
+    body->setContactTestBitmask(Utils::CreateMask(core::CategoryBits::PLATFORM));
     body->setCollisionBitmask(
         Utils::CreateMask(
-            core::CategoryBits::BOUNDARY, 
-            core::CategoryBits::PLATFORM 
+            core::CategoryBits::BOUNDARY 
+            , core::CategoryBits::PLATFORM 
         )
     );
-    body->setContactTestBitmask(
+
+    const auto hitBoxTag { Utils::CreateMask(core::CategoryBits::HITBOX_SENSOR) };
+    const auto hitBoxSensor { body->getShape(hitBoxTag) };
+    hitBoxSensor->setCollisionBitmask(0);
+    hitBoxSensor->setCategoryBitmask(hitBoxTag);
+    hitBoxSensor->setContactTestBitmask(
         Utils::CreateMask(
-            core::CategoryBits::PROJECTILE,
-            core::CategoryBits::TRAP,
-            core::CategoryBits::PLATFORM,
-            core::CategoryBits::ENEMY
+            core::CategoryBits::ENEMY_PROJECTILE
+            , core::CategoryBits::TRAP
+            , core::CategoryBits::HITBOX_SENSOR
         )
     );
-    const auto sensor { 
-        body->getShape(Utils::EnumCast(
-            core::CategoryBits::GROUND_SENSOR)
-        ) 
-    };
-    sensor->setCollisionBitmask(0);
-    sensor->setCategoryBitmask(
-        Utils::CreateMask(core::CategoryBits::GROUND_SENSOR)
-    );
-    sensor->setContactTestBitmask(
+
+    const auto groundSensorTag { Utils::EnumCast(core::CategoryBits::GROUND_SENSOR) };
+    const auto groundSensor { body->getShape(groundSensorTag) };
+    groundSensor->setCollisionBitmask(0);
+    groundSensor->setCategoryBitmask(Utils::CreateMask(core::CategoryBits::GROUND_SENSOR));
+    groundSensor->setContactTestBitmask(
         Utils::CreateMask(
-            core::CategoryBits::BOUNDARY,
-            core::CategoryBits::PLATFORM
+            core::CategoryBits::BOUNDARY
+            , core::CategoryBits::PLATFORM
         )
     );
 }
@@ -167,7 +167,7 @@ void Player::update(float dt) {
 }
 
 void Player::UpdateDebugLabel() noexcept {
-    auto state = dynamic_cast<cocos2d::Label*>(this->getChildByName("state"));
+    const auto state = this->getChildByName<cocos2d::Label*>("state");
     state->setString(this->GetStateName(m_currentState));
 }
 
@@ -180,7 +180,7 @@ void Player::UpdateAnimation() {
         if( m_currentState == State::ATTACK || m_currentState == State::JUMP ) {
             repeatTimes = 1;
         }
-        m_animator->Play(Utils::EnumCast(m_currentState), repeatTimes);
+        (void) m_animator->Play(Utils::EnumCast(m_currentState), repeatTimes);
     }
 }
 
@@ -212,15 +212,16 @@ void Player::UpdateState(const float dt) noexcept {
 
     // check whether we're out of level bounds
     const cocos2d::Rect boundary {
-        this->getParent()->getPosition() - this->getContentSize(),
-        this->getParent()->getContentSize() + this->getContentSize() * 2.f 
+        this->getParent()->getPosition() - m_contentSize,
+        this->getParent()->getContentSize() + m_contentSize * 2.f 
     };
     const cocos2d::Rect player {
         this->getParent()->getPosition() + this->getPosition(),
-        this->getContentSize()
+        m_contentSize
     };
     
-    if(!player.intersectsRect(boundary)) { // out of level boundaries
+    if(!player.intersectsRect(boundary)) { 
+        // out of level boundaries
         m_currentState = State::DEAD;
         m_health = 0;
     }

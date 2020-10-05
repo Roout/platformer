@@ -66,9 +66,6 @@ Projectile::Projectile (
     body->setDynamic(true);
     body->setGravityEnable(false);
     body->setRotationEnable(false);
-    body->setCategoryBitmask(
-        Utils::CreateMask(core::CategoryBits::PROJECTILE)
-    );
     this->setContentSize(size);
     this->addComponent(body);
 }
@@ -92,9 +89,7 @@ Projectile::Projectile(
     body->setDynamic(true);
     body->setGravityEnable(false);
     body->setRotationEnable(false);
-    body->setCategoryBitmask(
-        Utils::CreateMask(core::CategoryBits::PROJECTILE)
-    );
+    
     this->setContentSize(size);
     this->addComponent(body);
 }
@@ -103,6 +98,13 @@ void Projectile::SetContactTestBitmask(size_t mask) noexcept {
     const auto body = this->getPhysicsBody();
     if(body) {
         body->setContactTestBitmask(mask);
+    }
+}
+
+void Projectile::SetCategoryBitmask(size_t mask) noexcept {
+    const auto body = this->getPhysicsBody();
+    if(body) {
+        body->setCategoryBitmask(mask);
     }
 }
 

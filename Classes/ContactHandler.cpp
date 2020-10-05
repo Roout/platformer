@@ -60,7 +60,12 @@ bool OnContactBegin(cocos2d::PhysicsContact& contact) {
         bodyMasks[BODY_B] == Utils::CreateMask(core::CategoryBits::PLATFORM)
     };
 
-    const auto unitMask { Utils::CreateMask(core::CategoryBits::HERO, core::CategoryBits::ENEMY) };
+    const auto unitMask { 
+        Utils::CreateMask(
+            core::CategoryBits::PLAYER
+            , core::CategoryBits::ENEMY
+        ) 
+    };
     const bool isUnit[2] = {
         (bodyMasks[BODY_A] & unitMask) > 0,
         (bodyMasks[BODY_B] & unitMask) > 0
@@ -108,9 +113,15 @@ bool OnContactBegin(cocos2d::PhysicsContact& contact) {
     }
 
     /// Projectile & (Unit or Barrel)
+    const auto projectileMask { 
+        Utils::CreateMask(
+            core::CategoryBits::PLAYER_PROJECTILE
+            , core::CategoryBits::ENEMY_PROJECTILE
+        )
+    };
     const bool isProjectile[2] = {
-        bodyMasks[BODY_A] == Utils::CreateMask(core::CategoryBits::PROJECTILE),
-        bodyMasks[BODY_B] == Utils::CreateMask(core::CategoryBits::PROJECTILE)
+        (bodyMasks[BODY_A] & projectileMask) > 0,
+        (bodyMasks[BODY_B] & projectileMask) > 0
     };
 
     if( isProjectile[BODY_A] || isProjectile[BODY_B] ) {
@@ -198,7 +209,7 @@ bool OnContactSeparate(cocos2d::PhysicsContact& contact) {
     }
 
     /// Unit & Unit
-    const auto unitMask { Utils::CreateMask(core::CategoryBits::HERO, core::CategoryBits::ENEMY) };
+    const auto unitMask { Utils::CreateMask(core::CategoryBits::PLAYER, core::CategoryBits::ENEMY) };
     const bool isUnit[2] = {
         (bodyMasks[BODY_A] & unitMask) > 0,
         (bodyMasks[BODY_B] & unitMask) > 0
