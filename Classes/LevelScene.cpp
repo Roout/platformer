@@ -22,6 +22,7 @@
 #include "TileMapParser.hpp"
 #include "Path.hpp"
 #include "ContactHandler.hpp"
+#include "ParallaxBackground.hpp"
 
 #include <unordered_map>
 
@@ -65,11 +66,15 @@ bool LevelScene::init() {
     
     this->setName("Level");
 	this->scheduleUpdate();
-    
+
     const auto tmxFile { cocos2d::StringUtils::format("Map/level_%d.tmx", m_id) };
     const auto tileMap { cocos2d::FastTMXTiledMap::create(tmxFile) };
     tileMap->setName("Map");
     this->addChild(tileMap);
+
+    // add parallax background
+    auto back = Background::create();
+    tileMap->addChild(back, -1);
 
     // mark untouchable layers:
     for(auto& child: tileMap->getChildren()) {
@@ -77,6 +82,9 @@ bool LevelScene::init() {
     }
 
     this->Restart();    
+    
+    back->setAnchorPoint({0.f, 0.f});
+    back->setPosition(-tileMap->getPosition());
 
     return true;
 }

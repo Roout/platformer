@@ -82,6 +82,7 @@ list(APPEND GAME_SOURCE
      Classes/SmoothFollower.cpp
      Classes/UserInputHandler.cpp
      Classes/TileMapParser.cpp
+     Classes/ParallaxBackground.cpp
      Classes/Weapon.cpp
      Classes/HealthBar.cpp
      Classes/Curses.cpp
@@ -110,6 +111,7 @@ list(APPEND GAME_HEADER
      Classes/DragonBonesAnimator.hpp
      Classes/UserInputHandler.hpp
      Classes/TileMapParser.hpp
+     Classes/ParallaxBackground.hpp
      Classes/Weapon.hpp
      Classes/Core.hpp
      Classes/Utils.hpp
