@@ -175,18 +175,18 @@ void TileMapParser::Parse() {
 			return info;
 		};
 
-		for (int y = 0; y < height; y++) {
-			for (int x = 0; x < width; x++) {
+		for(int y = 0; y < height; y++) {
+			for(int x = 0; x < width; x++) {
 				const auto tileGid = obstaclesLayer->getTileGIDAt({
 					static_cast<float>(x),
 					static_cast<float>(y) 
 				});
 
-				if (tileGid) {
+				if(tileGid) {
 					// { bodyType, categoryName}
 					const auto [srcBodyType, srcCategoryName] = GetTileInfo(tileGid);
 					
-					if(srcBodyType == "static" && !isVisited[y][x] ) {
+					if(srcBodyType == "static" && !isVisited[y][x]) {
 						isVisited[y][x] = true;
 						const auto category { core::CategoryFromString(srcCategoryName) };
 						// Some bodies can consist from several tiles so
@@ -194,7 +194,7 @@ void TileMapParser::Parse() {
 
 						// merge all horizontal neighbors:
 						auto col { x + 1 };
-						while(col < width && !isVisited[y][col] ) {
+						while(col < width && !isVisited[y][col]) {
 							// if the right tile is same (static & categoory)
 							// then merge them
 							const auto gid = obstaclesLayer->getTileGIDAt({
@@ -203,7 +203,7 @@ void TileMapParser::Parse() {
 							});
 							if(!gid) break;
 							
-							if(	const auto [neighborBody, neighborCategory] = GetTileInfo(gid);
+							if(const auto [neighborBody, neighborCategory] = GetTileInfo(gid);
 								neighborBody != srcBodyType || 
 								srcCategoryName != neighborCategory
 							) {
@@ -222,64 +222,6 @@ void TileMapParser::Parse() {
 						form.m_type = category;
 
 						this->Get(category).emplace_back(form);
-
-						// now merge into vertical body if possible
-
-						auto topRow { y + 1 };
-						while(topRow < height && !isVisited[topRow][x] ) {
-							// if the right tile is same (static & categoory)
-							// then merge them
-							const auto gid = obstaclesLayer->getTileGIDAt({
-								static_cast<float>(x),
-								static_cast<float>(topRow) 
-							});
-							if(!gid) break;
-							
-							if(	const auto& [neighborBody, neighborCategory] = GetTileInfo(gid);
-								neighborBody != srcBodyType || 
-								srcCategoryName != neighborCategory
-							) {
-								break;
-							}
-
-							isVisited[topRow][x] = true;
-							topRow++;
-						}
-						topRow--;
-
-						auto lowRow { y - 1 };
-						while(lowRow >= 0 && !isVisited[lowRow][x] ) { 
-							// if the right tile is same (static & categoory)
-							// then merge them
-							const auto gid = obstaclesLayer->getTileGIDAt({
-								static_cast<float>(x),
-								static_cast<float>(lowRow) 
-							});
-							if(!gid) break;
-							
-							if(	const auto& [neighborBody, neighborCategory] = GetTileInfo(gid);
-								neighborBody != srcBodyType || 
-								srcCategoryName != neighborCategory
-							) {
-								break;
-							}
-
-							isVisited[lowRow][x] = true;
-							lowRow--;
-						}
-						lowRow++;
-
-						if( lowRow != topRow ) { // at least one tile can be merged
-							form.m_rect = cocos2d::Rect{
-								cocos2d::Vec2{ x * tileSize.width, (height - topRow - 1.f) * tileSize.height }, 
-								cocos2d::Size{ tileSize.width, tileSize.height * (topRow - lowRow + 1.f) }
-							};
-							form.m_type = category;
-							this->Get(category).emplace_back(form);
-						}
-
-						// skip horizontal tiles if can
-						x = col - 1;
 					} 
 				}	// tileGid
 			}	// for
