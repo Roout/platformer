@@ -142,7 +142,7 @@ void TileMapParser::Parse() {
     this->ParsePaths();
     this->ParseInfluences();
 
-    const auto obstaclesLayer = m_tileMap->getLayer("ground");
+    const auto obstaclesLayer = m_tileMap->getLayer("padding-background");
 	if (obstaclesLayer) {
 		const auto tileSize { obstaclesLayer->getMapTileSize() };
 		const auto mapSize { obstaclesLayer->getLayerSize() };
