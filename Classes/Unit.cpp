@@ -95,13 +95,13 @@ void Unit::Attack() {
 
         auto position = this->getPosition();
         if(m_side == Side::RIGHT) {
-            position.x += m_hitBoxSize.width / 2.f;
+            position.x += m_contentSize.width / 2.f;
         }
         else {
-            position.x -= m_hitBoxSize.width / 2.f + attackRange;
+            position.x -= m_contentSize.width / 2.f + attackRange;
         }
         // shift a little bit higher to avoid immediate collision with the ground
-        position.y += m_hitBoxSize.height * 0.05f;
+        position.y += m_contentSize.height * 0.05f;
         const cocos2d::Rect attackedArea {
             position,
             cocos2d::Size{ attackRange, m_contentSize.height * 1.05f } // a little bigger than the designed size

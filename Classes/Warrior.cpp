@@ -64,12 +64,12 @@ void Warrior::AttachNavigator(Path&& path) {
     this->Patrol();
 }
 
-void Warrior::Pursue(cocos2d::Node * target) noexcept {
-    if(!this->IsDead() && target) {
+void Warrior::Pursue(Unit * target) noexcept {
+    if(!this->IsDead() && target && !target->IsDead()) {
         const auto shift { 
-            target->getContentSize().width / 2.f    // shift to bottom left\right corner
-            + m_weapon->GetRange() * 0.8f           // shift by weapon length (not 1.0f to be able to reach the target by attack!)
-            + m_contentSize.width / 2.f    
+            target->GetHitBox().width / 2.f // shift to bottom left\right corner
+            + m_weapon->GetRange() * 0.8f   // shift by weapon length (not 1.0f to be able to reach the target by attack!)
+            + m_contentSize.width / 2.f     // shift by size where the weapon's attack will be created
         };
         // possible destinations (bottom middle of this unit)
         const float xTargets[2] = { 
@@ -81,7 +81,7 @@ void Warrior::Pursue(cocos2d::Node * target) noexcept {
             fabs(xTargets[0] - this->getPositionX()),
             fabs(xTargets[1] - this->getPositionX())
         };
-        const float xShift { floorf(m_contentSize.width * 0.4f) };
+        const float xShift { floorf(m_physicsBodySize.width * 0.4f) };
         // -xShift for left-bottom corner of this unit 
         // +xShift for right-bottom corner of this unit 
         // So if influence contains either of these corners than the unit won't fall down for sure!
@@ -118,7 +118,7 @@ void Warrior::Patrol() noexcept {
 /// Bot interface
 void Warrior::OnEnemyIntrusion() {
     m_detectEnemy = true;
-    auto target = this->getParent()->getChildByName(core::EntityNames::PLAYER);
+    auto target = this->getParent()->getChildByName<Unit *>(core::EntityNames::PLAYER);
     this->Pursue(target);
 }
 
@@ -148,7 +148,7 @@ void Warrior::UpdatePosition(const float dt) noexcept {
     auto initiateAttack { m_weapon->IsAttacking() || m_weapon->IsPreparing() };
     if(!this->IsDead() && !initiateAttack) {
         if(m_detectEnemy) { // update target
-            auto target = this->getParent()->getChildByName(core::EntityNames::PLAYER);
+            auto target = this->getParent()->getChildByName<Unit *>(core::EntityNames::PLAYER);
             this->Pursue(target);
         }
         // update

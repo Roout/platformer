@@ -37,7 +37,7 @@ private:
 
 /// Unique to warrior
 
-    void Pursue(cocos2d::Node * target) noexcept;
+    void Pursue(Unit * target) noexcept;
 
     void Patrol() noexcept;
 

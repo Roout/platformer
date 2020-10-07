@@ -61,8 +61,8 @@ bool Bot::NeedAttack() const noexcept {
                 target->GetHitBox()
             };
             const cocos2d::Rect rhs { // check attack in both directions
-                this->getPosition() - cocos2d::Vec2 { m_hitBoxSize.width / 2.f + radius, 0.f },
-                m_hitBoxSize + cocos2d::Size { 2.f * radius, 0.f }
+                this->getPosition() - cocos2d::Vec2 { m_contentSize.width / 2.f + radius, 0.f },
+                m_contentSize + cocos2d::Size { 2.f * radius, 0.f }
             };
             return lhs.intersectsRect(rhs);
         }
