@@ -16,6 +16,9 @@ namespace {
 		else if ( ty == core::EntityNames::SPIDER ) {
 			type = core::EnemyClass::SPIDER;
 		}
+		else if ( ty == core::EntityNames::BOULDER_PUSHER ) {
+			type = core::EnemyClass::BOULDER_PUSHER;
+		}
 		return type;
 	}
 }

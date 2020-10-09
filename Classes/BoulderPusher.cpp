@@ -1,4 +1,4 @@
-#include "Archer.hpp"
+#include "BoulderPusher.hpp"
 
 #include "Player.hpp"
 #include "Core.hpp"
@@ -10,8 +10,8 @@
 
 namespace Enemies {
 
-Archer* Archer::create(size_t id) {
-    auto pRet { new (std::nothrow) Archer(id) };
+BoulderPusher* BoulderPusher::create(size_t id) {
+    auto pRet { new (std::nothrow) BoulderPusher(id) };
     if( pRet && pRet->init()) {
         pRet->autorelease();
     } 
@@ -22,23 +22,22 @@ Archer* Archer::create(size_t id) {
     return pRet;
 }
 
-Archer::Archer(size_t id) :
-    Bot{ id, core::EntityNames::ARCHER }
+BoulderPusher::BoulderPusher(size_t id):
+    Bot{ id, core::EntityNames::BOULDER_PUSHER }
 {
     m_contentSize = cocos2d::Size{ 80.f, 135.f };
     m_physicsBodySize = cocos2d::Size{ 70.f, 135.f };
     m_hitBoxSize = m_physicsBodySize;
 }
 
-
-bool Archer::init() {
+bool BoulderPusher::init() {
     if( !Bot::init() ) {
         return false; 
     }
     return true;
 }
 
-void Archer::update(float dt) {
+void BoulderPusher::update(float dt) {
      // update components
     cocos2d::Node::update(dt);
     // custom updates
@@ -50,17 +49,15 @@ void Archer::update(float dt) {
     this->UpdateAnimation(); 
 }
 
-/// Bot interface
-void Archer::OnEnemyIntrusion() {
+void BoulderPusher::OnEnemyIntrusion() {
     m_detectEnemy = true;
 }
 
-void Archer::OnEnemyLeave() {
+void BoulderPusher::OnEnemyLeave() {
     m_detectEnemy = false;
 }
 
-
-void Archer::UpdateState(const float dt) noexcept {
+void BoulderPusher::UpdateState(const float dt) noexcept {
     m_previousState = m_currentState;
 
     if( m_health <= 0 ) {
@@ -77,10 +74,9 @@ void Archer::UpdateState(const float dt) noexcept {
     }
 }
 
-void Archer::UpdateAnimation() {
+void BoulderPusher::UpdateAnimation() {
     if(m_currentState != m_previousState) {
         auto isOneTimeAttack { 
-            m_currentState == State::PREPARE_ATTACK || 
             m_currentState == State::ATTACK || 
             m_currentState == State::DEAD
         };
@@ -92,8 +88,7 @@ void Archer::UpdateAnimation() {
     }
 }
 
-
-void Archer::OnDeath() {
+void BoulderPusher::OnDeath() {
     this->removeComponent(this->getPhysicsBody());
     this->getChildByName("health")->removeFromParent();
     m_animator->EndWith([this](){
@@ -101,7 +96,7 @@ void Archer::OnDeath() {
     });
 }
 
-void Archer::AddPhysicsBody() {
+void BoulderPusher::AddPhysicsBody() {
     Unit::AddPhysicsBody();
     // change masks for physics body
     const auto body { this->getPhysicsBody() };
@@ -141,27 +136,27 @@ void Archer::AddPhysicsBody() {
     );
 }
 
-void Archer::AddAnimator() {
+void BoulderPusher::AddAnimator() {
     Unit::AddAnimator();
+    m_animator->setScale(0.3f); // override scale
     m_animator->InitializeAnimations({
         /// TODO: mismatch, update animation!
         std::make_pair(Utils::EnumCast(State::PREPARE_ATTACK),  GetStateName(State::ATTACK)),
-        /// TODO: mismatch, update animation!
         std::make_pair(Utils::EnumCast(State::ATTACK),          GetStateName(State::IDLE)), 
         std::make_pair(Utils::EnumCast(State::IDLE),            GetStateName(State::IDLE)),
         std::make_pair(Utils::EnumCast(State::DEAD),            GetStateName(State::DEAD))
     });
 }
 
-void Archer::AddWeapon() {
+void BoulderPusher::AddWeapon() {
     const auto damage { 5.f };
-    const auto range { 100.f };
+    const auto range { 35.f };
     // TODO: Here a strange mess of durations needed to be fixed
     // The projectile need to be created only when the attack-animation ends
-    const auto preparationTime { m_animator->GetDuration(Utils::EnumCast(State::ATTACK)) }; /// TODO: update animation!
-    const auto attackDuration { 0.1f };
-    const auto reloadTime { 0.5f };
-    m_weapon = std::make_unique<Bow>(
+    const auto preparationTime { 0.4f };
+    const auto attackDuration { m_animator->GetDuration(Utils::EnumCast(State::ATTACK)) - preparationTime };
+    const auto reloadTime { 1.5f };
+    m_weapon = std::make_unique<Legs>(
         damage, 
         range, 
         preparationTime,
@@ -170,31 +165,31 @@ void Archer::AddWeapon() {
     );
 }
 
-void Archer::Attack() {
-    if(m_weapon->IsReady() && !this->IsDead()) {
-        const auto attackRange { m_weapon->GetRange() };
-        const cocos2d::Size arrowSize { attackRange, floorf(attackRange / 8.5f) };
+bool BoulderPusher::NeedAttack() const noexcept {
+    return !this->IsDead() && m_detectEnemy && m_weapon->IsReady();
+}
 
-        cocos2d::Vec2 velocity { 600.f, 0.f };
+void BoulderPusher::Attack() {
+    if(m_weapon->IsReady() && !this->IsDead()) {
+        const auto radius { m_weapon->GetRange() };
+        const cocos2d::Size stoneSize { radius * 2.f, radius * 2.f };
+
+        cocos2d::Vec2 impulse { 2000.f, 0.f };
         auto position = this->getPosition();
-        if(IsLookingLeft()) {
-            position.x -= m_contentSize.width / 2.f + arrowSize.width;
-            velocity.x *= -1.f;
+        if(this->IsLookingLeft()) {
+            position.x -= m_contentSize.width / 2.f + stoneSize.width;
+            impulse.x *= -1.f;
         }
         else {
             position.x += m_contentSize.width / 2.f;
         }
-        position.y += m_contentSize.height / 2.f;
 
-        const cocos2d::Rect attackedArea {position, arrowSize};
-        m_weapon->LaunchAttack(attackedArea, [velocity](cocos2d::PhysicsBody* body) {
-            body->setVelocity(velocity);
+        const cocos2d::Rect attackedArea { position, stoneSize };
+        m_weapon->LaunchAttack(attackedArea, [impulse](cocos2d::PhysicsBody* body){
+            body->applyImpulse(impulse);
+            body->setAngularVelocity(impulse.x > 0.f? -10.f: 10.f);
         });
     }
 }
 
-bool Archer::NeedAttack() const noexcept {
-    return !this->IsDead() && m_detectEnemy && m_weapon->IsReady();
 }
-
-} // namespace Enemies

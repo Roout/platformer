@@ -4,6 +4,7 @@
 #include "Bot.hpp"
 #include "Warrior.hpp"
 #include "Archer.hpp"
+#include "BoulderPusher.hpp"
 #include "Spider.hpp"
 #include "Spearman.hpp"
 #include "Player.hpp"
@@ -189,14 +190,16 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
     std::unordered_map<size_t, cocos2d::Rect> influences;
     std::unordered_map<size_t, Enemies::Warrior*> warriors;
     std::unordered_map<size_t, Enemies::Archer*> archers;
+    std::unordered_map<size_t, Enemies::BoulderPusher*> boulderPushers;
     std::unordered_map<size_t, Enemies::Spider*> spiders;
 
-    influences.reserve(100);
-    paths.reserve(100);
-    pathIdByUnitId.reserve(100);
-    warriors.reserve(100);
-    archers.reserve(100);
-    spiders.reserve(100);
+    influences.reserve(40);
+    paths.reserve(30);
+    pathIdByUnitId.reserve(20);
+    warriors.reserve(20);
+    archers.reserve(10);
+    boulderPushers.reserve(10);
+    spiders.reserve(20);
 
     for(size_t i = 0; i < Utils::EnumSize<core::CategoryName>(); i++) {
         const auto category { static_cast<core::CategoryName>(i) };
@@ -244,7 +247,6 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                         warrior->setName(core::EntityNames::WARRIOR);
                         warrior->setPosition(form.m_points.front());
                         map->addChild(warrior, zOrder);
-                        // save warrior pointer
                         warriors.emplace(form.m_id, warrior);
                         pathIdByUnitId.emplace(form.m_id, form.m_pathId);
                     } break;
@@ -253,7 +255,6 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                         spearman->setName(core::EntityNames::SPEARMAN);
                         spearman->setPosition(form.m_points.front());
                         map->addChild(spearman, zOrder);
-                        // save spearman pointer
                         warriors.emplace(form.m_id, spearman);
                         pathIdByUnitId.emplace(form.m_id, form.m_pathId);
                     } break;
@@ -262,8 +263,14 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                         archer->setName(core::EntityNames::ARCHER);
                         archer->setPosition(form.m_points.front());
                         map->addChild(archer, zOrder);
-                        // save warrior pointer
                         archers.emplace(form.m_id, archer);
+                    } break;
+                    case core::EnemyClass::BOULDER_PUSHER: {
+                        const auto boulderPusher { Enemies::BoulderPusher::create(form.m_id) };
+                        boulderPusher->setName(core::EntityNames::BOULDER_PUSHER);
+                        boulderPusher->setPosition(form.m_points.front());
+                        map->addChild(boulderPusher, zOrder);
+                        boulderPushers.emplace(form.m_id, boulderPusher);
                     } break;
                     case core::EnemyClass::SPIDER: {
                         const auto spider { Enemies::Spider::create(form.m_id) };
@@ -271,7 +278,6 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                         spider->setPosition(form.m_points.front());
                         map->addChild(spider, zOrder);
                         spider->CreateWebAt(form.m_points.front() + cocos2d::Vec2{0.f, spider->getContentSize().height * 0.8f });
-                        // save warrior pointer
                         spiders.emplace(form.m_id, spider);
                         pathIdByUnitId.emplace(form.m_id, form.m_pathId);
                     } break;
@@ -298,5 +304,8 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
     } 
     for(auto& [id, archer]: archers) {
         archer->AttachInfluenceArea(influences.at(id));
+    } 
+    for(auto& [id, pusher]: boulderPushers) {
+        pusher->AttachInfluenceArea(influences.at(id));
     } 
 }

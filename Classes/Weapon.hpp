@@ -3,6 +3,7 @@
 
 #include "cocos2d.h"
 #include "Utils.hpp"
+
 #include <cinttypes>
 #include <array>
 #include <functional>
@@ -74,22 +75,24 @@ public:
     }
 
     /**
-     * @param[in] projectile
-     *      A projectile which will be created after launching attack
+     * @param projectile A projectile which will be created after launching attack
      * 
-     * @param[in] velocity
-     *      The velocity where the projectile will move.
+     * @param modifier The callable modificator object that push the body:
+     * - setting velocity
+     * - setting impulse
+     * - setting force
+     * etc
      */
     void LaunchAttack (
         const cocos2d::Rect& projectile,
-        const cocos2d::Vec2& velocity
+        std::function<void(cocos2d::PhysicsBody*)>&& modifier
     ) noexcept {
         if(this->IsReady()) {
             // go to preparation state
             this->NextState();
             // save projectile properties
             m_projectile = projectile;
-            m_velocity = velocity;
+            m_modifier = std::move(modifier);
         }
     };
 
@@ -119,7 +122,7 @@ protected:
     // projectile size and spawn position
     cocos2d::Rect m_projectile{};
     // projectile velocity: direction & speed
-    cocos2d::Vec2 m_velocity{};
+    std::function<void(cocos2d::PhysicsBody*)> m_modifier{};
 
 private:
     enum class State : std::uint16_t {
@@ -185,6 +188,13 @@ public:
 };
 
 class Bow final : public Weapon {
+public:
+    using Weapon::Weapon;
+
+    void OnAttack() override;
+};
+
+class Legs final : public Weapon {
 public:
     using Weapon::Weapon;
 

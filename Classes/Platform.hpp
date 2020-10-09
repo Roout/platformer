@@ -34,6 +34,7 @@ private:
             Utils::CreateMask(
                 core::CategoryBits::PLAYER
                 , core::CategoryBits::ENEMY
+                , core::CategoryBits::ENEMY_PROJECTILE
             )
         );
         body->setContactTestBitmask(
