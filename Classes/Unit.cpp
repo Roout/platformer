@@ -144,7 +144,7 @@ void Unit::AddPhysicsBody() {
     body->setGravityEnable(true);
     body->setRotationEnable(false);
     
-    const cocos2d::Size sensorShapeSize { floorf(m_physicsBodySize.width * 0.9f), 8.f };
+    const cocos2d::Size sensorShapeSize { m_physicsBodySize.width, 2.f };
     const auto sensorShape = cocos2d::PhysicsShapeBox::create(
         sensorShapeSize, 
         cocos2d::PHYSICSSHAPE_MATERIAL_DEFAULT
