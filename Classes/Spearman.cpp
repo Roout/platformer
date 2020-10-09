@@ -38,7 +38,7 @@ Spearman::Spearman(size_t id, const char * name) :
 }
 
 void Spearman::AddWeapon() {
-    const auto damage { 25.f };
+    const auto damage { 10.f };
     const auto range { 100.f };
     const auto preparationTime { 0.f };
     const auto attackDuration { m_animator->GetDuration(Utils::EnumCast(State::ATTACK)) };
@@ -67,7 +67,9 @@ void Spearman::Attack() {
         position.y += m_contentSize.height / 2.f - spearSize.height / 2.f;
 
         const cocos2d::Rect attackedArea { position, spearSize };
-        m_weapon->LaunchAttack(attackedArea, this->getPhysicsBody()->getVelocity());
+        m_weapon->LaunchAttack(attackedArea, [this](cocos2d::PhysicsBody* body){
+            body->setVelocity(this->getPhysicsBody()->getVelocity());
+        });
     }
 }
 

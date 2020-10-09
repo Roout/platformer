@@ -106,7 +106,9 @@ void Unit::Attack() {
             position,
             cocos2d::Size{ attackRange, m_contentSize.height * 1.05f } // a little bigger than the designed size
         };
-        m_weapon->LaunchAttack(attackedArea, this->getPhysicsBody()->getVelocity());
+        m_weapon->LaunchAttack(attackedArea, [this](cocos2d::PhysicsBody* body){
+            body->setVelocity(this->getPhysicsBody()->getVelocity());
+        });
     }
 }
 
@@ -144,7 +146,7 @@ void Unit::AddPhysicsBody() {
     body->setGravityEnable(true);
     body->setRotationEnable(false);
     
-    const cocos2d::Size sensorShapeSize { m_physicsBodySize.width, 2.f };
+    const cocos2d::Size sensorShapeSize { m_physicsBodySize.width, 8.f };
     const auto sensorShape = cocos2d::PhysicsShapeBox::create(
         sensorShapeSize, 
         cocos2d::PHYSICSSHAPE_MATERIAL_DEFAULT

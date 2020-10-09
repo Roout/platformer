@@ -8,7 +8,6 @@
 
 #include "cocos2d.h"
 
-
 namespace Enemies {
 
 Archer* Archer::create(size_t id) {
@@ -156,7 +155,7 @@ void Archer::AddAnimator() {
 
 void Archer::AddWeapon() {
     const auto damage { 5.f };
-    const auto range { 50.f };
+    const auto range { 100.f };
     // TODO: Here a strange mess of durations needed to be fixed
     // The projectile need to be created only when the attack-animation ends
     const auto preparationTime { m_animator->GetDuration(Utils::EnumCast(State::ATTACK)) }; /// TODO: update animation!
@@ -174,7 +173,7 @@ void Archer::AddWeapon() {
 void Archer::Attack() {
     if(m_weapon->IsReady() && !this->IsDead()) {
         const auto attackRange { m_weapon->GetRange() };
-        const cocos2d::Size arrowSize { attackRange, attackRange / 4.f };
+        const cocos2d::Size arrowSize { attackRange, floorf(attackRange / 8.5f) };
 
         cocos2d::Vec2 velocity { 600.f, 0.f };
         auto position = this->getPosition();
@@ -188,7 +187,9 @@ void Archer::Attack() {
         position.y += m_contentSize.height / 2.f;
 
         const cocos2d::Rect attackedArea {position, arrowSize};
-        m_weapon->LaunchAttack(attackedArea, velocity);
+        m_weapon->LaunchAttack(attackedArea, [velocity](cocos2d::PhysicsBody* body) {
+            body->setVelocity(velocity);
+        });
     }
 }
 

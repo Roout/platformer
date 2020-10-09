@@ -5,17 +5,7 @@
 
 class Projectile : public cocos2d::Node {
 public:
-    static Projectile * create(
-        const cocos2d::Size& size,
-        const cocos2d::Vec2& velocity,
-        const float damage
-    );
-
-    static Projectile * create(
-        const char * imagePath,
-        const cocos2d::Vec2& velocity,
-        const float damage
-    );
+    static Projectile * create(float damage);
 
     bool init() override;
 
@@ -45,29 +35,39 @@ public:
         return m_damage;
     }
 
-    void SetLifetime(float time) noexcept {
-        m_lifeTime = time;
+    void SetLifetime(float seconds) noexcept {
+        m_lifeTime = seconds;
     }
 
     void SetContactTestBitmask(size_t mask) noexcept;
 
     void SetCategoryBitmask(size_t mask) noexcept;
 
+    /**
+     * Create a sprite for the projectile
+     * 
+     * @param imagePath specify the path to image
+     * 
+     * @note it may needs to be flipped depends on velocity vector  
+     * @code
+     * if(velocity.x > 0.f) {
+     *    image->setFlippedX(true);
+     * }
+     * @endcode
+     */
     cocos2d::Sprite* AddImage(const char* imagePath);
+
+    /**
+     * Create a dynamic body that is not influenced by grabity then add it to this node.
+     * 
+     * @return just created body
+     */
+    cocos2d::PhysicsBody* AddPhysicsBody(const cocos2d::Size& size);
 
 private:
     
-    Projectile(
-        const cocos2d::Size& size,
-        const cocos2d::Vec2& velocity,
-        const float damage
-    );
+    Projectile(float damage);
 
-    Projectile(
-        const char* imagePath,
-        const cocos2d::Vec2& velocity,
-        const float damage
-    );
     /**
      * Keep track of projectile lifetime. When 'm_lifeTime' <= 0.f
      * projectile should disappear.
