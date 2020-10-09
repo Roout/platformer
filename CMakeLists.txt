@@ -72,6 +72,7 @@ list(APPEND GAME_SOURCE
      Classes/Bot.cpp
      Classes/Warrior.cpp
      Classes/Archer.cpp
+     Classes/BoulderPusher.cpp
      Classes/Spider.cpp
      Classes/Spearman.cpp
      Classes/PauseNode.cpp
@@ -102,6 +103,7 @@ list(APPEND GAME_HEADER
      Classes/Bot.hpp
      Classes/Warrior.hpp
      Classes/Archer.hpp
+     Classes/BoulderPusher.hpp
      Classes/Spider.hpp
      Classes/Spearman.hpp
      Classes/Influence.hpp
