@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.16)
 
 set(This roout-classes)
 
@@ -80,6 +80,13 @@ list(APPEND sources
 
 # create static library
 add_library(${This} STATIC ${sources} ${headers})
+
+target_compile_options(${This} PRIVATE
+  $<$<COMPILE_LANGUAGE:CXX>:$<$<CXX_COMPILER_ID:Clang>:-Wall>>
+  $<$<COMPILE_LANGUAGE:CXX>:$<$<CXX_COMPILER_ID:GNU>:-Wall>>
+  $<$<COMPILE_LANGUAGE:CXX>:$<$<CXX_COMPILER_ID:MSVC>:/W3>>
+)
+
 
 # debug message
 message(STATUS "Classes debug message: ")
