@@ -20,6 +20,6 @@ void Curses::DPS::Update(const float dt) noexcept {
 void Curses::DPS::EffectUnit(Unit * const unit) noexcept {
     if( m_cooldown <= 0.f ) {
         m_cooldown = 1.0f;
-        unit->RecieveDamage(m_damage);
+        unit->RecieveDamage(static_cast<int>(m_damage));
     }
 }

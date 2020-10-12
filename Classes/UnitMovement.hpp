@@ -17,7 +17,7 @@ public:
     // Defines how high can the body jump
     static constexpr float JUMP_HEIGHT { 255.f };     // up to 3 tiles
     // Defines how fast the body reach the max height by single jump 
-    static constexpr float TIME_OF_APEX_JUMP { 0.30 };  // standart time
+    static constexpr float TIME_OF_APEX_JUMP { 0.3f };  // standart time
     // Calculate grvity base on defined constancts: height, time ( G = -H / (2*t*t) )
     static constexpr float GRAVITY { 
         -JUMP_HEIGHT / (2 * TIME_OF_APEX_JUMP * TIME_OF_APEX_JUMP) 
