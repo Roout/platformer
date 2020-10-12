@@ -50,8 +50,12 @@ endif()
 set(CMAKE_CXX_STANDARD 17)
 
 # record sources, headers, resources...
-set(GAME_SOURCE)
-set(GAME_HEADER)
+set(GAME_SOURCE 
+    Classes/AppDelegate.cpp
+)
+set(GAME_HEADER
+    Classes/AppDelegate.h
+)
 
 set(GAME_RES_FOLDER
     "${CMAKE_CURRENT_SOURCE_DIR}/Resources"
@@ -59,77 +63,6 @@ set(GAME_RES_FOLDER
 if(APPLE OR WINDOWS)
     cocos_mark_multi_resources(common_res_files RES_TO "Resources" FOLDERS ${GAME_RES_FOLDER})
 endif()
-
-# add cross-platforms source files and header files 
-list(APPEND GAME_SOURCE
-     Classes/AppDelegate.cpp
-     Classes/LevelScene.cpp
-     Classes/ContactHandler.cpp
-     Classes/Unit.cpp
-     Classes/Player.cpp
-     Classes/Influence.cpp
-     Classes/Navigator.cpp
-     Classes/Bot.cpp
-     Classes/Warrior.cpp
-     Classes/Archer.cpp
-     Classes/BoulderPusher.cpp
-     Classes/Spider.cpp
-     Classes/Spearman.cpp
-     Classes/PauseNode.cpp
-     Classes/DebugScreen.cpp
-     Classes/DragonBonesAnimator.cpp
-     Classes/DeathScreen.cpp
-     Classes/UnitMovement.cpp
-     Classes/SmoothFollower.cpp
-     Classes/UserInputHandler.cpp
-     Classes/TileMapParser.cpp
-     Classes/ParallaxBackground.cpp
-     Classes/Weapon.cpp
-     Classes/HealthBar.cpp
-     Classes/Curses.cpp
-     Classes/CurseHub.cpp
-     Classes/Barrel.cpp
-     Classes/Projectile.cpp
-     )
-list(APPEND GAME_HEADER
-     Classes/AppDelegate.h
-     Classes/LevelScene.hpp
-     Classes/ContactHandler.hpp
-     Classes/PauseNode.hpp
-     Classes/DebugScreen.hpp
-     Classes/Unit.hpp
-     Classes/DeathScreen.hpp
-     Classes/Player.hpp
-     Classes/Bot.hpp
-     Classes/Warrior.hpp
-     Classes/Archer.hpp
-     Classes/BoulderPusher.hpp
-     Classes/Spider.hpp
-     Classes/Spearman.hpp
-     Classes/Influence.hpp
-     "Classes/Path.hpp"
-     Classes/Navigator.hpp
-     Classes/UnitMovement.hpp
-     Classes/DragonBonesAnimator.hpp
-     Classes/UserInputHandler.hpp
-     Classes/TileMapParser.hpp
-     Classes/ParallaxBackground.hpp
-     Classes/Weapon.hpp
-     Classes/Core.hpp
-     Classes/Utils.hpp
-     Classes/Projectile.hpp
-     Classes/Platform.hpp
-     Classes/Border.hpp
-     Classes/Barrel.hpp
-     Classes/SizeDeducer.hpp
-     Classes/SmoothFollower.hpp
-     Classes/HealthBar.hpp
-     Classes/Interface.hpp
-     Classes/Traps.hpp
-     Classes/PhysicsHelper.hpp
-     Classes/Curses.hpp
-     Classes/CurseHub.hpp
-     )
 
 if(ANDROID)
     # change APP_NAME to the share library name for Android, it's value depend on AndroidManifest.xml
@@ -196,16 +129,14 @@ else()
     target_link_libraries(${APP_NAME} PUBLIC -Wl,--whole-archive cpp_android_spec -Wl,--no-whole-archive)
 endif()
 
-# compile and link dragonbones lib
-set(DRAGONBONES_ROOT_PATH Classes/own-extension/dragonBones)
-add_subdirectory(${DRAGONBONES_ROOT_PATH})
+add_subdirectory("Classes/")
 
-target_link_libraries(${APP_NAME} PUBLIC cocos2d dragon_bones )
+target_link_libraries(${APP_NAME} PUBLIC cocos2d roout-classes)
 
 target_include_directories(${APP_NAME}
-    PRIVATE Classes
-    PRIVATE ${DRAGONBONES_ROOT_PATH}/..
-    PRIVATE ${COCOS2DX_ROOT_PATH}/cocos/audio/include/
+    PUBLIC Classes/ # use AppDelegate for ${APP_NAME}
+    PUBLIC ${DRAGONBONES_ROOT_PATH}/..
+    PUBLIC ${COCOS2DX_ROOT_PATH}/cocos/audio/include/
 )
 
 # mark app resources

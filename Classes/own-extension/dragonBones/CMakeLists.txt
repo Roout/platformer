@@ -57,6 +57,8 @@ add_library(${This} STATIC ${sources} ${headers})
 
 target_include_directories(${This} PRIVATE ${RAPIDJSON_DIR})
 
+target_link_libraries(${This} PRIVATE cocos2d)
+
 # debug message
 message(STATUS "Dragon Bones debug message: ")
 message(STATUS "\tLIBRARY_OUTPUT_DIRECTORY: ${CMAKE_BINARY_DIR}/lib")
@@ -70,5 +72,3 @@ set_target_properties(${This}
     FOLDER "External"
 	LINKER_LANGUAGE CXX
 )
-
-target_link_libraries(${This} PRIVATE cocos2d)
