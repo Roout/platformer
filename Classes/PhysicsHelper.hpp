@@ -1,12 +1,6 @@
 #ifndef PHYSICS_HELPER_HPP
 #define PHYSICS_HELPER_HPP
 
-// physics
-#include "physics/CCPhysicsBody.h"
-#include "physics/CCPhysicsContact.h"
-#include "physics/CCPhysicsShape.h"
-#include "physics/CCPhysicsWorld.h"
-
 namespace helper {
     
     constexpr bool IsEquel(const float a, const float b, const float eps) noexcept {
