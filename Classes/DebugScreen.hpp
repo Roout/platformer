@@ -31,7 +31,7 @@ private:
 
     int m_physicsWorldMask { cocos2d::PhysicsWorld::DEBUGDRAW_NONE };
 
-    static inline bool m_isInvincible { false };
+    bool m_isInvincible { false };
 };
 
 } // namespace screen

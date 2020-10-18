@@ -215,6 +215,9 @@ void Player::OnDeath() {
     this->runAction(cocos2d::RemoveSelf::create());
 };
 
+bool Player::IsInvincible() const noexcept {
+    return m_isInvincible;
+}
 
 void Player::UpdateState(const float dt) noexcept {
     m_previousState = m_currentState;

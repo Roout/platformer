@@ -22,6 +22,8 @@ public:
     void pause() override;
 
     void RecieveDamage(int damage) noexcept override;
+
+    bool IsInvincible() const noexcept;
 private:
     enum class State {
         IDLE,

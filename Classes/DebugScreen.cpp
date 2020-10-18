@@ -28,12 +28,14 @@ bool DebugScreen::init() {
     this->setName(NAME);
 
     auto scene = cocos2d::Director::getInstance()->getRunningScene();
+    auto map = scene->getChildByName("Level")->getChildByName("Map");
     auto world = scene->getPhysicsWorld();
     if(!world) {
         return false;
     }
 
     m_physicsWorldMask = world->getDebugDrawMask();
+    m_isInvincible = map->getChildByName<Player*>(core::EntityNames::PLAYER)->IsInvincible();
 
     auto physicsCaption = cocos2d::Label::createWithTTF("Physics debug ", "fonts/arial.ttf", 25);
     auto godModeCaption = cocos2d::Label::createWithTTF("Be invincible ", "fonts/arial.ttf", 25);
