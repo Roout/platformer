@@ -33,13 +33,25 @@ Player::Player() :
 }
 
 bool Player::init() {
-    if( !Unit::init()) {
+    if (!Unit::init()) {
         return false; 
     }    
     m_follower = std::make_unique<SmoothFollower>(this);
     m_inputHandler = std::make_unique<UserInputHandler>(this);
     m_movement->SetMaxSpeed(400.f);
+    // handle INVINCIBLE event
+    auto listener = cocos2d::EventListenerCustom::create("INVINCIBLE", [this](cocos2d::EventCustom *) {
+        this->m_isInvincible = m_isInvincible? false : true;
+    });
+    const auto dispatcher = this->getEventDispatcher();
+    dispatcher->addEventListenerWithSceneGraphPriority(listener, this);
     return true;
+}
+
+void Player::RecieveDamage(int damage) noexcept {
+    if(!m_isInvincible) {
+        Unit::RecieveDamage(damage);
+    }
 }
 
 void Player::AddWeapon() {

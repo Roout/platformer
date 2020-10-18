@@ -23,7 +23,7 @@ public:
     /**
      * Used by curses to lower health value. 
      */
-    void RecieveDamage(int damage) noexcept;
+    virtual void RecieveDamage(int damage) noexcept;
 
     /**
      * This function initiate an attack. 

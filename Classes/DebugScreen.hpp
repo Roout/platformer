@@ -8,7 +8,7 @@ namespace screen {
 /**
  * - [x] pause/resume playing scene (level)
  * - [x] switch physics world debug mode
- * - [ ] switch GOD mode
+ * - [x] switch GOD mode
  */
 class DebugScreen : public cocos2d::Node {
 public:
@@ -28,9 +28,10 @@ public:
     void SwitchPhysicsDebugMode() noexcept;
 
 private:
+
     int m_physicsWorldMask { cocos2d::PhysicsWorld::DEBUGDRAW_NONE };
 
-    cocos2d::Label * m_caption { nullptr }; 
+    static inline bool m_isInvincible { false };
 };
 
 } // namespace screen

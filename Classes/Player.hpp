@@ -21,6 +21,7 @@ public:
     
     void pause() override;
 
+    void RecieveDamage(int damage) noexcept override;
 private:
     enum class State {
         IDLE,
@@ -65,6 +66,8 @@ private:
     State m_currentState  { State::IDLE };
 
     State m_previousState { State::IDLE };
+
+    bool m_isInvincible { false };
 };
 
 
