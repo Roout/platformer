@@ -58,18 +58,34 @@ void Player::RecieveDamage(int damage) noexcept {
 
 void Player::AddWeapons() {
     // create weapon (it should be read from config)
-    const auto damage { 25.f };
-    const auto range { 70.f };
-    const auto preparationTime { 0.f };
-    const auto attackDuration { m_animator->GetDuration(Utils::EnumCast(State::MELEE_ATTACK)) };
-    const auto reloadTime { 0.1f };
-    m_weapons[WeaponClass::MELEE] = new Sword(
-        damage, 
-        range, 
-        preparationTime,
-        attackDuration,
-        reloadTime 
-    );
+    {
+        const auto damage { 25.f };
+        const auto range { 70.f };
+        const auto preparationTime { 0.f };
+        const auto attackDuration { m_animator->GetDuration(Utils::EnumCast(State::MELEE_ATTACK)) };
+        const auto reloadTime { 0.1f };
+        m_weapons[WeaponClass::MELEE] = new Sword(
+            damage, 
+            range, 
+            preparationTime,
+            attackDuration,
+            reloadTime 
+        );
+    }
+    {
+        const auto damage { 25.f };
+        const auto range { 130.f };
+        const auto preparationTime { 0.f };
+        const auto attackDuration { m_animator->GetDuration(Utils::EnumCast(State::RANGE_ATTACK)) };
+        const auto reloadTime { 2.f };
+        m_weapons[WeaponClass::RANGE] = new Fireball(
+            damage, 
+            range, 
+            preparationTime,
+            attackDuration,
+            reloadTime 
+        );
+    }
 };
 
 std::string  Player::GetStateName(Player::State state) {
@@ -147,7 +163,7 @@ void Player::UpdatePosition(const float dt) noexcept {
 }
 
 void Player::MoveAlong(float x, float y) noexcept {
-    if( !helper::IsEquel(y, 0.f, 0.0001f) ) {
+    if (!helper::IsEquel(y, 0.f, 0.0001f) ) {
         // need to be called earlier because forces will be reseted 
         // and method @IsOnGround will fail
         const auto body { this->getPhysicsBody() };
@@ -161,7 +177,6 @@ void Player::MoveAlong(float x, float y) noexcept {
         m_movement->Move(x, y);
     }
 }
-
 
 void Player::pause() {
     Unit::pause();
@@ -193,7 +208,7 @@ void Player::UpdateAnimation() {
     } 
     else if(m_currentState != m_previousState) {
         int repeatTimes { dragonBones::Animator::INFINITY_LOOP };
-        if(m_currentState == State::MELEE_ATTACK 
+        if (m_currentState == State::MELEE_ATTACK 
             || m_currentState == State::JUMP 
             || m_currentState == State::RANGE_ATTACK 
         ) {
@@ -250,10 +265,10 @@ void Player::UpdateState(const float dt) noexcept {
     else if(m_health <= 0) {
         m_currentState = State::DEAD;
     }
-    else if(m_weapons[WeaponClass::MELEE] && m_weapons[WeaponClass::MELEE]->IsAttacking()) {
+    else if(m_weapons[WeaponClass::MELEE]->IsAttacking()) {
         m_currentState = State::MELEE_ATTACK;
     }
-    else if(m_weapons[WeaponClass::RANGE] && m_weapons[WeaponClass::RANGE]->IsAttacking()) {
+    else if(m_weapons[WeaponClass::RANGE]->IsAttacking()) {
         m_currentState = State::RANGE_ATTACK;
     }
     else if(!this->IsOnGround()) {
@@ -268,13 +283,38 @@ void Player::UpdateState(const float dt) noexcept {
 }
 
 void Player::RangeAttack() {
-    if(m_weapons[WeaponClass::RANGE]) {
-        assert(false && "player's range attack is not implemented");
+    bool usingMelee = {
+        m_weapons[WeaponClass::MELEE]->IsAttacking() || 
+        m_weapons[WeaponClass::MELEE]->IsPreparing()
+    };
+    if (!usingMelee && m_weapons[WeaponClass::RANGE]->IsReady() && !this->IsDead()) {
+        const auto attackRange { m_weapons[WeaponClass::RANGE]->GetRange() };
+        const cocos2d::Size fireballSize { attackRange, attackRange * 0.8f };
+
+        cocos2d::Vec2 velocity { 400.f, 0.f };
+        auto position = this->getPosition();
+        if(IsLookingLeft()) {
+            position.x -= m_contentSize.width / 2.f ;
+            velocity.x *= -1.f;
+        }
+        else {
+            position.x += m_contentSize.width / 2.f;
+        }
+        position.y += m_contentSize.height / 2.f;
+
+        const cocos2d::Rect attackedArea { position, fireballSize };
+        m_weapons[WeaponClass::RANGE]->LaunchAttack(attackedArea, [velocity](cocos2d::PhysicsBody* body) {
+            body->setVelocity(velocity);
+        });
     }
 }
 
 void Player::MeleeAttack() {
-    if(m_weapons[WeaponClass::MELEE]) {
+    bool usingRange = {
+        m_weapons[WeaponClass::RANGE]->IsAttacking() || 
+        m_weapons[WeaponClass::RANGE]->IsPreparing()
+    };
+    if (!usingRange) {
         Unit::Attack();
     }
 }

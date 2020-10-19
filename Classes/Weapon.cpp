@@ -100,8 +100,8 @@ void Bow::OnAttack() {
     const auto sprite = proj->AddImage("archer/library/arrow.png");
     sprite->setAnchorPoint({0.0f, 0.0f});
     sprite->setScale(scaleFactor);
-    if(body->getVelocity().x > 0.f) {
-        sprite->setFlippedX(true);
+    if (body->getVelocity().x > 0.f) {
+        proj->FlipX();
     }
 
     const auto testMask {
@@ -165,4 +165,53 @@ void Legs::OnAttack() {
     
     proj->SetLifetime(5.f);
     proj->addComponent(body);
+}
+
+void Fireball::OnAttack() {
+    const auto runningScene { cocos2d::Director::getInstance()->getRunningScene() };
+    const auto level = runningScene->getChildByName("Level");
+    const auto map = level->getChildByName("Map");
+    const auto scaleFactor { 0.5f };
+    
+    const auto proj = Projectile::create(this->GetDamage());
+    proj->AddAnimator("fireball");
+    proj->setScale(scaleFactor);
+
+    const auto body = cocos2d::PhysicsBody::createBox(
+        m_projectile.size
+        , cocos2d::PhysicsMaterial{ 1.f, 0.0f, 0.0f }
+        , { -m_projectile.size.width / 2.f, 0.f }
+    );
+    body->setDynamic(true);
+    body->setGravityEnable(false);
+
+    proj->setAnchorPoint({0.0f, 0.0f});
+    proj->setContentSize(m_projectile.size);
+    proj->setPosition(m_projectile.origin);
+    // push projectile
+    m_modifier(body);
+    // ---------------
+    if(body->getVelocity().x > 0.f) {
+        proj->FlipX();
+    }
+
+    const auto testMask {
+        Utils::CreateMask(
+            core::CategoryBits::HITBOX_SENSOR
+            , core::CategoryBits::BARREL
+            , core::CategoryBits::BOUNDARY
+            , core::CategoryBits::ENEMY_PROJECTILE
+            , core::CategoryBits::PLATFORM
+        )
+    };
+    const auto categoryMask {
+        Utils::CreateMask(core::CategoryBits::PLAYER_PROJECTILE)
+    };
+    body->setCollisionBitmask(0);
+    body->setCategoryBitmask(categoryMask);
+    body->setContactTestBitmask(testMask);
+    
+    proj->SetLifetime(5.f);
+    proj->addComponent(body);
+    map->addChild(proj, 101); /// TODO: clean up this mess with Z-order!
 }
