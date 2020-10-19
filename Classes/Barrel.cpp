@@ -1,10 +1,12 @@
 #include "Barrel.hpp"
+
 #include "Core.hpp"
 #include "SizeDeducer.hpp"
 #include "Utils.hpp"
+#include "DragonBonesAnimator.hpp"
+
 #include <algorithm>
 
-#include "DragonBonesAnimator.hpp"
 
 Barrel * Barrel::create() {
     auto pRet = new (std::nothrow) Barrel();
@@ -27,13 +29,13 @@ bool Barrel::init() {
     // setup animator
     m_animator = dragonBones::Animator::create("barrel"); 
     m_animator->InitializeAnimations({
-        std::make_pair<std::size_t, std::string>(Utils::EnumCast(State::idle), "idle"),
-        std::make_pair<std::size_t, std::string>(Utils::EnumCast(State::exploded), "strike")
+        std::make_pair(Utils::EnumCast(State::idle), "idle"),
+        std::make_pair(Utils::EnumCast(State::exploded), "strike")
     });
     (void) m_animator->Play(Utils::EnumCast(State::idle), dragonBones::Animator::INFINITY_LOOP);
     this->addChild(m_animator);
     
-    m_animator->setScale(0.2f); // TODO: introduce multi-resolution scaling
+    m_animator->setScale(0.2f);
     this->AddPhysicsBody(m_contentSize);
     this->setContentSize(m_contentSize);
     
