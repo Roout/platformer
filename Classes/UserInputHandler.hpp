@@ -44,7 +44,8 @@ private:
     struct Input final {
         int     jumpCounter { 0 };
         bool    jump { false };
-        bool    attack { false };
+        bool    meleeAttack { false };
+        bool    rangeAttack { false };
         int     dx { 0 };
 
         Input() = default;
@@ -56,12 +57,12 @@ private:
          * - always change old jump state to new one;
          * - change direction (@dx) only when new input was given. 
         */
-        void Merge(const Input&) noexcept;
+        void Merge(Input&&) noexcept;
     };
 
     Input m_lastInput {};
     Player * const m_player { nullptr };
-    std::array<WinKeyCode, 8U> m_validKeys;
+    std::array<WinKeyCode, 9U> m_validKeys;
 };
 
 #endif // USER_INPUT_H

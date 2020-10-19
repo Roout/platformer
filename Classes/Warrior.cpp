@@ -13,7 +13,7 @@ namespace Enemies {
 
 Warrior* Warrior::create(size_t id) {
     auto pRet { new (std::nothrow) Warrior(id, core::EntityNames::WARRIOR) };
-    if( pRet && pRet->init()) {
+    if (pRet && pRet->init()) {
         pRet->autorelease();
     } 
     else {
@@ -33,7 +33,7 @@ Warrior::Warrior(size_t id, const char* dragonBonesName) :
 
 
 bool Warrior::init() {
-    if( !Bot::init() ) {
+    if (!Bot::init() ) {
         return false; 
     }
     m_movement->SetMaxSpeed(130.f);
@@ -41,11 +41,11 @@ bool Warrior::init() {
 }
 
 void Warrior::update(float dt) {
-     // update components
+    // update components
     cocos2d::Node::update(dt);
     // custom updates
     this->UpdateDebugLabel();
-    this->UpdateWeapon(dt);
+    this->UpdateWeapons(dt);
     this->UpdatePosition(dt); 
     this->UpdateCurses(dt);
     this->TryAttack();
@@ -68,7 +68,7 @@ void Warrior::Pursue(Unit * target) noexcept {
     if(!this->IsDead() && target && !target->IsDead()) {
         const auto shift { 
             target->GetHitBox().width / 2.f // shift to bottom left\right corner
-            + m_weapon->GetRange() * 0.8f   // shift by weapon length (not 1.0f to be able to reach the target by attack!)
+            + m_weapons[WeaponClass::MELEE]->GetRange() * 0.8f   // shift by weapon length (not 1.0f to be able to reach the target by attack!)
             + m_contentSize.width / 2.f     // shift by size where the weapon's attack will be created
         };
         // possible destinations (bottom middle of this unit)
@@ -133,7 +133,7 @@ void Warrior::UpdateState(const float dt) noexcept {
     if( m_health <= 0 ) {
         m_currentState = State::DEAD;
     }
-    else if( m_weapon->IsAttacking() ) {
+    else if( m_weapons[WeaponClass::MELEE]->IsAttacking() ) {
         m_currentState = State::ATTACK;
     }
     else if( m_detectEnemy ) {
@@ -145,8 +145,11 @@ void Warrior::UpdateState(const float dt) noexcept {
 }
 
 void Warrior::UpdatePosition(const float dt) noexcept {
-    auto initiateAttack { m_weapon->IsAttacking() || m_weapon->IsPreparing() };
-    if(!this->IsDead() && !initiateAttack) {
+    auto initiateAttack { 
+        m_weapons[WeaponClass::MELEE]->IsAttacking() || 
+        m_weapons[WeaponClass::MELEE]->IsPreparing() 
+    };
+    if (!this->IsDead() && !initiateAttack) {
         if(m_detectEnemy) { // update target
             auto target = this->getParent()->getChildByName<Unit *>(core::EntityNames::PLAYER);
             this->Pursue(target);
@@ -227,13 +230,13 @@ void Warrior::AddAnimator() {
     });
 }
 
-void Warrior::AddWeapon() {
+void Warrior::AddWeapons() {
     const auto damage { 2.f };
     const auto range { 60.f };
     const auto preparationTime { 0.f };
     const auto attackDuration { m_animator->GetDuration(Utils::EnumCast(State::ATTACK)) };
     const auto reloadTime { 0.5f };
-    m_weapon = std::make_unique<Axe>(
+    m_weapons[WeaponClass::MELEE] = new Axe(
         damage, 
         range, 
         preparationTime,

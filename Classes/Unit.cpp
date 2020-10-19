@@ -13,11 +13,21 @@
 Unit::Unit(const std::string& dragonBonesName) :
     m_curses { this },
     m_dragonBonesName { dragonBonesName }
-{   
+{
+    m_weapons.fill(nullptr);
+}
+
+Unit::~Unit() {
+    for(auto p: m_weapons) {
+        if(p) {
+            delete p;
+            p = nullptr;
+        }
+    }
 }
 
 bool Unit::init() {
-    if( !cocos2d::Node::init() ) {
+    if (!cocos2d::Node::init() ) {
         return false;
     }
     this->scheduleUpdate();
@@ -26,7 +36,7 @@ bool Unit::init() {
     this->AddPhysicsBody();
     const auto body { this->getPhysicsBody() };
     m_movement = std::make_unique<Movement>(body);
-    this->AddWeapon();
+    this->AddWeapons();
     this->setContentSize(m_contentSize);
 
     /// TODO: move somewhere
@@ -61,7 +71,7 @@ void Unit::MoveAlong(const cocos2d::Vec2& direction) noexcept {
 }
 
 void Unit::MoveAlong(float x, float y) noexcept {
-    if( !helper::IsEquel(y, 0.f, 0.0001f) ) {
+    if (!helper::IsEquel(y, 0.f, 0.0001f)) {
         m_movement->Push(x, y);
     }
     else {
@@ -90,8 +100,8 @@ void Unit::RecieveDamage(int damage) noexcept {
 }
 
 void Unit::Attack() {
-    if(m_weapon->IsReady() && !this->IsDead()) {
-        const auto attackRange { m_weapon->GetRange() };
+    if(m_weapons.front()->IsReady() && !this->IsDead()) {
+        const auto attackRange { m_weapons.front()->GetRange() };
 
         auto position = this->getPosition();
         if(m_side == Side::RIGHT) {
@@ -106,15 +116,19 @@ void Unit::Attack() {
             position,
             cocos2d::Size{ attackRange, m_contentSize.height * 1.05f } // a little bigger than the designed size
         };
-        m_weapon->LaunchAttack(attackedArea, [this](cocos2d::PhysicsBody* body){
+        m_weapons.front()->LaunchAttack(attackedArea, [this](cocos2d::PhysicsBody* body){
             body->setVelocity(this->getPhysicsBody()->getVelocity());
         });
     }
 }
 
-void Unit::UpdateWeapon(const float dt) noexcept {
+void Unit::UpdateWeapons(const float dt) noexcept {
     if(!this->IsDead()) {
-        m_weapon->UpdateState(dt);
+        for(auto& weapon: m_weapons) {
+            if(weapon) {
+                weapon->UpdateState(dt);
+            }
+        }
     }
 }
 
@@ -174,4 +188,4 @@ void Unit::AddAnimator() {
     m_animator->setScale(0.2f); // TODO: introduce multi-resolution scaling
 }
 
-void Unit::AddWeapon() {};
+void Unit::AddWeapons() {};

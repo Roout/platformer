@@ -32,7 +32,7 @@ Archer::Archer(size_t id) :
 
 
 bool Archer::init() {
-    if( !Bot::init() ) {
+    if (!Bot::init() ) {
         return false; 
     }
     return true;
@@ -43,7 +43,7 @@ void Archer::update(float dt) {
     cocos2d::Node::update(dt);
     // custom updates
     this->UpdateDebugLabel();
-    this->UpdateWeapon(dt);
+    this->UpdateWeapons(dt);
     this->UpdateCurses(dt);
     this->TryAttack();
     this->UpdateState(dt);
@@ -63,13 +63,13 @@ void Archer::OnEnemyLeave() {
 void Archer::UpdateState(const float dt) noexcept {
     m_previousState = m_currentState;
 
-    if( m_health <= 0 ) {
+    if(m_health <= 0) {
         m_currentState = State::DEAD;
     }
-    else if( m_weapon->IsPreparing() ) {
+    else if(m_weapons[WeaponClass::RANGE]->IsPreparing()) {
         m_currentState = State::PREPARE_ATTACK;
     }
-    else if( m_weapon->IsAttacking() ) {
+    else if(m_weapons[WeaponClass::RANGE]->IsAttacking()) {
         m_currentState = State::ATTACK;
     }
     else {
@@ -153,7 +153,7 @@ void Archer::AddAnimator() {
     });
 }
 
-void Archer::AddWeapon() {
+void Archer::AddWeapons() {
     const auto damage { 5.f };
     const auto range { 100.f };
     // TODO: Here a strange mess of durations needed to be fixed
@@ -161,7 +161,7 @@ void Archer::AddWeapon() {
     const auto preparationTime { m_animator->GetDuration(Utils::EnumCast(State::ATTACK)) }; /// TODO: update animation!
     const auto attackDuration { 0.1f };
     const auto reloadTime { 0.5f };
-    m_weapon = std::make_unique<Bow>(
+    m_weapons[WeaponClass::RANGE] = new Bow(
         damage, 
         range, 
         preparationTime,
@@ -171,8 +171,8 @@ void Archer::AddWeapon() {
 }
 
 void Archer::Attack() {
-    if(m_weapon->IsReady() && !this->IsDead()) {
-        const auto attackRange { m_weapon->GetRange() };
+    if(m_weapons[WeaponClass::RANGE]->IsReady() && !this->IsDead()) {
+        const auto attackRange { m_weapons[WeaponClass::RANGE]->GetRange() };
         const cocos2d::Size arrowSize { attackRange, floorf(attackRange / 8.5f) };
 
         cocos2d::Vec2 velocity { 600.f, 0.f };
@@ -187,14 +187,14 @@ void Archer::Attack() {
         position.y += m_contentSize.height / 2.f;
 
         const cocos2d::Rect attackedArea {position, arrowSize};
-        m_weapon->LaunchAttack(attackedArea, [velocity](cocos2d::PhysicsBody* body) {
+        m_weapons[WeaponClass::RANGE]->LaunchAttack(attackedArea, [velocity](cocos2d::PhysicsBody* body) {
             body->setVelocity(velocity);
         });
     }
 }
 
 bool Archer::NeedAttack() const noexcept {
-    return !this->IsDead() && m_detectEnemy && m_weapon->IsReady();
+    return !this->IsDead() && m_detectEnemy && m_weapons[WeaponClass::RANGE]->IsReady();
 }
 
 } // namespace Enemies

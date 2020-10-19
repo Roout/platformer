@@ -12,6 +12,7 @@
 
 #include <unordered_map>
 #include <algorithm>
+#include <cassert>
 
 Player* Player::create() {
     auto pRet { new (std::nothrow) Player() };
@@ -39,6 +40,7 @@ bool Player::init() {
     m_follower = std::make_unique<SmoothFollower>(this);
     m_inputHandler = std::make_unique<UserInputHandler>(this);
     m_movement->SetMaxSpeed(400.f);
+
     // handle INVINCIBLE event
     auto listener = cocos2d::EventListenerCustom::create("INVINCIBLE", [this](cocos2d::EventCustom *) {
         this->m_isInvincible = m_isInvincible? false : true;
@@ -54,14 +56,14 @@ void Player::RecieveDamage(int damage) noexcept {
     }
 }
 
-void Player::AddWeapon() {
+void Player::AddWeapons() {
     // create weapon (it should be read from config)
     const auto damage { 25.f };
     const auto range { 70.f };
     const auto preparationTime { 0.f };
-    const auto attackDuration { m_animator->GetDuration(Utils::EnumCast(State::ATTACK)) };
+    const auto attackDuration { m_animator->GetDuration(Utils::EnumCast(State::MELEE_ATTACK)) };
     const auto reloadTime { 0.1f };
-    m_weapon = std::make_unique<Sword>(
+    m_weapons[WeaponClass::MELEE] = new Sword(
         damage, 
         range, 
         preparationTime,
@@ -72,8 +74,9 @@ void Player::AddWeapon() {
 
 std::string  Player::GetStateName(Player::State state) {
     static std::unordered_map<Player::State, std::string> mapped {
+        { Player::State::MELEE_ATTACK, "attack_1" },
+        { Player::State::RANGE_ATTACK, "attack_2" },
         { Player::State::IDLE, "idle" },
-        { Player::State::ATTACK, "attack_1" },
         { Player::State::JUMP, "jump" },
         { Player::State::WALK, "walk" },
         { Player::State::DEAD, "dead" }
@@ -85,7 +88,8 @@ std::string  Player::GetStateName(Player::State state) {
 void Player::AddAnimator() {
     Unit::AddAnimator();
     m_animator->InitializeAnimations({
-        std::make_pair(Utils::EnumCast(State::ATTACK), "attack_1"),
+        std::make_pair(Utils::EnumCast(State::MELEE_ATTACK), "attack_1"),
+        std::make_pair(Utils::EnumCast(State::RANGE_ATTACK), "attack_2"),
         std::make_pair(Utils::EnumCast(State::DEAD), "dead"),
         std::make_pair(Utils::EnumCast(State::IDLE), "idle"),
         std::make_pair(Utils::EnumCast(State::JUMP), "jump"),
@@ -171,7 +175,7 @@ void Player::update(float dt) {
     cocos2d::Node::update(dt);
      
     this->UpdateDebugLabel();
-    this->UpdateWeapon(dt);
+    this->UpdateWeapons(dt);
     this->UpdatePosition(dt); 
     this->UpdateCurses(dt);
     this->UpdateState(dt);
@@ -187,9 +191,12 @@ void Player::UpdateAnimation() {
     if(this->IsDead()) {
         this->OnDeath();
     } 
-    else if( m_currentState != m_previousState ) {
+    else if(m_currentState != m_previousState) {
         int repeatTimes { dragonBones::Animator::INFINITY_LOOP };
-        if( m_currentState == State::ATTACK || m_currentState == State::JUMP ) {
+        if(m_currentState == State::MELEE_ATTACK 
+            || m_currentState == State::JUMP 
+            || m_currentState == State::RANGE_ATTACK 
+        ) {
             repeatTimes = 1;
         }
         (void) m_animator->Play(Utils::EnumCast(m_currentState), repeatTimes);
@@ -240,19 +247,34 @@ void Player::UpdateState(const float dt) noexcept {
         m_currentState = State::DEAD;
         m_health = 0;
     }
-    else if( m_health <= 0 ) {
+    else if(m_health <= 0) {
         m_currentState = State::DEAD;
     }
-    else if( m_weapon->IsAttacking() ) {
-        m_currentState = State::ATTACK;
+    else if(m_weapons[WeaponClass::MELEE] && m_weapons[WeaponClass::MELEE]->IsAttacking()) {
+        m_currentState = State::MELEE_ATTACK;
     }
-    else if( !this->IsOnGround() ) {
+    else if(m_weapons[WeaponClass::RANGE] && m_weapons[WeaponClass::RANGE]->IsAttacking()) {
+        m_currentState = State::RANGE_ATTACK;
+    }
+    else if(!this->IsOnGround()) {
         m_currentState = State::JUMP;
     } 
-    else if( helper::IsEquel(velocity.x, 0.f, EPS) ) {
+    else if(helper::IsEquel(velocity.x, 0.f, EPS)) {
         m_currentState = State::IDLE;
     } 
     else {
         m_currentState = State::WALK;
+    }
+}
+
+void Player::RangeAttack() {
+    if(m_weapons[WeaponClass::RANGE]) {
+        assert(false && "player's range attack is not implemented");
+    }
+}
+
+void Player::MeleeAttack() {
+    if(m_weapons[WeaponClass::MELEE]) {
+        Unit::Attack();
     }
 }

@@ -29,7 +29,7 @@ std::string GetStateName(State state) {
 }
 
 bool Bot::init() {
-    if( !Unit::init()) {
+    if (!Unit::init()) {
         return false; 
     }
     return true;
@@ -45,17 +45,18 @@ Bot::Bot(size_t id, const char* dragonBonesName):
 }
 
 bool Bot::NeedAttack() const noexcept {
+    constexpr auto MELEE { 0U };
     bool attackIsReady {
         !this->IsDead() && 
         m_detectEnemy && 
-        m_weapon->IsReady()
+        m_weapons[MELEE]->IsReady()
     };
-    auto enemyIsClose = [this]() { 
+    auto enemyIsClose = [this, MELEE]() { 
         const auto target = this->getParent()->getChildByName<const Unit*>(core::EntityNames::PLAYER);
         // use some simple algorithm to determine whether a player is close enough to the target
         // to perform an attack
-        if( target && !target->IsDead() ) {
-            const auto radius = m_weapon->GetRange();
+        if(target && !target->IsDead()) {
+            const auto radius = m_weapons[MELEE]->GetRange();
             const cocos2d::Rect lhs { 
                 target->getPosition() - cocos2d::Vec2{ target->GetHitBox().width / 2.f, 0.f },
                 target->GetHitBox()

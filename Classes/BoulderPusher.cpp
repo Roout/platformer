@@ -42,7 +42,7 @@ void BoulderPusher::update(float dt) {
     cocos2d::Node::update(dt);
     // custom updates
     this->UpdateDebugLabel();
-    this->UpdateWeapon(dt);
+    this->UpdateWeapons(dt);
     this->UpdateCurses(dt);
     this->TryAttack();
     this->UpdateState(dt);
@@ -60,13 +60,13 @@ void BoulderPusher::OnEnemyLeave() {
 void BoulderPusher::UpdateState(const float dt) noexcept {
     m_previousState = m_currentState;
 
-    if( m_health <= 0 ) {
+    if(m_health <= 0) {
         m_currentState = State::DEAD;
     }
-    else if( m_weapon->IsPreparing() ) {
+    else if(m_weapons[WeaponClass::RANGE]->IsPreparing()) {
         m_currentState = State::PREPARE_ATTACK;
     }
-    else if( m_weapon->IsAttacking() ) {
+    else if(m_weapons[WeaponClass::RANGE]->IsAttacking()) {
         m_currentState = State::ATTACK;
     }
     else {
@@ -148,7 +148,7 @@ void BoulderPusher::AddAnimator() {
     });
 }
 
-void BoulderPusher::AddWeapon() {
+void BoulderPusher::AddWeapons() {
     const auto damage { 5.f };
     const auto range { 35.f };
     // TODO: Here a strange mess of durations needed to be fixed
@@ -156,7 +156,7 @@ void BoulderPusher::AddWeapon() {
     const auto preparationTime { 0.4f };
     const auto attackDuration { m_animator->GetDuration(Utils::EnumCast(State::ATTACK)) - preparationTime };
     const auto reloadTime { 1.5f };
-    m_weapon = std::make_unique<Legs>(
+    m_weapons[WeaponClass::RANGE] = new Legs(
         damage, 
         range, 
         preparationTime,
@@ -166,12 +166,12 @@ void BoulderPusher::AddWeapon() {
 }
 
 bool BoulderPusher::NeedAttack() const noexcept {
-    return !this->IsDead() && m_detectEnemy && m_weapon->IsReady();
+    return !this->IsDead() && m_detectEnemy && m_weapons[WeaponClass::RANGE]->IsReady();
 }
 
 void BoulderPusher::Attack() {
-    if(m_weapon->IsReady() && !this->IsDead()) {
-        const auto radius { m_weapon->GetRange() };
+    if(m_weapons[WeaponClass::RANGE]->IsReady() && !this->IsDead()) {
+        const auto radius { m_weapons[WeaponClass::RANGE]->GetRange() };
         const cocos2d::Size stoneSize { radius * 2.f, radius * 2.f };
 
         cocos2d::Vec2 impulse { 2000.f, 0.f };
@@ -185,7 +185,7 @@ void BoulderPusher::Attack() {
         }
 
         const cocos2d::Rect attackedArea { position, stoneSize };
-        m_weapon->LaunchAttack(attackedArea, [impulse](cocos2d::PhysicsBody* body){
+        m_weapons[WeaponClass::RANGE]->LaunchAttack(attackedArea, [impulse](cocos2d::PhysicsBody* body){
             body->applyImpulse(impulse);
             body->setAngularVelocity(impulse.x > 0.f? -10.f: 10.f);
         });

@@ -26,6 +26,8 @@ public:
     void Attack() override;
 
 private:
+    enum WeaponClass{ RANGE };
+
     Archer(size_t id);
 
 /// Bot interface
@@ -40,7 +42,7 @@ private:
 
     void AddAnimator() override;
 
-    void AddWeapon() override;
+    void AddWeapons() override;
 
     bool NeedAttack() const noexcept override;
 };

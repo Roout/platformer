@@ -26,16 +26,20 @@ UserInputHandler::Input UserInputHandler::Input::Create(WinKeyCode keyCode) noex
         input.jump = true;
     }
     
-    if(keyCode == WinKeyCode::KEY_F ) {
-        input.attack = true;
+    if(keyCode == WinKeyCode::KEY_F) {
+        input.meleeAttack = true;
+    }
+    else if(keyCode == WinKeyCode::KEY_G) {
+        input.rangeAttack = true;
     }
     
     return input;
 }
 
-void UserInputHandler::Input::Merge(const Input& input) noexcept {
+void UserInputHandler::Input::Merge(Input&& input) noexcept {
     jump = input.jump;
-    attack = input.attack;
+    meleeAttack = input.meleeAttack;
+    rangeAttack = input.rangeAttack;
     if(input.dx) {
         dx = input.dx;
     }
@@ -51,7 +55,8 @@ UserInputHandler::UserInputHandler(Player * const player) :
         WinKeyCode::KEY_UP_ARROW,
         WinKeyCode::KEY_W,
         WinKeyCode::KEY_SPACE,
-        WinKeyCode::KEY_F
+        WinKeyCode::KEY_F,
+        WinKeyCode::KEY_G
     }
 {
     const auto listener = cocos2d::EventListenerKeyboard::create();
@@ -79,7 +84,8 @@ void UserInputHandler::Reset() {
     m_player->m_movement->ResetForce();
     m_lastInput.dx = 0;
     m_lastInput.jump = 0;
-    m_lastInput.attack = false;
+    m_lastInput.meleeAttack = false;
+    m_lastInput.rangeAttack = false;
 }
 
 void UserInputHandler::OnKeyPressed(
@@ -129,8 +135,11 @@ void UserInputHandler::OnKeyPressed(
         }
     }
 
-    if(m_lastInput.attack) {
-        m_player->Attack();
+    if(m_lastInput.meleeAttack) {
+        m_player->MeleeAttack();
+    }
+    else if(m_lastInput.rangeAttack) {
+        m_player->RangeAttack();
     }
 }
 
@@ -146,7 +155,10 @@ void UserInputHandler::OnKeyRelease(
         m_lastInput.dx = 0;
     }
 
-    if(released.attack) {
-        m_lastInput.attack = false;
+    if(released.meleeAttack) {
+        m_lastInput.meleeAttack = false;
+    }
+    else if(released.rangeAttack) {
+        m_lastInput.rangeAttack = false;
     }
 }

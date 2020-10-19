@@ -24,12 +24,14 @@ public:
     void RecieveDamage(int damage) noexcept override;
 
     bool IsInvincible() const noexcept;
+
 private:
     enum class State {
         IDLE,
         WALK,
         JUMP,
-        ATTACK,
+        MELEE_ATTACK,
+        RANGE_ATTACK,
         DEAD,
         COUNT
     };
@@ -48,7 +50,11 @@ private:
  
     void AddPhysicsBody() override;
 
-    void AddWeapon() override;
+    void AddWeapons() override;
+
+    void RangeAttack();
+
+    void MeleeAttack();
 
     void AddAnimator() override;
 
@@ -58,6 +64,8 @@ private:
 
     /// Properties
 private:
+    enum WeaponClass { MELEE, RANGE };
+
     std::unique_ptr<SmoothFollower> m_follower { nullptr };
 
     // controller:

@@ -114,7 +114,7 @@ bool Spider::NeedAttack() const noexcept{
 void Spider::UpdateState(const float dt) noexcept {
     m_previousState = m_currentState;
 
-    if( m_health <= 0 ) {
+    if (m_health <= 0) {
         m_currentState = State::DEAD;
     }
     else {
