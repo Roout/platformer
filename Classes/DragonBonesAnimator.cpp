@@ -89,6 +89,11 @@ namespace dragonBones {
         }
     }
 
+    void Animator::AddAnimation(std::pair<std::size_t, std::string> && animation) {
+        m_animations.emplace(std::move(animation));
+    }
+
+
     Animator::Animator(std::string&& armatureCacheName) noexcept 
         : m_armatureName { std::move(armatureCacheName) }
     {
