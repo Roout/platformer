@@ -29,9 +29,11 @@ public:
     void OnEnemyLeave() override;
 
 protected:
+    enum WeaponClass { MELEE };
+
     Warrior(size_t id, const char* dragonBonesName);
 
-    void AddWeapon() override;
+    void AddWeapons() override;
 
 private:
 

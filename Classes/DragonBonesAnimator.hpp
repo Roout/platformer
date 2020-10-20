@@ -47,6 +47,8 @@ namespace dragonBones {
 
         void InitializeAnimations(std::initializer_list<std::pair<std::size_t, std::string>> animations);
 
+        void AddAnimation(std::pair<std::size_t, std::string> && animation);
+
         bool IsPlaying() const noexcept;
 
         bool IsPlaying(std::size_t type) const noexcept;

@@ -75,7 +75,8 @@ public:
     }
 
     /**
-     * @param projectile A projectile which will be created after launching attack
+     * @param extractPosition A provided callback which extract the current
+     * position from the player and generate an area where the projectile will be born. 
      * 
      * @param modifier The callable modificator object that push the body:
      * - setting velocity
@@ -84,14 +85,14 @@ public:
      * etc
      */
     void LaunchAttack (
-        const cocos2d::Rect& projectile,
+        std::function<cocos2d::Rect()>&& extractPosition,
         std::function<void(cocos2d::PhysicsBody*)>&& modifier
     ) noexcept {
         if(this->IsReady()) {
             // go to preparation state
             this->NextState();
             // save projectile properties
-            m_projectile = projectile;
+            m_extractor = std::move(extractPosition);
             m_modifier = std::move(modifier);
         }
     };
@@ -119,8 +120,9 @@ protected:
 
     virtual void OnAttack() = 0;
     
-    // projectile size and spawn position
-    cocos2d::Rect m_projectile{};
+    // extract projectile size and spawn position from the current
+    // state of the player.
+    std::function<cocos2d::Rect()> m_extractor{};
     // projectile velocity: direction & speed
     std::function<void(cocos2d::PhysicsBody*)> m_modifier{};
 
@@ -181,6 +183,13 @@ public:
 };
 
 class Spear final : public Weapon {
+public:
+    using Weapon::Weapon;
+
+    void OnAttack() override;
+};
+
+class Fireball final : public Weapon {
 public:
     using Weapon::Weapon;
 

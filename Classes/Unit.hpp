@@ -3,6 +3,8 @@
 
 #include "CurseHub.hpp"
 #include <memory>
+#include <array>
+
 #include "cocos2d.h"
 
 namespace dragonBones {
@@ -13,6 +15,8 @@ class Movement;
 
 class Unit : public cocos2d::Node { 
 public:
+
+    ~Unit();
 
     [[nodiscard]] bool init() override;
 
@@ -88,7 +92,7 @@ protected:
      */
     virtual void UpdateAnimation() = 0;
 
-    virtual void UpdateWeapon(const float dt) noexcept;
+    virtual void UpdateWeapons(const float dt) noexcept;
 
     virtual void UpdatePosition(const float dt) noexcept;
 
@@ -119,7 +123,7 @@ protected:
     /**
      * Create a weapon with desired parameters 
      */
-    virtual void AddWeapon();
+    virtual void AddWeapons();
 
     /// Properties
 protected:
@@ -136,7 +140,10 @@ protected:
 
     std::unique_ptr<Movement> m_movement { nullptr };
     
-    std::unique_ptr<Weapon> m_weapon { nullptr };
+    // keep all weapons that the unit may use
+    // 3 is maximum because the boss has 3 types of attack
+    // Note: in this case weapons are equivalent of the skills
+    std::array<Weapon *, 3U> m_weapons;
 
     // retain when add as child
     dragonBones::Animator *m_animator { nullptr };

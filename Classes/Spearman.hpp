@@ -12,9 +12,11 @@ public:
     bool init() override;
 
 private:
+    enum WeaponClass { MELEE };
+
     Spearman(size_t id, const char * name);
 
-    void AddWeapon() override;
+    void AddWeapons() override;
 
     void Attack() override;
 };

@@ -11,7 +11,7 @@ namespace Enemies {
 
 Spearman* Spearman::Spearman::create(size_t id) {
     auto pRet { new (std::nothrow) Spearman(id, core::EntityNames::SPEARMAN) };
-    if( pRet && pRet->init()) {
+    if (pRet && pRet->init()) {
         pRet->autorelease();
     } 
     else {
@@ -22,7 +22,7 @@ Spearman* Spearman::Spearman::create(size_t id) {
 }
 
 bool Spearman::init() {
-    if( !Warrior::init() ) {
+    if (!Warrior::init() ) {
         return false; 
     }
     m_movement->SetMaxSpeed(150.f);
@@ -37,13 +37,13 @@ Spearman::Spearman(size_t id, const char * name) :
     m_hitBoxSize = m_physicsBodySize;
 }
 
-void Spearman::AddWeapon() {
+void Spearman::AddWeapons() {
     const auto damage { 10.f };
     const auto range { 100.f };
     const auto preparationTime { 0.f };
     const auto attackDuration { m_animator->GetDuration(Utils::EnumCast(State::ATTACK)) };
     const auto reloadTime { 0.8f };
-    m_weapon = std::make_unique<Spear>(
+    m_weapons[WeaponClass::MELEE] = new Spear(
         damage, 
         range, 
         preparationTime,
@@ -53,23 +53,29 @@ void Spearman::AddWeapon() {
 }
 
 void Spearman::Attack() {
-    if(m_weapon->IsReady() && !this->IsDead()) {
-        const auto attackRange { m_weapon->GetRange() };
-        const cocos2d::Size spearSize { attackRange, attackRange / 4.f };
+    if(m_weapons[WeaponClass::MELEE]->IsReady() && !this->IsDead()) {
+        auto projectilePosition = [this]() -> cocos2d::Rect {
+            const auto attackRange { m_weapons[WeaponClass::MELEE]->GetRange() };
+            const cocos2d::Size spearSize { attackRange, attackRange / 4.f };
 
-        auto position = this->getPosition();
-        if(IsLookingLeft()) {
-            position.x -= m_contentSize.width / 2.f + spearSize.width;
-        }
-        else {
-            position.x += m_contentSize.width / 2.f;
-        }
-        position.y += m_contentSize.height / 2.f - spearSize.height / 2.f;
+            auto position = this->getPosition();
+            if (this->IsLookingLeft()) {
+                position.x -= m_contentSize.width / 2.f + spearSize.width;
+            }
+            else {
+                position.x += m_contentSize.width / 2.f;
+            }
+            position.y += m_contentSize.height / 2.f - spearSize.height / 2.f;
 
-        const cocos2d::Rect attackedArea { position, spearSize };
-        m_weapon->LaunchAttack(attackedArea, [this](cocos2d::PhysicsBody* body){
+            return { position, spearSize };
+        };
+        auto pushProjectile = [this](cocos2d::PhysicsBody* body){
             body->setVelocity(this->getPhysicsBody()->getVelocity());
-        });
+        };
+        m_weapons[WeaponClass::MELEE]->LaunchAttack(
+            std::move(projectilePosition), 
+            std::move(pushProjectile)
+        );
     }
 }
 

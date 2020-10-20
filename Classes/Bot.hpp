@@ -63,6 +63,7 @@ protected:
 
 private:
     const size_t m_id { 0 };
+
 };
 
 inline size_t Bot::GetId() const noexcept {

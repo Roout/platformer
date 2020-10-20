@@ -2,12 +2,18 @@
 #define PROJECTILE_HPP
 
 #include "cocos2d.h"
+#include <cstdint> // std::uint8_t
+#include <string>
+
+namespace dragonBones {
+    class Animator;
+}
 
 class Projectile : public cocos2d::Node {
 public:
     static Projectile * create(float damage);
 
-    bool init() override;
+    [[nodiscard]] bool init() override;
 
     /**
      * This function update projectile state by keeping track 
@@ -15,13 +21,19 @@ public:
      */
     void update(float dt) override;
 
+    void pause() override;
+    
+    void resume() override;
+
+    void FlipX() noexcept; 
+
     /**
      * This function tells whether this prjectile still exist or not.
      * @return 
      *      The indication that the projectile still exist. 
      */
     [[nodiscard]] bool IsAlive() const noexcept {
-        return m_lifeTime > 0.f;
+        return m_currentState == State::IDLE;
     }
 
     /**
@@ -31,7 +43,7 @@ public:
         m_lifeTime = 0.f;
     }
 
-    float GetDamage() const noexcept {
+    [[nodiscard]] float GetDamage() const noexcept {
         return m_damage;
     }
 
@@ -42,6 +54,13 @@ public:
     void SetContactTestBitmask(size_t mask) noexcept;
 
     void SetCategoryBitmask(size_t mask) noexcept;
+
+    /**
+     * Create a dynamic body that is not influenced by gravity then add it to this node.
+     * 
+     * @return just created body
+     */
+    cocos2d::PhysicsBody* AddPhysicsBody(const cocos2d::Size& size);
 
     /**
      * Create a sprite for the projectile
@@ -58,15 +77,31 @@ public:
     cocos2d::Sprite* AddImage(const char* imagePath);
 
     /**
-     * Create a dynamic body that is not influenced by grabity then add it to this node.
-     * 
-     * @return just created body
+     * Use when you're going to create an animated projectile 
      */
-    cocos2d::PhysicsBody* AddPhysicsBody(const cocos2d::Size& size);
+    void AddAnimator(std::string chachedArmatureName);
 
 private:
+
+    enum class State : std::uint8_t {
+        IDLE = 0,
+        EXPLODED,
+        COUNT
+    };
     
     Projectile(float damage);
+
+    void OnExplosion();
+
+    void UpdateLifetime(const float dt) noexcept;
+
+    void UpdateState(const float dt) noexcept;
+    
+    void UpdatePhysicsBody() noexcept;
+    /**
+     * Update animation according to the current state of Unit  
+     */
+    void UpdateAnimation();
 
     /**
      * Keep track of projectile lifetime. When 'm_lifeTime' <= 0.f
@@ -75,6 +110,15 @@ private:
     float m_lifeTime { 0.f };
 
     const float m_damage { 0 };
-};
 
+    State m_previousState { State::IDLE };
+    
+    State m_currentState { State::IDLE };
+    
+    dragonBones::Animator * m_animator{ nullptr };
+
+    cocos2d::Sprite * m_image { nullptr };
+
+    // cocos2d::Size m_contentSize { 60.f, 135.f };
+};
 #endif // PROJECTILE_HPP

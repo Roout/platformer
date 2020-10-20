@@ -124,7 +124,14 @@ bool OnContactBegin(cocos2d::PhysicsContact& contact) {
         (bodyMasks[BODY_B] & projectileMask) > 0
     };
 
-    if( isProjectile[BODY_A] || isProjectile[BODY_B] ) {
+    if( isProjectile[BODY_A] && isProjectile[BODY_B] ) {
+        const auto projA { static_cast<Projectile*>(nodes[BODY_A]) };
+        const auto projB { static_cast<Projectile*>(nodes[BODY_B]) };
+        projA->Collapse();
+        projB->Collapse();
+        return false;
+    }
+    else if( isProjectile[BODY_A] || isProjectile[BODY_B] ) {
         const auto projectileIndex { isProjectile[BODY_A]? BODY_A: BODY_B };
 
         const auto proj { static_cast<Projectile*>(nodes[projectileIndex]) };
