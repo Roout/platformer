@@ -30,6 +30,7 @@ private:
         IDLE,
         WALK,
         JUMP,
+        PREPARE_RANGE_ATTACK,
         MELEE_ATTACK,
         RANGE_ATTACK,
         DEAD,

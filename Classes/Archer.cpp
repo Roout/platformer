@@ -172,24 +172,32 @@ void Archer::AddWeapons() {
 
 void Archer::Attack() {
     if(m_weapons[WeaponClass::RANGE]->IsReady() && !this->IsDead()) {
-        const auto attackRange { m_weapons[WeaponClass::RANGE]->GetRange() };
-        const cocos2d::Size arrowSize { attackRange, floorf(attackRange / 8.5f) };
+        auto projectilePosition = [this]()->cocos2d::Rect {
+            const auto attackRange { m_weapons[WeaponClass::RANGE]->GetRange() };
+            const cocos2d::Size arrowSize { attackRange, floorf(attackRange / 8.5f) };
 
-        cocos2d::Vec2 velocity { 600.f, 0.f };
-        auto position = this->getPosition();
-        if(IsLookingLeft()) {
-            position.x -= m_contentSize.width / 2.f + arrowSize.width;
-            velocity.x *= -1.f;
-        }
-        else {
-            position.x += m_contentSize.width / 2.f;
-        }
-        position.y += m_contentSize.height / 2.f;
+            auto position = this->getPosition();
+            if (this->IsLookingLeft()) {
+                position.x -= m_contentSize.width / 2.f + arrowSize.width;
+            }
+            else {
+                position.x += m_contentSize.width / 2.f;
+            }
+            position.y += m_contentSize.height / 2.f;
 
-        const cocos2d::Rect attackedArea {position, arrowSize};
-        m_weapons[WeaponClass::RANGE]->LaunchAttack(attackedArea, [velocity](cocos2d::PhysicsBody* body) {
+            return {position, arrowSize};
+        };
+        auto pushProjectile = [this](cocos2d::PhysicsBody* body) {
+            cocos2d::Vec2 velocity { 600.f, 0.f };
+            if (this->IsLookingLeft()) {
+                velocity.x *= -1.f;
+            }
             body->setVelocity(velocity);
-        });
+        };
+        m_weapons[WeaponClass::RANGE]->LaunchAttack(
+            std::move(projectilePosition), 
+            std::move(pushProjectile)
+        );
     }
 }
 

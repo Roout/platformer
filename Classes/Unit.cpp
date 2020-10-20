@@ -101,24 +101,31 @@ void Unit::RecieveDamage(int damage) noexcept {
 
 void Unit::Attack() {
     if(m_weapons.front()->IsReady() && !this->IsDead()) {
-        const auto attackRange { m_weapons.front()->GetRange() };
+        auto projectilePosition = [this]() -> cocos2d::Rect {
+            const auto attackRange { m_weapons.front()->GetRange() };
 
-        auto position = this->getPosition();
-        if(m_side == Side::RIGHT) {
-            position.x += m_contentSize.width / 2.f;
-        }
-        else {
-            position.x -= m_contentSize.width / 2.f + attackRange;
-        }
-        // shift a little bit higher to avoid immediate collision with the ground
-        position.y += m_contentSize.height * 0.05f;
-        const cocos2d::Rect attackedArea {
-            position,
-            cocos2d::Size{ attackRange, m_contentSize.height * 1.05f } // a little bigger than the designed size
+            auto position = this->getPosition();
+            if(m_side == Side::RIGHT) {
+                position.x += m_contentSize.width / 2.f;
+            }
+            else {
+                position.x -= m_contentSize.width / 2.f + attackRange;
+            }
+            // shift a little bit higher to avoid immediate collision with the ground
+            position.y += m_contentSize.height * 0.05f;
+            cocos2d::Rect attackedArea {
+                position,
+                cocos2d::Size{ attackRange, m_contentSize.height * 1.05f } // a little bigger than the designed size
+            };
+            return attackedArea;
         };
-        m_weapons.front()->LaunchAttack(attackedArea, [this](cocos2d::PhysicsBody* body){
+        auto pushProjectile = [this](cocos2d::PhysicsBody* body){
             body->setVelocity(this->getPhysicsBody()->getVelocity());
-        });
+        };
+        m_weapons.front()->LaunchAttack(
+            std::move(projectilePosition), 
+            std::move(pushProjectile)
+        );
     }
 }
 

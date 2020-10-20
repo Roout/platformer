@@ -171,24 +171,31 @@ bool BoulderPusher::NeedAttack() const noexcept {
 
 void BoulderPusher::Attack() {
     if(m_weapons[WeaponClass::RANGE]->IsReady() && !this->IsDead()) {
-        const auto radius { m_weapons[WeaponClass::RANGE]->GetRange() };
-        const cocos2d::Size stoneSize { radius * 2.f, radius * 2.f };
+        auto projectilePosition = [this]() -> cocos2d::Rect {
+            const auto radius { m_weapons[WeaponClass::RANGE]->GetRange() };
+            const cocos2d::Size stoneSize { radius * 2.f, radius * 2.f };
 
-        cocos2d::Vec2 impulse { 2000.f, 0.f };
-        auto position = this->getPosition();
-        if(this->IsLookingLeft()) {
-            position.x -= m_contentSize.width / 2.f + stoneSize.width;
-            impulse.x *= -1.f;
-        }
-        else {
-            position.x += m_contentSize.width / 2.f;
-        }
-
-        const cocos2d::Rect attackedArea { position, stoneSize };
-        m_weapons[WeaponClass::RANGE]->LaunchAttack(attackedArea, [impulse](cocos2d::PhysicsBody* body){
+            auto position = this->getPosition();
+            if(this->IsLookingLeft()) {
+                position.x -= m_contentSize.width / 2.f + stoneSize.width;
+            }
+            else {
+                position.x += m_contentSize.width / 2.f;
+            }
+            return { position, stoneSize };
+        };
+        auto pushProjectile = [isLookingLeft = this->IsLookingLeft()](cocos2d::PhysicsBody* body) {
+            cocos2d::Vec2 impulse { 2000.f, 0.f };
+            if (isLookingLeft) {
+                impulse.x *= -1.f;
+            }
             body->applyImpulse(impulse);
             body->setAngularVelocity(impulse.x > 0.f? -10.f: 10.f);
-        });
+        };
+        m_weapons[WeaponClass::RANGE]->LaunchAttack(
+            std::move(projectilePosition), 
+            std::move(pushProjectile)
+        );
     }
 }
 

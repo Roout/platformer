@@ -16,8 +16,9 @@ void Sword::OnAttack() {
     const auto map = level->getChildByName("Map");
 
     const auto proj = Projectile::create(this->GetDamage());
-    const auto body = proj->AddPhysicsBody(m_projectile.size);
-    proj->setPosition(m_projectile.origin);
+    const auto projectile = m_extractor();
+    const auto body = proj->AddPhysicsBody(projectile.size);
+    proj->setPosition(projectile.origin);
     m_modifier(body);
     const auto testMask {
         Utils::CreateMask(
@@ -41,8 +42,9 @@ void Axe::OnAttack() {
     const auto map = level->getChildByName("Map");
     
     const auto proj = Projectile::create(this->GetDamage());
-    const auto body = proj->AddPhysicsBody(m_projectile.size);
-    proj->setPosition(m_projectile.origin);
+    const auto projectile = m_extractor();
+    const auto body = proj->AddPhysicsBody(projectile.size);
+    proj->setPosition(projectile.origin);
     m_modifier(body);
     const auto testMask {
         Utils::CreateMask(
@@ -66,8 +68,9 @@ void Spear::OnAttack() {
     const auto map = level->getChildByName("Map");
     
     const auto proj = Projectile::create(this->GetDamage());
-    const auto body = proj->AddPhysicsBody(m_projectile.size);
-    proj->setPosition(m_projectile.origin);
+    const auto projectile = m_extractor();
+    const auto body = proj->AddPhysicsBody(projectile.size);
+    proj->setPosition(projectile.origin);
     m_modifier(body);
     const auto testMask {
         Utils::CreateMask(
@@ -91,9 +94,10 @@ void Bow::OnAttack() {
     const auto map = level->getChildByName("Map");
     
     const auto proj = Projectile::create(this->GetDamage());
-    auto body = proj->AddPhysicsBody(m_projectile.size);
-    proj->setPosition(m_projectile.origin);
-    proj->setContentSize(m_projectile.size);
+    const auto projectile = m_extractor();
+    auto body = proj->AddPhysicsBody(projectile.size);
+    proj->setPosition(projectile.origin);
+    proj->setContentSize(projectile.size);
     // push projectile
     m_modifier(body);
     const auto scaleFactor { 0.4f };
@@ -130,8 +134,9 @@ void Legs::OnAttack() {
     const auto proj = Projectile::create(this->GetDamage());
     map->addChild(proj, 100); /// TODO: clean up this mess with Z-order!
 
+    const auto projectile = m_extractor();
     const auto body = cocos2d::PhysicsBody::createCircle(
-        m_projectile.size.width / 2.f
+        projectile.size.width / 2.f
         , cocos2d::PhysicsMaterial{ 1.f, 0.1f, 0.2f }
     );
     body->setDynamic(true);
@@ -155,8 +160,8 @@ void Legs::OnAttack() {
         )
     );
     proj->setAnchorPoint({0.5f, 0.5f});
-    proj->setPosition(m_projectile.origin + m_projectile.size / 2.f);
-    proj->setContentSize(m_projectile.size);
+    proj->setPosition(projectile.origin + projectile.size / 2.f);
+    proj->setContentSize(projectile.size);
     // push projectile
     m_modifier(body);
     const auto sprite = proj->AddImage("old_man/library/stone.png");
@@ -177,17 +182,18 @@ void Fireball::OnAttack() {
     proj->AddAnimator("fireball");
     proj->setScale(scaleFactor);
 
+    const auto projectile = m_extractor();
     const auto body = cocos2d::PhysicsBody::createBox(
-        m_projectile.size
+        projectile.size
         , cocos2d::PhysicsMaterial{ 1.f, 0.0f, 0.0f }
-        , { -m_projectile.size.width / 2.f, 0.f }
+        , { -projectile.size.width / 2.f, 0.f }
     );
     body->setDynamic(true);
     body->setGravityEnable(false);
 
     proj->setAnchorPoint({0.0f, 0.0f});
-    proj->setContentSize(m_projectile.size);
-    proj->setPosition(m_projectile.origin);
+    proj->setContentSize(projectile.size);
+    proj->setPosition(projectile.origin);
     // push projectile
     m_modifier(body);
     // ---------------

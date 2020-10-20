@@ -13,6 +13,7 @@
 #include <unordered_map>
 #include <algorithm>
 #include <cassert>
+#include <cmath>
 
 Player* Player::create() {
     auto pRet { new (std::nothrow) Player() };
@@ -75,8 +76,8 @@ void Player::AddWeapons() {
     {
         const auto damage { 25.f };
         const auto range { 130.f };
-        const auto preparationTime { 0.f };
-        const auto attackDuration { m_animator->GetDuration(Utils::EnumCast(State::RANGE_ATTACK)) };
+        const auto preparationTime { m_animator->GetDuration(Utils::EnumCast(State::RANGE_ATTACK)) - 0.2f};
+        const auto attackDuration { 0.2f };
         const auto reloadTime { 2.f };
         m_weapons[WeaponClass::RANGE] = new Fireball(
             damage, 
@@ -92,6 +93,7 @@ std::string  Player::GetStateName(Player::State state) {
     static std::unordered_map<Player::State, std::string> mapped {
         { Player::State::MELEE_ATTACK, "attack_1" },
         { Player::State::RANGE_ATTACK, "attack_2" },
+        { Player::State::PREPARE_RANGE_ATTACK, "prep_attack_2" },
         { Player::State::IDLE, "idle" },
         { Player::State::JUMP, "jump" },
         { Player::State::WALK, "walk" },
@@ -105,7 +107,8 @@ void Player::AddAnimator() {
     Unit::AddAnimator();
     m_animator->InitializeAnimations({
         std::make_pair(Utils::EnumCast(State::MELEE_ATTACK), "attack_1"),
-        std::make_pair(Utils::EnumCast(State::RANGE_ATTACK), "attack_2"),
+        std::make_pair(Utils::EnumCast(State::RANGE_ATTACK), "idle"),               // some problems with animator...sorry
+        std::make_pair(Utils::EnumCast(State::PREPARE_RANGE_ATTACK), "attack_2"),   // same here....
         std::make_pair(Utils::EnumCast(State::DEAD), "dead"),
         std::make_pair(Utils::EnumCast(State::IDLE), "idle"),
         std::make_pair(Utils::EnumCast(State::JUMP), "jump"),
@@ -167,7 +170,7 @@ void Player::MoveAlong(float x, float y) noexcept {
         // need to be called earlier because forces will be reseted 
         // and method @IsOnGround will fail
         const auto body { this->getPhysicsBody() };
-        if( !helper::IsEquel(body->getVelocity().y, 0.f, 0.001f) ) {
+        if(!helper::IsEquel(body->getVelocity().y, 0.f, 0.001f) ) {
             m_hasContactWithGround = false;
         }
         m_movement->ResetForceY();
@@ -211,6 +214,7 @@ void Player::UpdateAnimation() {
         if (m_currentState == State::MELEE_ATTACK 
             || m_currentState == State::JUMP 
             || m_currentState == State::RANGE_ATTACK 
+            || m_currentState == State::PREPARE_RANGE_ATTACK 
         ) {
             repeatTimes = 1;
         }
@@ -245,7 +249,7 @@ void Player::UpdateState(const float dt) noexcept {
     m_previousState = m_currentState;
 
     const auto velocity { this->getPhysicsBody()->getVelocity() };
-    static constexpr float EPS { 0.00001f };
+    static constexpr float EPS { 0.001f };
 
     // check whether we're out of level bounds
     const cocos2d::Rect boundary {
@@ -264,6 +268,9 @@ void Player::UpdateState(const float dt) noexcept {
     }
     else if(m_health <= 0) {
         m_currentState = State::DEAD;
+    }
+    else if(m_weapons[WeaponClass::RANGE]->IsPreparing()) {
+        m_currentState = State::PREPARE_RANGE_ATTACK;
     }
     else if(m_weapons[WeaponClass::MELEE]->IsAttacking()) {
         m_currentState = State::MELEE_ATTACK;
@@ -288,24 +295,33 @@ void Player::RangeAttack() {
         m_weapons[WeaponClass::MELEE]->IsPreparing()
     };
     if (!usingMelee && m_weapons[WeaponClass::RANGE]->IsReady() && !this->IsDead()) {
-        const auto attackRange { m_weapons[WeaponClass::RANGE]->GetRange() };
-        const cocos2d::Size fireballSize { attackRange, attackRange * 0.8f };
+        auto projectilePosition = [this]() -> cocos2d::Rect {
+            const auto attackRange { m_weapons[WeaponClass::RANGE]->GetRange() };
+            const cocos2d::Size fireballSize { attackRange, floorf(attackRange * 0.8f) };
 
-        cocos2d::Vec2 velocity { 400.f, 0.f };
-        auto position = this->getPosition();
-        if(IsLookingLeft()) {
-            position.x -= m_contentSize.width / 2.f ;
-            velocity.x *= -1.f;
-        }
-        else {
-            position.x += m_contentSize.width / 2.f;
-        }
-        position.y += m_contentSize.height / 2.f;
+            auto position = this->getPosition();
+            if (this->IsLookingLeft()) {
+                position.x -= m_contentSize.width / 2.f ;
+            }
+            else {
+                position.x += m_contentSize.width / 2.f;
+            }
+            position.y += floorf(m_contentSize.height * 0.4f);
 
-        const cocos2d::Rect attackedArea { position, fireballSize };
-        m_weapons[WeaponClass::RANGE]->LaunchAttack(attackedArea, [velocity](cocos2d::PhysicsBody* body) {
+            return { position, fireballSize };
+        };
+        
+        auto pushProjectile = [this](cocos2d::PhysicsBody* body) {
+            cocos2d::Vec2 velocity { 400.f, 0.f };
+            if (this->IsLookingLeft()) {
+                velocity.x *= -1.f;
+            }
             body->setVelocity(velocity);
-        });
+        };
+        m_weapons[WeaponClass::RANGE]->LaunchAttack(
+            std::move(projectilePosition), 
+            std::move(pushProjectile)
+        );
     }
 }
 
