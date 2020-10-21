@@ -57,38 +57,6 @@ void Player::RecieveDamage(int damage) noexcept {
     }
 }
 
-void Player::AddWeapons() {
-    // create weapon (it should be read from config)
-    {
-        const auto damage { 25.f };
-        const auto range { 70.f };
-        const auto preparationTime { 0.f };
-        const auto attackDuration { m_animator->GetDuration(Utils::EnumCast(State::MELEE_ATTACK)) };
-        const auto reloadTime { 0.1f };
-        m_weapons[WeaponClass::MELEE] = new Sword(
-            damage, 
-            range, 
-            preparationTime,
-            attackDuration,
-            reloadTime 
-        );
-    }
-    {
-        const auto damage { 25.f };
-        const auto range { 130.f };
-        const auto preparationTime { m_animator->GetDuration(Utils::EnumCast(State::RANGE_ATTACK)) - 0.2f};
-        const auto attackDuration { 0.2f };
-        const auto reloadTime { 2.f };
-        m_weapons[WeaponClass::RANGE] = new Fireball(
-            damage, 
-            range, 
-            preparationTime,
-            attackDuration,
-            reloadTime 
-        );
-    }
-};
-
 std::string  Player::GetStateName(Player::State state) {
     static std::unordered_map<Player::State, std::string> mapped {
         { Player::State::MELEE_ATTACK, "attack_1" },
@@ -107,8 +75,8 @@ void Player::AddAnimator() {
     Unit::AddAnimator();
     m_animator->InitializeAnimations({
         std::make_pair(Utils::EnumCast(State::MELEE_ATTACK), "attack_1"),
-        std::make_pair(Utils::EnumCast(State::RANGE_ATTACK), "idle"),               // some problems with animator...sorry
-        std::make_pair(Utils::EnumCast(State::PREPARE_RANGE_ATTACK), "attack_2"),   // same here....
+        std::make_pair(Utils::EnumCast(State::RANGE_ATTACK), "attack_2"),       // some problems with animator...sorry
+        std::make_pair(Utils::EnumCast(State::PREPARE_RANGE_ATTACK), "idle"),   // same here....
         std::make_pair(Utils::EnumCast(State::DEAD), "dead"),
         std::make_pair(Utils::EnumCast(State::IDLE), "idle"),
         std::make_pair(Utils::EnumCast(State::JUMP), "jump"),
@@ -289,6 +257,38 @@ void Player::UpdateState(const float dt) noexcept {
     }
 }
 
+void Player::AddWeapons() {
+    // create weapon (it should be read from config)
+    {
+        const auto damage { 25.f };
+        const auto range { 70.f };
+        const auto preparationTime { 0.f };
+        const auto attackDuration { m_animator->GetDuration(Utils::EnumCast(State::MELEE_ATTACK)) };
+        const auto reloadTime { 0.1f };
+        m_weapons[WeaponClass::MELEE] = new Sword(
+            damage, 
+            range, 
+            preparationTime,
+            attackDuration,
+            reloadTime 
+        );
+    }
+    {
+        const auto damage { 25.f };
+        const auto range { 130.f };
+        const auto preparationTime { 0.f };
+        const auto attackDuration { m_animator->GetDuration(Utils::EnumCast(State::RANGE_ATTACK))  };
+        const auto reloadTime { 2.f };
+        m_weapons[WeaponClass::RANGE] = new Fireball(
+            damage, 
+            range, 
+            preparationTime,
+            attackDuration,
+            reloadTime 
+        );
+    }
+};
+
 void Player::RangeAttack() {
     bool usingMelee = {
         m_weapons[WeaponClass::MELEE]->IsAttacking() || 
@@ -306,17 +306,13 @@ void Player::RangeAttack() {
             else {
                 position.x += m_contentSize.width / 2.f;
             }
-            position.y += floorf(m_contentSize.height * 0.4f);
+            position.y += floorf(m_contentSize.height * 0.3f);
 
             return { position, fireballSize };
         };
         
         auto pushProjectile = [this](cocos2d::PhysicsBody* body) {
-            cocos2d::Vec2 velocity { 400.f, 0.f };
-            if (this->IsLookingLeft()) {
-                velocity.x *= -1.f;
-            }
-            body->setVelocity(velocity);
+            body->setVelocity({ this->IsLookingLeft()? -750.f: 750.f, 0.f });
         };
         m_weapons[WeaponClass::RANGE]->LaunchAttack(
             std::move(projectilePosition), 
