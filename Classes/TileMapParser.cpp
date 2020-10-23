@@ -1,7 +1,10 @@
 #include "TileMapParser.hpp"
 #include "cocos2d.h"
 
+#include "PhysicsHelper.hpp"
 #include <list>
+#include <optional>
+#include <cassert>
 
 namespace {
 	core::EnemyClass AsEnemyClass(const std::string& ty) noexcept {
@@ -254,6 +257,98 @@ void TileMapParser::Parse() {
 			return false;
 		};
 
+		auto InMap = [width, height](const cocos2d::Vec2 & pos) {
+			return pos.x >= 0.f 
+				&& pos.y >= 0.f 
+				&& pos.x < static_cast<float>(width) 
+				&& pos.y < static_cast<float>(height); 
+		};
+
+		auto IsFree = [this](int gid) {
+			if (gid) {
+				const auto tileProp { m_tileMap->getPropertiesForGID(gid) };
+				const auto& properties = tileProp.asValueMap();
+
+				const auto categoryNameIter = properties.find("category-name");
+				const auto exist { categoryNameIter != properties.end() };
+				if (!exist) return true;
+				auto name = categoryNameIter->second.asString();
+				return (name != "border" && name != "solid");
+			}
+			// empty =>
+			return true;
+		};
+
+		auto AddPoint = [
+			this
+			, width
+			, height
+			, tileSize
+			, IsFree
+			, InMap
+			, IsBorder
+			, &obstaclesLayer
+		](const cocos2d::Vec2 & point) -> std::optional<cocos2d::Vec2> {
+			// check for { empty tiles | map boundary | (not solid && not border ) } around the point
+			cocos2d::Vec2 shifts[4] = {};
+			int count { 0 };
+			int countOutsideMap { 0 };
+			float dx[] = {-1.f, 1.f, 0.f,  0.f};
+			float dy[] = { 0.f, 0.f, 1.f, -1.f};
+			for(int i = 0; i < 4; ++i) {
+				auto neighbor = point + cocos2d::Vec2{ dx[i], dy[i] };
+				if(!InMap(neighbor)) {
+					shifts[count] = { dx[i], dy[i] };
+					++count;
+					++countOutsideMap;
+				}
+				else if(auto gid = obstaclesLayer->getTileGIDAt(neighbor); IsFree(gid)) {
+					shifts[count] = { dx[i], dy[i] };
+					++count;
+				}
+			}
+			assert(count >= 0 && count <= 2 && "Can't have more than 2 neighbours");
+			cocos2d::Vec2 sum { shifts[0].x + shifts[1].x, shifts[0].y + shifts[1].y };
+			if(count == 2 && helper::IsEquel(fabs(sum.x) + fabs(sum.y), 2.f, 0.01f)) {
+				// { -1, 0 } --> { 0,  1 }
+				// { 0,  1 } --> { 1,  0 }
+				// { 1,  0 } --> { 0  -1 }
+				// { 0, -1 } --> { -1  0 }
+				// =======================
+				cocos2d::Vec2 tileMiddle { 
+					point.x * tileSize.width + tileSize.width / 2.f, 
+					(height - point.y - 1.f) * tileSize.height + tileSize.height / 2.f
+				};
+				tileMiddle.x +=  sum.x * tileSize.width  / 2.f;
+				tileMiddle.y += -sum.y * tileSize.height / 2.f;
+				return { tileMiddle };
+			}
+			else if(count - countOutsideMap == 0) { // this is a case for some corner tiles (they indicates a concave polygons)
+				cocos2d::Vec2 tileMiddle { 
+					point.x * tileSize.width + tileSize.width / 2.f, 
+					(height - point.y - 1.f) * tileSize.height + tileSize.height / 2.f
+				};
+				cocos2d::Vec2 shift[4] = {
+					{-1.f, -1.f}, {-1.f, 1.f}, {1.f, 1.f}, {1.f, -1.f}
+				};
+				for(int i = 0; i < 4; ++i) {
+					auto neighbor = point + shift[i];
+					if(InMap(neighbor)) {
+						auto gid = obstaclesLayer->getTileGIDAt(neighbor);
+						if(IsFree(gid)) {
+							tileMiddle.x +=  shift[i].x * tileSize.width  / 2.f;
+							tileMiddle.y += -shift[i].y * tileSize.height / 2.f;
+							break;
+						}
+					}
+				}
+				return { tileMiddle };
+			}
+			else {
+				return std::nullopt;
+			}
+		};
+
 		// BUILD BORDERS FOR COMPOSITE PHYSICS BODIES:
 		int components { 0 };
 		std::vector<std::list<cocos2d::Vec2>> tiles;
@@ -270,7 +365,7 @@ void TileMapParser::Parse() {
 				tiles.emplace_back();
 
 				Move move { point, width, height };
-				tiles[components - 1].emplace_back(point.x, point.y);
+				tiles[components - 1].emplace_back(point);
 				isVisited[(int)point.y][(int)point.x] = true;
 				
 				for(int turns = 0, skips = 0; ; turns++) {
@@ -287,7 +382,7 @@ void TileMapParser::Parse() {
 						if(!isVisited[(int)point.y][(int)point.x] && IsBorder(tileGid)) {
 							// mark
 							isVisited[(int)point.y][(int)point.x] = true;
-							tiles[components - 1].emplace_back(point.x, point.y);
+							tiles[components - 1].emplace_back(point);
 							steps++;
 						}
 						else {
@@ -317,7 +412,7 @@ void TileMapParser::Parse() {
 						if(!isVisited[(int)point.y][(int)point.x] && IsBorder(tileGid)) {
 							// mark
 							isVisited[(int)point.y][(int)point.x] = true;
-							tiles[components - 1].emplace_front(point.x, point.y);
+							tiles[components - 1].emplace_front(point);
 							steps++;
 						}
 						else {
@@ -338,12 +433,12 @@ void TileMapParser::Parse() {
 		for(auto&& chain: tiles) {
 			details::Form form;
 			form.m_type = core::CategoryName::BORDER;
-			form.m_points.reserve(chain.size());
+			form.m_points.reserve(chain.size() >> 1U);
 			for(auto& point: chain) {
-				form.m_points.emplace_back(
-					(point.x) * tileSize.width + tileSize.width / 2.f, 
-					(height - point.y) * tileSize.height
-				);
+				auto result = AddPoint(point);
+				if(result.has_value()) {
+					form.m_points.emplace_back(*result);
+				}
 			}
 			this->Get(form.m_type).emplace_back(form);
 		}
