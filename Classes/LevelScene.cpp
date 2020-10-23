@@ -184,6 +184,15 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
         m_parser->Parse();
     }
 
+    // auto line = cocos2d::Node::create();
+    // auto body = cocos2d::PhysicsBody::createEdgeChain(points, 2, {}, 5.f);
+    // body->setCategoryBitmask(Utils::CreateMask(core::CategoryBits::BOUNDARY));
+    // body->setCollisionBitmask(Utils::CreateMask(
+    //     core::CategoryBits::PLAYER
+    // ));
+    // line->addComponent(body);
+    // map->addChild(line);
+
     /// TODO: get rid of this shitty maps
     std::unordered_map<size_t, Path> paths;
     std::unordered_map<size_t, size_t> pathIdByUnitId;
@@ -218,8 +227,24 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                 map->addChild(platform);
             }
             else if(form.m_type == core::CategoryName::BORDER) {
-                const auto border { Border::create(form.m_rect.size) };
-                border->setPosition(form.m_rect.origin + form.m_rect.size / 2.f);
+                const auto border { cocos2d::Node::create() };
+                auto body = cocos2d::PhysicsBody::createEdgeChain(form.m_points.data(), form.m_points.size(), {}, 1.f);
+                body->setCategoryBitmask(Utils::CreateMask(core::CategoryBits::BOUNDARY));
+                body->setCollisionBitmask(
+                    Utils::CreateMask(
+                        core::CategoryBits::ENEMY 
+                        , core::CategoryBits::PLAYER
+                        , core::CategoryBits::ENEMY_PROJECTILE
+                    )
+                );
+                body->setContactTestBitmask(
+                    Utils::CreateMask(
+                        core::CategoryBits::GROUND_SENSOR
+                        , core::CategoryBits::ENEMY_PROJECTILE
+                        , core::CategoryBits::PLAYER_PROJECTILE
+                    )
+                );
+                border->addComponent(body);
                 map->addChild(border);
             }
             else if(form.m_type == core::CategoryName::SPIKES) {

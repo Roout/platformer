@@ -2,6 +2,7 @@
 #define TILE_MAP_PARSER_HPP
 
 #include <vector>
+#include <list>
 #include <array>
 #include "math/CCGeometry.h" // cocos2d::Rect, cocos2d::Vec2
 #include "Core.hpp"
@@ -62,7 +63,7 @@ private:
     void ParseProps();
     
     void ParsePaths();
-
+    
     void ParseInfluences();
 
     template <CategoryName category>

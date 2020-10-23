@@ -1,6 +1,8 @@
 #include "TileMapParser.hpp"
 #include "cocos2d.h"
 
+#include <list>
+
 namespace {
 	core::EnemyClass AsEnemyClass(const std::string& ty) noexcept {
 		auto type { core::EnemyClass::UNDEFINED };
@@ -139,6 +141,67 @@ void TileMapParser::ParseInfluences() {
 	}
 }
 
+// simulate behaviour
+struct Move {
+
+	Move(cocos2d::Vec2 start, int w, int h) : 
+		position { start },
+		width { w }, 
+		height { h } 
+	{}
+
+	void TurnRight() noexcept {
+		shiftIndex = (shiftIndex + 1) % 4;
+	}
+	
+	bool CanMoveForward() const noexcept {
+		return this->WithinBounds(position + shift[shiftIndex]);
+	}
+
+	void MakeMoveForward() noexcept {
+		position += shift[shiftIndex];
+	}
+
+	void MakeMoveBackwards() noexcept {
+		position -= shift[shiftIndex];
+	}
+
+	cocos2d::Vec2 GetPosition() const noexcept {
+		return position;
+	}
+
+	void Reset(const cocos2d::Vec2& pos) noexcept {
+		position = pos;
+		shiftIndex = 0;
+	}
+
+	cocos2d::Vec2 PeekNext() const noexcept {
+		return position + shift[shiftIndex];
+	}
+
+private:
+	bool WithinBounds(const cocos2d::Vec2 & pos) const noexcept {
+		return pos.x >= 0.f 
+			&& pos.y >= 0.f 
+			&& pos.x < static_cast<float>(width) 
+			&& pos.y < static_cast<float>(height); 
+	}
+
+	inline static const cocos2d::Vec2 shift[4] = { 
+		{ 1.f, 0.f }, 
+		{ 0.f, 1.f }, 
+		{ -1.f, 0.f }, 
+		{ 0.f, -1.f } 
+	};
+	
+	cocos2d::Vec2 position {};
+	
+	size_t shiftIndex { 0 };
+
+	const int width { 0 };
+	const int height { 0 };
+};
+
 void TileMapParser::Parse() {
     this->ParseUnits();
     this->ParseProps();
@@ -170,13 +233,129 @@ void TileMapParser::Parse() {
 					categoryNameIter != properties.end()
 				};
 
-				if( exist ) {
+				if (exist) {
 					info = std::make_pair(bodyTypeIter->second.asString(), categoryNameIter->second.asString());
 				}
 			}
 
 			return info;
 		};
+		
+		auto IsBorder = [this](int gid) {
+			if (gid) {
+				const auto tileProp { m_tileMap->getPropertiesForGID(gid) };
+				const auto& properties = tileProp.asValueMap();
+				const auto categoryNameIter = properties.find("category-name");
+				const auto exist { categoryNameIter != properties.end() };
+				if (exist) {
+					return categoryNameIter->second.asString() == "border";
+				}
+			}
+			return false;
+		};
+
+		// BUILD BORDERS FOR COMPOSITE PHYSICS BODIES:
+		int components { 0 };
+		std::vector<std::list<cocos2d::Vec2>> tiles;
+		for(int y = 0; y < height; y++) {
+			for(int x = 0; x < width; x++) {
+				if(isVisited[y][x]) continue;
+				// always top-left tile
+				cocos2d::Vec2 point { static_cast<float>(x), static_cast<float>(y) };
+				auto tileGid = obstaclesLayer->getTileGIDAt(point);
+
+				if(!IsBorder(tileGid)) continue;
+				
+				components++;
+				tiles.emplace_back();
+
+				Move move { point, width, height };
+				tiles[components - 1].emplace_back(point.x, point.y);
+				isVisited[(int)point.y][(int)point.x] = true;
+				
+				for(int turns = 0, skips = 0; ; turns++) {
+					int steps { 0 };
+					// trying to move
+					while(move.CanMoveForward()) {
+						// move 1 tile forward
+						move.MakeMoveForward();
+						// update position
+						point = move.GetPosition();
+						// get tile gid
+						tileGid = obstaclesLayer->getTileGIDAt(point);
+						// add tile if it's not visited yet and is border tile
+						if(!isVisited[(int)point.y][(int)point.x] && IsBorder(tileGid)) {
+							// mark
+							isVisited[(int)point.y][(int)point.x] = true;
+							tiles[components - 1].emplace_back(point.x, point.y);
+							steps++;
+						}
+						else {
+							// restore position
+							move.MakeMoveBackwards();
+							break;
+						}
+					}
+					
+					skips = steps? 0: skips + 1;
+					if(skips >= 4) break;
+					move.TurnRight();
+				}
+
+				move.Reset({(float)x, (float)y});
+				for(int turns = 0, skips = 0; ; turns++) {
+					int steps { 0 };
+					// trying to move
+					while(move.CanMoveForward()) {
+						// move 1 tile forward
+						move.MakeMoveForward();
+						// update position
+						point = move.GetPosition();
+						// get tile gid
+						tileGid = obstaclesLayer->getTileGIDAt(point);
+						// add tile if it's not visited yet and is border tile
+						if(!isVisited[(int)point.y][(int)point.x] && IsBorder(tileGid)) {
+							// mark
+							isVisited[(int)point.y][(int)point.x] = true;
+							tiles[components - 1].emplace_front(point.x, point.y);
+							steps++;
+						}
+						else {
+							// restore position
+							move.MakeMoveBackwards();
+							break;
+						}
+					}
+					
+					skips = steps? 0: skips + 1;
+					if(skips >= 4) break;
+					move.TurnRight();
+				}
+			}
+		}
+		
+		// CREATE CHAINED LINES
+		for(auto&& chain: tiles) {
+			details::Form form;
+			form.m_type = core::CategoryName::BORDER;
+			form.m_points.reserve(chain.size());
+			for(auto& point: chain) {
+				form.m_points.emplace_back(
+					(point.x) * tileSize.width + tileSize.width / 2.f, 
+					(height - point.y) * tileSize.height
+				);
+			}
+			this->Get(form.m_type).emplace_back(form);
+		}
+
+
+		for(auto& rows: isVisited) {
+			for(auto& v: rows) {
+				v = false;
+			}
+		}
+
+		// END OF THE SHITTY TEST CODE
 
 		for(int y = 0; y < height; y++) {
 			for(int x = 0; x < width; x++) {
@@ -184,49 +363,48 @@ void TileMapParser::Parse() {
 					static_cast<float>(x),
 					static_cast<float>(y) 
 				});
+				if(!tileGid) continue;
+				// { bodyType, categoryName}
+				const auto [srcBodyType, srcCategoryName] = GetTileInfo(tileGid);
+				
+				if(srcBodyType == "static" && !isVisited[y][x]) {
+					isVisited[y][x] = true;
+					const auto category { core::CategoryFromString(srcCategoryName) };
+					if(category == core::CategoryName::BORDER) continue;
+					// Some bodies can consist from several tiles so
+					// they should be combined into one physics body.
 
-				if(tileGid) {
-					// { bodyType, categoryName}
-					const auto [srcBodyType, srcCategoryName] = GetTileInfo(tileGid);
-					
-					if(srcBodyType == "static" && !isVisited[y][x]) {
-						isVisited[y][x] = true;
-						const auto category { core::CategoryFromString(srcCategoryName) };
-						// Some bodies can consist from several tiles so
-						// they should be combined into one physics body.
-
-						// merge all horizontal neighbors:
-						auto col { x + 1 };
-						while(col < width && !isVisited[y][col]) {
-							// if the right tile is same (static & categoory)
-							// then merge them
-							const auto gid = obstaclesLayer->getTileGIDAt({
-								static_cast<float>(col),
-								static_cast<float>(y) 
-							});
-							if(!gid) break;
-							
-							if(const auto [neighborBody, neighborCategory] = GetTileInfo(gid);
-								neighborBody != srcBodyType || 
-								srcCategoryName != neighborCategory
-							) {
-								break;
-							}
-
-							isVisited[y][col] = true;
-							col++;
+					// merge all horizontal neighbors:
+					auto col { x + 1 };
+					while(col < width && !isVisited[y][col]) {
+						// if the right tile is same (static & categoory)
+						// then merge them
+						const auto gid = obstaclesLayer->getTileGIDAt({
+							static_cast<float>(col),
+							static_cast<float>(y) 
+						});
+						if(!gid) break;
+						
+						if(const auto [neighborBody, neighborCategory] = GetTileInfo(gid);
+							neighborBody != srcBodyType || 
+							srcCategoryName != neighborCategory
+						) {
+							break;
 						}
 
-						details::Form form;
-						form.m_rect = cocos2d::Rect{
-							cocos2d::Vec2{ x * tileSize.width, (height - y - 1) * tileSize.height }, 
-							cocos2d::Size{ tileSize.width * (col - x), tileSize.height }
-						};
-						form.m_type = category;
+						isVisited[y][col] = true;
+						col++;
+					}
 
-						this->Get(category).emplace_back(form);
-					} 
-				}	// tileGid
+					details::Form form;
+					form.m_rect = cocos2d::Rect{
+						cocos2d::Vec2{ x * tileSize.width, (height - y - 1) * tileSize.height }, 
+						cocos2d::Size{ tileSize.width * (col - x), tileSize.height }
+					};
+					form.m_type = category;
+
+					this->Get(category).emplace_back(form);
+				} 
 			}	// for
 		}	// for
 	}
