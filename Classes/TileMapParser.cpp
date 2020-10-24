@@ -5,6 +5,8 @@
 #include "PhysicsHelper.hpp"
 #include <list>
 #include <optional>
+#include <functional>
+#include <iterator>
 #include <cassert>
 #include <cstdint>
 
@@ -202,6 +204,59 @@ struct BorderBuilder {
 		}
 	}
 
+	/**
+	 * Go from the start through the first met neighbour to extract a border of physics object
+	 * 
+	 * @param start is a position of the tile on tile map from which the algo starts
+	 * @param tiles is a container for the border tiles
+	 * @param adder is a functional object which define where the tile will be added
+	 * @param isVisited is a 2d map of visited tiles
+	 */
+	void Visit(
+		const cocos2d::Vec2& start
+		, std::function<void(const cocos2d::Vec2&)> && add
+		, std::vector<std::vector<char>>& isVisited
+	) const {
+		Move move { start, 
+			static_cast<int>(m_cache.mapWidth), 
+			static_cast<int>(m_cache.mapHeight)
+		};
+		isVisited[static_cast<size_t>(start.y)][static_cast<size_t>(start.x)] = true;
+		
+		auto point = start;
+
+		for(size_t turns = 0, skips = 0; ; turns++) {
+			size_t steps { 0 };
+			// trying to move
+			while(move.CanMoveForward()) {
+				// move 1 tile forward
+				move.MakeMoveForward();
+				// update position
+				point = move.GetPosition();
+				// get tile gid
+				size_t mask = this->GetProperties(point);
+				const auto x = static_cast<size_t>(point.x);
+				const auto y = static_cast<size_t>(point.y);
+				// add tile if it's not visited yet and is border tile
+				if(!isVisited[y][x] && (mask & Category::BORDER) > 0) {
+					// mark
+					isVisited[y][x] = true;
+					add(point);
+					steps++;
+				}
+				else {
+					// restore position
+					move.MakeMoveBackwards();
+					break;
+				}
+			}
+			
+			skips = steps? 0: skips + 1;
+			if(skips >= 4) break;
+			move.TurnRight();
+		}
+	}
+
 	std::vector<std::list<cocos2d::Vec2>> BuildBorder() const {
 		// BUILD BORDERS FOR COMPOSITE PHYSICS BODIES:
 		int components { 0 };
@@ -222,69 +277,18 @@ struct BorderBuilder {
 				
 				components++;
 				tiles.emplace_back();
+				tiles.back().emplace_back(point);
 
-				Move move { point, (int) m_cache.mapWidth, (int) m_cache.mapHeight };
-				tiles[components - 1].emplace_back(point);
-				isVisited[(size_t)point.y][(size_t)point.x] = true;
-				
-				for(size_t turns = 0, skips = 0; ; turns++) {
-					size_t steps { 0 };
-					// trying to move
-					while(move.CanMoveForward()) {
-						// move 1 tile forward
-						move.MakeMoveForward();
-						// update position
-						point = move.GetPosition();
-						// get tile gid
-						mask = this->GetProperties(point);
-						// add tile if it's not visited yet and is border tile
-						if(!isVisited[(size_t)point.y][(size_t)point.x] && (mask & Category::BORDER) > 0) {
-							// mark
-							isVisited[(size_t)point.y][(size_t)point.x] = true;
-							tiles[components - 1].emplace_back(point);
-							steps++;
-						}
-						else {
-							// restore position
-							move.MakeMoveBackwards();
-							break;
-						}
-					}
-					
-					skips = steps? 0: skips + 1;
-					if(skips >= 4) break;
-					move.TurnRight();
-				}
-
-				move.Reset({(float)x, (float)y});
-				for(int turns = 0, skips = 0; ; turns++) {
-					int steps { 0 };
-					// trying to move
-					while(move.CanMoveForward()) {
-						// move 1 tile forward
-						move.MakeMoveForward();
-						// update position
-						point = move.GetPosition();
-						// get tile gid
-						mask = this->GetProperties(point);
-						// add tile if it's not visited yet and is border tile
-						if(!isVisited[(size_t)point.y][(size_t)point.x] && (mask & Category::BORDER) > 0) {
-							// mark
-							isVisited[(size_t)point.y][(size_t)point.x] = true;
-							tiles[components - 1].emplace_front(point);
-							steps++;
-						}
-						else {
-							// restore position
-							move.MakeMoveBackwards();
-							break;
-						}
-					}
-					
-					skips = steps? 0: skips + 1;
-					if(skips >= 4) break;
-					move.TurnRight();
-				}
+				// go in one direction from the found border tile
+				this->Visit(point, [&tiles = tiles.back()](const cocos2d::Vec2& tile) {
+					tiles.push_back(tile);
+				}, isVisited);
+				// reset start position
+				point = cocos2d::Vec2{ static_cast<float>(x), static_cast<float>(y) };
+				// try to go in another direction from the found border tile
+				this->Visit(point, [&tiles = tiles.back()](const cocos2d::Vec2& tile) {
+					tiles.push_front(tile);
+				}, isVisited);
 			}
 		}
 		
