@@ -291,6 +291,8 @@ void TileMapParser::Parse() {
 		](const cocos2d::Vec2 & point) -> std::optional<cocos2d::Vec2> {
 			// check for { empty tiles | map boundary | (not solid && not border ) } around the point
 			cocos2d::Vec2 shifts[4] = {};
+			cocos2d::Vec2 shiftsToBorder[4] = {};
+			int borderTileCount {0};
 			int count { 0 };
 			int countOutsideMap { 0 };
 			float dx[] = {-1.f, 1.f, 0.f,  0.f};
@@ -305,10 +307,16 @@ void TileMapParser::Parse() {
 				else if(auto gid = obstaclesLayer->getTileGIDAt(neighbor); IsFree(gid)) {
 					shifts[count] = { dx[i], dy[i] };
 					++count;
+				} 
+				else if(auto gid = obstaclesLayer->getTileGIDAt(neighbor); IsBorder(gid)) {
+					shiftsToBorder[borderTileCount] = { dx[i], dy[i] };
+					++borderTileCount;
 				}
 			}
 			assert(count >= 0 && count <= 2 && "Can't have more than 2 neighbours");
 			cocos2d::Vec2 sum { shifts[0].x + shifts[1].x, shifts[0].y + shifts[1].y };
+			cocos2d::Vec2 borderSum { shiftsToBorder[0].x + shiftsToBorder[1].x, shiftsToBorder[0].y + shiftsToBorder[1].y };
+
 			if(count == 2 && helper::IsEquel(fabs(sum.x) + fabs(sum.y), 2.f, 0.01f)) {
 				// { -1, 0 } --> { 0,  1 }
 				// { 0,  1 } --> { 1,  0 }
@@ -323,21 +331,24 @@ void TileMapParser::Parse() {
 				tileMiddle.y += -sum.y * tileSize.height / 2.f;
 				return { tileMiddle };
 			}
-			else if(count - countOutsideMap == 0) { // this is a case for some corner tiles (they indicates a concave polygons)
+			else if(count - countOutsideMap == 0 && !helper::IsEquel(fabs(borderSum.x) + fabs(borderSum.y), 0.f, 0.1f)) { 
+				// this is a case for some corner tiles (they indicates a concave polygons)
+				// or tiles new the map's border
 				cocos2d::Vec2 tileMiddle { 
 					point.x * tileSize.width + tileSize.width / 2.f, 
 					(height - point.y - 1.f) * tileSize.height + tileSize.height / 2.f
 				};
-				cocos2d::Vec2 shift[4] = {
+				
+				cocos2d::Vec2 diagonalShift[4] = {
 					{-1.f, -1.f}, {-1.f, 1.f}, {1.f, 1.f}, {1.f, -1.f}
 				};
 				for(int i = 0; i < 4; ++i) {
-					auto neighbor = point + shift[i];
+					auto neighbor = point + diagonalShift[i];
 					if(InMap(neighbor)) {
 						auto gid = obstaclesLayer->getTileGIDAt(neighbor);
 						if(IsFree(gid)) {
-							tileMiddle.x +=  shift[i].x * tileSize.width  / 2.f;
-							tileMiddle.y += -shift[i].y * tileSize.height / 2.f;
+							tileMiddle.x +=  diagonalShift[i].x * tileSize.width  / 2.f;
+							tileMiddle.y += -diagonalShift[i].y * tileSize.height / 2.f;
 							break;
 						}
 					}
@@ -439,6 +450,15 @@ void TileMapParser::Parse() {
 				if(result.has_value()) {
 					form.m_points.emplace_back(*result);
 				}
+			}
+			assert(chain.size() >= 2 && "Can't have a chain with 0 or 1 elements");
+			// if distance between front and back tiles is short enough => connect them
+			float dx = chain.front().x - chain.back().x;
+			float dy = chain.front().y - chain.back().y;
+			auto distance = fabs(dx) + fabs(dy);
+			bool isSameLine = helper::IsEquel(dx, 0.f, 0.1f) || helper::IsEquel(dy, 0.f, 0.1f);
+			if(distance <= 10.f && isSameLine) {
+				form.m_points.emplace_back(form.m_points.front());
 			}
 			this->Get(form.m_type).emplace_back(form);
 		}
