@@ -30,13 +30,13 @@ list(APPEND headers
     DragonBonesAnimator.hpp
     UserInputHandler.hpp
     TileMapParser.hpp
+    TileMapHelper.hpp
     ParallaxBackground.hpp
     Weapon.hpp
     Core.hpp
     Utils.hpp
     Projectile.hpp
     Platform.hpp
-    Border.hpp
     Barrel.hpp
     SizeDeducer.hpp
     SmoothFollower.hpp
@@ -69,6 +69,7 @@ list(APPEND sources
     SmoothFollower.cpp
     UserInputHandler.cpp
     TileMapParser.cpp
+    TileMapHelper.cpp
     ParallaxBackground.cpp
     Weapon.cpp
     HealthBar.cpp

@@ -3,30 +3,30 @@
 
 namespace helper {
     
-    constexpr bool IsEquel(const float a, const float b, const float eps) noexcept {
+    constexpr bool IsEqual(const float a, const float b, const float eps) noexcept {
         return (a - eps <= b && b <= a + eps);
     } 
 
     constexpr bool IsPositive(const float x, const float eps) noexcept {
-        return !IsEquel(x, 0.f, eps) && x > 0.f;
+        return !IsEqual(x, 0.f, eps) && x > 0.f;
     }
 
     constexpr bool IsNegative(const float x, const float eps) noexcept {
-        return !IsEquel(x, 0.f, eps) && x < 0.f;
+        return !IsEqual(x, 0.f, eps) && x < 0.f;
     }
 
     constexpr bool IsGreater(const float a, const float b, const float eps) noexcept {
-        return !IsEquel(a, b, eps) && a > b;
+        return !IsEqual(a, b, eps) && a > b;
     }
 
     constexpr bool IsLesser(const float a, const float b, const float eps) noexcept {
-        return !IsEquel(a, b, eps) && a < b;
+        return !IsEqual(a, b, eps) && a < b;
     }
 
 
     constexpr bool HaveSameSigns(const float a, const float b) noexcept {
         constexpr float EPS { 0.00001f };
-        return ( a > 0.f && b > 0.f ) || ( a < 0.f && b < 0.f ) || IsEquel(a, b, EPS);
+        return ( a > 0.f && b > 0.f ) || ( a < 0.f && b < 0.f ) || IsEqual(a, b, EPS);
     }
 
     /**

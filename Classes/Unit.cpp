@@ -71,7 +71,7 @@ void Unit::MoveAlong(const cocos2d::Vec2& direction) noexcept {
 }
 
 void Unit::MoveAlong(float x, float y) noexcept {
-    if (!helper::IsEquel(y, 0.f, 0.0001f)) {
+    if (!helper::IsEqual(y, 0.f, 0.0001f)) {
         m_movement->Push(x, y);
     }
     else {
@@ -152,7 +152,7 @@ void Unit::UpdateCurses(const float dt) noexcept {
 bool Unit::IsOnGround() const noexcept {
     const auto velocity { this->getPhysicsBody()->getVelocity() };
     constexpr float EPS { 0.000001f };  
-    return helper::IsEquel(velocity.y, 0.f, EPS) && m_hasContactWithGround;
+    return helper::IsEqual(velocity.y, 0.f, EPS) && m_hasContactWithGround;
 }
 
 

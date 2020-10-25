@@ -11,7 +11,6 @@
 
 #include "Platform.hpp"
 #include "Barrel.hpp"
-#include "Border.hpp"
 #include "Traps.hpp"
 
 #include "PhysicsHelper.hpp"
@@ -172,7 +171,9 @@ void LevelScene::Restart() {
 void LevelScene::menuCloseCallback(cocos2d::Ref* pSender) {
     //Close the cocos2d-x game scene and quit the application
     cocos2d::Director::getInstance()->end();
-    /*To navigate back to native iOS screen(if present) without quitting the application  ,do not use Director::getInstance()->end() as given above,instead trigger a custom event created in RootViewController.mm as below*/
+    /*To navigate back to native iOS screen(if present) without quitting the application, 
+    do not use Director::getInstance()->end() as given above,
+    instead trigger a custom event created in RootViewController.mm as below*/
     //EventCustom customEndEvent("game_scene_close_event");
     //_eventDispatcher->dispatchEvent(&customEndEvent);
 }
@@ -183,15 +184,6 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
         m_parser = std::make_unique<TileMapParser>(map);
         m_parser->Parse();
     }
-
-    // auto line = cocos2d::Node::create();
-    // auto body = cocos2d::PhysicsBody::createEdgeChain(points, 2, {}, 5.f);
-    // body->setCategoryBitmask(Utils::CreateMask(core::CategoryBits::BOUNDARY));
-    // body->setCollisionBitmask(Utils::CreateMask(
-    //     core::CategoryBits::PLAYER
-    // ));
-    // line->addComponent(body);
-    // map->addChild(line);
 
     /// TODO: get rid of this shitty maps
     std::unordered_map<size_t, Path> paths;
