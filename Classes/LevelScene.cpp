@@ -15,7 +15,7 @@
 
 #include "PhysicsHelper.hpp"
 #include "UserInputHandler.hpp"
-#include "UnitMovement.hpp"
+#include "Movement.hpp"
 #include "Utils.hpp"
 #include "SizeDeducer.hpp"
 #include "Interface.hpp"

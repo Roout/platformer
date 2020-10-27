@@ -2,7 +2,7 @@
 #include "Player.hpp"
 #include "PhysicsHelper.hpp"
 #include "cocos2d.h"
-#include "UnitMovement.hpp"
+#include "Movement.hpp"
 
 #include <algorithm> // std::find
 

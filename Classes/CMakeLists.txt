@@ -26,7 +26,7 @@ list(APPEND headers
     Influence.hpp
     Path.hpp
     Navigator.hpp
-    UnitMovement.hpp
+    Movement.hpp
     DragonBonesAnimator.hpp
     UserInputHandler.hpp
     TileMapParser.hpp
@@ -65,7 +65,7 @@ list(APPEND sources
     DebugScreen.cpp
     DragonBonesAnimator.cpp
     DeathScreen.cpp
-    UnitMovement.cpp
+    Movement.cpp
     SmoothFollower.cpp
     UserInputHandler.cpp
     TileMapParser.cpp

@@ -1,5 +1,5 @@
-#ifndef UNIT_MOVEMENT_HPP
-#define UNIT_MOVEMENT_HPP
+#ifndef MOVEMENT_HPP
+#define MOVEMENT_HPP
 
 #include "cocos/math/Vec2.h"
 #include "Utils.hpp"
@@ -93,4 +93,4 @@ private:
     cocos2d::Vec2 m_impulse { 0.f, 0.f };
 };
 
-#endif // UNIT_MOVEMENT_HPP
+#endif // MOVEMENT_HPP

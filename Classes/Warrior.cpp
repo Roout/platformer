@@ -5,7 +5,7 @@
 #include "DragonBonesAnimator.hpp"
 #include "Weapon.hpp"
 #include "Influence.hpp"
-#include "UnitMovement.hpp"
+#include "Movement.hpp"
 
 #include "cocos2d.h"
 
