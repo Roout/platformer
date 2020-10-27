@@ -137,10 +137,10 @@ void Legs::OnAttack() {
     const auto projectile = m_extractor();
     const auto body = cocos2d::PhysicsBody::createCircle(
         projectile.size.width / 2.f
-        , cocos2d::PhysicsMaterial{ 1.f, 0.1f, 0.2f }
+        , cocos2d::PhysicsMaterial{ 0.1f, 0.2f, 0.7f }
     );
     body->setDynamic(true);
-    body->setMass(10.f);
+    // body->setMass(10.f);
     body->setGravityEnable(true);
     body->setRotationEnable(true);
     body->setCategoryBitmask(

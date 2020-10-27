@@ -3,12 +3,17 @@
 
 #include <vector>
 #include <array>
+#include <memory>
 #include "math/CCGeometry.h" // cocos2d::Rect, cocos2d::Vec2
 #include "Core.hpp"
 #include "Utils.hpp"
 
 namespace cocos2d {
     class FastTMXTiledMap;
+}
+
+namespace TileMap {
+    struct Cache;
 }
 
 namespace details {
@@ -40,6 +45,8 @@ public:
 
     TileMapParser(const cocos2d::FastTMXTiledMap * tilemap);
 
+    ~TileMapParser();
+
     void Parse();
 
     template <CategoryName category>
@@ -62,7 +69,7 @@ private:
     void ParseProps();
     
     void ParsePaths();
-
+    
     void ParseInfluences();
 
     template <CategoryName category>
@@ -76,6 +83,8 @@ private:
 
     const cocos2d::FastTMXTiledMap * const m_tileMap { nullptr };
     
+    std::unique_ptr<const TileMap::Cache> m_tileMapCache;
+
     std::array<
         std::vector<details::Form>, 
         Utils::EnumSize<CategoryName>()

@@ -6,7 +6,7 @@
 #include "Weapon.hpp"
 #include "Core.hpp"
 #include "DragonBonesAnimator.hpp"
-#include "UnitMovement.hpp"
+#include "Movement.hpp"
 
 #include <cmath>
 
@@ -71,7 +71,7 @@ void Unit::MoveAlong(const cocos2d::Vec2& direction) noexcept {
 }
 
 void Unit::MoveAlong(float x, float y) noexcept {
-    if (!helper::IsEquel(y, 0.f, 0.0001f)) {
+    if (!helper::IsEqual(y, 0.f, 0.0001f)) {
         m_movement->Push(x, y);
     }
     else {
@@ -152,17 +152,17 @@ void Unit::UpdateCurses(const float dt) noexcept {
 bool Unit::IsOnGround() const noexcept {
     const auto velocity { this->getPhysicsBody()->getVelocity() };
     constexpr float EPS { 0.000001f };  
-    return helper::IsEquel(velocity.y, 0.f, EPS) && m_hasContactWithGround;
+    return helper::IsEqual(velocity.y, 0.f, EPS) && m_hasContactWithGround;
 }
 
 
 void Unit::AddPhysicsBody() {
     const auto body = cocos2d::PhysicsBody::createBox(
         m_physicsBodySize,
-        cocos2d::PhysicsMaterial(1.f, 0.f, 0.f), 
+        cocos2d::PhysicsMaterial(1.f, 0.1f, 0.1f), 
         {0.f, floorf(m_physicsBodySize.height / 2.f)}
     );
-    body->setMass(25.f);
+    // body->setMass(25.f);
     body->setDynamic(true);
     body->setGravityEnable(true);
     body->setRotationEnable(false);

@@ -11,12 +11,11 @@
 
 #include "Platform.hpp"
 #include "Barrel.hpp"
-#include "Border.hpp"
 #include "Traps.hpp"
 
 #include "PhysicsHelper.hpp"
 #include "UserInputHandler.hpp"
-#include "UnitMovement.hpp"
+#include "Movement.hpp"
 #include "Utils.hpp"
 #include "SizeDeducer.hpp"
 #include "Interface.hpp"
@@ -172,7 +171,9 @@ void LevelScene::Restart() {
 void LevelScene::menuCloseCallback(cocos2d::Ref* pSender) {
     //Close the cocos2d-x game scene and quit the application
     cocos2d::Director::getInstance()->end();
-    /*To navigate back to native iOS screen(if present) without quitting the application  ,do not use Director::getInstance()->end() as given above,instead trigger a custom event created in RootViewController.mm as below*/
+    /*To navigate back to native iOS screen(if present) without quitting the application, 
+    do not use Director::getInstance()->end() as given above,
+    instead trigger a custom event created in RootViewController.mm as below*/
     //EventCustom customEndEvent("game_scene_close_event");
     //_eventDispatcher->dispatchEvent(&customEndEvent);
 }
@@ -218,8 +219,32 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                 map->addChild(platform);
             }
             else if(form.m_type == core::CategoryName::BORDER) {
-                const auto border { Border::create(form.m_rect.size) };
-                border->setPosition(form.m_rect.origin + form.m_rect.size / 2.f);
+                const auto border { cocos2d::Node::create() };
+                ///< The density of the object.
+                ///< The bounciness of the physics body.
+                ///< The roughness of the surface of a shape.
+                auto body = cocos2d::PhysicsBody::createEdgeChain(
+                    form.m_points.data()
+                    , form.m_points.size()
+                    , {0.5f, 0.5f, 0.1f}
+                    , 2.f
+                );
+                body->setCategoryBitmask(Utils::CreateMask(core::CategoryBits::BOUNDARY));
+                body->setCollisionBitmask(
+                    Utils::CreateMask(
+                        core::CategoryBits::ENEMY 
+                        , core::CategoryBits::PLAYER
+                        , core::CategoryBits::ENEMY_PROJECTILE
+                    )
+                );
+                body->setContactTestBitmask(
+                    Utils::CreateMask(
+                        core::CategoryBits::GROUND_SENSOR
+                        , core::CategoryBits::ENEMY_PROJECTILE
+                        , core::CategoryBits::PLAYER_PROJECTILE
+                    )
+                );
+                border->addComponent(body);
                 map->addChild(border);
             }
             else if(form.m_type == core::CategoryName::SPIKES) {

@@ -4,7 +4,7 @@
 #include "DragonBonesAnimator.hpp"
 #include "Core.hpp"
 #include "Weapon.hpp"
-#include "UnitMovement.hpp"
+#include "Movement.hpp"
 
 #include <cmath>
 
@@ -173,7 +173,7 @@ void Spider::AddPhysicsBody() {
     // because in constructor offset is added to the shape!
     const auto yOffset { floorf(m_contentSize.height * 0.65f) };
     body->setPositionOffset({0.f, yOffset});
-    body->setMass(25.f);
+    // body->setMass(25.f);
     body->setDynamic(true);
     body->setGravityEnable(false);
     body->setRotationEnable(false);

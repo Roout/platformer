@@ -4,7 +4,7 @@
 #include "Core.hpp"
 #include "DragonBonesAnimator.hpp"
 #include "Weapon.hpp"
-#include "UnitMovement.hpp"
+#include "Movement.hpp"
 
 #include "cocos2d.h"
 
@@ -105,7 +105,7 @@ void Archer::AddPhysicsBody() {
     Unit::AddPhysicsBody();
     // change masks for physics body
     const auto body { this->getPhysicsBody() };
-    body->setMass(25.f);
+    // body->setMass(25.f);
     body->setCategoryBitmask(Utils::CreateMask(core::CategoryBits::ENEMY));
     body->setContactTestBitmask(Utils::CreateMask(core::CategoryBits::PLATFORM));
     body->setCollisionBitmask(

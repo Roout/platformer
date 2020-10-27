@@ -25,6 +25,11 @@ namespace Utils {
         return (static_cast<size_t>(bits) | ...);
     } 
 
+    template<class ...Args>
+	constexpr bool HasAny(size_t mask, Args ... bits) noexcept {
+		return (mask & Utils::CreateMask(bits...)) > 0;
+	}
+
     /**
      * Generate numbers in range (0, 2^64].
      * Overflow is possible. (no check performed)

@@ -192,8 +192,8 @@ bool OnContactSeparate(cocos2d::PhysicsContact& contact) {
         const auto player { static_cast<Unit*>(isUnitSensor[BODY_A]? nodes[BODY_A] : nodes[BODY_B]) };
         bool onGround {
             isUnitSensor[BODY_A]? 
-                helper::IsEquel(bodies[BODY_A]->getVelocity().y, 0.f, 0.000001f):
-                helper::IsEquel(bodies[BODY_B]->getVelocity().y, 0.f, 0.000001f)
+                helper::IsEqual(bodies[BODY_A]->getVelocity().y, 0.f, 0.000001f):
+                helper::IsEqual(bodies[BODY_B]->getVelocity().y, 0.f, 0.000001f)
         };
         player->SetContactWithGround(onGround);
         return true;

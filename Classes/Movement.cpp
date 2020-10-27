@@ -1,4 +1,4 @@
-#include "UnitMovement.hpp"
+#include "Movement.hpp"
 #include "Unit.hpp"
 #include "PhysicsHelper.hpp"
 #include "cocos2d.h"
@@ -55,7 +55,7 @@ void Movement::Push(float [[maybe_unused]] x, float y) noexcept {
 }
 
 void Movement::Move(float x, float y) noexcept {
-    const auto force { m_body->getMass() * m_desiredVelocity * 25.f };
+    const auto force { m_body->getMass() * m_desiredVelocity * 20.f };
 
     if(x == 0.f && y == 0.f) {
         this->ResetForce();
