@@ -220,7 +220,15 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
             }
             else if(form.m_type == core::CategoryName::BORDER) {
                 const auto border { cocos2d::Node::create() };
-                auto body = cocos2d::PhysicsBody::createEdgeChain(form.m_points.data(), form.m_points.size(), {}, 1.f);
+                ///< The density of the object.
+                ///< The bounciness of the physics body.
+                ///< The roughness of the surface of a shape.
+                auto body = cocos2d::PhysicsBody::createEdgeChain(
+                    form.m_points.data()
+                    , form.m_points.size()
+                    , {0.5f, 0.5f, 0.1f}
+                    , 2.f
+                );
                 body->setCategoryBitmask(Utils::CreateMask(core::CategoryBits::BOUNDARY));
                 body->setCollisionBitmask(
                     Utils::CreateMask(

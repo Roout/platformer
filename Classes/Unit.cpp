@@ -159,10 +159,10 @@ bool Unit::IsOnGround() const noexcept {
 void Unit::AddPhysicsBody() {
     const auto body = cocos2d::PhysicsBody::createBox(
         m_physicsBodySize,
-        cocos2d::PhysicsMaterial(1.f, 0.f, 0.f), 
+        cocos2d::PhysicsMaterial(1.f, 0.1f, 0.1f), 
         {0.f, floorf(m_physicsBodySize.height / 2.f)}
     );
-    body->setMass(25.f);
+    // body->setMass(25.f);
     body->setDynamic(true);
     body->setGravityEnable(true);
     body->setRotationEnable(false);
