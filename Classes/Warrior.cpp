@@ -33,7 +33,7 @@ Warrior::Warrior(size_t id, const char* dragonBonesName) :
 
 
 bool Warrior::init() {
-    if (!Bot::init() ) {
+    if (!Bot::init()) {
         return false; 
     }
     m_movement->SetMaxSpeed(130.f);
@@ -136,6 +136,9 @@ void Warrior::UpdateState(const float dt) noexcept {
     else if( m_weapons[WeaponClass::MELEE]->IsAttacking() ) {
         m_currentState = State::ATTACK;
     }
+    else if( m_weapons[WeaponClass::MELEE]->IsReloading() ) {
+        m_currentState = State::IDLE;
+    }
     else if( m_detectEnemy ) {
         m_currentState = State::PURSUIT;
     }
@@ -149,7 +152,11 @@ void Warrior::UpdatePosition(const float dt) noexcept {
         m_weapons[WeaponClass::MELEE]->IsAttacking() || 
         m_weapons[WeaponClass::MELEE]->IsPreparing() 
     };
-    if (!this->IsDead() && !initiateAttack) {
+    if(m_weapons[WeaponClass::MELEE]->IsReloading()) {
+        // stop
+        m_movement->ResetForce();
+    }
+    else if(!initiateAttack) {
         if(m_detectEnemy) { // update target
             auto target = this->getParent()->getChildByName<Unit *>(core::EntityNames::PLAYER);
             this->Pursue(target);
@@ -224,6 +231,7 @@ void Warrior::AddAnimator() {
     Unit::AddAnimator();
     m_animator->InitializeAnimations({
         std::make_pair(Utils::EnumCast(State::ATTACK),  GetStateName(State::ATTACK)),
+        std::make_pair(Utils::EnumCast(State::IDLE),    GetStateName(State::IDLE)),
         std::make_pair(Utils::EnumCast(State::PURSUIT), GetStateName(State::PURSUIT)),
         std::make_pair(Utils::EnumCast(State::PATROL),  GetStateName(State::PATROL)),
         std::make_pair(Utils::EnumCast(State::DEAD),    GetStateName(State::DEAD))
