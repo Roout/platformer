@@ -228,7 +228,7 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                 auto body = cocos2d::PhysicsBody::createEdgeChain(
                     form.m_points.data()
                     , form.m_points.size()
-                    , {0.5f, 0.5f, 0.1f}
+                    , {0.5f, 0.f, 0.1f}
                     , 2.f
                 );
                 body->setCategoryBitmask(Utils::CreateMask(core::CategoryBits::BOUNDARY));
