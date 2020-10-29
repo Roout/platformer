@@ -77,7 +77,7 @@ bool LevelScene::init() {
     this->addChild(tileMap);
 
     // add parallax background
-    auto back = Background::create();
+    auto back = Background::create(tileMap->getContentSize());
     tileMap->addChild(back, -1);
 
     // mark untouchable layers:
