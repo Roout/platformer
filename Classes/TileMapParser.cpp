@@ -23,12 +23,16 @@ namespace {
 		else if ( ty == core::EntityNames::SPEARMAN ) {
 			type = core::EnemyClass::SPEARMAN;
 		}
+		else if ( ty == core::EntityNames::SLIME ) {
+			type = core::EnemyClass::SLIME;
+		}
 		else if ( ty == core::EntityNames::SPIDER ) {
 			type = core::EnemyClass::SPIDER;
 		}
 		else if ( ty == core::EntityNames::BOULDER_PUSHER ) {
 			type = core::EnemyClass::BOULDER_PUSHER;
 		}
+		// assert(type == core::EnemyClass::UNDEFINED && "[TileMapParser] Enemy class not defined!");
 		return type;
 	}
 

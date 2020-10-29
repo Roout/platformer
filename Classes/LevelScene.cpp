@@ -3,6 +3,7 @@
 #include "Unit.hpp"
 #include "Bot.hpp"
 #include "Warrior.hpp"
+#include "Slime.hpp"
 #include "Archer.hpp"
 #include "BoulderPusher.hpp"
 #include "Spider.hpp"
@@ -190,6 +191,7 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
     std::unordered_map<size_t, size_t> pathIdByUnitId;
     std::unordered_map<size_t, cocos2d::Rect> influences;
     std::unordered_map<size_t, Enemies::Warrior*> warriors;
+    std::unordered_map<size_t, Enemies::Slime*> slimes;
     std::unordered_map<size_t, Enemies::Archer*> archers;
     std::unordered_map<size_t, Enemies::BoulderPusher*> boulderPushers;
     std::unordered_map<size_t, Enemies::Spider*> spiders;
@@ -275,6 +277,14 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                         warriors.emplace(form.m_id, warrior);
                         pathIdByUnitId.emplace(form.m_id, form.m_pathId);
                     } break;
+                    case core::EnemyClass::SLIME: {
+                        const auto slime { Enemies::Slime::create(form.m_id) };
+                        slime->setName(core::EntityNames::SLIME);
+                        slime->setPosition(form.m_points.front());
+                        map->addChild(slime, zOrder);
+                        slimes.emplace(form.m_id, slime);
+                        pathIdByUnitId.emplace(form.m_id, form.m_pathId);
+                    } break;
                     case core::EnemyClass::SPEARMAN: {
                         const auto spearman { Enemies::Spearman::create(form.m_id) };
                         spearman->setName(core::EntityNames::SPEARMAN);
@@ -321,6 +331,13 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
         warrior->AttachNavigator(std::move(paths.at(pathId)));
         if(auto it = influences.find(id); it != influences.end()) {
             warrior->AttachInfluenceArea(it->second);
+        }
+    } 
+    for(auto& [id, slime]: slimes) {
+        const auto pathId { pathIdByUnitId.at(id) };
+        slime->AttachNavigator(std::move(paths.at(pathId)));
+        if(auto it = influences.find(id); it != influences.end()) {
+            slime->AttachInfluenceArea(it->second);
         }
     } 
     for(auto& [id, spider]: spiders) {
