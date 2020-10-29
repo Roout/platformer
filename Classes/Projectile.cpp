@@ -105,7 +105,7 @@ void Projectile::AddAnimator(std::string chachedArmatureName) {
     });
     m_animator->setPosition({0.f, 0.f});
     m_animator->setAnchorPoint({0.f, 0.f});
-    this->addChild(m_animator);
+    this->addChild(m_animator, 102);
 }
 
 Projectile::Projectile(float damage) :

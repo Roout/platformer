@@ -31,6 +31,7 @@ namespace core {
 
         WARRIOR, // in fact it's axe-warrior
         ARCHER,
+        SLIME,
         BOULDER_PUSHER,
         SPEARMAN,
         SPIDER,
@@ -43,6 +44,7 @@ namespace core {
         const char* const ARCHER    = "archer";
         const char* const BOULDER_PUSHER = "old_man";
         const char* const SPIDER    = "spider";
+        const char* const SLIME    = "slime";
         const char* const SPEARMAN  = "spear_man";
         const char* const PLAYER    = "player";
     }

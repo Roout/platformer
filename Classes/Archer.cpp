@@ -30,7 +30,6 @@ Archer::Archer(size_t id) :
     m_hitBoxSize = m_physicsBodySize;
 }
 
-
 bool Archer::init() {
     if (!Bot::init() ) {
         return false; 
@@ -58,7 +57,6 @@ void Archer::OnEnemyIntrusion() {
 void Archer::OnEnemyLeave() {
     m_detectEnemy = false;
 }
-
 
 void Archer::UpdateState(const float dt) noexcept {
     m_previousState = m_currentState;
@@ -91,7 +89,6 @@ void Archer::UpdateAnimation() {
         }
     }
 }
-
 
 void Archer::OnDeath() {
     this->removeComponent(this->getPhysicsBody());

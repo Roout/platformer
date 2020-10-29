@@ -11,14 +11,15 @@ set(sources)
 
 list(APPEND headers
     LevelScene.hpp
-    ContactHandler.hpp
     PauseNode.hpp
     DebugScreen.hpp
-    Unit.hpp
     DeathScreen.hpp
+    ContactHandler.hpp
+    Unit.hpp
     Player.hpp
     Bot.hpp
     Warrior.hpp
+    Slime.hpp
     Archer.hpp
     BoulderPusher.hpp
     Spider.hpp
@@ -57,6 +58,7 @@ list(APPEND sources
     Navigator.cpp
     Bot.cpp
     Warrior.cpp
+    Slime.cpp
     Archer.cpp
     BoulderPusher.cpp
     Spider.cpp
