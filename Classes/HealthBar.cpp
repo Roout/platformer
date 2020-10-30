@@ -15,13 +15,13 @@ HealthBar * HealthBar::create( const Unit* const unit) {
 }
 
 bool HealthBar::init() {
-    if( !cocos2d::DrawNode::init() ) {
+    if (!cocos2d::DrawNode::init()) {
         return false;
     }
     this->scheduleUpdate(); 
 
     const auto size = m_unit->getContentSize();
-    const auto barSize { cocos2d::Size(size.width, 15.f) };
+    const auto barSize { cocos2d::Size(size.width, 10.f) };
 
     const auto boarder = cocos2d::DrawNode::create();
     boarder->drawRect(
