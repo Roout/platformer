@@ -29,8 +29,8 @@ Player* Player::create() {
 Player::Player() :
     Unit { "mc" }
 {
-    m_contentSize = cocos2d::Size{ 80.f, 135.f };
-    m_physicsBodySize = cocos2d::Size{ 40.f, 135.f };
+    m_contentSize = cocos2d::Size{ 40.f, 68.f };
+    m_physicsBodySize = cocos2d::Size{ m_contentSize.width / 2.f, m_contentSize.height };
     m_hitBoxSize = m_contentSize;
 }
 
@@ -40,7 +40,7 @@ bool Player::init() {
     }    
     m_follower = std::make_unique<SmoothFollower>(this);
     m_inputHandler = std::make_unique<UserInputHandler>(this);
-    m_movement->SetMaxSpeed(400.f);
+    m_movement->SetMaxSpeed(200.f);
 
     // handle INVINCIBLE event
     auto listener = cocos2d::EventListenerCustom::create("INVINCIBLE", [this](cocos2d::EventCustom *) {
@@ -195,7 +195,7 @@ void Player::OnDeath() {
     const auto emitter = cocos2d::ParticleSystemQuad::create("particle_texture.plist");
     emitter->setAutoRemoveOnFinish(true);
     /// TODO: adjust for the multiresolution
-    emitter->setScale(0.4f);
+    emitter->setScale(0.2f);
     emitter->setPositionType(cocos2d::ParticleSystem::PositionType::RELATIVE);
     emitter->setPosition(this->getPosition());
     this->getParent()->addChild(emitter, 9);
@@ -261,7 +261,7 @@ void Player::AddWeapons() {
     // create weapon (it should be read from config)
     {
         const auto damage { 25.f };
-        const auto range { 70.f };
+        const auto range { 35.f };
         const auto preparationTime { 0.f };
         const auto attackDuration { m_animator->GetDuration(Utils::EnumCast(State::MELEE_ATTACK)) };
         const auto reloadTime { 0.1f };
@@ -275,7 +275,7 @@ void Player::AddWeapons() {
     }
     {
         const auto damage { 25.f };
-        const auto range { 130.f };
+        const auto range { 110.f };
         const auto preparationTime { 0.f };
         const auto attackDuration { m_animator->GetDuration(Utils::EnumCast(State::RANGE_ATTACK))  };
         const auto reloadTime { 2.f };
@@ -312,7 +312,7 @@ void Player::RangeAttack() {
         };
         
         auto pushProjectile = [this](cocos2d::PhysicsBody* body) {
-            body->setVelocity({ this->IsLookingLeft()? -750.f: 750.f, 0.f });
+            body->setVelocity({ this->IsLookingLeft()? -450.f: 450.f, 0.f });
         };
         m_weapons[WeaponClass::RANGE]->LaunchAttack(
             std::move(projectilePosition), 

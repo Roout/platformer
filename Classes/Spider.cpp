@@ -26,17 +26,17 @@ Spider::Spider(size_t id, const char* dragonBonesName) :
     Bot{ id, dragonBonesName }
 {
     // define size of the graphical content
-    m_contentSize = cocos2d::Size { 90.f, 125.f };
+    m_contentSize = cocos2d::Size { 45.f, 65.f };
     // define size of the physics body
-    m_physicsBodySize = cocos2d::Size{ 80.f, 80.f };
-    m_hitBoxSize = cocos2d::Size{ 90.f, 90.f };
+    m_physicsBodySize = cocos2d::Size{ 40.f, 40.f };
+    m_hitBoxSize = cocos2d::Size{ 45.f, 45.f };
 }
 
 bool Spider::init() {
     if(!Bot::init()) {
         return false; 
     }
-    m_movement->SetMaxSpeed(130.f);
+    m_movement->SetMaxSpeed(60.f);
     // override content size because the body is with offset and smaller than the 
     // graph content
     this->setContentSize(m_contentSize);
@@ -87,12 +87,12 @@ void Spider::update(float dt) {
 
 void Spider::OnEnemyIntrusion() {
     m_detectEnemy = true;
-    m_movement->SetMaxSpeed(150.f);
+    m_movement->SetMaxSpeed(100.f);
 };
 
 void Spider::OnEnemyLeave() {
     m_detectEnemy = false;
-    m_movement->SetMaxSpeed(80.f);
+    m_movement->SetMaxSpeed(60.f);
 };
 
 /// Unique to warrior
@@ -205,7 +205,7 @@ void Spider::AddPhysicsBody() {
 
 void Spider::AddAnimator() {
     Unit::AddAnimator();
-    m_animator->setScale(0.4f); // override scale
+    m_animator->setScale(0.2f); // override scale
     m_animator->InitializeAnimations({
         std::make_pair(Utils::EnumCast(State::PATROL),  GetStateName(State::PATROL)),
         std::make_pair(Utils::EnumCast(State::DEAD),    GetStateName(State::DEAD))

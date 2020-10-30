@@ -26,8 +26,8 @@ Warrior* Warrior::create(size_t id) {
 Warrior::Warrior(size_t id, const char* dragonBonesName) :
     Bot{ id, dragonBonesName }
 {
-    m_contentSize = cocos2d::Size{ 80.f, 135.f };
-    m_physicsBodySize = cocos2d::Size{ 70.f, 135.f };
+    m_contentSize = cocos2d::Size{ 40.f, 68.f };
+    m_physicsBodySize = cocos2d::Size{ 30.f, m_contentSize.height };
     m_hitBoxSize = m_physicsBodySize;
 }
 
@@ -36,7 +36,7 @@ bool Warrior::init() {
     if (!Bot::init()) {
         return false; 
     }
-    m_movement->SetMaxSpeed(130.f);
+    m_movement->SetMaxSpeed(80.f);
     return true;
 }
 
@@ -66,11 +66,11 @@ void Warrior::AttachNavigator(Path&& path) {
 
 void Warrior::Pursue(Unit * target) noexcept {
     if(!this->IsDead() && target && !target->IsDead()) {
-        const auto shift { 
+        const auto shift { floorf(
             target->GetHitBox().width / 2.f // shift to bottom left\right corner
             + m_weapons[WeaponClass::MELEE]->GetRange() * 0.8f   // shift by weapon length (not 1.0f to be able to reach the target by attack!)
             + m_contentSize.width / 2.f     // shift by size where the weapon's attack will be created
-        };
+        )};
         // possible destinations (bottom middle of this unit)
         const float xTargets[2] = { 
             target->getPositionX() + shift,
@@ -240,7 +240,7 @@ void Warrior::AddAnimator() {
 
 void Warrior::AddWeapons() {
     const auto damage { 2.f };
-    const auto range { 60.f };
+    const auto range { 30.f };
     const auto preparationTime { 0.f };
     const auto attackDuration { m_animator->GetDuration(Utils::EnumCast(State::ATTACK)) };
     const auto reloadTime { 0.5f };

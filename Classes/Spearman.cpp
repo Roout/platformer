@@ -25,24 +25,24 @@ bool Spearman::init() {
     if (!Warrior::init() ) {
         return false; 
     }
-    m_movement->SetMaxSpeed(150.f);
+    m_movement->SetMaxSpeed(75.f);
     return true;
 }
 
 Spearman::Spearman(size_t id, const char * name) :
     Warrior{ id, name }
 {
-    m_contentSize = cocos2d::Size{ 80.f, 135.f };
-    m_physicsBodySize = cocos2d::Size{ 70.f, 135.f };
+    m_contentSize = cocos2d::Size{ 40.f, 68.f };
+    m_physicsBodySize = cocos2d::Size{ 30.f, m_contentSize.height };
     m_hitBoxSize = m_physicsBodySize;
 }
 
 void Spearman::AddWeapons() {
     const auto damage { 10.f };
-    const auto range { 100.f };
+    const auto range { 50.f };
     const auto preparationTime { 0.f };
     const auto attackDuration { m_animator->GetDuration(Utils::EnumCast(State::ATTACK)) };
-    const auto reloadTime { 0.8f };
+    const auto reloadTime { 1.4f };
     m_weapons[WeaponClass::MELEE] = new Spear(
         damage, 
         range, 
