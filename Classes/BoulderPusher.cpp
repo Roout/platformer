@@ -25,13 +25,13 @@ BoulderPusher* BoulderPusher::create(size_t id) {
 BoulderPusher::BoulderPusher(size_t id):
     Bot{ id, core::EntityNames::BOULDER_PUSHER }
 {
-    m_contentSize = cocos2d::Size{ 80.f, 135.f };
-    m_physicsBodySize = cocos2d::Size{ 70.f, 135.f };
+    m_contentSize = cocos2d::Size{ 40.f, 68.f };
+    m_physicsBodySize = cocos2d::Size{ 30.f, m_contentSize.height };
     m_hitBoxSize = m_physicsBodySize;
 }
 
 bool BoulderPusher::init() {
-    if( !Bot::init() ) {
+    if (!Bot::init()) {
         return false; 
     }
     return true;
@@ -138,7 +138,7 @@ void BoulderPusher::AddPhysicsBody() {
 
 void BoulderPusher::AddAnimator() {
     Unit::AddAnimator();
-    m_animator->setScale(0.3f); // override scale
+    m_animator->setScale(0.15f); // override scale
     m_animator->InitializeAnimations({
         /// TODO: mismatch, update animation!
         std::make_pair(Utils::EnumCast(State::PREPARE_ATTACK),  GetStateName(State::ATTACK)),
@@ -150,7 +150,7 @@ void BoulderPusher::AddAnimator() {
 
 void BoulderPusher::AddWeapons() {
     const auto damage { 5.f };
-    const auto range { 35.f };
+    const auto range { 18.f };
     // TODO: Here a strange mess of durations needed to be fixed
     // The projectile need to be created only when the attack-animation ends
     const auto preparationTime { 0.4f };

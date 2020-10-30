@@ -165,7 +165,7 @@ void Legs::OnAttack() {
     // push projectile
     m_modifier(body);
     const auto sprite = proj->AddImage("old_man/library/stone.png");
-    sprite->setScale(0.3f);
+    sprite->setScale(0.15f);
     sprite->setAnchorPoint({0.f, 0.f});
     
     proj->SetLifetime(5.f);
