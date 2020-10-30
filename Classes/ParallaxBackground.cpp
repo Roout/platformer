@@ -35,10 +35,12 @@ bool Background::init() {
         cocos2d::Vec2 offset;
     };
 
-    const std::array<ParallaxLayer, 3U> layers = {
-          ParallaxLayer{ 1.f, "Map/back/sky.png", 0, {0.f, 0.f}, {0.f, 600.f} }
-        , ParallaxLayer{ 1.f, "Map/back/1.png", 2, {0.3f, 0.2f}, {0.f, -100.f} } // trees
-        , ParallaxLayer{ 1.f, "Map/back/2.png", 1, {0.4f, 0.1f}, {0.f, 0.f} } // mountains
+    const std::array<ParallaxLayer, 5U> layers = {
+          ParallaxLayer{ 1.f, "Map/back/sky.png",   0, {0.f, 0.f},      {0.f, 600.f} }
+        , ParallaxLayer{ 1.f, "Map/back/sky-0.png", 1, {0.1f, 0.15f},   {0.f, -60.f} }  // clouds
+        , ParallaxLayer{ 1.f, "Map/back/2.png",     2, {0.4f, 0.1f},    {0.f, 0.f} }    // mountains
+        , ParallaxLayer{ 1.f, "Map/back/sky-1.png", 3, {0.25f, 0.1f},   {0.f, -80.f} }  // cloud
+        , ParallaxLayer{ 1.f, "Map/back/1.png",     4, {0.3f, 0.2f},    {0.f, -100.f} } // trees
     };
 
     for(auto& layer: layers) {
