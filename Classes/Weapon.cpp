@@ -100,7 +100,7 @@ void Bow::OnAttack() {
     proj->setContentSize(projectile.size);
     // push projectile
     m_modifier(body);
-    const auto scaleFactor { 0.4f };
+    const auto scaleFactor { 0.2f };
     const auto sprite = proj->AddImage("archer/library/arrow.png");
     sprite->setAnchorPoint({0.0f, 0.0f});
     sprite->setScale(scaleFactor);
@@ -165,7 +165,7 @@ void Legs::OnAttack() {
     // push projectile
     m_modifier(body);
     const auto sprite = proj->AddImage("old_man/library/stone.png");
-    sprite->setScale(0.3f);
+    sprite->setScale(0.15f);
     sprite->setAnchorPoint({0.f, 0.f});
     
     proj->SetLifetime(5.f);
@@ -176,7 +176,7 @@ void Fireball::OnAttack() {
     const auto runningScene { cocos2d::Director::getInstance()->getRunningScene() };
     const auto level = runningScene->getChildByName("Level");
     const auto map = level->getChildByName("Map");
-    const auto scaleFactor { 0.5f };
+    const auto scaleFactor { 0.2f };
     
     const auto proj = Projectile::create(this->GetDamage());
     proj->AddAnimator("fireball");

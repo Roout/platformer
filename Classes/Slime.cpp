@@ -26,15 +26,15 @@ bool Slime::init() {
     if (!Bot::init()) {
         return false; 
     }
-    m_movement->SetMaxSpeed(100.f);
+    m_movement->SetMaxSpeed(80.f);
     return true;
 }
 
 Slime::Slime(size_t id, const char * name) :
     Bot{ id, name }
 {
-    m_contentSize = cocos2d::Size{ 80.f, 50.f };
-    m_physicsBodySize = cocos2d::Size{ 80.f, 50.f };
+    m_contentSize = cocos2d::Size{ 70.f, 45.f };
+    m_physicsBodySize = cocos2d::Size{ 70.f, 45.f };
     m_hitBoxSize = m_physicsBodySize;
 }
 
@@ -190,7 +190,7 @@ void Slime::AddAnimator() {
 
 void Slime::AddWeapons() {
     const auto damage { 15.f };
-    const auto range { 130.f };
+    const auto range { 110.f };
     const auto duration { m_animator->GetDuration(Utils::EnumCast(State::ATTACK)) };
     const auto preparationTime { duration * 0.6f }; /// TODO: update animation!
     const auto attackDuration { duration - preparationTime };
@@ -222,7 +222,7 @@ void Slime::Attack() {
             return { position, fireballSize };
         };
         auto pushProjectile = [this](cocos2d::PhysicsBody* body) {
-            body->setVelocity({ this->IsLookingLeft()? -750.f: 750.f, 0.f });
+            body->setVelocity({ this->IsLookingLeft()? -450.f: 450.f, 0.f });
         };
         m_weapons[WeaponClass::RANGE]->LaunchAttack(
             std::move(projectilePosition), 

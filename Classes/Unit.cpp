@@ -48,9 +48,9 @@ bool Unit::init() {
     this->addChild(bar);
 
     // add state lable:
-    const auto state = cocos2d::Label::createWithTTF("state", "fonts/arial.ttf", 25);
+    const auto state = cocos2d::Label::createWithTTF("state", "fonts/arial.ttf", 15);
     state->setName("state");
-    state->setPosition(0.f, bar->getPositionY() + bar->getContentSize().height + 15.f);
+    state->setPosition(0.f, bar->getPositionY() + bar->getContentSize().height + 8.f);
     this->addChild(state);
     
     return true;
@@ -192,7 +192,7 @@ void Unit::AddAnimator() {
     std::string chachedArmatureName = m_dragonBonesName;
     m_animator = dragonBones::Animator::create(std::move(chachedArmatureName));
     this->addChild(m_animator);
-    m_animator->setScale(0.2f); // TODO: introduce multi-resolution scaling
+    m_animator->setScale(0.1f); // TODO: introduce multi-resolution scaling
 }
 
 void Unit::AddWeapons() {};

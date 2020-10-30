@@ -25,8 +25,8 @@ Archer* Archer::create(size_t id) {
 Archer::Archer(size_t id) :
     Bot{ id, core::EntityNames::ARCHER }
 {
-    m_contentSize = cocos2d::Size{ 80.f, 135.f };
-    m_physicsBodySize = cocos2d::Size{ 70.f, 135.f };
+    m_contentSize = cocos2d::Size{ 40.f, 68.f };
+    m_physicsBodySize = cocos2d::Size{ 35.f, 68.f };
     m_hitBoxSize = m_physicsBodySize;
 }
 
@@ -152,7 +152,7 @@ void Archer::AddAnimator() {
 
 void Archer::AddWeapons() {
     const auto damage { 5.f };
-    const auto range { 100.f };
+    const auto range { 50.f };
     // TODO: Here a strange mess of durations needed to be fixed
     // The projectile need to be created only when the attack-animation ends
     const auto preparationTime { m_animator->GetDuration(Utils::EnumCast(State::ATTACK)) }; /// TODO: update animation!
@@ -185,11 +185,7 @@ void Archer::Attack() {
             return {position, arrowSize};
         };
         auto pushProjectile = [this](cocos2d::PhysicsBody* body) {
-            cocos2d::Vec2 velocity { 600.f, 0.f };
-            if (this->IsLookingLeft()) {
-                velocity.x *= -1.f;
-            }
-            body->setVelocity(velocity);
+            body->setVelocity({ this->IsLookingLeft()? -300.f: 300.f, 0.f });
         };
         m_weapons[WeaponClass::RANGE]->LaunchAttack(
             std::move(projectilePosition), 
