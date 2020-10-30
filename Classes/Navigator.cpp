@@ -63,7 +63,7 @@ std::pair<bool, bool> Navigator::ReachedDestination() const noexcept {
     if(m_isFollowingPath) {
         destination = m_path.m_waypoints[m_choosenWaypointIndex];
     }
-    constexpr auto checkPrecision { 8.f };
+    constexpr auto checkPrecision { 4.f };
     const auto reachedX = fabs(destination.x - m_owner->getPosition().x) <= checkPrecision;
     const auto reachedY = fabs(destination.y - m_owner->getPosition().y) <= checkPrecision;
     return { reachedX, reachedY };
