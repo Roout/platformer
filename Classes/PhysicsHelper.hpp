@@ -23,6 +23,11 @@ namespace helper {
         return !IsEqual(a, b, eps) && a < b;
     }
 
+    // Return the indication whether the `value` belongs to the interval [`left`, `right`] or not.
+    constexpr bool IsBetween(const float value, const float left, const float right) noexcept {
+        return value >= left && value <= right;
+    }
+
 
     constexpr bool HaveSameSigns(const float a, const float b) noexcept {
         constexpr float EPS { 0.00001f };

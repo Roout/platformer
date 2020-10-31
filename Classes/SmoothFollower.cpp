@@ -1,6 +1,7 @@
 #include "SmoothFollower.hpp"
 #include "PhysicsHelper.hpp"
 #include "Unit.hpp"
+#include "cocos2d.h"
 
 #include <cmath>
 
@@ -15,7 +16,17 @@ SmoothFollower::SmoothFollower( Unit * const unit ) :
  */
 void SmoothFollower::UpdateMapPosition(const float dt) {
     const auto tileMap { m_unit->getParent() };
+    const auto mapSize { tileMap->getContentSize() };
     const auto currentNodePos { tileMap->getPosition() };
+
+    const auto visible = cocos2d::Director::getInstance()->getVisibleSize();
+    const auto origin = cocos2d::Director::getInstance()->getVisibleOrigin();
+    
+    const cocos2d::Rect bounds { 
+        visible - mapSize + cocos2d::Size{ origin.x, origin.y }, 
+        mapSize - visible - cocos2d::Size{ origin.x, origin.y }
+    };
+    const cocos2d::Vec2 before { this->x, this->y };
 
     auto target { m_unit->getPosition() };
 
@@ -31,16 +42,31 @@ void SmoothFollower::UpdateMapPosition(const float dt) {
     // *this * (1.f - alpha) + other * alpha;
     // a * (1 - x) + b * x = a - ax + bx = x(b - a) + a
     const auto pos = this->lerp(target, alpha) + shift;
+    auto delta = m_delta;
+    
     if (pos.fuzzyEquals(target, eps)) {
         m_delta = target - *this;
-        x = target.x, y = target.y;
+        x = target.x; 
+        y = target.y;
     } 
     else {
         m_delta = pos - *this;
-        x = pos.x, y = pos.y;
+        x = pos.x; 
+        y = pos.y;
+    }
+    auto newPosition { currentNodePos - m_delta };
+    if(!helper::IsBetween(newPosition.x, bounds.getMinX(), bounds.getMaxX())) {
+        newPosition.x = currentNodePos.x;
+        m_delta.x = 0.f;
+        x = before.x;
+    }
+    if(!helper::IsBetween(newPosition.y, bounds.getMinY(), bounds.getMaxY())) {
+        newPosition.y = currentNodePos.y;
+        m_delta.y = 0.f;
+        y = before.y;
     }
 
-    tileMap->setPosition(currentNodePos - m_delta);
+    tileMap->setPosition(newPosition);
 }
 
 void SmoothFollower::Reset() {
