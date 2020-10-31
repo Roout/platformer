@@ -19,6 +19,17 @@ public:
      */
     void Reset();
     
+    /**
+     * Input: TileMap: { width, height }
+     * 
+     * Algorithm:
+     * - define the rectangle in global coordinates where the camera can move
+     * - stop the movement along the axis whenever it want to go out of bounds along this axis! 
+     * 
+     * @return indicator whether the camera can move or not
+     */
+    // bool CanMove()
+
 private:
     Unit * const m_unit { nullptr };
 
