@@ -226,7 +226,7 @@ void SlimeShot::OnAttack() {
     const auto runningScene { cocos2d::Director::getInstance()->getRunningScene() };
     const auto level = runningScene->getChildByName("Level");
     const auto map = level->getChildByName("Map");
-    const auto scaleFactor { 0.3f };
+    const auto scaleFactor { 0.2f };
     
     const auto proj = Projectile::create(this->GetDamage());
     proj->AddAnimator("slime_attack");
@@ -236,7 +236,7 @@ void SlimeShot::OnAttack() {
     const auto body = cocos2d::PhysicsBody::createBox(
         projectile.size
         , cocos2d::PhysicsMaterial{ 1.f, 0.0f, 0.0f }
-        , { -projectile.size.width / 2.f, 0.f }
+        , { -projectile.size.width / 2.f, projectile.size.height }
     );
     body->setDynamic(true);
     body->setGravityEnable(false);

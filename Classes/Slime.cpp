@@ -175,7 +175,7 @@ bool Slime::NeedAttack() const noexcept {
 
 void Slime::AddAnimator() {
     Unit::AddAnimator();
-    m_animator->setScale(0.4f); // TODO: introduce multi-resolution scaling
+    m_animator->setScale(0.35f); // TODO: introduce multi-resolution scaling
     m_animator->InitializeAnimations({
         /// TODO: mismatch, update animation!
         std::make_pair(Utils::EnumCast(State::PREPARE_ATTACK),  GetStateName(State::ATTACK)),
@@ -190,7 +190,7 @@ void Slime::AddAnimator() {
 
 void Slime::AddWeapons() {
     const auto damage { 15.f };
-    const auto range { 110.f };
+    const auto range { 120.f };
     const auto duration { m_animator->GetDuration(Utils::EnumCast(State::ATTACK)) };
     const auto preparationTime { duration * 0.6f }; /// TODO: update animation!
     const auto attackDuration { duration - preparationTime };
@@ -208,7 +208,7 @@ void Slime::Attack() {
     if(m_weapons[WeaponClass::RANGE]->IsReady() && !this->IsDead()) {
         auto projectilePosition = [this]() -> cocos2d::Rect {
             const auto attackRange { m_weapons[WeaponClass::RANGE]->GetRange() };
-            const cocos2d::Size fireballSize { attackRange, floorf(attackRange * 0.8f) };
+            const cocos2d::Size waterballSize { attackRange, floorf(attackRange * 0.8f) };
 
             auto position = this->getPosition();
             if (this->IsLookingLeft()) {
@@ -219,7 +219,7 @@ void Slime::Attack() {
             }
             position.y += floorf(m_contentSize.height * 0.3f);
 
-            return { position, fireballSize };
+            return { position, waterballSize };
         };
         auto pushProjectile = [this](cocos2d::PhysicsBody* body) {
             body->setVelocity({ this->IsLookingLeft()? -450.f: 450.f, 0.f });
