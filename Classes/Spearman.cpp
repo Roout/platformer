@@ -65,7 +65,7 @@ void Spearman::Attack() {
             else {
                 position.x += m_contentSize.width / 2.f;
             }
-            position.y += m_contentSize.height / 2.f - spearSize.height / 2.f;
+            position.y += m_contentSize.height / 3.f - spearSize.height / 2.f;
 
             return { position, spearSize };
         };
