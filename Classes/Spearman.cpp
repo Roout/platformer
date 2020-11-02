@@ -40,8 +40,8 @@ Spearman::Spearman(size_t id, const char * name) :
 void Spearman::AddWeapons() {
     const auto damage { 10.f };
     const auto range { 50.f };
-    const auto preparationTime { 0.f };
-    const auto attackDuration { m_animator->GetDuration(Utils::EnumCast(State::ATTACK)) };
+    const auto attackDuration { 0.2f };
+    const auto preparationTime { m_animator->GetDuration(Utils::EnumCast(State::ATTACK)) - attackDuration };
     const auto reloadTime { 1.4f };
     m_weapons[WeaponClass::MELEE] = new Spear(
         damage, 
