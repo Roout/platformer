@@ -132,6 +132,9 @@ void Warrior::UpdateState(const float dt) noexcept {
 
     if( m_health <= 0 ) {
         m_currentState = State::DEAD;
+    } 
+    else if( m_weapons[WeaponClass::MELEE]->IsPreparing() ) {
+        m_currentState = State::ATTACK;
     }
     else if( m_weapons[WeaponClass::MELEE]->IsAttacking() ) {
         m_currentState = State::ATTACK;
@@ -241,8 +244,8 @@ void Warrior::AddAnimator() {
 void Warrior::AddWeapons() {
     const auto damage { 2.f };
     const auto range { 30.f };
-    const auto preparationTime { 0.f };
-    const auto attackDuration { m_animator->GetDuration(Utils::EnumCast(State::ATTACK)) };
+    const auto attackDuration { 0.15f };
+    const auto preparationTime { m_animator->GetDuration(Utils::EnumCast(State::ATTACK)) - attackDuration };
     const auto reloadTime { 0.5f };
     m_weapons[WeaponClass::MELEE] = new Axe(
         damage, 
