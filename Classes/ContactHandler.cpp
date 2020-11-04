@@ -9,7 +9,7 @@
 #include "Player.hpp"
 #include "PhysicsHelper.hpp"
 #include "Traps.hpp"
-#include "Barrel.hpp"
+#include "Props.hpp"
 #include "Projectile.hpp"
 #include "CurseHub.hpp"
 
@@ -144,9 +144,9 @@ bool OnContactBegin(cocos2d::PhysicsContact& contact) {
                 proj->GetDamage()
             );
         } 
-        else if( bodyMasks[projectileIndex ^ 1] == Utils::CreateMask(core::CategoryBits::BARREL)) {
-            const auto barrel { static_cast<Barrel*>(nodes[projectileIndex^1]) };
-            barrel->Explode();
+        else if( bodyMasks[projectileIndex ^ 1] == Utils::CreateMask(core::CategoryBits::PROPS)) {
+            const auto prop { static_cast<props::Prop*>(nodes[projectileIndex^1]) };
+            prop->Explode();
         }
 
         // destroy projectile
