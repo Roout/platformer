@@ -45,6 +45,7 @@ private:
     // level id. Used to load a map
     const int m_id { -1 }; 
 
+    std::string m_tmxFile;
 };
 
 #endif // LEVEL_SCENE_HPP

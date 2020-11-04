@@ -44,7 +44,7 @@ class TileMapParser final {
 public:
     using CategoryName = core::CategoryName;
 
-    TileMapParser(const cocos2d::FastTMXTiledMap * tilemap);
+    TileMapParser(const cocos2d::FastTMXTiledMap * tilemap, const std::string& tmxFile);
 
     ~TileMapParser();
 
@@ -83,7 +83,9 @@ private:
     }
 
     const cocos2d::FastTMXTiledMap * const m_tileMap { nullptr };
-    
+
+    const std::string m_tmxFile;
+
     std::unique_ptr<const TileMap::Cache> m_tileMapCache;
 
     std::array<

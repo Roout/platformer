@@ -341,8 +341,9 @@ private:
 	};
 };
 
-TileMapParser::TileMapParser(const cocos2d::FastTMXTiledMap * tileMap)
+TileMapParser::TileMapParser(const cocos2d::FastTMXTiledMap * tileMap, const std::string& tmxFile)
 	: m_tileMap{ tileMap }
+	, m_tmxFile{ tmxFile }
 	, m_tileMapCache{ std::make_unique<TileMap::Cache>(m_tileMap) }
 {
     this->Get<CategoryName::PLATFORM>().reserve(20);
