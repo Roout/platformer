@@ -20,10 +20,11 @@ namespace details {
     
     struct Form final {
         core::CategoryName  m_type { core::CategoryName::UNDEFINED };
-        core::EnemyClass    m_enemyClass { core::EnemyClass::UNDEFINED };
-        size_t              m_id { 0 };
-        size_t              m_pathId { 0 };
-        size_t              m_ownerId { 0 };
+        size_t  m_subType { 0u };
+        size_t  m_id { 0u };
+        size_t  m_pathId { 0u };
+        size_t  m_ownerId { 0u };
+        float   m_scale { 0.f };
         /**
          * Front point always defines a position
          * If it's a Polygon than it contains all points of the figure
@@ -32,7 +33,7 @@ namespace details {
         /**
          * Define rect object 
          */
-        cocos2d::Rect       m_rect;
+        cocos2d::Rect m_rect;
     };
 }
 

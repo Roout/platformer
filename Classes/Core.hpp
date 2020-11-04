@@ -16,7 +16,7 @@ namespace core {
         
         PLATFORM,
         BORDER,
-        BARREL,
+        PROPS,
         PLAYER,
         ENEMY,
         SPIKES,
@@ -64,8 +64,8 @@ namespace core {
         else if(str == "player") {
             category = CategoryName::PLAYER;
         } 
-        else if(str == "barrel") {
-            category = CategoryName::BARREL;
+        else if(str == "props") {
+            category = CategoryName::PROPS;
         } 
         else if(str == "enemy") {
             category = CategoryName::ENEMY;
@@ -88,7 +88,7 @@ namespace core {
         PLAYER_PROJECTILE   = 0x0010,
         PLATFORM            = 0x0020,
         TRAP                = 0x0040,
-        BARREL              = 0x0080,
+        PROPS               = 0x0080,
         GROUND_SENSOR       = 0x0100,
         HITBOX_SENSOR       = 0x0200
     };

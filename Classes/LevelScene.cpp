@@ -11,7 +11,7 @@
 #include "Player.hpp"
 
 #include "Platform.hpp"
-#include "Barrel.hpp"
+#include "Props.hpp"
 #include "Traps.hpp"
 
 #include "PhysicsHelper.hpp"
@@ -254,11 +254,15 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                 trap->setPosition(form.m_rect.origin + form.m_rect.size / 2.f);
                 map->addChild(trap);
             }
-            else if(form.m_type == core::CategoryName::BARREL) {
-                const auto barrel { Barrel::create() };
-                barrel->setPosition(form.m_points.front());
-                barrel->setAnchorPoint(cocos2d::Vec2::ANCHOR_BOTTOM_LEFT);
-                map->addChild(barrel);
+            else if(form.m_type == core::CategoryName::PROPS) {
+                const auto prop = props::Prop::create(
+                        Utils::EnumCast<props::Name>(form.m_subType)
+                        , form.m_rect.size
+                        , form.m_scale
+                );
+                prop->setAnchorPoint({0.5f, 0.f});
+                prop->setPosition(form.m_rect.origin + prop->getContentSize());
+                map->addChild(prop);
             }
             else if(form.m_type == core::CategoryName::PATH) {
                 Path path{};
@@ -268,7 +272,7 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
             }
             else if(form.m_type == core::CategoryName::ENEMY) {
                 const auto zOrder { 10 };
-                switch(form.m_enemyClass) {
+                switch(Utils::EnumCast<core::EnemyClass>(form.m_subType)) {
                     case core::EnemyClass::WARRIOR: {
                         const auto warrior { Enemies::Warrior::create(form.m_id) };
                         warrior->setName(core::EntityNames::WARRIOR);

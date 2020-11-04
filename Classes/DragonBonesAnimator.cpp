@@ -7,8 +7,8 @@
 
 namespace dragonBones {
 
-    Animator * Animator::create(std::string&& armatureCacheName) {
-        auto pRet = new (std::nothrow) Animator(std::move(armatureCacheName));
+    Animator * Animator::create(std::string&& prefix, std::string&& armatureCacheName) {
+        auto pRet = new (std::nothrow) Animator(std::move(prefix), std::move(armatureCacheName));
         if(pRet && pRet->init()) {
             pRet->autorelease();
         }
@@ -24,7 +24,7 @@ namespace dragonBones {
             return false;
         }
         this->scheduleUpdate();
-        m_armatureDisplay = BuildArmatureDisplay(m_armatureName); 
+        m_armatureDisplay = BuildArmatureDisplay(); 
         this->addChild(m_armatureDisplay);
         return true;
     }
@@ -94,20 +94,22 @@ namespace dragonBones {
     }
 
 
-    Animator::Animator(std::string&& armatureCacheName) noexcept 
+    Animator::Animator(std::string&& prefix, std::string&& armatureCacheName) noexcept 
         : m_armatureName { std::move(armatureCacheName) }
+        , m_prefix{ std::move(prefix) }
     {
     }
 
-    CCArmatureDisplay* Animator::BuildArmatureDisplay(const std::string& cacheName) const {
+    CCArmatureDisplay* Animator::BuildArmatureDisplay() const {
         const auto factory = CCFactory::getFactory();
-        if(const auto bonesData = factory->getDragonBonesData(cacheName); bonesData == nullptr) {
-            factory->loadDragonBonesData(cacheName + "/" + cacheName + "_ske.json");
+        std::string path = m_prefix.empty()? "" : m_prefix + "/";
+        if(const auto bonesData = factory->getDragonBonesData(m_armatureName); bonesData == nullptr) {    
+            factory->loadDragonBonesData( path + m_armatureName + "/" + m_armatureName + "_ske.json");
         }
-        if(const auto texture = factory->getTextureAtlasData(cacheName); texture == nullptr) {
-            factory->loadTextureAtlasData(cacheName + "/" + cacheName + "_tex.json");
+        if(const auto texture = factory->getTextureAtlasData(m_armatureName); texture == nullptr) {
+            factory->loadTextureAtlasData( path + m_armatureName + "/" + m_armatureName + "_tex.json");
         }
-        return factory->buildArmatureDisplay("Armature", cacheName);
+        return factory->buildArmatureDisplay("Armature", m_armatureName);
     }
 
 }

@@ -22,7 +22,7 @@ void Sword::OnAttack() {
     m_modifier(body);
     const auto testMask {
         Utils::CreateMask(
-            core::CategoryBits::BARREL
+            core::CategoryBits::PROPS
             , core::CategoryBits::BOUNDARY
             , core::CategoryBits::ENEMY_PROJECTILE 
             , core::CategoryBits::HITBOX_SENSOR 
@@ -49,7 +49,7 @@ void Axe::OnAttack() {
     const auto testMask {
         Utils::CreateMask(
             core::CategoryBits::HITBOX_SENSOR
-            , core::CategoryBits::BARREL
+            , core::CategoryBits::PROPS
             , core::CategoryBits::BOUNDARY
             , core::CategoryBits::PLAYER_PROJECTILE 
         )
@@ -75,7 +75,7 @@ void Spear::OnAttack() {
     const auto testMask {
         Utils::CreateMask(
             core::CategoryBits::HITBOX_SENSOR
-            , core::CategoryBits::BARREL
+            , core::CategoryBits::PROPS
             , core::CategoryBits::BOUNDARY
             , core::CategoryBits::PLAYER_PROJECTILE 
         )
@@ -111,7 +111,7 @@ void Bow::OnAttack() {
     const auto testMask {
         Utils::CreateMask(
             core::CategoryBits::HITBOX_SENSOR
-            , core::CategoryBits::BARREL
+            , core::CategoryBits::PROPS
             , core::CategoryBits::BOUNDARY
             , core::CategoryBits::PLAYER_PROJECTILE
             , core::CategoryBits::PLATFORM
@@ -155,7 +155,7 @@ void Legs::OnAttack() {
     body->setContactTestBitmask(
         Utils::CreateMask(
             core::CategoryBits::HITBOX_SENSOR
-            , core::CategoryBits::BARREL
+            , core::CategoryBits::PROPS
             , core::CategoryBits::PLAYER_PROJECTILE
         )
     );
@@ -204,7 +204,7 @@ void Fireball::OnAttack() {
     const auto testMask {
         Utils::CreateMask(
             core::CategoryBits::HITBOX_SENSOR
-            , core::CategoryBits::BARREL
+            , core::CategoryBits::PROPS
             , core::CategoryBits::BOUNDARY
             , core::CategoryBits::ENEMY_PROJECTILE
             , core::CategoryBits::PLATFORM
@@ -254,7 +254,7 @@ void SlimeShot::OnAttack() {
     const auto testMask {
         Utils::CreateMask(
             core::CategoryBits::HITBOX_SENSOR
-            , core::CategoryBits::BARREL
+            , core::CategoryBits::PROPS
             , core::CategoryBits::BOUNDARY
             , core::CategoryBits::PLAYER_PROJECTILE
             , core::CategoryBits::PLATFORM
