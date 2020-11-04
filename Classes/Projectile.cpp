@@ -98,7 +98,7 @@ void Projectile::UpdateAnimation() {
 }
 
 void Projectile::AddAnimator(std::string chachedArmatureName) {
-    m_animator = dragonBones::Animator::create(std::move(chachedArmatureName));
+    m_animator = dragonBones::Animator::create("", std::move(chachedArmatureName));
     m_animator->InitializeAnimations({
         std::make_pair(Utils::EnumCast(State::IDLE), "walk"),       // sorry the illustrator is a little bit of an idiot
         std::make_pair(Utils::EnumCast(State::EXPLODED), "attack")  // sorry the illustrator is a little bit of an idiot

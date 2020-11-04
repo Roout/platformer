@@ -29,7 +29,7 @@ namespace dragonBones {
     public:
         static constexpr int INFINITY_LOOP { 0 };
 
-        static Animator * create(std::string&& armatureCacheName);
+        static Animator * create(std::string&& armatureCacheName, std::string&& prefix);
 
         bool init() override;
 
@@ -57,9 +57,9 @@ namespace dragonBones {
 
     private:
 
-        Animator(std::string&& armatureCacheName) noexcept;
+        Animator(std::string&& armatureCacheName, std::string&& prefix) noexcept;
 
-        CCArmatureDisplay* BuildArmatureDisplay(const std::string& cacheName) const;
+        CCArmatureDisplay* BuildArmatureDisplay() const;
 
     private:
         static constexpr std::size_t NONE { std::numeric_limits<std::size_t>::max() };
@@ -70,6 +70,7 @@ namespace dragonBones {
         std::optional<std::function<void()>> m_completionHandler {};
 
         std::string m_armatureName;
+        std::string m_prefix;
         std::unordered_map<std::size_t, std::string> m_animations {};
     };
 }

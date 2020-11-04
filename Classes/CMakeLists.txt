@@ -32,13 +32,13 @@ list(APPEND headers
     UserInputHandler.hpp
     TileMapParser.hpp
     TileMapHelper.hpp
+    Props.hpp
     ParallaxBackground.hpp
     Weapon.hpp
     Core.hpp
     Utils.hpp
     Projectile.hpp
     Platform.hpp
-    Barrel.hpp
     SizeDeducer.hpp
     SmoothFollower.hpp
     HealthBar.hpp
@@ -72,12 +72,12 @@ list(APPEND sources
     UserInputHandler.cpp
     TileMapParser.cpp
     TileMapHelper.cpp
+    Props.cpp
     ParallaxBackground.cpp
     Weapon.cpp
     HealthBar.cpp
     Curses.cpp
     CurseHub.cpp
-    Barrel.cpp
     Projectile.cpp
 )
 

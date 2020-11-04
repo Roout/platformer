@@ -4,6 +4,8 @@
 #include "Utils.hpp"
 #include "TileMapHelper.hpp"
 #include "PhysicsHelper.hpp"
+#include "Props.hpp"
+
 #include <list>
 #include <optional>
 #include <functional>
@@ -12,6 +14,7 @@
 #include <cstdint>
 
 namespace {
+
 	core::EnemyClass AsEnemyClass(const std::string& ty) noexcept {
 		auto type { core::EnemyClass::UNDEFINED };
 		if( ty == core::EntityNames::WARRIOR ) {
@@ -344,7 +347,7 @@ TileMapParser::TileMapParser(const cocos2d::FastTMXTiledMap * tileMap)
 {
     this->Get<CategoryName::PLATFORM>().reserve(20);
 	this->Get<CategoryName::BORDER>().reserve(100);
-	this->Get<CategoryName::BARREL>().reserve(10);
+	this->Get<CategoryName::PROPS>().reserve(20);
 	this->Get<CategoryName::ENEMY>().reserve(30);
 	this->Get<CategoryName::PATH>().reserve(30);
 	this->Get<CategoryName::INFLUENCE>().reserve(30);
@@ -442,7 +445,7 @@ void TileMapParser::ParseUnits() {
 			else if(name == "enemy") {
 				form.m_type = CategoryName::ENEMY;
 				form.m_pathId = objMap.at("path-id").asUnsignedInt();
-				form.m_enemyClass = ::AsEnemyClass(type);
+				form.m_subType = Utils::EnumCast(::AsEnemyClass(type));
 				this->Get<CategoryName::ENEMY>().emplace_back(form);
 			}
 		}
@@ -455,19 +458,21 @@ void TileMapParser::ParseProps() {
 		const auto& allObjects = group->getObjects();
 		for (const auto& object : allObjects) {
 			const auto& objMap = object.asValueMap();
-			const auto type = objMap.at("type").asString();
 			const auto name = objMap.at("name").asString();
+			const auto origin_width = objMap.at("origin_width").asFloat();
+			const auto width = objMap.at("width").asFloat();
+			const auto height = objMap.at("height").asFloat();
 			const auto x = objMap.at("x").asFloat();
 			const auto y = objMap.at("y").asFloat();
 
 			details::Form form;
-			form.m_points.emplace_back(x, y);
 			form.m_id = objMap.at("id").asUnsignedInt();
-
-			if(name == "barrel") {
-				form.m_type = CategoryName::BARREL;
-				this->Get<CategoryName::BARREL>().emplace_back(form);
-			}
+			form.m_subType = Utils::EnumCast(props::GetPropName(name));
+			form.m_rect.origin = cocos2d::Vec2{ x, y };
+			form.m_scale = width / origin_width;
+			form.m_rect.size = cocos2d::Size{ origin_width, height * (origin_width / width) };
+			form.m_type = CategoryName::PROPS;
+			this->Get<CategoryName::PROPS>().emplace_back(form);
 		}
 	}
 }
