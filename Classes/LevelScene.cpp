@@ -71,8 +71,9 @@ bool LevelScene::init() {
     this->setName("Level");
 	this->scheduleUpdate();
 
-    const auto tmxFile { cocos2d::StringUtils::format("Map/level_%d.tmx", m_id) };
-    const auto tileMap { cocos2d::FastTMXTiledMap::create(tmxFile) };
+    m_tmxFile = cocos2d::StringUtils::format("Map/level_%d.tmx", m_id);
+    	
+    const auto tileMap { cocos2d::FastTMXTiledMap::create(m_tmxFile) };
     tileMap->setName("Map");
     this->addChild(tileMap);
 
@@ -182,7 +183,7 @@ void LevelScene::menuCloseCallback(cocos2d::Ref* pSender) {
 void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
 
     if(!m_parser) {
-        m_parser = std::make_unique<TileMapParser>(map);
+        m_parser = std::make_unique<TileMapParser>(map, m_tmxFile);
         m_parser->Parse();
     }
 

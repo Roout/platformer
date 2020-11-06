@@ -6,6 +6,9 @@
 #include "PhysicsHelper.hpp"
 #include "Props.hpp"
 
+#include <string_view>
+#include <charconv> // std::from_chars
+#include <algorithm>
 #include <list>
 #include <optional>
 #include <functional>
@@ -341,8 +344,9 @@ private:
 	};
 };
 
-TileMapParser::TileMapParser(const cocos2d::FastTMXTiledMap * tileMap)
+TileMapParser::TileMapParser(const cocos2d::FastTMXTiledMap * tileMap, const std::string& tmxFile)
 	: m_tileMap{ tileMap }
+	, m_tmxFile{ tmxFile }
 	, m_tileMapCache{ std::make_unique<TileMap::Cache>(m_tileMap) }
 {
     this->Get<CategoryName::PLATFORM>().reserve(20);
@@ -357,6 +361,7 @@ TileMapParser::TileMapParser(const cocos2d::FastTMXTiledMap * tileMap)
 TileMapParser::~TileMapParser() = default;
 
 void TileMapParser::Parse() {
+	this->ParseTileSets();
     this->ParseUnits();
     this->ParseProps();
     this->ParsePaths();
@@ -452,6 +457,86 @@ void TileMapParser::ParseUnits() {
 	}
 }
 
+void TileMapParser::ParseTileSets() {
+	auto fileUtils = cocos2d::FileUtils::getInstance();
+	assert(fileUtils->isFileExist(m_tmxFile) && "Can't find tmxFile"); 
+	auto data = fileUtils->getDataFromFile(m_tmxFile);
+	assert(!data.isNull() && "No data has being read!");
+	// Parsing:
+	std::string_view view { 
+		reinterpret_cast<char*>(data.getBytes()), 
+		static_cast<size_t>(data.getSize()) 
+	};
+	const std::string_view openTileSet = "<tileset";
+	const std::string_view closeTileSet = "</tileset";
+	const std::string_view openProperties = "<properties";
+	const std::string_view closeProperties = "</properties>";
+	/**
+	 * Expected structure:
+	 * <tileset field0="value" field1="value" ... >
+	 * 	<properties>
+	 * 		<property field0="value" field1="value" ... />
+	 * 	</properties>
+	 * </tileset>
+	*/
+	auto indx = view.find(openTileSet, 0u); 
+	struct Pair {
+		std::string_view field;
+		std::string_view value;
+
+		Pair(std::string_view f, std::string_view v) 
+			: field(f)
+			, value(v)
+		{}
+	};
+	std::vector<std::vector<Pair>> parsed;
+	while(indx != std::string_view::npos) {
+		parsed.emplace_back();
+		view.remove_prefix(indx);
+		auto tagEnd = view.find_first_of(">");
+		assert(tagEnd != std::string_view::npos && "Logic error or text format: can't find closing `>`!");
+		
+		std::string_view substr{ view.data(), tagEnd };
+		// extract field-value pairs
+		for(size_t i = 0; i < substr.size(); i++) {
+			if(substr[i] == ' ') {
+				while(i < substr.size() && substr[i] == ' ') i++;
+				if(i >= substr.size()) break;
+				
+				auto equal = substr.find_first_of("=", i);
+				assert(equal != std::string_view::npos && "Absent `=`");
+				
+				auto field = substr.substr(i, equal - i);
+				auto valueBegin = equal + 2;
+				auto valueEnd = substr.find_first_of("\"", valueBegin);
+				auto value = substr.substr(valueBegin, valueEnd - valueBegin);
+				parsed.back().emplace_back(field, value);
+			}
+		} 
+		indx = view.find(openTileSet, 1u);
+	}
+	// Fill tileSets info
+	using namespace std::string_view_literals;
+	for(const auto& set: parsed) {
+		details::TileSet tileset{};
+		for(const auto& pair: set) {
+			if(pair.field == "firstgid"sv) {
+				std::from_chars(pair.value.data(), pair.value.data() + pair.value.size(), tileset.firstgid);	
+			}
+			else if(pair.field == "name"sv) {
+				tileset.name = pair.value;
+			}
+			else if(pair.field == "tilewidth"sv) {
+				std::from_chars(pair.value.data(), pair.value.data() + pair.value.size(), tileset.tilewidth);
+			}
+			else if(pair.field == "tileheight"sv) {
+				std::from_chars(pair.value.data(), pair.value.data() + pair.value.size(), tileset.tileheight);
+			}
+		}
+		m_tileSets.emplace(tileset.firstgid, std::move(tileset));
+	}
+}
+
 void TileMapParser::ParseProps() {
 	const auto group = m_tileMap->getObjectGroup("props");
 	if (group) {
@@ -459,7 +544,10 @@ void TileMapParser::ParseProps() {
 		for (const auto& object : allObjects) {
 			const auto& objMap = object.asValueMap();
 			const auto name = objMap.at("name").asString();
-			const auto origin_width = objMap.at("origin_width").asFloat();
+			const auto gid = objMap.at("gid").asUnsignedInt();
+			assert(m_tileSets.at(gid).name == name && "Wrong GID");
+			auto origin_width  = static_cast<float>(m_tileSets.at(gid).tilewidth);
+			auto origin_height = static_cast<float>(m_tileSets.at(gid).tileheight);
 			const auto width = objMap.at("width").asFloat();
 			const auto height = objMap.at("height").asFloat();
 			const auto x = objMap.at("x").asFloat();
@@ -470,7 +558,7 @@ void TileMapParser::ParseProps() {
 			form.m_subType = Utils::EnumCast(props::GetPropName(name));
 			form.m_rect.origin = cocos2d::Vec2{ x, y };
 			form.m_scale = width / origin_width;
-			form.m_rect.size = cocos2d::Size{ origin_width, height * (origin_width / width) };
+			form.m_rect.size = cocos2d::Size{ origin_width, origin_height };
 			form.m_type = CategoryName::PROPS;
 			this->Get<CategoryName::PROPS>().emplace_back(form);
 		}
