@@ -2,8 +2,10 @@
 #define TILE_MAP_PARSER_HPP
 
 #include <vector>
+#include <string>
 #include <array>
 #include <memory>
+#include <unordered_map>
 #include "math/CCGeometry.h" // cocos2d::Rect, cocos2d::Vec2
 #include "Core.hpp"
 #include "Utils.hpp"
@@ -35,6 +37,16 @@ namespace details {
          */
         cocos2d::Rect m_rect;
     };
+
+	using GID = size_t;
+
+	struct TileSet final {
+		GID 		firstgid;
+		std::string name;
+		uint16_t 	tilewidth;
+		uint16_t 	tileheight;
+		std::vector<std::pair<std::string, std::string>> properties;
+	};
 }
 
 /** @brief
@@ -65,6 +77,8 @@ public:
     
 private:
 
+    void ParseTileSets();
+
     void ParseUnits();
 
     void ParseProps();
@@ -92,6 +106,9 @@ private:
         std::vector<details::Form>, 
         Utils::EnumSize<CategoryName>()
     >  m_parsed;
+
+    
+	std::unordered_map<details::GID, details::TileSet> m_tileSets;
 };
 
 #endif // TILE_MAP_PARSER_HPP
