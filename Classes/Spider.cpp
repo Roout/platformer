@@ -10,8 +10,8 @@
 
 namespace Enemies {
 
-Spider* Spider::create(size_t id) {
-    auto pRet { new (std::nothrow) Spider(id, core::EntityNames::SPIDER) };
+Spider* Spider::create(size_t id, const cocos2d::Size& contentSize) {
+    auto pRet { new (std::nothrow) Spider(id, core::EntityNames::SPIDER, contentSize) };
     if( pRet && pRet->init()) {
         pRet->autorelease();
     } 
@@ -22,14 +22,18 @@ Spider* Spider::create(size_t id) {
     return pRet;
 }
 
-Spider::Spider(size_t id, const char* dragonBonesName) :
-    Bot{ id, dragonBonesName }
+Spider::Spider(size_t id, const char* dragonBonesName, const cocos2d::Size& contentSize)
+    : Bot{ id, dragonBonesName }
 {
+    m_contentSize = contentSize;
+    m_physicsBodySize = cocos2d::Size{ contentSize.width * 0.89f, contentSize.height * 0.77f };
+    m_hitBoxSize = cocos2d::Size{ contentSize.width, contentSize.height * 0.82f };
+
     // define size of the graphical content
-    m_contentSize = cocos2d::Size { 45.f, 65.f };
+    // m_contentSize = cocos2d::Size { 45.f, 65.f };
     // define size of the physics body
-    m_physicsBodySize = cocos2d::Size{ 40.f, 40.f };
-    m_hitBoxSize = cocos2d::Size{ 45.f, 45.f };
+    // m_physicsBodySize = cocos2d::Size{ 40.f, 40.f };
+    // m_hitBoxSize = cocos2d::Size{ 45.f, 45.f };
 }
 
 bool Spider::init() {

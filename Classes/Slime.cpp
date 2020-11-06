@@ -10,8 +10,8 @@
 namespace Enemies {
 
 
-Slime* Slime::create(size_t id) {
-    auto pRet { new (std::nothrow) Slime(id, core::EntityNames::SLIME) };
+Slime* Slime::create(size_t id, const cocos2d::Size& contentSize) {
+    auto pRet { new (std::nothrow) Slime(id, core::EntityNames::SLIME, contentSize) };
     if (pRet && pRet->init()) {
         pRet->autorelease();
     } 
@@ -30,12 +30,12 @@ bool Slime::init() {
     return true;
 }
 
-Slime::Slime(size_t id, const char * name) :
-    Bot{ id, name }
+Slime::Slime(size_t id, const char * name, const cocos2d::Size& contentSize)
+    : Bot{ id, name }
 {
-    m_contentSize = cocos2d::Size{ 70.f, 45.f };
-    m_physicsBodySize = cocos2d::Size{ 70.f, 45.f };
-    m_hitBoxSize = m_physicsBodySize;
+    m_contentSize = contentSize;
+    m_physicsBodySize = contentSize;
+    m_hitBoxSize = contentSize;
 }
 
 void Slime::update(float dt) {

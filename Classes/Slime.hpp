@@ -11,7 +11,7 @@ namespace Enemies {
 
 class Slime : public Bot {
 public:
-    static Slime* create(size_t id);
+    static Slime* create(size_t id, const cocos2d::Size& contentSizee);
 
     bool init() override;
 
@@ -30,7 +30,7 @@ public:
 private:
     enum WeaponClass { RANGE };
 
-    Slime(size_t id, const char * name);
+    Slime(size_t id, const char * name, const cocos2d::Size& contentSizee);
 
     /// Unique to slime
 

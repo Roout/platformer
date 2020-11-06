@@ -7,14 +7,14 @@ namespace Enemies {
 
 class Spearman : public Warrior {
 public:
-    static Spearman* Spearman::create(size_t id);
+    static Spearman* Spearman::create(size_t id, const cocos2d::Size& contentSize);
 
     bool init() override;
 
 private:
     enum WeaponClass { MELEE };
 
-    Spearman(size_t id, const char * name);
+    Spearman(size_t id, const char * name, const cocos2d::Size& contentSize);
 
     void AddWeapons() override;
 

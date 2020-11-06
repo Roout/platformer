@@ -9,8 +9,8 @@
 
 namespace Enemies {
 
-Spearman* Spearman::Spearman::create(size_t id) {
-    auto pRet { new (std::nothrow) Spearman(id, core::EntityNames::SPEARMAN) };
+Spearman* Spearman::Spearman::create(size_t id, const cocos2d::Size& contentSize) {
+    auto pRet { new (std::nothrow) Spearman(id, core::EntityNames::SPEARMAN, contentSize) };
     if (pRet && pRet->init()) {
         pRet->autorelease();
     } 
@@ -29,12 +29,9 @@ bool Spearman::init() {
     return true;
 }
 
-Spearman::Spearman(size_t id, const char * name) :
-    Warrior{ id, name }
+Spearman::Spearman(size_t id, const char * name, const cocos2d::Size& contentSize)
+    : Warrior{ id, name, contentSize }
 {
-    m_contentSize = cocos2d::Size{ 40.f, 68.f };
-    m_physicsBodySize = cocos2d::Size{ 30.f, m_contentSize.height };
-    m_hitBoxSize = m_physicsBodySize;
 }
 
 void Spearman::AddWeapons() {

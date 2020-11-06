@@ -19,7 +19,7 @@ namespace Enemies {
  */
 class Spider final : public Bot {
 public:
-    static Spider* create(size_t id);
+    static Spider* create(size_t id, const cocos2d::Size& contentSize);
 
     [[nodiscard]] bool init() override;
     
@@ -41,7 +41,10 @@ public:
     void CreateWebAt(const cocos2d::Vec2& start);
 
 private: 
-    Spider(size_t id, const char* dragonBonesName);
+    Spider(size_t id, 
+        const char* dragonBonesName, 
+        const cocos2d::Size& contentSize
+    );
 
     void UpdateWeb();
     /// Bot interface
@@ -67,7 +70,6 @@ private:
     std::unique_ptr<Navigator> m_navigator { nullptr };
 
     cocos2d::Vec2 m_webStart {};
-    cocos2d::Size m_physicsBodySize {};
     cocos2d::DrawNode * m_web { nullptr };
 };
 
