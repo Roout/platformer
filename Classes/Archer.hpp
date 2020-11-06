@@ -8,7 +8,7 @@ namespace Enemies {
 class Archer final : public Bot {
 public:
 
-    static Archer* create(size_t id);
+    static Archer* create(size_t id, const cocos2d::Size& contentSize);
 
     [[nodiscard]] bool init() override;
     
@@ -28,7 +28,7 @@ public:
 private:
     enum WeaponClass{ RANGE };
 
-    Archer(size_t id);
+    Archer(size_t id, const cocos2d::Size& contentSize);
 
 /// Bot interface
    

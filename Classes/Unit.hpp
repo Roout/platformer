@@ -152,9 +152,9 @@ protected:
 
     cocos2d::Size m_contentSize {};
 
-    cocos2d::Size m_hitBoxSize {};
-    
     cocos2d::Size m_physicsBodySize {};
+    
+    cocos2d::Size m_hitBoxSize {};
     
     bool m_hasContactWithGround { false };
 };

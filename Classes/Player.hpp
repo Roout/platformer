@@ -11,7 +11,7 @@ public:
 
     inline static constexpr float DAMAGE_ON_CONTACT { 7.f }; 
 
-    static Player* create();
+    static Player* create(const cocos2d::Size& contentSize);
 
     [[nodiscard]] bool init() override;
 
@@ -61,7 +61,7 @@ private:
 
     void MoveAlong(float x, float y) noexcept override;
 
-    Player();
+    Player(const cocos2d::Size& contentSize);
 
     /// Properties
 private:

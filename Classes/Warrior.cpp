@@ -11,8 +11,8 @@
 
 namespace Enemies {
 
-Warrior* Warrior::create(size_t id) {
-    auto pRet { new (std::nothrow) Warrior(id, core::EntityNames::WARRIOR) };
+Warrior* Warrior::create(size_t id, const cocos2d::Size& contentSize ) {
+    auto pRet { new (std::nothrow) Warrior(id, core::EntityNames::WARRIOR, contentSize) };
     if (pRet && pRet->init()) {
         pRet->autorelease();
     } 
@@ -23,11 +23,11 @@ Warrior* Warrior::create(size_t id) {
     return pRet;
 }
 
-Warrior::Warrior(size_t id, const char* dragonBonesName) :
-    Bot{ id, dragonBonesName }
+Warrior::Warrior(size_t id, const char* dragonBonesName, const cocos2d::Size& contentSize)
+    : Bot{ id, dragonBonesName }
 {
-    m_contentSize = cocos2d::Size{ 40.f, 68.f };
-    m_physicsBodySize = cocos2d::Size{ 30.f, m_contentSize.height };
+    m_contentSize = contentSize;
+    m_physicsBodySize = cocos2d::Size { contentSize.width * 0.75f, contentSize.height };
     m_hitBoxSize = m_physicsBodySize;
 }
 

@@ -10,8 +10,8 @@
 
 namespace Enemies {
 
-BoulderPusher* BoulderPusher::create(size_t id) {
-    auto pRet { new (std::nothrow) BoulderPusher(id) };
+BoulderPusher* BoulderPusher::create(size_t id, const cocos2d::Size& contentSize) {
+    auto pRet { new (std::nothrow) BoulderPusher(id, contentSize) };
     if( pRet && pRet->init()) {
         pRet->autorelease();
     } 
@@ -22,11 +22,11 @@ BoulderPusher* BoulderPusher::create(size_t id) {
     return pRet;
 }
 
-BoulderPusher::BoulderPusher(size_t id):
-    Bot{ id, core::EntityNames::BOULDER_PUSHER }
+BoulderPusher::BoulderPusher(size_t id, const cocos2d::Size& contentSize)
+    : Bot{ id, core::EntityNames::BOULDER_PUSHER }
 {
-    m_contentSize = cocos2d::Size{ 40.f, 68.f };
-    m_physicsBodySize = cocos2d::Size{ 30.f, m_contentSize.height };
+    m_contentSize = contentSize;
+    m_physicsBodySize = cocos2d::Size{ contentSize.width * 0.75f, contentSize.height };
     m_hitBoxSize = m_physicsBodySize;
 }
 

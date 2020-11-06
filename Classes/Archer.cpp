@@ -10,8 +10,8 @@
 
 namespace Enemies {
 
-Archer* Archer::create(size_t id) {
-    auto pRet { new (std::nothrow) Archer(id) };
+Archer* Archer::create(size_t id, const cocos2d::Size& contentSize) {
+    auto pRet { new (std::nothrow) Archer(id, contentSize) };
     if( pRet && pRet->init()) {
         pRet->autorelease();
     } 
@@ -22,11 +22,11 @@ Archer* Archer::create(size_t id) {
     return pRet;
 }
 
-Archer::Archer(size_t id) :
-    Bot{ id, core::EntityNames::ARCHER }
+Archer::Archer(size_t id, const cocos2d::Size& contentSize)
+    : Bot{ id, core::EntityNames::ARCHER }
 {
-    m_contentSize = cocos2d::Size{ 40.f, 68.f };
-    m_physicsBodySize = cocos2d::Size{ 35.f, 68.f };
+    m_contentSize = contentSize;
+    m_physicsBodySize = cocos2d::Size { contentSize.width * 0.875f, contentSize.height };
     m_hitBoxSize = m_physicsBodySize;
 }
 

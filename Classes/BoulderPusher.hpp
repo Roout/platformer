@@ -8,7 +8,7 @@ namespace Enemies {
 class BoulderPusher final : public Bot {
 public:
 
-    static BoulderPusher* create(size_t id);
+    static BoulderPusher* create(size_t id, const cocos2d::Size& contentSize);
 
     [[nodiscard]] bool init() override;
     
@@ -28,7 +28,7 @@ public:
 private:
     enum WeaponClass { RANGE };
 
-    BoulderPusher(size_t id);
+    BoulderPusher(size_t id, const cocos2d::Size& contentSize);
 
 /// Bot interface
    

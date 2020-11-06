@@ -15,8 +15,8 @@
 #include <cassert>
 #include <cmath>
 
-Player* Player::create() {
-    auto pRet { new (std::nothrow) Player() };
+Player* Player::create(const cocos2d::Size& contentSize) {
+    auto pRet { new (std::nothrow) Player(contentSize) };
     if( pRet && pRet->init()) {
         pRet->autorelease();
     } else {
@@ -26,12 +26,12 @@ Player* Player::create() {
     return pRet;
 }
 
-Player::Player() :
-    Unit { "mc" }
+Player::Player(const cocos2d::Size& contentSize) 
+    : Unit { "mc" }
 {
-    m_contentSize = cocos2d::Size{ 40.f, 68.f };
-    m_physicsBodySize = cocos2d::Size{ m_contentSize.width / 2.f, m_contentSize.height };
-    m_hitBoxSize = m_contentSize;
+    m_contentSize = contentSize;
+    m_physicsBodySize = cocos2d::Size { contentSize.width / 2.f, contentSize.height };
+    m_hitBoxSize = contentSize;
 }
 
 bool Player::init() {

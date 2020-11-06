@@ -12,7 +12,7 @@ namespace Enemies {
 class Warrior : public Bot {
 public:
 
-    static Warrior* create(size_t id);
+    static Warrior* create(size_t id, const cocos2d::Size& contentSize);
 
     [[nodiscard]] bool init() override;
     
@@ -31,7 +31,7 @@ public:
 protected:
     enum WeaponClass { MELEE };
 
-    Warrior(size_t id, const char* dragonBonesName);
+    Warrior(size_t id, const char* dragonBonesName, const cocos2d::Size& contentSize);
 
     void AddWeapons() override;
 

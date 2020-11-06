@@ -210,10 +210,10 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
         const auto parsedForms { m_parser->Peek(category) };
         for(const auto& form: parsedForms) {
             if(form.m_type == core::CategoryName::PLAYER) {
-                const auto hero { Player::create() };
+                const auto contentSize = form.m_rect.size * form.m_scale;
+                const auto hero { Player::create(contentSize) };
                 hero->setName(core::EntityNames::PLAYER);
-                hero->setAnchorPoint(cocos2d::Vec2::ANCHOR_BOTTOM_LEFT);
-                hero->setPosition(form.m_points.front());
+                hero->setPosition( form.m_rect.origin + cocos2d::Size{ contentSize.width / 2.f, contentSize.height } );
                 map->addChild(hero, 100);
             } 
             else if(form.m_type == core::CategoryName::PLATFORM) {
@@ -273,51 +273,52 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
             }
             else if(form.m_type == core::CategoryName::ENEMY) {
                 const auto zOrder { 10 };
+                const auto contentSize = form.m_rect.size * form.m_scale;
                 switch(Utils::EnumCast<core::EnemyClass>(form.m_subType)) {
                     case core::EnemyClass::WARRIOR: {
-                        const auto warrior { Enemies::Warrior::create(form.m_id) };
+                        const auto warrior { Enemies::Warrior::create(form.m_id, contentSize) };
                         warrior->setName(core::EntityNames::WARRIOR);
-                        warrior->setPosition(form.m_points.front());
+                        warrior->setPosition(form.m_rect.origin + cocos2d::Size{ contentSize.width / 2.f, contentSize.height });
                         map->addChild(warrior, zOrder);
                         warriors.emplace(form.m_id, warrior);
                         pathIdByUnitId.emplace(form.m_id, form.m_pathId);
                     } break;
                     case core::EnemyClass::SLIME: {
-                        const auto slime { Enemies::Slime::create(form.m_id) };
+                        const auto slime { Enemies::Slime::create(form.m_id, contentSize) };
                         slime->setName(core::EntityNames::SLIME);
-                        slime->setPosition(form.m_points.front());
+                        slime->setPosition(form.m_rect.origin + cocos2d::Size{ contentSize.width / 2.f, contentSize.height });
                         map->addChild(slime, zOrder);
                         slimes.emplace(form.m_id, slime);
                         pathIdByUnitId.emplace(form.m_id, form.m_pathId);
                     } break;
                     case core::EnemyClass::SPEARMAN: {
-                        const auto spearman { Enemies::Spearman::create(form.m_id) };
+                        const auto spearman { Enemies::Spearman::create(form.m_id, contentSize) };
                         spearman->setName(core::EntityNames::SPEARMAN);
-                        spearman->setPosition(form.m_points.front());
+                        spearman->setPosition(form.m_rect.origin + cocos2d::Size{ contentSize.width / 2.f, contentSize.height });
                         map->addChild(spearman, zOrder);
                         warriors.emplace(form.m_id, spearman);
                         pathIdByUnitId.emplace(form.m_id, form.m_pathId);
                     } break;
                     case core::EnemyClass::ARCHER: {
-                        const auto archer { Enemies::Archer::create(form.m_id) };
+                        const auto archer { Enemies::Archer::create(form.m_id, contentSize) };
                         archer->setName(core::EntityNames::ARCHER);
-                        archer->setPosition(form.m_points.front());
+                        archer->setPosition(form.m_rect.origin + cocos2d::Size{ contentSize.width / 2.f, contentSize.height });
                         map->addChild(archer, zOrder);
                         archers.emplace(form.m_id, archer);
                     } break;
                     case core::EnemyClass::BOULDER_PUSHER: {
-                        const auto boulderPusher { Enemies::BoulderPusher::create(form.m_id) };
+                        const auto boulderPusher { Enemies::BoulderPusher::create(form.m_id, contentSize) };
                         boulderPusher->setName(core::EntityNames::BOULDER_PUSHER);
-                        boulderPusher->setPosition(form.m_points.front());
+                        boulderPusher->setPosition(form.m_rect.origin + cocos2d::Size{ contentSize.width / 2.f, contentSize.height });
                         map->addChild(boulderPusher, zOrder);
                         boulderPushers.emplace(form.m_id, boulderPusher);
                     } break;
                     case core::EnemyClass::SPIDER: {
-                        const auto spider { Enemies::Spider::create(form.m_id) };
+                        const auto spider { Enemies::Spider::create(form.m_id, contentSize) };
                         spider->setName(core::EntityNames::SPIDER);
-                        spider->setPosition(form.m_points.front());
+                        spider->setPosition(form.m_rect.origin + cocos2d::Size{ contentSize.width / 2.f, contentSize.height });
                         map->addChild(spider, zOrder);
-                        spider->CreateWebAt(form.m_points.front() + cocos2d::Vec2{0.f, spider->getContentSize().height * 0.8f });
+                        spider->CreateWebAt(spider->getPosition() + cocos2d::Vec2{0.f, spider->getContentSize().height });
                         spiders.emplace(form.m_id, spider);
                         pathIdByUnitId.emplace(form.m_id, form.m_pathId);
                     } break;
