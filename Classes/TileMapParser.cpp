@@ -544,7 +544,10 @@ void TileMapParser::ParseProps() {
 		for (const auto& object : allObjects) {
 			const auto& objMap = object.asValueMap();
 			const auto name = objMap.at("name").asString();
-			const auto origin_width = objMap.at("origin_width").asFloat();
+			const auto gid = objMap.at("gid").asUnsignedInt();
+			assert(m_tileSets.at(gid).name == name && "Wrong GID");
+			auto origin_width  = static_cast<float>(m_tileSets.at(gid).tilewidth);
+			auto origin_height = static_cast<float>(m_tileSets.at(gid).tileheight);
 			const auto width = objMap.at("width").asFloat();
 			const auto height = objMap.at("height").asFloat();
 			const auto x = objMap.at("x").asFloat();
@@ -555,7 +558,7 @@ void TileMapParser::ParseProps() {
 			form.m_subType = Utils::EnumCast(props::GetPropName(name));
 			form.m_rect.origin = cocos2d::Vec2{ x, y };
 			form.m_scale = width / origin_width;
-			form.m_rect.size = cocos2d::Size{ origin_width, height * (origin_width / width) };
+			form.m_rect.size = cocos2d::Size{ origin_width, origin_height };
 			form.m_type = CategoryName::PROPS;
 			this->Get<CategoryName::PROPS>().emplace_back(form);
 		}
