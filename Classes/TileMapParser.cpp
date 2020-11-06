@@ -436,21 +436,30 @@ void TileMapParser::ParseUnits() {
 			const auto& objMap = object.asValueMap();
 			const auto type = objMap.at("type").asString();
 			const auto name = objMap.at("name").asString();
+			const auto width = objMap.at("width").asFloat();
+			const auto height = objMap.at("height").asFloat();
+			const auto gid = objMap.at("gid").asUnsignedInt();
+			assert(m_tileSets.at(gid).name == name && "Wrong GID");
+			const auto origin_height = static_cast<float>(m_tileSets.at(gid).tileheight);
 			const auto x = objMap.at("x").asFloat();
 			const auto y = objMap.at("y").asFloat();
 
 			details::Form form;
-			form.m_points.emplace_back(x, y);
 			form.m_id = objMap.at("id").asUnsignedInt();
-
-			if(name == "player") {
+			form.m_rect.origin = cocos2d::Vec2{ x, y };
+			form.m_scale = height / origin_height;
+			// width need to be specified manualy because images used in the map editor are usefull 
+			// only for providing visual info and desired height and width. 
+			// Scale factor can be calculated only using height not width!  
+			form.m_rect.size = cocos2d::Size{ width * (origin_height / height), origin_height };
+			if(type == "player") {
 				form.m_type = CategoryName::PLAYER;
 				this->Get<CategoryName::PLAYER>().emplace_back(form);
 			}
-			else if(name == "enemy") {
+			else if(type == "enemy") {
 				form.m_type = CategoryName::ENEMY;
 				form.m_pathId = objMap.at("path-id").asUnsignedInt();
-				form.m_subType = Utils::EnumCast(::AsEnemyClass(type));
+				form.m_subType = Utils::EnumCast(::AsEnemyClass(name));
 				this->Get<CategoryName::ENEMY>().emplace_back(form);
 			}
 		}
@@ -546,8 +555,8 @@ void TileMapParser::ParseProps() {
 			const auto name = objMap.at("name").asString();
 			const auto gid = objMap.at("gid").asUnsignedInt();
 			assert(m_tileSets.at(gid).name == name && "Wrong GID");
-			auto origin_width  = static_cast<float>(m_tileSets.at(gid).tilewidth);
-			auto origin_height = static_cast<float>(m_tileSets.at(gid).tileheight);
+			const auto origin_width  = static_cast<float>(m_tileSets.at(gid).tilewidth);
+			const auto origin_height = static_cast<float>(m_tileSets.at(gid).tileheight);
 			const auto width = objMap.at("width").asFloat();
 			const auto height = objMap.at("height").asFloat();
 			const auto x = objMap.at("x").asFloat();
@@ -557,7 +566,7 @@ void TileMapParser::ParseProps() {
 			form.m_id = objMap.at("id").asUnsignedInt();
 			form.m_subType = Utils::EnumCast(props::GetPropName(name));
 			form.m_rect.origin = cocos2d::Vec2{ x, y };
-			form.m_scale = width / origin_width;
+			form.m_scale = height / origin_height;
 			form.m_rect.size = cocos2d::Size{ origin_width, origin_height };
 			form.m_type = CategoryName::PROPS;
 			this->Get<CategoryName::PROPS>().emplace_back(form);
