@@ -441,9 +441,8 @@ void TileMapParser::ParseUnits() {
 			const auto name = objMap.at("name").asString();
 			const auto width = objMap.at("width").asFloat();
 			const auto height = objMap.at("height").asFloat();
-			const auto gid = objMap.at("gid").asUnsignedInt();
-			assert(m_tileSets.at(gid).name == name && "Wrong GID");
-			const auto origin_height = static_cast<float>(m_tileSets.at(gid).tileheight);
+			const auto & tileset = m_tileSets.at(name);	
+			const auto origin_height = static_cast<float>(tileset.tileheight);
 			const auto x = objMap.at("x").asFloat();
 			const auto y = objMap.at("y").asFloat();
 
@@ -451,6 +450,9 @@ void TileMapParser::ParseUnits() {
 			form.m_id = objMap.at("id").asUnsignedInt();
 			form.m_rect.origin = cocos2d::Vec2{ x, y };
 			form.m_scale = height / origin_height;
+			if(auto it = objMap.find("flip-x"); it != objMap.end()) {
+				form.m_flipX = it->second.asBool();
+			}
 			// width need to be specified manualy because images used in the map editor are usefull 
 			// only for providing visual info and desired height and width. 
 			// Scale factor can be calculated only using height not width!  
@@ -545,7 +547,7 @@ void TileMapParser::ParseTileSets() {
 				std::from_chars(pair.value.data(), pair.value.data() + pair.value.size(), tileset.tileheight);
 			}
 		}
-		m_tileSets.emplace(tileset.firstgid, std::move(tileset));
+		m_tileSets.emplace(tileset.name, std::move(tileset));
 	}
 }
 
@@ -556,10 +558,9 @@ void TileMapParser::ParseProps() {
 		for (const auto& object : allObjects) {
 			const auto& objMap = object.asValueMap();
 			const auto name = objMap.at("name").asString();
-			const auto gid = objMap.at("gid").asUnsignedInt();
-			assert(m_tileSets.at(gid).name == name && "Wrong GID");
-			const auto origin_width  = static_cast<float>(m_tileSets.at(gid).tilewidth);
-			const auto origin_height = static_cast<float>(m_tileSets.at(gid).tileheight);
+			const auto& tileset = m_tileSets.at(name);
+			const auto origin_width  = static_cast<float>(tileset.tilewidth);
+			const auto origin_height = static_cast<float>(tileset.tileheight);
 			const auto width = objMap.at("width").asFloat();
 			const auto height = objMap.at("height").asFloat();
 			const auto x = objMap.at("x").asFloat();

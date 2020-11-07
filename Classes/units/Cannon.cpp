@@ -50,6 +50,17 @@ void Cannon::update(float dt) {
     this->UpdateAnimation(); 
 }
 
+void Cannon::onEnter() {
+    cocos2d::Node::onEnter();
+    
+    if(this->IsLookingLeft()) {
+        m_animator->setPositionX(-m_contentSize.width / 2.f);
+    }
+    else {
+        m_animator->setPositionX( m_contentSize.width / 2.f);
+    }
+}
+
 /// Bot interface
 void Cannon::OnEnemyIntrusion() {
     m_detectEnemy = true;
@@ -131,8 +142,7 @@ void Cannon::AddPhysicsBody() {
 
 void Cannon::AddAnimator() {
     Unit::AddAnimator();
-    m_animator->setScale(m_scale);
-    m_animator->setPositionX(-m_contentSize.width / 2.f);
+    m_animator->setScale(m_scale); 
     m_animator->InitializeAnimations({
         /// TODO: mismatch, update animation!
         std::make_pair(Utils::EnumCast(State::PREPARE_ATTACK),  GetStateName(State::ATTACK)),
@@ -158,6 +168,14 @@ void Cannon::AddWeapons() {
         attackDuration,
         reloadTime 
     );
+}
+
+void Cannon::TryAttack() {
+    const auto target = this->getParent()->getChildByName(core::EntityNames::PLAYER);
+    if( target && this->NeedAttack() ) { // attack if possible
+        this->MoveAlong(0.f, 0.f);
+        this->Attack();
+    } 
 }
 
 void Cannon::Attack() {

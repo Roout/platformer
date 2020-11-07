@@ -14,6 +14,8 @@ public:
     
     void update(float dt) override;
 
+    void onEnter() override;
+
 /// Bot interface
 
     void OnEnemyIntrusion() override;
@@ -24,6 +26,8 @@ public:
      * Generate projectile at unit's center 
      */
     void Attack() override;
+
+    void TryAttack() override;
 
 private:
     enum WeaponClass{ RANGE };

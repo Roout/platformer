@@ -311,6 +311,7 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                     } break;
                     case core::EnemyClass::CANNON: {
                         const auto cannon { Enemies::Cannon::create(form.m_id, contentSize, form.m_scale) };
+                        if(form.m_flipX) cannon->Turn();
                         cannon->setName(core::EntityNames::CANNON);
                         cannon->setPosition(form.m_rect.origin + cocos2d::Size{ contentSize.width / 2.f, contentSize.height });
                         map->addChild(cannon, zOrder);
