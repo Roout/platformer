@@ -26,6 +26,9 @@ namespace {
 		else if ( ty == core::EntityNames::ARCHER ) {
 			type = core::EnemyClass::ARCHER;
 		}
+		else if ( ty == core::EntityNames::CANNON ) {
+			type = core::EnemyClass::CANNON;
+		}
 		else if ( ty == core::EntityNames::SPEARMAN ) {
 			type = core::EnemyClass::SPEARMAN;
 		}

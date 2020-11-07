@@ -217,4 +217,11 @@ public:
     void OnAttack() override;
 };
 
+class Stake final : public Weapon {
+public:
+    using Weapon::Weapon;
+
+    void OnAttack() override;
+};
+
 #endif // WEAPON_SYSTEM_HPP

@@ -271,3 +271,41 @@ void SlimeShot::OnAttack() {
     proj->addComponent(body);
     map->addChild(proj, 101); /// TODO: clean up this mess with Z-order!
 }
+
+void Stake::OnAttack() {
+    const auto runningScene { cocos2d::Director::getInstance()->getRunningScene() };
+    const auto level = runningScene->getChildByName("Level");
+    const auto map = level->getChildByName("Map");
+    
+    const auto proj = Projectile::create(this->GetDamage());
+    const auto projectile = m_extractor();
+    auto body = proj->AddPhysicsBody(projectile.size);
+    proj->setPosition(projectile.origin);
+    proj->setContentSize(projectile.size);
+    // push projectile
+    m_modifier(body);
+    const auto scaleFactor { 0.2f };
+    const auto sprite = proj->AddImage("cannon/library/Asset 4.png");
+    sprite->setAnchorPoint({0.0f, 0.0f});
+    sprite->setScale(scaleFactor);
+    if (body->getVelocity().x > 0.f) {
+        proj->FlipX();
+    }
+
+    const auto testMask {
+        Utils::CreateMask(
+            core::CategoryBits::HITBOX_SENSOR
+            , core::CategoryBits::PROPS
+            , core::CategoryBits::BOUNDARY
+            , core::CategoryBits::PLATFORM
+            , core::CategoryBits::PLAYER_PROJECTILE
+        )
+    };
+    const auto categoryMask {
+        Utils::CreateMask(core::CategoryBits::ENEMY_PROJECTILE)
+    };
+    proj->SetCategoryBitmask(categoryMask);
+    proj->SetContactTestBitmask(testMask);
+    proj->SetLifetime(3.f);
+    map->addChild(proj, 100); /// TODO: clean up this mess with Z-order!
+}

@@ -32,6 +32,7 @@ namespace core {
         WARRIOR, // in fact it's axe-warrior
         ARCHER,
         SLIME,
+        CANNON,
         BOULDER_PUSHER,
         SPEARMAN,
         SPIDER,
@@ -42,6 +43,7 @@ namespace core {
     namespace EntityNames {
         const char* const WARRIOR   = "warrior";
         const char* const ARCHER    = "archer";
+        const char* const CANNON    = "cannon";
         const char* const BOULDER_PUSHER = "old_man";
         const char* const SPIDER    = "spider";
         const char* const SLIME    = "slime";
