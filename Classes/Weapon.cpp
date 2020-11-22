@@ -4,6 +4,10 @@
 #include "Player.hpp"
 #include "Core.hpp"
 
+#include <string>
+
+using namespace std::literals;
+
 /**
  * TODO: 
  * - remove run-time dependency on UI. It shouldn't be attached to the scene here
@@ -308,4 +312,64 @@ void Stake::OnAttack() {
     proj->SetContactTestBitmask(testMask);
     proj->SetLifetime(3.f);
     map->addChild(proj, 100); /// TODO: clean up this mess with Z-order!
+}
+
+StalactitePart::StalactitePart(
+    float damage
+    , float range
+    , float preparationTime 
+    , float attackTime 
+    , float reloadTime
+    , size_t index
+)   
+    : Weapon { damage, range, preparationTime, attackTime, reloadTime }
+    , m_index { index }
+{}
+
+void StalactitePart::OnAttack() {
+    const auto runningScene { cocos2d::Director::getInstance()->getRunningScene() };
+    const auto level = runningScene->getChildByName("Level");
+    const auto map = level->getChildByName("Map");
+    std::string prefix = "stalactities/stalactities_"s + std::to_string(m_index);
+    std::string armatureName = "stalactities";
+
+    const auto proj = Projectile::create(this->GetDamage());
+    proj->AddAnimator(armatureName, prefix);
+    const auto scaleFactor { 0.2f };
+    proj->setScale(scaleFactor);
+
+    const auto projectile = m_extractor();
+    const auto body = cocos2d::PhysicsBody::createBox(
+        projectile.size
+        , cocos2d::PhysicsMaterial{ 1.f, 0.0f, 0.0f }
+        , { -projectile.size.width / 2.f, 0.f }
+    );
+    body->setDynamic(true);
+    body->setGravityEnable(false);
+
+    proj->setAnchorPoint({0.0f, 0.0f});
+    proj->setContentSize(projectile.size);
+    proj->setPosition(projectile.origin);
+    // push projectile
+    m_modifier(body);
+   
+    const auto testMask {
+        Utils::CreateMask(
+            core::CategoryBits::HITBOX_SENSOR
+            , core::CategoryBits::PROPS
+            , core::CategoryBits::BOUNDARY
+            , core::CategoryBits::PLAYER_PROJECTILE
+            , core::CategoryBits::PLATFORM
+        )
+    };
+    const auto categoryMask {
+        Utils::CreateMask(core::CategoryBits::ENEMY_PROJECTILE)
+    };
+    body->setCollisionBitmask(0);
+    body->setCategoryBitmask(categoryMask);
+    body->setContactTestBitmask(testMask);
+    
+    proj->SetLifetime(5.f);
+    proj->addComponent(body);
+    map->addChild(proj, 101); /// TODO: clean up this mess with Z-order!
 }

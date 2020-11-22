@@ -35,7 +35,7 @@ bool Bot::init() {
     return true;
 }
 
-Bot::Bot(size_t id, const char* dragonBonesName): 
+Bot::Bot(size_t id, const std::string& dragonBonesName): 
     Unit{ dragonBonesName },
     m_id { id }
 {

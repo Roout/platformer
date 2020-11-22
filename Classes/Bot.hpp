@@ -4,6 +4,7 @@
 #include "cocos2d.h"
 
 #include "Unit.hpp"
+#include <string>
 
 class Influence;
 
@@ -42,7 +43,7 @@ public:
 
 protected:
 
-    Bot(size_t id, const char* dragonBonesName);
+    Bot(size_t id, const std::string& dragonBonesName);
     
     void UpdateDebugLabel() noexcept override;
 

@@ -79,7 +79,7 @@ public:
     /**
      * Use when you're going to create an animated projectile 
      */
-    void AddAnimator(std::string chachedArmatureName);
+    void AddAnimator(std::string chachedArmatureName, std::string prefix = "");
 
 private:
 
