@@ -183,7 +183,7 @@ void Fireball::OnAttack() {
     const auto scaleFactor { 0.2f };
     
     const auto proj = Projectile::create(this->GetDamage());
-    proj->AddAnimator("fireball");
+    proj->AddAnimator("fireball", "fireball");
     proj->setScale(scaleFactor);
 
     const auto projectile = m_extractor();
@@ -233,7 +233,7 @@ void SlimeShot::OnAttack() {
     const auto scaleFactor { 0.2f };
     
     const auto proj = Projectile::create(this->GetDamage());
-    proj->AddAnimator("slime_attack");
+    proj->AddAnimator("slime_attack", "slime_attack");
     proj->setScale(scaleFactor);
 
     const auto projectile = m_extractor();
@@ -330,8 +330,8 @@ void StalactitePart::OnAttack() {
     const auto runningScene { cocos2d::Director::getInstance()->getRunningScene() };
     const auto level = runningScene->getChildByName("Level");
     const auto map = level->getChildByName("Map");
+    std::string armatureName = core::EntityNames::STALACTITE;
     std::string prefix = "stalactities/stalactities_"s + std::to_string(m_index);
-    std::string armatureName = "stalactities";
 
     const auto proj = Projectile::create(this->GetDamage());
     proj->AddAnimator(armatureName, prefix);

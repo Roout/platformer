@@ -190,7 +190,8 @@ void Unit::AddPhysicsBody() {
 
 void Unit::AddAnimator() {
     std::string chachedArmatureName = m_dragonBonesName;
-    m_animator = dragonBones::Animator::create("", std::move(chachedArmatureName));
+    std::string prefix = m_dragonBonesName;
+    m_animator = dragonBones::Animator::create(std::move(prefix), std::move(chachedArmatureName));
     this->addChild(m_animator);
     m_animator->setScale(0.1f); // TODO: introduce multi-resolution scaling
 }
