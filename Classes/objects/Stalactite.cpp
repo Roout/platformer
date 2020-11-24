@@ -34,6 +34,8 @@ bool Stalactite::init() {
     if(!Bot::init()) {
         return false;
     }
+    this->getChildByName("health")->removeFromParent();
+    this->getChildByName("state")->removeFromParent();
     return true;
 }
 
@@ -70,6 +72,9 @@ Stalactite::Stalactite(
     m_hitBoxSize = m_physicsBodySize;
 }
 
+void Stalactite::Attack() {
+    m_alreadyAttacked = true;
+}
 
 void Stalactite::TryAttack() {
     if(this->NeedAttack()) { // attack if possible
@@ -79,7 +84,7 @@ void Stalactite::TryAttack() {
 
 bool Stalactite::NeedAttack() const noexcept {
     return !this->IsDead() 
-        && m_alreadyAttacked 
+        && !m_alreadyAttacked 
         && m_detectEnemy 
         && m_weapons[WeaponClass::RANGE]->IsReady();
 }
@@ -117,6 +122,8 @@ void Stalactite::UpdateAnimation() {
 }
 
 void Stalactite::OnDeath() {
+    // Just remove physics body. 
+    // The base of stalactite will still be visible!
     this->removeComponent(this->getPhysicsBody());
     // this->getChildByName("health")->removeFromParent();
     // m_animator->EndWith([this](){
@@ -128,7 +135,7 @@ void Stalactite::AddPhysicsBody() {
     const auto body = cocos2d::PhysicsBody::createBox(
         m_physicsBodySize,
         cocos2d::PhysicsMaterial(1.f, 0.0f, 0.0f), 
-        { floorf(m_physicsBodySize.width / 2.f), 0.f}
+        { 0.f, floorf(m_physicsBodySize.height / 2.f)}
     );
     body->setDynamic(false);
     body->setGravityEnable(false);
@@ -136,7 +143,7 @@ void Stalactite::AddPhysicsBody() {
     const auto hitBoxShape = cocos2d::PhysicsShapeBox::create(
         m_hitBoxSize, 
         cocos2d::PHYSICSSHAPE_MATERIAL_DEFAULT,
-        { floorf(m_physicsBodySize.width / 2.f), 0.f}
+        { 0.f, floorf(m_physicsBodySize.height / 2.f) }
     );
     hitBoxShape->setSensor(true);
     hitBoxShape->setCollisionBitmask(0);
@@ -155,11 +162,15 @@ void Stalactite::AddPhysicsBody() {
 }
 
 void Stalactite::AddAnimator() {
-    Unit::AddAnimator();
+    // stalactities/stalactities_1/stalactities_tex"
+    std::string name = core::EntityNames::STALACTITE;
+    std::string prefix = name + "/" + m_dragonBonesName;
+    m_animator = dragonBones::Animator::create(std::move(prefix), std::move(name));
+    this->addChild(m_animator);
     m_animator->setScale(m_scale); 
     m_animator->InitializeAnimations({
         std::make_pair(Utils::EnumCast(State::IDLE), GetStateName(State::IDLE)),
-        std::make_pair(Utils::EnumCast(State::PREPARE_ATTACK), GetStateName(State::PREPARE_ATTACK)),
+        std::make_pair(Utils::EnumCast(State::PREPARE_ATTACK), GetStateName(State::ATTACK)),
         std::make_pair(Utils::EnumCast(State::ATTACK), GetStateName(State::ATTACK)), 
         std::make_pair(Utils::EnumCast(State::DEAD), GetStateName(State::DEAD))
     });

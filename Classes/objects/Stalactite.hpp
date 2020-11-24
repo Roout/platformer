@@ -6,8 +6,9 @@
 namespace Enemies {
 
 /**
+ * @brief
  * - just collapce when the hero passed
- * - consist of idle/die animations 
+ * - implemented like one time cannon
  */
 class Stalactite final : public Bot {
 public:
@@ -35,6 +36,8 @@ private:
     /// Bot interface
     
     void TryAttack();
+
+    void Attack() override;
 
     bool NeedAttack() const noexcept;
    
