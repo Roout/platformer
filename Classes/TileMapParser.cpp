@@ -15,34 +15,23 @@
 #include <iterator>
 #include <cassert>
 #include <cstdint>
+#include <unordered_map>
 
 namespace {
 
-	core::EnemyClass AsEnemyClass(const std::string& ty) noexcept {
-		auto type { core::EnemyClass::UNDEFINED };
-		if( ty == core::EntityNames::WARRIOR ) {
-			type = core::EnemyClass::WARRIOR;
-		} 
-		else if ( ty == core::EntityNames::ARCHER ) {
-			type = core::EnemyClass::ARCHER;
-		}
-		else if ( ty == core::EntityNames::CANNON ) {
-			type = core::EnemyClass::CANNON;
-		}
-		else if ( ty == core::EntityNames::SPEARMAN ) {
-			type = core::EnemyClass::SPEARMAN;
-		}
-		else if ( ty == core::EntityNames::SLIME ) {
-			type = core::EnemyClass::SLIME;
-		}
-		else if ( ty == core::EntityNames::SPIDER ) {
-			type = core::EnemyClass::SPIDER;
-		}
-		else if ( ty == core::EntityNames::BOULDER_PUSHER ) {
-			type = core::EnemyClass::BOULDER_PUSHER;
-		}
-		// assert(type == core::EnemyClass::UNDEFINED && "[TileMapParser] Enemy class not defined!");
-		return type;
+	core::EnemyClass AsEnemyClass(const std::string& ty) {
+		static std::unordered_map<std::string, core::EnemyClass> routing {
+			{ core::EntityNames::WARRIOR, core::EnemyClass::WARRIOR }
+			, { core::EntityNames::ARCHER, core::EnemyClass::ARCHER }
+			, { core::EntityNames::CANNON, core::EnemyClass::CANNON }
+			, { core::EntityNames::STALACTITE, core::EnemyClass::STALACTITE }
+			, { core::EntityNames::SPEARMAN, core::EnemyClass::SPEARMAN }
+			, { core::EntityNames::SLIME, core::EnemyClass::SLIME }
+			, { core::EntityNames::SPIDER, core::EnemyClass::SPIDER }
+			, { core::EntityNames::BOULDER_PUSHER, core::EnemyClass::BOULDER_PUSHER }
+		};
+		auto it = routing.find(ty);
+		return it != routing.end()? it->second: core::EnemyClass::UNDEFINED;
 	}
 
 	// This thing is used only by TileMapParser::Parse for merging bodies
@@ -463,7 +452,9 @@ void TileMapParser::ParseUnits() {
 			}
 			else if(type == "enemy") {
 				form.m_type = CategoryName::ENEMY;
-				form.m_pathId = objMap.at("path-id").asUnsignedInt();
+				if(auto it = objMap.find("path-id"); it != objMap.end()) {
+					form.m_pathId = objMap.at("path-id").asUnsignedInt();
+				}
 				form.m_subType = Utils::EnumCast(::AsEnemyClass(name));
 				this->Get<CategoryName::ENEMY>().emplace_back(form);
 			}
