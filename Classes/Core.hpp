@@ -45,7 +45,7 @@ namespace core {
         const char* const WARRIOR   = "warrior";
         const char* const ARCHER    = "archer";
         const char* const CANNON    = "cannon";
-        const char* const STALACTITE    = "stalactities";
+        const char* const STALACTITE    = "stalactite";
         const char* const BOULDER_PUSHER = "old_man";
         const char* const SPIDER    = "spider";
         const char* const SLIME    = "slime";
@@ -53,6 +53,7 @@ namespace core {
         const char* const PLAYER    = "player";
     }
 
+    // TODO: add routing through the unordered_map
     inline CategoryName CategoryFromString(const std::string& str) noexcept {
         CategoryName category { core::CategoryName::UNDEFINED };
 

@@ -4,6 +4,7 @@
 #include "cocos2d.h"
 #include <cstdint> // std::uint8_t
 #include <string>
+#include <initializer_list>
 
 namespace dragonBones {
     class Animator;
@@ -11,6 +12,12 @@ namespace dragonBones {
 
 class Projectile : public cocos2d::Node {
 public:
+    enum class State : std::uint8_t {
+        IDLE = 0,
+        EXPLODED,
+        COUNT
+    };
+    
     static Projectile * create(float damage);
 
     [[nodiscard]] bool init() override;
@@ -81,13 +88,9 @@ public:
      */
     void AddAnimator(std::string chachedArmatureName, std::string prefix = "");
 
-private:
+    void InitializeAnimations(std::initializer_list<std::pair<std::size_t, std::string>> animations);
 
-    enum class State : std::uint8_t {
-        IDLE = 0,
-        EXPLODED,
-        COUNT
-    };
+private:
     
     Projectile(float damage);
 

@@ -18,7 +18,7 @@ Stalactite* Stalactite::create(
     auto pRet = new (std::nothrow) Stalactite(id
         , contentSize
         , scale
-        , cocos2d::RandomHelper::random_int(1, 4)
+        , 1 // cocos2d::RandomHelper::random_int(1, 4)
     );
     if(pRet && pRet->init()) {
         pRet->autorelease();
@@ -162,9 +162,9 @@ void Stalactite::AddPhysicsBody() {
 }
 
 void Stalactite::AddAnimator() {
-    // stalactities/stalactities_1/stalactities_tex"
-    std::string name = core::EntityNames::STALACTITE;
-    std::string prefix = name + "/" + m_dragonBonesName;
+    // stalactites/stalactite_1/stalactite_1/stalactite_1_tex"
+    std::string name = m_dragonBonesName;
+    std::string prefix = "stalactites/" + m_dragonBonesName + "/" + m_dragonBonesName;
     m_animator = dragonBones::Animator::create(std::move(prefix), std::move(name));
     this->addChild(m_animator);
     m_animator->setScale(m_scale); 

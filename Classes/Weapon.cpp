@@ -184,6 +184,10 @@ void Fireball::OnAttack() {
     
     const auto proj = Projectile::create(this->GetDamage());
     proj->AddAnimator("fireball", "fireball");
+    proj->InitializeAnimations({
+        std::make_pair(Utils::EnumCast(Projectile::State::IDLE), "walk"),       // sorry the illustrator is a little bit of an idiot
+        std::make_pair(Utils::EnumCast(Projectile::State::EXPLODED), "attack")  // sorry the illustrator is a little bit of an idiot
+    });
     proj->setScale(scaleFactor);
 
     const auto projectile = m_extractor();
@@ -234,6 +238,10 @@ void SlimeShot::OnAttack() {
     
     const auto proj = Projectile::create(this->GetDamage());
     proj->AddAnimator("slime_attack", "slime_attack");
+    proj->InitializeAnimations({
+        std::make_pair(Utils::EnumCast(Projectile::State::IDLE), "walk"),       // sorry the illustrator is a little bit of an idiot
+        std::make_pair(Utils::EnumCast(Projectile::State::EXPLODED), "attack")  // sorry the illustrator is a little bit of an idiot
+    });
     proj->setScale(scaleFactor);
 
     const auto projectile = m_extractor();
@@ -330,11 +338,15 @@ void StalactitePart::OnAttack() {
     const auto runningScene { cocos2d::Director::getInstance()->getRunningScene() };
     const auto level = runningScene->getChildByName("Level");
     const auto map = level->getChildByName("Map");
-    std::string armatureName = core::EntityNames::STALACTITE;
-    std::string prefix = "stalactities/stalactities_"s + std::to_string(m_index);
 
     const auto proj = Projectile::create(this->GetDamage());
-    proj->AddAnimator(armatureName, prefix);
+    auto name   = cocos2d::StringUtils::format("%s_%d_projectile", core::EntityNames::STALACTITE, m_index);
+    auto prefix = cocos2d::StringUtils::format("stalactites/%s_%d/%s", core::EntityNames::STALACTITE, m_index, name.c_str());
+    proj->AddAnimator(name, prefix);
+    proj->InitializeAnimations({
+        std::make_pair(Utils::EnumCast(Projectile::State::IDLE), "idle"),
+        std::make_pair(Utils::EnumCast(Projectile::State::EXPLODED), "dead") 
+    });
     const auto scaleFactor { 0.2f };
     proj->setScale(scaleFactor);
 
