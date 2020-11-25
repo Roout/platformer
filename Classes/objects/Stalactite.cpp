@@ -73,6 +73,20 @@ Stalactite::Stalactite(
 }
 
 void Stalactite::Attack() {
+    auto projectilePosition = [this]()->cocos2d::Rect {
+        const auto attackRange { m_weapons[WeaponClass::RANGE]->GetRange() };
+        const cocos2d::Size stalactite { m_contentSize / m_scale };
+        auto position = this->getPosition();
+        // shift y-axis to avoid collision with the ceiling
+        return { cocos2d::Vec2(position.x, position.y - stalactite.height * 0.05f) , stalactite};
+    };
+    auto pushProjectile = [this](cocos2d::PhysicsBody* body) {
+        body->setVelocity({ 0.f, -400.f });
+    };
+    m_weapons[WeaponClass::RANGE]->LaunchAttack(
+        std::move(projectilePosition), 
+        std::move(pushProjectile)
+    );
     m_alreadyAttacked = true;
 }
 
@@ -126,9 +140,9 @@ void Stalactite::OnDeath() {
     // The base of stalactite will still be visible!
     this->removeComponent(this->getPhysicsBody());
     // this->getChildByName("health")->removeFromParent();
-    // m_animator->EndWith([this](){
-    //     this->runAction(cocos2d::RemoveSelf::create(true));
-    // });
+    m_animator->EndWith([this](){
+        this->runAction(cocos2d::RemoveSelf::create(true));
+    });
 }
 
 void Stalactite::AddPhysicsBody() {
@@ -170,7 +184,7 @@ void Stalactite::AddAnimator() {
     m_animator->setScale(m_scale); 
     m_animator->InitializeAnimations({
         std::make_pair(Utils::EnumCast(State::IDLE), GetStateName(State::IDLE)),
-        std::make_pair(Utils::EnumCast(State::PREPARE_ATTACK), GetStateName(State::ATTACK)),
+        std::make_pair(Utils::EnumCast(State::PREPARE_ATTACK), "shaking"),
         std::make_pair(Utils::EnumCast(State::ATTACK), GetStateName(State::ATTACK)), 
         std::make_pair(Utils::EnumCast(State::DEAD), GetStateName(State::DEAD))
     });
@@ -178,7 +192,7 @@ void Stalactite::AddAnimator() {
 
 void Stalactite::AddWeapons() {
     const auto damage { 30.f };
-    const auto range { 50.f };
+    const auto range { m_contentSize.height };
     // TODO: Here a strange mess of durations needed to be fixed
     // The projectile need to be created only when the attack-animation ends
     const auto preparationTime { m_animator->GetDuration(Utils::EnumCast(State::PREPARE_ATTACK)) };

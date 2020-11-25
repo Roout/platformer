@@ -347,7 +347,7 @@ void StalactitePart::OnAttack() {
         std::make_pair(Utils::EnumCast(Projectile::State::IDLE), "idle"),
         std::make_pair(Utils::EnumCast(Projectile::State::EXPLODED), "dead") 
     });
-    const auto scaleFactor { 0.2f };
+    const auto scaleFactor { 0.095f };
     proj->setScale(scaleFactor);
 
     const auto projectile = m_extractor();
