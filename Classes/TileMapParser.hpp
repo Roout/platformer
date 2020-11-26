@@ -27,6 +27,7 @@ namespace details {
         size_t  m_pathId { 0u };
         size_t  m_ownerId { 0u };
         float   m_scale { 0.f };
+        bool    m_flipX { false };
         /**
          * Front point always defines a position
          * If it's a Polygon than it contains all points of the figure
@@ -41,8 +42,8 @@ namespace details {
 	using GID = size_t;
 
 	struct TileSet final {
-		GID 		firstgid;
 		std::string name;
+		GID 		firstgid;
 		uint16_t 	tilewidth;
 		uint16_t 	tileheight;
 		std::vector<std::pair<std::string, std::string>> properties;
@@ -107,8 +108,7 @@ private:
         Utils::EnumSize<CategoryName>()
     >  m_parsed;
 
-    
-	std::unordered_map<details::GID, details::TileSet> m_tileSets;
+	std::unordered_map<std::string, details::TileSet> m_tileSets;
 };
 
 #endif // TILE_MAP_PARSER_HPP

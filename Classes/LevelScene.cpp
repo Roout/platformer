@@ -5,6 +5,8 @@
 #include "Warrior.hpp"
 #include "Slime.hpp"
 #include "Archer.hpp"
+#include "units/Cannon.hpp"
+#include "objects/Stalactite.hpp"
 #include "BoulderPusher.hpp"
 #include "Spider.hpp"
 #include "Spearman.hpp"
@@ -194,6 +196,8 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
     std::unordered_map<size_t, Enemies::Warrior*> warriors;
     std::unordered_map<size_t, Enemies::Slime*> slimes;
     std::unordered_map<size_t, Enemies::Archer*> archers;
+    std::unordered_map<size_t, Enemies::Cannon*> cannons;
+    std::unordered_map<size_t, Enemies::Stalactite*> stalactites;
     std::unordered_map<size_t, Enemies::BoulderPusher*> boulderPushers;
     std::unordered_map<size_t, Enemies::Spider*> spiders;
 
@@ -202,6 +206,8 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
     pathIdByUnitId.reserve(20);
     warriors.reserve(20);
     archers.reserve(10);
+    cannons.reserve(10);
+    stalactites.reserve(10);
     boulderPushers.reserve(10);
     spiders.reserve(20);
 
@@ -306,6 +312,21 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                         map->addChild(archer, zOrder);
                         archers.emplace(form.m_id, archer);
                     } break;
+                    case core::EnemyClass::CANNON: {
+                        const auto cannon { Enemies::Cannon::create(form.m_id, contentSize, form.m_scale) };
+                        if(form.m_flipX) cannon->Turn();
+                        cannon->setName(core::EntityNames::CANNON);
+                        cannon->setPosition(form.m_rect.origin + cocos2d::Size{ contentSize.width / 2.f, contentSize.height });
+                        map->addChild(cannon, zOrder);
+                        cannons.emplace(form.m_id, cannon);
+                    } break;
+                    case core::EnemyClass::STALACTITE: {
+                        const auto stalactite { Enemies::Stalactite::create(form.m_id, contentSize, form.m_scale) };
+                        stalactite->setName(core::EntityNames::STALACTITE);
+                        stalactite->setPosition(form.m_rect.origin + cocos2d::Size{ contentSize.width / 2.f, contentSize.height });
+                        map->addChild(stalactite, zOrder);
+                        stalactites.emplace(form.m_id, stalactite);
+                    } break;
                     case core::EnemyClass::BOULDER_PUSHER: {
                         const auto boulderPusher { Enemies::BoulderPusher::create(form.m_id, contentSize) };
                         boulderPusher->setName(core::EntityNames::BOULDER_PUSHER);
@@ -352,6 +373,12 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
     } 
     for(auto& [id, archer]: archers) {
         archer->AttachInfluenceArea(influences.at(id));
+    } 
+    for(auto& [id, cannon]: cannons) {
+        cannon->AttachInfluenceArea(influences.at(id));
+    } 
+    for(auto& [id, stalactite]: stalactites) {
+        stalactite->AttachInfluenceArea(influences.at(id));
     } 
     for(auto& [id, pusher]: boulderPushers) {
         pusher->AttachInfluenceArea(influences.at(id));

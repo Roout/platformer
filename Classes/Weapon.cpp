@@ -4,6 +4,10 @@
 #include "Player.hpp"
 #include "Core.hpp"
 
+#include <string>
+
+using namespace std::literals;
+
 /**
  * TODO: 
  * - remove run-time dependency on UI. It shouldn't be attached to the scene here
@@ -179,7 +183,11 @@ void Fireball::OnAttack() {
     const auto scaleFactor { 0.2f };
     
     const auto proj = Projectile::create(this->GetDamage());
-    proj->AddAnimator("fireball");
+    proj->AddAnimator("fireball", "fireball");
+    proj->InitializeAnimations({
+        std::make_pair(Utils::EnumCast(Projectile::State::IDLE), "walk"),       // sorry the illustrator is a little bit of an idiot
+        std::make_pair(Utils::EnumCast(Projectile::State::EXPLODED), "attack")  // sorry the illustrator is a little bit of an idiot
+    });
     proj->setScale(scaleFactor);
 
     const auto projectile = m_extractor();
@@ -229,7 +237,11 @@ void SlimeShot::OnAttack() {
     const auto scaleFactor { 0.2f };
     
     const auto proj = Projectile::create(this->GetDamage());
-    proj->AddAnimator("slime_attack");
+    proj->AddAnimator("slime_attack", "slime_attack");
+    proj->InitializeAnimations({
+        std::make_pair(Utils::EnumCast(Projectile::State::IDLE), "walk"),       // sorry the illustrator is a little bit of an idiot
+        std::make_pair(Utils::EnumCast(Projectile::State::EXPLODED), "attack")  // sorry the illustrator is a little bit of an idiot
+    });
     proj->setScale(scaleFactor);
 
     const auto projectile = m_extractor();
@@ -268,6 +280,108 @@ void SlimeShot::OnAttack() {
     body->setContactTestBitmask(testMask);
     
     proj->SetLifetime(4.f);
+    proj->addComponent(body);
+    map->addChild(proj, 101); /// TODO: clean up this mess with Z-order!
+}
+
+void Stake::OnAttack() {
+    const auto runningScene { cocos2d::Director::getInstance()->getRunningScene() };
+    const auto level = runningScene->getChildByName("Level");
+    const auto map = level->getChildByName("Map");
+    
+    const auto proj = Projectile::create(this->GetDamage());
+    const auto projectile = m_extractor();
+    auto body = proj->AddPhysicsBody(projectile.size);
+    proj->setPosition(projectile.origin);
+    proj->setContentSize(projectile.size);
+    // push projectile
+    m_modifier(body);
+    const auto scaleFactor { 0.2f };
+    const auto sprite = proj->AddImage("cannon/library/Asset 4.png");
+    sprite->setAnchorPoint({0.0f, 0.0f});
+    sprite->setScale(scaleFactor);
+    if (body->getVelocity().x > 0.f) {
+        proj->FlipX();
+    }
+
+    const auto testMask {
+        Utils::CreateMask(
+            core::CategoryBits::HITBOX_SENSOR
+            , core::CategoryBits::PROPS
+            , core::CategoryBits::BOUNDARY
+            , core::CategoryBits::PLATFORM
+            , core::CategoryBits::PLAYER_PROJECTILE
+        )
+    };
+    const auto categoryMask {
+        Utils::CreateMask(core::CategoryBits::ENEMY_PROJECTILE)
+    };
+    proj->SetCategoryBitmask(categoryMask);
+    proj->SetContactTestBitmask(testMask);
+    proj->SetLifetime(3.f);
+    map->addChild(proj, 100); /// TODO: clean up this mess with Z-order!
+}
+
+StalactitePart::StalactitePart(
+    float damage
+    , float range
+    , float preparationTime 
+    , float attackTime 
+    , float reloadTime
+    , size_t index
+)   
+    : Weapon { damage, range, preparationTime, attackTime, reloadTime }
+    , m_index { index }
+{}
+
+void StalactitePart::OnAttack() {
+    const auto runningScene { cocos2d::Director::getInstance()->getRunningScene() };
+    const auto level = runningScene->getChildByName("Level");
+    const auto map = level->getChildByName("Map");
+
+    const auto proj = Projectile::create(this->GetDamage());
+    auto name   = cocos2d::StringUtils::format("%s_%d_projectile", core::EntityNames::STALACTITE, m_index);
+    auto prefix = cocos2d::StringUtils::format("stalactites/%s_%d/%s", core::EntityNames::STALACTITE, m_index, name.c_str());
+    proj->AddAnimator(name, prefix);
+    proj->InitializeAnimations({
+        std::make_pair(Utils::EnumCast(Projectile::State::IDLE), "idle"),
+        std::make_pair(Utils::EnumCast(Projectile::State::EXPLODED), "dead") 
+    });
+    const auto scaleFactor { 0.095f };
+    proj->setScale(scaleFactor);
+
+    const auto projectile = m_extractor();
+    const auto body = cocos2d::PhysicsBody::createBox(
+        projectile.size
+        , cocos2d::PhysicsMaterial{ 1.f, 0.0f, 0.0f }
+        , { -projectile.size.width / 2.f, 0.f }
+    );
+    body->setDynamic(true);
+    body->setGravityEnable(false);
+
+    proj->setAnchorPoint({0.0f, 0.0f});
+    proj->setContentSize(projectile.size);
+    proj->setPosition(projectile.origin);
+    // push projectile
+    m_modifier(body);
+   
+    const auto testMask {
+        Utils::CreateMask(
+            core::CategoryBits::HITBOX_SENSOR
+            , core::CategoryBits::PROPS
+            , core::CategoryBits::BOUNDARY
+            , core::CategoryBits::PLAYER_PROJECTILE
+            , core::CategoryBits::PLATFORM
+        )
+    };
+    const auto categoryMask {
+        Utils::CreateMask(core::CategoryBits::ENEMY_PROJECTILE)
+    };
+    body->setCollisionBitmask(0);
+    body->setCategoryBitmask(categoryMask);
+    body->setContactTestBitmask(testMask);
+    
+    proj->SetLifetime(5.f);
     proj->addComponent(body);
     map->addChild(proj, 101); /// TODO: clean up this mess with Z-order!
 }

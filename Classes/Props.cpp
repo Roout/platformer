@@ -132,7 +132,9 @@ void Prop::AddPhysicsBody() {
 }
  
 void Prop::AddAnimator() {
-    m_animator = dragonBones::Animator::create("Map/props/"s, std::string(GetPropName(m_name)));
+    std::string name(GetPropName(m_name));
+    std::string prefix = "Map/props/"s + name;
+    m_animator = dragonBones::Animator::create(std::move(prefix), std::move(name));
     m_animator->InitializeAnimations({
         std::make_pair(Utils::EnumCast(State::IDLE), "idle"),
         std::make_pair(Utils::EnumCast(State::DEAD), "dead")

@@ -217,4 +217,28 @@ public:
     void OnAttack() override;
 };
 
+class Stake final : public Weapon {
+public:
+    using Weapon::Weapon;
+
+    void OnAttack() override;
+};
+
+class StalactitePart final : public Weapon {
+public:
+    StalactitePart(float damage
+        , float range
+        , float preparationTime 
+        , float attackTime 
+        , float reloadTime
+        , size_t index
+    );
+
+    void OnAttack() override;
+    
+private:
+
+    size_t m_index { 1 };
+};
+
 #endif // WEAPON_SYSTEM_HPP

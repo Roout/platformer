@@ -15,31 +15,23 @@
 #include <iterator>
 #include <cassert>
 #include <cstdint>
+#include <unordered_map>
 
 namespace {
 
-	core::EnemyClass AsEnemyClass(const std::string& ty) noexcept {
-		auto type { core::EnemyClass::UNDEFINED };
-		if( ty == core::EntityNames::WARRIOR ) {
-			type = core::EnemyClass::WARRIOR;
-		} 
-		else if ( ty == core::EntityNames::ARCHER ) {
-			type = core::EnemyClass::ARCHER;
-		}
-		else if ( ty == core::EntityNames::SPEARMAN ) {
-			type = core::EnemyClass::SPEARMAN;
-		}
-		else if ( ty == core::EntityNames::SLIME ) {
-			type = core::EnemyClass::SLIME;
-		}
-		else if ( ty == core::EntityNames::SPIDER ) {
-			type = core::EnemyClass::SPIDER;
-		}
-		else if ( ty == core::EntityNames::BOULDER_PUSHER ) {
-			type = core::EnemyClass::BOULDER_PUSHER;
-		}
-		// assert(type == core::EnemyClass::UNDEFINED && "[TileMapParser] Enemy class not defined!");
-		return type;
+	core::EnemyClass AsEnemyClass(const std::string& ty) {
+		static std::unordered_map<std::string, core::EnemyClass> routing {
+			{ core::EntityNames::WARRIOR, core::EnemyClass::WARRIOR }
+			, { core::EntityNames::ARCHER, core::EnemyClass::ARCHER }
+			, { core::EntityNames::CANNON, core::EnemyClass::CANNON }
+			, { core::EntityNames::STALACTITE, core::EnemyClass::STALACTITE }
+			, { core::EntityNames::SPEARMAN, core::EnemyClass::SPEARMAN }
+			, { core::EntityNames::SLIME, core::EnemyClass::SLIME }
+			, { core::EntityNames::SPIDER, core::EnemyClass::SPIDER }
+			, { core::EntityNames::BOULDER_PUSHER, core::EnemyClass::BOULDER_PUSHER }
+		};
+		auto it = routing.find(ty);
+		return it != routing.end()? it->second: core::EnemyClass::UNDEFINED;
 	}
 
 	// This thing is used only by TileMapParser::Parse for merging bodies
@@ -438,9 +430,8 @@ void TileMapParser::ParseUnits() {
 			const auto name = objMap.at("name").asString();
 			const auto width = objMap.at("width").asFloat();
 			const auto height = objMap.at("height").asFloat();
-			const auto gid = objMap.at("gid").asUnsignedInt();
-			assert(m_tileSets.at(gid).name == name && "Wrong GID");
-			const auto origin_height = static_cast<float>(m_tileSets.at(gid).tileheight);
+			const auto & tileset = m_tileSets.at(name);	
+			const auto origin_height = static_cast<float>(tileset.tileheight);
 			const auto x = objMap.at("x").asFloat();
 			const auto y = objMap.at("y").asFloat();
 
@@ -448,6 +439,9 @@ void TileMapParser::ParseUnits() {
 			form.m_id = objMap.at("id").asUnsignedInt();
 			form.m_rect.origin = cocos2d::Vec2{ x, y };
 			form.m_scale = height / origin_height;
+			if(auto it = objMap.find("flip-x"); it != objMap.end()) {
+				form.m_flipX = it->second.asBool();
+			}
 			// width need to be specified manualy because images used in the map editor are usefull 
 			// only for providing visual info and desired height and width. 
 			// Scale factor can be calculated only using height not width!  
@@ -458,7 +452,9 @@ void TileMapParser::ParseUnits() {
 			}
 			else if(type == "enemy") {
 				form.m_type = CategoryName::ENEMY;
-				form.m_pathId = objMap.at("path-id").asUnsignedInt();
+				if(auto it = objMap.find("path-id"); it != objMap.end()) {
+					form.m_pathId = objMap.at("path-id").asUnsignedInt();
+				}
 				form.m_subType = Utils::EnumCast(::AsEnemyClass(name));
 				this->Get<CategoryName::ENEMY>().emplace_back(form);
 			}
@@ -542,7 +538,7 @@ void TileMapParser::ParseTileSets() {
 				std::from_chars(pair.value.data(), pair.value.data() + pair.value.size(), tileset.tileheight);
 			}
 		}
-		m_tileSets.emplace(tileset.firstgid, std::move(tileset));
+		m_tileSets.emplace(tileset.name, std::move(tileset));
 	}
 }
 
@@ -553,10 +549,9 @@ void TileMapParser::ParseProps() {
 		for (const auto& object : allObjects) {
 			const auto& objMap = object.asValueMap();
 			const auto name = objMap.at("name").asString();
-			const auto gid = objMap.at("gid").asUnsignedInt();
-			assert(m_tileSets.at(gid).name == name && "Wrong GID");
-			const auto origin_width  = static_cast<float>(m_tileSets.at(gid).tilewidth);
-			const auto origin_height = static_cast<float>(m_tileSets.at(gid).tileheight);
+			const auto& tileset = m_tileSets.at(name);
+			const auto origin_width  = static_cast<float>(tileset.tilewidth);
+			const auto origin_height = static_cast<float>(tileset.tileheight);
 			const auto width = objMap.at("width").asFloat();
 			const auto height = objMap.at("height").asFloat();
 			const auto x = objMap.at("x").asFloat();

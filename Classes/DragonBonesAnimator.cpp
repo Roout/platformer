@@ -104,10 +104,10 @@ namespace dragonBones {
         const auto factory = CCFactory::getFactory();
         std::string path = m_prefix.empty()? "" : m_prefix + "/";
         if(const auto bonesData = factory->getDragonBonesData(m_armatureName); bonesData == nullptr) {    
-            factory->loadDragonBonesData( path + m_armatureName + "/" + m_armatureName + "_ske.json");
+            factory->loadDragonBonesData( path + "/" + m_armatureName + "_ske.json");
         }
         if(const auto texture = factory->getTextureAtlasData(m_armatureName); texture == nullptr) {
-            factory->loadTextureAtlasData( path + m_armatureName + "/" + m_armatureName + "_tex.json");
+            factory->loadTextureAtlasData( path + "/" + m_armatureName + "_tex.json");
         }
         return factory->buildArmatureDisplay("Armature", m_armatureName);
     }

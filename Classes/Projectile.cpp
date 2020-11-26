@@ -90,19 +90,19 @@ void Projectile::UpdateAnimation() {
         const auto repeatTimes { isOneTimeAttack ? 1 : dragonBones::Animator::INFINITY_LOOP };
         (void) m_animator->Play(Utils::EnumCast(m_currentState), repeatTimes);
         if(!this->IsAlive()) {
-            m_animator->EndWith([this](){ 
+            m_animator->EndWith([this]() { 
                 this->runAction(cocos2d::RemoveSelf::create(true));
             });
         }
     }
 }
 
-void Projectile::AddAnimator(std::string chachedArmatureName) {
-    m_animator = dragonBones::Animator::create("", std::move(chachedArmatureName));
-    m_animator->InitializeAnimations({
-        std::make_pair(Utils::EnumCast(State::IDLE), "walk"),       // sorry the illustrator is a little bit of an idiot
-        std::make_pair(Utils::EnumCast(State::EXPLODED), "attack")  // sorry the illustrator is a little bit of an idiot
-    });
+void Projectile::InitializeAnimations(std::initializer_list<std::pair<std::size_t, std::string>> animations) {
+    m_animator->InitializeAnimations(animations);
+}
+
+void Projectile::AddAnimator(std::string chachedArmatureName, std::string prefix) {
+    m_animator = dragonBones::Animator::create(std::move(prefix), std::move(chachedArmatureName));
     m_animator->setPosition({0.f, 0.f});
     m_animator->setAnchorPoint({0.f, 0.f});
     this->addChild(m_animator, 102);
