@@ -18,7 +18,7 @@ Stalactite* Stalactite::create(
     auto pRet = new (std::nothrow) Stalactite(id
         , contentSize
         , scale
-        , 1 // cocos2d::RandomHelper::random_int(1, 4)
+        , cocos2d::RandomHelper::random_int(1, 4)
     );
     if(pRet && pRet->init()) {
         pRet->autorelease();
