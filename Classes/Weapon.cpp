@@ -176,14 +176,14 @@ void Legs::OnAttack() {
     proj->addComponent(body);
 }
 
-void Fireball::OnAttack() {
+void PlayerFireball::OnAttack() {
     const auto runningScene { cocos2d::Director::getInstance()->getRunningScene() };
     const auto level = runningScene->getChildByName("Level");
     const auto map = level->getChildByName("Map");
     const auto scaleFactor { 0.2f };
     
     const auto proj = Projectile::create(this->GetDamage());
-    proj->AddAnimator("fireball", "fireball");
+    proj->AddAnimator("mc_fireball", "mc/mc_fireball");
     proj->InitializeAnimations({
         std::make_pair(Utils::EnumCast(Projectile::State::IDLE), "walk"),       // sorry the illustrator is a little bit of an idiot
         std::make_pair(Utils::EnumCast(Projectile::State::EXPLODED), "attack")  // sorry the illustrator is a little bit of an idiot

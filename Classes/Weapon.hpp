@@ -189,7 +189,7 @@ public:
     void OnAttack() override;
 };
 
-class Fireball final : public Weapon {
+class PlayerFireball final : public Weapon {
 public:
     using Weapon::Weapon;
 

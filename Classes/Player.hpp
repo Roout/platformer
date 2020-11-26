@@ -28,12 +28,15 @@ public:
 private:
     enum class State {
         IDLE,
+        DEAD,
         WALK,
         JUMP,
+        MELEE_ATTACK, // simple attack
+        RANGE_ATTACK, // fireball attack
         PREPARE_RANGE_ATTACK,
-        MELEE_ATTACK,
-        RANGE_ATTACK,
-        DEAD,
+        SPECIAL_PHASE_1,
+        SPECIAL_PHASE_2,
+        SPECIAL_PHASE_3,
         COUNT
     };
 
@@ -56,6 +59,8 @@ private:
     void RangeAttack();
 
     void MeleeAttack();
+
+    void Attack() override;
 
     void AddAnimator() override;
 

@@ -57,31 +57,53 @@ void Player::RecieveDamage(int damage) noexcept {
     }
 }
 
-std::string  Player::GetStateName(Player::State state) {
+/**
+ * IDLE,
+ * DEAD,
+ * WALK,
+ * JUMP,
+ * MELEE_ATTACK, // simple attack
+ * RANGE_ATTACK, // fireball attack
+ * PREPARE_RANGE_ATTACK,
+ * SPECIAL_PHASE_1,
+ * SPECIAL_PHASE_2,
+ * SPECIAL_PHASE_3,
+*/
+std::string Player::GetStateName(Player::State state) {
     static std::unordered_map<Player::State, std::string> mapped {
         { Player::State::MELEE_ATTACK, "attack_1" },
         { Player::State::RANGE_ATTACK, "attack_2" },
-        { Player::State::PREPARE_RANGE_ATTACK, "prep_attack_2" },
         { Player::State::IDLE, "idle" },
         { Player::State::JUMP, "jump" },
         { Player::State::WALK, "walk" },
-        { Player::State::DEAD, "dead" }
+        { Player::State::DEAD, "dead" },
+        { Player::State::PREPARE_RANGE_ATTACK, "prep_attack_2" },
+        { Player::State::SPECIAL_PHASE_1, "special_phase_1" },
+        { Player::State::SPECIAL_PHASE_2, "special_phase_2" },
+        { Player::State::SPECIAL_PHASE_3, "special_phase_3" }
     };
     auto it = mapped.find(state);
     return (it != mapped.cend()? it->second: "");        
 }
 
 void Player::AddAnimator() {
-    Unit::AddAnimator();
-    m_animator->InitializeAnimations({
-        std::make_pair(Utils::EnumCast(State::MELEE_ATTACK), "attack_1"),
-        std::make_pair(Utils::EnumCast(State::RANGE_ATTACK), "attack_2"),       // some problems with animator...sorry
-        std::make_pair(Utils::EnumCast(State::PREPARE_RANGE_ATTACK), "idle"),   // same here....
-        std::make_pair(Utils::EnumCast(State::DEAD), "dead"),
-        std::make_pair(Utils::EnumCast(State::IDLE), "idle"),
-        std::make_pair(Utils::EnumCast(State::JUMP), "jump"),
-        std::make_pair(Utils::EnumCast(State::WALK), "walk")
+    std::string chachedArmatureName = m_dragonBonesName;
+    std::string prefix = m_dragonBonesName + "/" + m_dragonBonesName;
+    m_animator = dragonBones::Animator::create(std::move(prefix), std::move(chachedArmatureName));
+    m_animator->setScale(0.1f); // TODO: introduce multi-resolution scaling
+    m_animator->InitializeAnimations(std::initializer_list<std::pair<size_t, std::string>> {
+        { Utils::EnumCast(State::MELEE_ATTACK), GetStateName(State::MELEE_ATTACK) },
+        { Utils::EnumCast(State::RANGE_ATTACK), GetStateName(State::RANGE_ATTACK) }, 
+        { Utils::EnumCast(State::PREPARE_RANGE_ATTACK), std::string("idle") },
+        { Utils::EnumCast(State::DEAD), GetStateName(State::DEAD) },
+        { Utils::EnumCast(State::IDLE), GetStateName(State::IDLE) },
+        { Utils::EnumCast(State::JUMP), GetStateName(State::JUMP) },
+        { Utils::EnumCast(State::WALK), GetStateName(State::WALK) },
+        { Utils::EnumCast(State::SPECIAL_PHASE_1), GetStateName(State::SPECIAL_PHASE_1) },
+        { Utils::EnumCast(State::SPECIAL_PHASE_2), GetStateName(State::SPECIAL_PHASE_2) },
+        { Utils::EnumCast(State::SPECIAL_PHASE_3), GetStateName(State::SPECIAL_PHASE_3) }
     });
+    this->addChild(m_animator);
 }
 
 void Player::AddPhysicsBody() {
@@ -91,10 +113,7 @@ void Player::AddPhysicsBody() {
     body->setCategoryBitmask(Utils::CreateMask(core::CategoryBits::PLAYER));
     body->setContactTestBitmask(Utils::CreateMask(core::CategoryBits::PLATFORM));
     body->setCollisionBitmask(
-        Utils::CreateMask(
-            core::CategoryBits::BOUNDARY 
-            , core::CategoryBits::PLATFORM 
-        )
+        Utils::CreateMask(core::CategoryBits::BOUNDARY, core::CategoryBits::PLATFORM)
     );
 
     const auto hitBoxTag { Utils::CreateMask(core::CategoryBits::HITBOX_SENSOR) };
@@ -114,10 +133,7 @@ void Player::AddPhysicsBody() {
     groundSensor->setCollisionBitmask(0);
     groundSensor->setCategoryBitmask(Utils::CreateMask(core::CategoryBits::GROUND_SENSOR));
     groundSensor->setContactTestBitmask(
-        Utils::CreateMask(
-            core::CategoryBits::BOUNDARY
-            , core::CategoryBits::PLATFORM
-        )
+        Utils::CreateMask(core::CategoryBits::BOUNDARY, core::CategoryBits::PLATFORM)
     );
 }
 
@@ -174,39 +190,34 @@ void Player::UpdateDebugLabel() noexcept {
 }
 
 void Player::UpdateAnimation() {
-    if(this->IsDead()) {
-        this->OnDeath();
-    } 
-    else if(m_currentState != m_previousState) {
+    if(m_currentState != m_previousState) {
         int repeatTimes { dragonBones::Animator::INFINITY_LOOP };
         if (m_currentState == State::MELEE_ATTACK 
             || m_currentState == State::JUMP 
+            || m_currentState == State::DEAD 
             || m_currentState == State::RANGE_ATTACK 
             || m_currentState == State::PREPARE_RANGE_ATTACK 
         ) {
             repeatTimes = 1;
         }
         (void) m_animator->Play(Utils::EnumCast(m_currentState), repeatTimes);
+        if(this->IsDead()) {
+            this->OnDeath();
+        }
     }
 }
 
 void Player::OnDeath() {
-    // emit particles
-    const auto emitter = cocos2d::ParticleSystemQuad::create("particle_texture.plist");
-    emitter->setAutoRemoveOnFinish(true);
-    /// TODO: adjust for the multiresolution
-    emitter->setScale(0.2f);
-    emitter->setPositionType(cocos2d::ParticleSystem::PositionType::RELATIVE);
-    emitter->setPosition(this->getPosition());
-    this->getParent()->addChild(emitter, 9);
-
     // remove physics body
     this->removeComponent(this->getPhysicsBody());
-    // create a death screen
-    cocos2d::EventCustom event(DeathScreen::EVENT_NAME);
-    this->getEventDispatcher()->dispatchEvent(&event);
-    // remove player from screen
-    this->runAction(cocos2d::RemoveSelf::create());
+    this->getChildByName("health")->removeFromParent();
+    m_animator->EndWith([this](){
+        // create a death screen
+        cocos2d::EventCustom event(DeathScreen::EVENT_NAME);
+        this->getEventDispatcher()->dispatchEvent(&event);
+        // remove player from screen
+        this->runAction(cocos2d::RemoveSelf::create(true));
+    });
 };
 
 bool Player::IsInvincible() const noexcept {
@@ -216,7 +227,7 @@ bool Player::IsInvincible() const noexcept {
 void Player::UpdateState(const float dt) noexcept {
     m_previousState = m_currentState;
 
-    const auto velocity { this->getPhysicsBody()->getVelocity() };
+    const auto velocity { this->IsDead()? cocos2d::Vec2{ 0.f, 0.f } : this->getPhysicsBody()->getVelocity() };
     static constexpr float EPS { 0.001f };
 
     // check whether we're out of level bounds
@@ -261,7 +272,7 @@ void Player::AddWeapons() {
     // create weapon (it should be read from config)
     {
         const auto damage { 25.f };
-        const auto range { 35.f };
+        const auto range { 80.f };
         const auto preparationTime { 0.f };
         const auto attackDuration { m_animator->GetDuration(Utils::EnumCast(State::MELEE_ATTACK)) };
         const auto reloadTime { 0.1f };
@@ -279,7 +290,7 @@ void Player::AddWeapons() {
         const auto preparationTime { 0.f };
         const auto attackDuration { m_animator->GetDuration(Utils::EnumCast(State::RANGE_ATTACK))  };
         const auto reloadTime { 2.f };
-        m_weapons[WeaponClass::RANGE] = new Fireball(
+        m_weapons[WeaponClass::RANGE] = new PlayerFireball(
             damage, 
             range, 
             preparationTime,
@@ -327,6 +338,35 @@ void Player::MeleeAttack() {
         m_weapons[WeaponClass::RANGE]->IsPreparing()
     };
     if (!usingRange) {
-        Unit::Attack();
+        this->Attack();
+    }
+}
+
+void Player::Attack() {
+    if(m_weapons.front()->IsReady() && !this->IsDead()) {
+        auto projectilePosition = [this]() -> cocos2d::Rect {
+            const auto attackRange { m_weapons.front()->GetRange() };
+
+            auto position = this->getPosition();
+            if(m_side == Side::RIGHT) {
+                position.x += m_contentSize.width / 2.f;
+            }
+            else {
+                position.x -= m_contentSize.width / 2.f + attackRange;
+            }
+            position.y += m_contentSize.height * 0.25f;
+            cocos2d::Rect attackedArea {
+                position,
+                cocos2d::Size{ attackRange, m_contentSize.height * 0.5f }
+            };
+            return attackedArea;
+        };
+        auto pushProjectile = [this](cocos2d::PhysicsBody* body){
+            body->setVelocity(this->getPhysicsBody()->getVelocity());
+        };
+        m_weapons.front()->LaunchAttack(
+            std::move(projectilePosition), 
+            std::move(pushProjectile)
+        );
     }
 }
