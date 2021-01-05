@@ -251,11 +251,14 @@ void Player::UpdateState(const float dt) noexcept {
     else if(m_weapons[WeaponClass::RANGE]->IsPreparing()) {
         m_currentState = State::PREPARE_RANGE_ATTACK;
     }
-    else if(m_weapons[WeaponClass::MELEE]->IsAttacking()) {
-        m_currentState = State::MELEE_ATTACK;
-    }
     else if(m_weapons[WeaponClass::RANGE]->IsAttacking()) {
         m_currentState = State::RANGE_ATTACK;
+    }
+    else if(m_weapons[WeaponClass::MELEE]->IsPreparing()) {
+        m_currentState = State::MELEE_ATTACK;
+    }
+    else if(m_weapons[WeaponClass::MELEE]->IsAttacking()) {
+        m_currentState = State::MELEE_ATTACK;
     }
     else if(!this->IsOnGround()) {
         m_currentState = State::JUMP;
@@ -269,13 +272,14 @@ void Player::UpdateState(const float dt) noexcept {
 }
 
 void Player::AddWeapons() {
-    // create weapon (it should be read from config)
+    // create weapon (TODO: it should be read from config)
     {
         const auto damage { 25.f };
         const auto range { 80.f };
-        const auto preparationTime { 0.f };
-        const auto attackDuration { m_animator->GetDuration(Utils::EnumCast(State::MELEE_ATTACK)) };
-        const auto reloadTime { 0.1f };
+        const auto animDuration = m_animator->GetDuration(Utils::EnumCast(State::MELEE_ATTACK));
+        const auto attackDuration { 0.5f * animDuration };
+        const auto preparationTime { animDuration - attackDuration };
+        const auto reloadTime { 0.f };
         m_weapons[WeaponClass::MELEE] = new Sword(
             damage, 
             range, 
@@ -289,7 +293,7 @@ void Player::AddWeapons() {
         const auto range { 110.f };
         const auto preparationTime { 0.f };
         const auto attackDuration { m_animator->GetDuration(Utils::EnumCast(State::RANGE_ATTACK))  };
-        const auto reloadTime { 2.f };
+        const auto reloadTime { 0.f };
         m_weapons[WeaponClass::RANGE] = new PlayerFireball(
             damage, 
             range, 
@@ -301,7 +305,7 @@ void Player::AddWeapons() {
 };
 
 void Player::RangeAttack() {
-    bool usingMelee = {
+    bool usingMelee {
         m_weapons[WeaponClass::MELEE]->IsAttacking() || 
         m_weapons[WeaponClass::MELEE]->IsPreparing()
     };
