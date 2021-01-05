@@ -251,11 +251,14 @@ void Player::UpdateState(const float dt) noexcept {
     else if(m_weapons[WeaponClass::RANGE]->IsPreparing()) {
         m_currentState = State::PREPARE_RANGE_ATTACK;
     }
-    else if(m_weapons[WeaponClass::MELEE]->IsAttacking()) {
-        m_currentState = State::MELEE_ATTACK;
-    }
     else if(m_weapons[WeaponClass::RANGE]->IsAttacking()) {
         m_currentState = State::RANGE_ATTACK;
+    }
+    else if(m_weapons[WeaponClass::MELEE]->IsPreparing()) {
+        m_currentState = State::MELEE_ATTACK;
+    }
+    else if(m_weapons[WeaponClass::MELEE]->IsAttacking()) {
+        m_currentState = State::MELEE_ATTACK;
     }
     else if(!this->IsOnGround()) {
         m_currentState = State::JUMP;
@@ -273,8 +276,9 @@ void Player::AddWeapons() {
     {
         const auto damage { 25.f };
         const auto range { 80.f };
-        const auto preparationTime { 0.f };
-        const auto attackDuration { m_animator->GetDuration(Utils::EnumCast(State::MELEE_ATTACK)) };
+        const auto animDuration = m_animator->GetDuration(Utils::EnumCast(State::MELEE_ATTACK));
+        const auto attackDuration { 0.5f * animDuration };
+        const auto preparationTime { animDuration - attackDuration };
         const auto reloadTime { 0.f };
         m_weapons[WeaponClass::MELEE] = new Sword(
             damage, 
