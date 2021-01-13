@@ -324,7 +324,7 @@ void Player::AddWeapons() {
     }
     {
         const auto damage { 55.f };
-        const auto range { 200.f };
+        const auto range { 180.f };
         const auto animDuration = m_animator->GetDuration(Utils::EnumCast(State::SPECIAL_PHASE_3));
         const auto attackDuration { 0.75f * animDuration };
         const auto preparationTime { animDuration - attackDuration };
@@ -385,7 +385,7 @@ void Player::SpecialAttack() {
     if (m_weapons[WeaponClass::SPECIAL]->IsReady() && !this->IsDead()) {
         auto projectilePosition = [this]() -> cocos2d::Rect {
             const auto attackRange { m_weapons[WeaponClass::SPECIAL]->GetRange() };
-            const cocos2d::Size slashSize { attackRange, attackRange };
+            const cocos2d::Size slashSize { attackRange * 1.8f, attackRange };
 
             auto position = this->getPosition();
             if (this->IsLookingLeft()) {

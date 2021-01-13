@@ -234,7 +234,7 @@ void PlayerSpecial::OnAttack() {
     const auto runningScene { cocos2d::Director::getInstance()->getRunningScene() };
     const auto level = runningScene->getChildByName("Level");
     const auto map = level->getChildByName("Map");
-    const auto scaleFactor { 0.2f };
+    const auto scaleFactor { 0.17f };
     
     const auto proj = Projectile::create(this->GetDamage());
     proj->AddAnimator("mc_special", "mc/mc_special");
