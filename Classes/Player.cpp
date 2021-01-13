@@ -442,8 +442,8 @@ void Player::OnSpecialAttackEnd() {
             m_currentState = State::SPECIAL_PHASE_3;
         } break;
         case State::SPECIAL_PHASE_3: {
-            // impossible to reach this state
-            assert(false && "Shouldn't reach this state!");
+            // can be reached when `E` is pressed 
+            // and released during this phase
         } break;
         default: break;
     }
