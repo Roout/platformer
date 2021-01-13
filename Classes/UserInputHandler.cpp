@@ -128,6 +128,7 @@ void UserInputHandler::OnKeyPressed(
     if(m_lastInput.dx == 1) {
         // reset only dx!
         m_player->m_movement->ResetForceX();
+        m_player->FinishSpecialAttack();
         m_player->MoveAlong(1.f, 0.f);
         if(m_player->IsLookingLeft()) {
             m_player->Turn();
@@ -136,6 +137,7 @@ void UserInputHandler::OnKeyPressed(
     else if(m_lastInput.dx == -1) {
         // reset only dx!
         m_player->m_movement->ResetForceX();
+        m_player->FinishSpecialAttack();
         m_player->MoveAlong(-1.f, 0.f);
         if(!m_player->IsLookingLeft()) {
             m_player->Turn();
