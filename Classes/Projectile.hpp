@@ -15,6 +15,7 @@ public:
     enum class State : std::uint8_t {
         IDLE = 0,
         EXPLODED,
+        UNDEFINED,
         COUNT
     };
     
@@ -114,9 +115,9 @@ private:
 
     const float m_damage { 0 };
 
-    State m_previousState { State::IDLE };
+    State m_previousState { State::UNDEFINED };
     
-    State m_currentState { State::IDLE };
+    State m_currentState { State::UNDEFINED };
     
     dragonBones::Animator * m_animator{ nullptr };
 

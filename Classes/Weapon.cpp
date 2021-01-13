@@ -230,6 +230,60 @@ void PlayerFireball::OnAttack() {
     map->addChild(proj, 101); /// TODO: clean up this mess with Z-order!
 }
 
+void PlayerSpecial::OnAttack() {
+    const auto runningScene { cocos2d::Director::getInstance()->getRunningScene() };
+    const auto level = runningScene->getChildByName("Level");
+    const auto map = level->getChildByName("Map");
+    const auto scaleFactor { 0.17f };
+    
+    const auto proj = Projectile::create(this->GetDamage());
+    proj->AddAnimator("mc_special", "mc/mc_special");
+    proj->InitializeAnimations({
+        std::make_pair(Utils::EnumCast(Projectile::State::IDLE), "walk"),       // sorry the illustrator is a little bit of an idiot
+        std::make_pair(Utils::EnumCast(Projectile::State::EXPLODED), "attack")  // sorry the illustrator is a little bit of an idiot
+    });
+    proj->setScale(scaleFactor);
+
+    const auto projectile = m_extractor();
+    const auto body = cocos2d::PhysicsBody::createBox(
+        projectile.size
+        , cocos2d::PhysicsMaterial{ 1.f, 0.0f, 0.0f }
+        , { -projectile.size.width / 2.f, projectile.size.height * 0.2f }
+    );
+    body->setDynamic(true);
+    body->setGravityEnable(false);
+
+    proj->setAnchorPoint({0.0f, 0.0f});
+    proj->setContentSize(projectile.size);
+    proj->setPosition(projectile.origin);
+    // push projectile
+    m_modifier(body);
+    // ---------------
+    if(body->getVelocity().x > 0.f) {
+        proj->FlipX();
+    }
+
+    const auto testMask {
+        Utils::CreateMask(
+            core::CategoryBits::HITBOX_SENSOR
+            , core::CategoryBits::PROPS
+            , core::CategoryBits::BOUNDARY
+            , core::CategoryBits::ENEMY_PROJECTILE
+            , core::CategoryBits::PLATFORM
+        )
+    };
+    const auto categoryMask {
+        Utils::CreateMask(core::CategoryBits::PLAYER_PROJECTILE)
+    };
+    body->setCollisionBitmask(0);
+    body->setCategoryBitmask(categoryMask);
+    body->setContactTestBitmask(testMask);
+    
+    proj->SetLifetime(5.f);
+    proj->addComponent(body);
+    map->addChild(proj, 101); /// TODO: clean up this mess with Z-order!
+}
+
 void SlimeShot::OnAttack() {
     const auto runningScene { cocos2d::Director::getInstance()->getRunningScene() };
     const auto level = runningScene->getChildByName("Level");

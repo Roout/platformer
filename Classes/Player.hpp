@@ -60,6 +60,16 @@ private:
 
     void MeleeAttack();
 
+//==== Special Attack
+    void SpecialAttack();
+
+    void StartSpecialAttack();
+
+    void OnSpecialAttackEnd();
+
+    void FinishSpecialAttack();
+//===
+
     void Attack() override;
 
     void AddAnimator() override;
@@ -70,7 +80,7 @@ private:
 
     /// Properties
 private:
-    enum WeaponClass { MELEE, RANGE };
+    enum WeaponClass { MELEE, RANGE, SPECIAL };
 
     std::unique_ptr<SmoothFollower> m_follower { nullptr };
 
@@ -84,6 +94,10 @@ private:
     State m_previousState { State::IDLE };
 
     bool m_isInvincible { false };
+
+    bool m_scheduleSpecialAttack { false };
+
+    bool m_finishSpecialAttack { false };
 };
 
 

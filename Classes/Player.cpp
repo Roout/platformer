@@ -57,18 +57,6 @@ void Player::RecieveDamage(int damage) noexcept {
     }
 }
 
-/**
- * IDLE,
- * DEAD,
- * WALK,
- * JUMP,
- * MELEE_ATTACK, // simple attack
- * RANGE_ATTACK, // fireball attack
- * PREPARE_RANGE_ATTACK,
- * SPECIAL_PHASE_1,
- * SPECIAL_PHASE_2,
- * SPECIAL_PHASE_3,
-*/
 std::string Player::GetStateName(Player::State state) {
     static std::unordered_map<Player::State, std::string> mapped {
         { Player::State::MELEE_ATTACK, "attack_1" },
@@ -197,6 +185,8 @@ void Player::UpdateAnimation() {
             || m_currentState == State::DEAD 
             || m_currentState == State::RANGE_ATTACK 
             || m_currentState == State::PREPARE_RANGE_ATTACK 
+            || m_currentState == State::SPECIAL_PHASE_1 
+            || m_currentState == State::SPECIAL_PHASE_3 
         ) {
             repeatTimes = 1;
         }
@@ -239,6 +229,11 @@ void Player::UpdateState(const float dt) noexcept {
         this->getParent()->getPosition() + this->getPosition(),
         m_contentSize
     };
+
+    if(m_finishSpecialAttack) {
+        this->OnSpecialAttackEnd();
+        assert(!m_finishSpecialAttack && "Isn't consumed");
+    }
     
     if(!player.intersectsRect(boundary)) { 
         // out of level boundaries
@@ -259,6 +254,31 @@ void Player::UpdateState(const float dt) noexcept {
     }
     else if(m_weapons[WeaponClass::MELEE]->IsAttacking()) {
         m_currentState = State::MELEE_ATTACK;
+    }
+    else if(m_weapons[WeaponClass::SPECIAL]->IsPreparing()) {
+        m_currentState = State::SPECIAL_PHASE_3;
+    }
+    else if(m_weapons[WeaponClass::SPECIAL]->IsAttacking()) {
+        m_currentState = State::SPECIAL_PHASE_3;
+    }
+    else if(m_scheduleSpecialAttack) {
+        m_currentState = State::SPECIAL_PHASE_1;
+        // consume scheduled attack
+        m_scheduleSpecialAttack = false;
+    }
+    else if(m_currentState == State::SPECIAL_PHASE_1) {
+        // switch to State::SPECIAL_PHASE_2
+        // if animation is completed 
+        // TODO: try checking whether an animation is ongoing or not
+        if(!m_animator->IsPlaying()) {
+            m_currentState = State::SPECIAL_PHASE_2;
+        }
+    }
+    else if(m_currentState == State::SPECIAL_PHASE_2) {
+        // do nothing as player is charging a special attack
+        // it can be aborted if 
+        // - [ ] player moved
+        // - [ ] release button 
     }
     else if(!this->IsOnGround()) {
         m_currentState = State::JUMP;
@@ -302,6 +322,21 @@ void Player::AddWeapons() {
             reloadTime 
         );
     }
+    {
+        const auto damage { 55.f };
+        const auto range { 180.f };
+        const auto animDuration = m_animator->GetDuration(Utils::EnumCast(State::SPECIAL_PHASE_3));
+        const auto attackDuration { 0.75f * animDuration };
+        const auto preparationTime { animDuration - attackDuration };
+        const auto reloadTime { 0.f };
+        m_weapons[WeaponClass::SPECIAL] = new PlayerSpecial(
+            damage, 
+            range, 
+            preparationTime,
+            attackDuration,
+            reloadTime 
+        );
+    }
 };
 
 void Player::RangeAttack() {
@@ -337,12 +372,89 @@ void Player::RangeAttack() {
 }
 
 void Player::MeleeAttack() {
-    bool usingRange = {
+    bool usingRange {
         m_weapons[WeaponClass::RANGE]->IsAttacking() || 
         m_weapons[WeaponClass::RANGE]->IsPreparing()
     };
     if (!usingRange) {
         this->Attack();
+    }
+}
+
+void Player::SpecialAttack() {
+    if (m_weapons[WeaponClass::SPECIAL]->IsReady() && !this->IsDead()) {
+        auto projectilePosition = [this]() -> cocos2d::Rect {
+            const auto attackRange { m_weapons[WeaponClass::SPECIAL]->GetRange() };
+            const cocos2d::Size slashSize { attackRange * 1.8f, attackRange };
+
+            auto position = this->getPosition();
+            if (this->IsLookingLeft()) {
+                position.x -= m_contentSize.width / 2.f ;
+            }
+            else {
+                position.x += m_contentSize.width / 2.f;
+            }
+            position.y += floorf(m_contentSize.height * 0.1f);
+
+            return { position, slashSize };
+        };
+        
+        auto pushProjectile = [this](cocos2d::PhysicsBody* body) {
+            body->setVelocity({ this->IsLookingLeft()? -550.f: 550.f, 0.f });
+        };
+        m_weapons[WeaponClass::SPECIAL]->LaunchAttack(
+            std::move(projectilePosition), 
+            std::move(pushProjectile)
+        );
+    }
+}
+
+void Player::StartSpecialAttack() {
+    bool usingMelee {
+        m_weapons[WeaponClass::MELEE]->IsAttacking() || 
+        m_weapons[WeaponClass::MELEE]->IsPreparing()
+    };
+    bool usingRange {
+        m_weapons[WeaponClass::RANGE]->IsAttacking() || 
+        m_weapons[WeaponClass::RANGE]->IsPreparing()
+    };
+    bool usingSpecial {
+        m_weapons[WeaponClass::SPECIAL]->IsAttacking() || 
+        m_weapons[WeaponClass::SPECIAL]->IsPreparing()
+    };
+    if(!usingMelee && !usingRange && !usingSpecial && m_currentState != State::DEAD) {
+        m_scheduleSpecialAttack = true;
+    }
+}
+
+void Player::OnSpecialAttackEnd() {
+    m_finishSpecialAttack = false;
+    switch(m_currentState) {
+        case State::SPECIAL_PHASE_1: {
+            // cancel attack
+            m_currentState = State::IDLE;
+        } break;
+        case State::SPECIAL_PHASE_2: { // this is phase when player is charging sword attack
+            // interrupt charging
+            // invoke special wweapon attack!
+            this->SpecialAttack();
+            // switch to phase 3
+            m_currentState = State::SPECIAL_PHASE_3;
+        } break;
+        case State::SPECIAL_PHASE_3: {
+            // can be reached when `E` is pressed 
+            // and released during this phase
+        } break;
+        default: break;
+    }
+}
+
+void Player::FinishSpecialAttack() {
+    if( m_currentState == State::SPECIAL_PHASE_1 || 
+        m_currentState == State::SPECIAL_PHASE_2 || 
+        m_currentState == State::SPECIAL_PHASE_3
+    ) {
+        m_finishSpecialAttack = true;
     }
 }
 
