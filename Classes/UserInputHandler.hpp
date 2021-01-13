@@ -46,6 +46,7 @@ private:
         bool    jump { false };
         bool    meleeAttack { false };
         bool    rangeAttack { false };
+        bool    specialAttack { false }; 
         int     dx { 0 };
 
         Input() = default;
@@ -62,7 +63,7 @@ private:
 
     Input m_lastInput {};
     Player * const m_player { nullptr };
-    std::array<WinKeyCode, 9U> m_validKeys;
+    std::array<WinKeyCode, 10U> m_validKeys;
 };
 
 #endif // USER_INPUT_H

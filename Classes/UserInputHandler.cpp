@@ -32,6 +32,9 @@ UserInputHandler::Input UserInputHandler::Input::Create(WinKeyCode keyCode) noex
     else if(keyCode == WinKeyCode::KEY_G) {
         input.rangeAttack = true;
     }
+    else if(keyCode == WinKeyCode::KEY_E) {
+        input.specialAttack = true;
+    }
     
     return input;
 }
@@ -40,6 +43,7 @@ void UserInputHandler::Input::Merge(Input&& input) noexcept {
     jump = input.jump;
     meleeAttack = input.meleeAttack;
     rangeAttack = input.rangeAttack;
+    specialAttack = input.specialAttack;
     if(input.dx) {
         dx = input.dx;
     }
@@ -55,8 +59,9 @@ UserInputHandler::UserInputHandler(Player * const player) :
         WinKeyCode::KEY_UP_ARROW,
         WinKeyCode::KEY_W,
         WinKeyCode::KEY_SPACE,
-        WinKeyCode::KEY_F,
-        WinKeyCode::KEY_G
+        WinKeyCode::KEY_F, // simple sword attack
+        WinKeyCode::KEY_G, // fireball
+        WinKeyCode::KEY_E  // special attack
     }
 {
     const auto listener = cocos2d::EventListenerKeyboard::create();
@@ -86,12 +91,14 @@ void UserInputHandler::Reset() {
     m_lastInput.jump = 0;
     m_lastInput.meleeAttack = false;
     m_lastInput.rangeAttack = false;
+    m_lastInput.specialAttack = false;
 }
 
 void UserInputHandler::OnKeyPressed(
     WinKeyCode keyCode, 
     cocos2d::Event* event
 ) {
+    const auto lastInputCopy { m_lastInput };
     m_lastInput.Merge(Input::Create(keyCode));
     /**
      * first jump from the ground   - m_lastInput.jump && m_player->IsOnGround()
@@ -141,12 +148,16 @@ void UserInputHandler::OnKeyPressed(
     else if(m_lastInput.rangeAttack) {
         m_player->RangeAttack();
     }
+    else if(m_lastInput.specialAttack) {
+        m_player->StartSpecialAttack();
+    }
 }
 
 void UserInputHandler::OnKeyRelease(
     WinKeyCode keyCode, 
     cocos2d::Event* event
 ) {
+    const auto lastInputCopy { m_lastInput };
     const Input released { Input::Create(keyCode) };
     // TODO: release up and left/right is ongoing!
     if(released.dx && released.dx == m_lastInput.dx) {
@@ -160,5 +171,9 @@ void UserInputHandler::OnKeyRelease(
     }
     else if(released.rangeAttack) {
         m_lastInput.rangeAttack = false;
+    }
+    else if(released.specialAttack) {
+        m_lastInput.specialAttack = false;
+        m_player->FinishSpecialAttack();
     }
 }

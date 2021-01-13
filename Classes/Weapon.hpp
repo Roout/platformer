@@ -196,6 +196,13 @@ public:
     void OnAttack() override;
 };
 
+class PlayerSpecial final : public Weapon {
+public:
+    using Weapon::Weapon;
+
+    void OnAttack() override;
+};
+
 class SlimeShot final : public Weapon {
 public:
     using Weapon::Weapon;
