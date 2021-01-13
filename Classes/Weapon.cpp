@@ -248,7 +248,7 @@ void PlayerSpecial::OnAttack() {
     const auto body = cocos2d::PhysicsBody::createBox(
         projectile.size
         , cocos2d::PhysicsMaterial{ 1.f, 0.0f, 0.0f }
-        , { -projectile.size.width / 2.f, 0.f }
+        , { -projectile.size.width / 2.f, projectile.size.height * 0.2f }
     );
     body->setDynamic(true);
     body->setGravityEnable(false);
