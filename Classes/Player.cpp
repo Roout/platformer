@@ -422,13 +422,20 @@ void Player::StartSpecialAttack() {
         m_weapons[WeaponClass::SPECIAL]->IsAttacking() || 
         m_weapons[WeaponClass::SPECIAL]->IsPreparing()
     };
-    if(!usingMelee && !usingRange && !usingSpecial && m_currentState != State::DEAD) {
+
+    if(!usingMelee 
+        && !usingRange 
+        && !usingSpecial 
+        && m_currentState != State::DEAD 
+        && m_currentState != State::WALK
+    ) {
         m_scheduleSpecialAttack = true;
     }
 }
 
 void Player::OnSpecialAttackEnd() {
     m_finishSpecialAttack = false;
+
     switch(m_currentState) {
         case State::SPECIAL_PHASE_1: {
             // cancel attack
