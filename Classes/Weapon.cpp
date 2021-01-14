@@ -398,7 +398,7 @@ void StalactitePart::OnAttack() {
     auto prefix = cocos2d::StringUtils::format("stalactites/%s_%d/%s", core::EntityNames::STALACTITE, m_index, name.c_str());
     proj->AddAnimator(name, prefix);
     proj->InitializeAnimations({
-        std::make_pair(Utils::EnumCast(Projectile::State::IDLE), "idle"),
+        std::make_pair(Utils::EnumCast(Projectile::State::IDLE), "attack"),
         std::make_pair(Utils::EnumCast(Projectile::State::EXPLODED), "dead") 
     });
     const auto scaleFactor { 0.095f };
