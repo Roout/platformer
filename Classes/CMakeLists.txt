@@ -25,6 +25,7 @@ list(APPEND headers
     Spider.hpp
     Spearman.hpp
     units/Cannon.hpp
+    units/BanditBoss.hpp
     objects/Stalactite.hpp
     Influence.hpp
     Path.hpp
@@ -63,6 +64,7 @@ list(APPEND sources
     Slime.cpp
     Archer.cpp
     units/Cannon.cpp
+    units/BanditBoss.cpp
     objects/Stalactite.cpp
     BoulderPusher.cpp
     Spider.cpp
