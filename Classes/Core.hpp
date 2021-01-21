@@ -30,6 +30,7 @@ namespace core {
         UNDEFINED,
 
         WARRIOR, // in fact it's axe-warrior
+        BOSS, 
         ARCHER,
         SLIME,
         CANNON,
@@ -42,15 +43,16 @@ namespace core {
     };
 
     namespace EntityNames {
-        const char* const WARRIOR   = "warrior";
-        const char* const ARCHER    = "archer";
-        const char* const CANNON    = "cannon";
+        const char* const WARRIOR       = "warrior";
+        const char* const BOSS   = "boss";
+        const char* const ARCHER        = "archer";
+        const char* const CANNON        = "cannon";
         const char* const STALACTITE    = "stalactite";
         const char* const BOULDER_PUSHER = "old_man";
-        const char* const SPIDER    = "spider";
-        const char* const SLIME    = "slime";
-        const char* const SPEARMAN  = "spear_man";
-        const char* const PLAYER    = "player";
+        const char* const SPIDER        = "spider";
+        const char* const SLIME         = "slime";
+        const char* const SPEARMAN      = "spear_man";
+        const char* const PLAYER        = "player";
     }
 
     // TODO: add routing through the unordered_map

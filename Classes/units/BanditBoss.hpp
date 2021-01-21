@@ -3,9 +3,9 @@
 
 #include <memory>
 
-#include "Navigator.hpp"
-#include "Bot.hpp"
-#include "Path.hpp"
+#include "../Navigator.hpp"
+#include "../Bot.hpp"
+#include "../Path.hpp"
 
 namespace Enemies {
 
@@ -31,7 +31,7 @@ public:
 protected:
     enum WeaponClass { MELEE };
 
-    Warrior(size_t id, const char* dragonBonesName, const cocos2d::Size& contentSize);
+    BanditBoss(size_t id, const char* dragonBonesName, const cocos2d::Size& contentSize);
 
     void AddWeapons() override;
 

@@ -6,6 +6,7 @@
 #include "Slime.hpp"
 #include "Archer.hpp"
 #include "units/Cannon.hpp"
+#include "units/BanditBoss.hpp"
 #include "objects/Stalactite.hpp"
 #include "BoulderPusher.hpp"
 #include "Spider.hpp"
@@ -200,6 +201,8 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
     std::unordered_map<size_t, Enemies::Stalactite*> stalactites;
     std::unordered_map<size_t, Enemies::BoulderPusher*> boulderPushers;
     std::unordered_map<size_t, Enemies::Spider*> spiders;
+    Enemies::BanditBoss * boss { nullptr };
+
 
     influences.reserve(40);
     paths.reserve(30);
@@ -287,6 +290,13 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                         warrior->setPosition(form.m_rect.origin + cocos2d::Size{ contentSize.width / 2.f, contentSize.height });
                         map->addChild(warrior, zOrder);
                         warriors.emplace(form.m_id, warrior);
+                        pathIdByUnitId.emplace(form.m_id, form.m_pathId);
+                    } break;
+                    case core::EnemyClass::BOSS: {
+                        boss = Enemies::BanditBoss::create(form.m_id, contentSize);
+                        boss->setName(core::EntityNames::BOSS);
+                        boss->setPosition(form.m_rect.origin + cocos2d::Size{ contentSize.width / 2.f, contentSize.height });
+                        map->addChild(boss, zOrder);
                         pathIdByUnitId.emplace(form.m_id, form.m_pathId);
                     } break;
                     case core::EnemyClass::SLIME: {
