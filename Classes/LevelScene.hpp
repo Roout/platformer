@@ -3,10 +3,9 @@
 
 #include <memory>
 #include "cocos2d.h"
+#include "TileMapParser.hpp"
 
-class TileMapParser;
-
-class LevelScene final : public cocos2d::Scene {
+class LevelScene : public cocos2d::Scene {
 public:
 
     [[nodiscard]] static cocos2d::Scene* createRootScene(int id);
@@ -35,10 +34,10 @@ public:
 
     LevelScene& operator=(const LevelScene&) = delete;
 
-private:
+protected:
 	LevelScene(int id);
 
-    void InitTileMapObjects(cocos2d::FastTMXTiledMap * map);
+    virtual void InitTileMapObjects(cocos2d::FastTMXTiledMap * map);
 
     std::unique_ptr<TileMapParser> m_parser { nullptr };
 
