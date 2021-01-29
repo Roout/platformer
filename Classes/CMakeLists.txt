@@ -11,6 +11,7 @@ set(sources)
 
 list(APPEND headers
     LevelScene.hpp
+    BossFightScene.hpp
     PauseNode.hpp
     DebugScreen.hpp
     DeathScreen.hpp
@@ -54,6 +55,7 @@ list(APPEND headers
 
 list(APPEND sources
     LevelScene.cpp
+    BossFightScene.cpp
     ContactHandler.cpp
     Unit.cpp
     Player.cpp
