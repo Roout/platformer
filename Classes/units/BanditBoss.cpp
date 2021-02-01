@@ -75,6 +75,9 @@ void BanditBoss::UpdateState(const float dt) noexcept {
     if( m_health <= 0 ) {
         m_currentState = State::DEAD;
     } 
+    else {
+        m_currentState = State::IDLE;
+    }
 
 }
 
@@ -84,11 +87,8 @@ void BanditBoss::UpdatePosition(const float dt) noexcept {
 
 void BanditBoss::UpdateAnimation() {
     if(m_currentState != m_previousState) {
-        const auto isOneTimeAttack { 
-            m_currentState == State::ATTACK || 
-            m_currentState == State::DEAD
-        };
-        const auto repeatTimes { isOneTimeAttack ? 1 : dragonBones::Animator::INFINITY_LOOP };
+        const auto isInfinity { m_currentState == State::IDLE || m_currentState == State::WALK };
+        const auto repeatTimes { isInfinity ? dragonBones::Animator::INFINITY_LOOP: 1 };
         (void) m_animator->Play(Utils::EnumCast(m_currentState), repeatTimes);
         if(this->IsDead()) {
             this->OnDeath();
@@ -148,10 +148,11 @@ void BanditBoss::AddAnimator() {
     m_animator = dragonBones::Animator::create(std::move(prefix), std::move(chachedArmatureName));
     m_animator->setScale(0.2f); // TODO: introduce multi-resolution scaling
     m_animator->InitializeAnimations({
-        std::make_pair(Utils::EnumCast(State::ATTACK),  GetStateName(State::ATTACK)),
+        std::make_pair(Utils::EnumCast(State::ATTACK_1),  GetStateName(State::ATTACK_1)),
+        std::make_pair(Utils::EnumCast(State::ATTACK_2),  GetStateName(State::ATTACK_2)),
+        std::make_pair(Utils::EnumCast(State::ATTACK_3),  GetStateName(State::ATTACK_3)),
         std::make_pair(Utils::EnumCast(State::IDLE),    GetStateName(State::IDLE)),
-        std::make_pair(Utils::EnumCast(State::PURSUIT), GetStateName(State::PURSUIT)),
-        std::make_pair(Utils::EnumCast(State::PATROL),  GetStateName(State::PATROL)),
+        std::make_pair(Utils::EnumCast(State::WALK),    GetStateName(State::WALK)),
         std::make_pair(Utils::EnumCast(State::DEAD),    GetStateName(State::DEAD))
     });
     this->addChild(m_animator);

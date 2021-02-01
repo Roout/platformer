@@ -19,9 +19,13 @@ std::string GetStateName(State state) {
     static std::unordered_map<State, std::string> mapped {
         { State::PATROL,            "walk" },
         { State::PURSUIT,           "walk" },
+        { State::WALK,              "walk" },
         { State::IDLE,              "idle" },
         { State::PREPARE_ATTACK,    "prepare_attack" },
         { State::ATTACK,            "attack" },
+        { State::ATTACK_1,          "attack_1" },
+        { State::ATTACK_2,          "attack_2" },
+        { State::ATTACK_3,          "attack_3" },
         { State::DEAD,              "dead" }
     };
     auto it = mapped.find(state);
