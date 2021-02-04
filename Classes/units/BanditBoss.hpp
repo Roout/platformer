@@ -18,7 +18,7 @@ public:
     
     void update(float dt) override;
 
-/// Unique to warrior
+/// Unique to boss
 
     void AttachNavigator(Path&& path);
     
@@ -29,7 +29,11 @@ public:
     void OnEnemyLeave() override;
 
 protected:
-    enum WeaponClass { MELEE };
+    enum WeaponClass { 
+        ATTACK_1,
+        ATTACK_2,
+        ATTACK_3
+    };
 
     BanditBoss(size_t id, const char* dragonBonesName, const cocos2d::Size& contentSize);
 
@@ -39,9 +43,13 @@ private:
 
 /// unique to boss
 
-    
+    void Attack1();
+    void Attack2();
+    void Attack3();
 
 /// Bot interface
+
+    void TryAttack() override;
    
     void UpdateState(const float dt) noexcept override;
 

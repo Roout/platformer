@@ -2,6 +2,7 @@
 #include "Projectile.hpp"
 #include "Utils.hpp"
 #include "Player.hpp"
+#include "Unit.hpp"
 #include "Core.hpp"
 
 #include <string>
@@ -220,6 +221,88 @@ void PlayerFireball::OnAttack() {
     };
     const auto categoryMask {
         Utils::CreateMask(core::CategoryBits::PLAYER_PROJECTILE)
+    };
+    body->setCollisionBitmask(0);
+    body->setCategoryBitmask(categoryMask);
+    body->setContactTestBitmask(testMask);
+    
+    proj->SetLifetime(5.f);
+    proj->addComponent(body);
+    map->addChild(proj, 101); /// TODO: clean up this mess with Z-order!
+}
+
+// READY -> PREPARATION -> [ ATTACK -> DELAY -> ATTACK ] -> RELOAD -> READY ... 
+void BossFireball::UpdateState(const float dt) noexcept {
+    if(m_state != State::READY) {
+        m_timer -= dt;
+        if(m_timer <= 0.f) {
+            this->NextState();
+            if(m_state == State::ATTACK) {
+                this->OnAttack();
+                m_delay = DELAY;
+                m_attackedTwice = false;
+            }
+        } 
+        else if(m_state == State::ATTACK) { // timer > 0
+            m_delay -= dt;
+            if(m_delay <= 0.f && !m_attackedTwice) {
+                this->OnAttack();
+                m_delay = DELAY;
+                m_attackedTwice = true;
+            }
+        }
+    }
+}
+
+void BossFireball::OnAttack() {
+    const auto runningScene { cocos2d::Director::getInstance()->getRunningScene() };
+    const auto level = runningScene->getChildByName("Level");
+    if(!level) return;
+    const auto map = level->getChildByName("Map");
+    if(!map) return;
+    const auto boss = map->getChildByName<Unit*>(core::EntityNames::BOSS);
+    if(!boss || boss->IsDead()) return;
+
+    const auto scaleFactor { 0.15f };
+    
+    const auto proj = Projectile::create(this->GetDamage());
+    proj->AddAnimator("fireball", "boss/boss_fireball");
+    proj->InitializeAnimations({
+        std::make_pair(Utils::EnumCast(Projectile::State::IDLE),        "walk"),       // sorry the illustrator is a little bit of an idiot
+        std::make_pair(Utils::EnumCast(Projectile::State::HIT_PLAYER),  "attack_2"),   // sorry the illustrator is a little bit of an idiot
+        std::make_pair(Utils::EnumCast(Projectile::State::HIT_GROUND),  "attack_1"),   // sorry the illustrator is a little bit of an idiot
+        std::make_pair(Utils::EnumCast(Projectile::State::EXPLODED),    "attack_1")    // sorry the illustrator is a little bit of an idiot
+    });
+    proj->setScale(scaleFactor);
+
+    const auto projectile = m_extractor();
+    const auto body = cocos2d::PhysicsBody::createBox(
+        projectile.size
+        , cocos2d::PhysicsMaterial{ 1.f, 0.0f, 0.0f }
+        , { -projectile.size.width / 2.f, 0.f }
+    );
+    body->setDynamic(true);
+    body->setGravityEnable(false);
+
+    proj->setAnchorPoint({0.0f, 0.0f});
+    proj->setContentSize(projectile.size);
+    proj->setPosition(projectile.origin);
+    // push projectile
+    m_modifier(body);
+    // ---------------
+    if(body->getVelocity().x > 0.f) proj->FlipX();
+
+    const auto testMask {
+        Utils::CreateMask(
+            core::CategoryBits::HITBOX_SENSOR
+            , core::CategoryBits::PROPS
+            , core::CategoryBits::BOUNDARY
+            , core::CategoryBits::ENEMY_PROJECTILE
+            , core::CategoryBits::PLATFORM
+        )
+    };
+    const auto categoryMask {
+        Utils::CreateMask(core::CategoryBits::ENEMY_PROJECTILE)
     };
     body->setCollisionBitmask(0);
     body->setCategoryBitmask(categoryMask);

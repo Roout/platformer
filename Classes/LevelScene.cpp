@@ -202,6 +202,7 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
     std::unordered_map<size_t, Enemies::BoulderPusher*> boulderPushers;
     std::unordered_map<size_t, Enemies::Spider*> spiders;
     Enemies::BanditBoss * boss { nullptr };
+    size_t bossId { 0 };
 
 
     influences.reserve(40);
@@ -293,6 +294,7 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                         pathIdByUnitId.emplace(form.m_id, form.m_pathId);
                     } break;
                     case core::EnemyClass::BOSS: {
+                        bossId = form.m_id;
                         boss = Enemies::BanditBoss::create(form.m_id, contentSize);
                         boss->setName(core::EntityNames::BOSS);
                         boss->setPosition(form.m_rect.origin + cocos2d::Size{ contentSize.width / 2.f, contentSize.height });
@@ -393,4 +395,8 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
     for(auto& [id, pusher]: boulderPushers) {
         pusher->AttachInfluenceArea(influences.at(id));
     } 
+
+    if(auto it = influences.find(bossId); it != influences.end()) {
+        boss->AttachInfluenceArea(it->second);
+    }
 }

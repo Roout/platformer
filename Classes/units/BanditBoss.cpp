@@ -58,7 +58,6 @@ void BanditBoss::AttachNavigator(Path&& path) {
    
 }
 
-
 /// Bot interface
 void BanditBoss::OnEnemyIntrusion() {
     m_detectEnemy = true;
@@ -69,12 +68,70 @@ void BanditBoss::OnEnemyLeave() {
     m_detectEnemy = false;
 }
 
+void BanditBoss::Attack1() {
+    if(m_weapons[ATTACK_1]->IsReady() && !this->IsDead()) {
+        auto projectilePosition = [this]() -> cocos2d::Rect {
+            const auto attackRange { m_weapons[ATTACK_1]->GetRange() * 0.25f };
+
+            auto position = this->getPosition();
+            if(m_side == Side::RIGHT) {
+                position.x += m_contentSize.width / 2.f;
+            }
+            else {
+                position.x -= m_contentSize.width / 2.f + attackRange;
+            }
+            // shift a little bit higher to avoid immediate collision with the ground
+            position.y += m_contentSize.height * 0.2f;
+            cocos2d::Rect attackedArea {
+                position,
+                cocos2d::Size{ m_weapons[ATTACK_1]->GetRange() * 2.f, m_contentSize.height * 1.05f } // a little bigger than the designed size
+            };
+            return attackedArea;
+        };
+        auto pushProjectile = [this](cocos2d::PhysicsBody* body) {
+            body->setVelocity({ this->IsLookingLeft()? -400.f: 400.f, 0.f });
+        };
+        m_weapons[ATTACK_1]->LaunchAttack(
+            std::move(projectilePosition), 
+            std::move(pushProjectile)
+        );
+    }
+}
+
+void BanditBoss::Attack2() {
+
+}
+
+void BanditBoss::Attack3() {
+
+}
+
+void BanditBoss::TryAttack() {
+    const auto target = this->getParent()->getChildByName(core::EntityNames::PLAYER);
+    bool attackIsReady {
+        !this->IsDead() && 
+        m_detectEnemy && 
+        m_weapons[ATTACK_1]->IsReady()
+    };
+    if( target && attackIsReady ) { // attack if possible
+        this->LookAt(target->getPosition());
+        this->MoveAlong(0.f, 0.f);
+        this->Attack1();
+    } 
+}
+
 void BanditBoss::UpdateState(const float dt) noexcept {
     m_previousState = m_currentState;
 
     if( m_health <= 0 ) {
         m_currentState = State::DEAD;
     } 
+    else if(m_weapons[WeaponClass::ATTACK_1]->IsPreparing()) {
+        m_currentState = State::ATTACK_1;
+    }
+    else if(m_weapons[WeaponClass::ATTACK_1]->IsAttacking()) {
+        m_currentState = State::ATTACK_1;
+    }
     else {
         m_currentState = State::IDLE;
     }
@@ -112,10 +169,7 @@ void BanditBoss::AddPhysicsBody() {
     body->setContactTestBitmask(Utils::CreateMask(core::CategoryBits::PLATFORM));
     body->setCategoryBitmask(Utils::CreateMask(core::CategoryBits::ENEMY));
     body->setCollisionBitmask(
-        Utils::CreateMask(
-            core::CategoryBits::BOUNDARY
-            , core::CategoryBits::PLATFORM 
-        )
+        Utils::CreateMask(core::CategoryBits::BOUNDARY, core::CategoryBits::PLATFORM )
     );
 
     const auto hitBoxTag { Utils::EnumCast(core::CategoryBits::HITBOX_SENSOR) };
@@ -159,7 +213,21 @@ void BanditBoss::AddAnimator() {
 }
 
 void BanditBoss::AddWeapons() {
-  
+    {
+        const auto damage { 15.f };
+        const auto range { 60.f };
+        const auto animDuration = m_animator->GetDuration(Utils::EnumCast(State::ATTACK_1));
+        const auto attackDuration { 0.4f * animDuration };
+        const auto preparationTime { animDuration - attackDuration };
+        const auto reloadTime { 2.f };
+        m_weapons[WeaponClass::ATTACK_1] = new BossFireball(
+            damage, 
+            range, 
+            preparationTime,
+            attackDuration,
+            reloadTime 
+        );
+    }
 }
 
 } // namespace Enemies

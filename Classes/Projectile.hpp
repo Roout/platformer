@@ -15,6 +15,8 @@ public:
     enum class State : std::uint8_t {
         IDLE = 0,
         EXPLODED,
+        HIT_PLAYER,
+        HIT_GROUND,
         UNDEFINED,
         COUNT
     };
