@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.2" tiledversion="1.2.4" orientation="orthogonal" renderorder="right-down" width="48" height="28" tilewidth="35" tileheight="35" infinite="0" nextlayerid="12" nextobjectid="74">
+<map version="1.2" tiledversion="1.2.4" orientation="orthogonal" renderorder="right-down" width="48" height="28" tilewidth="35" tileheight="35" infinite="0" nextlayerid="12" nextobjectid="77">
  <tileset firstgid="1" name="tiles" tilewidth="36" tileheight="36" spacing="1" margin="1" tilecount="39" columns="13">
   <image source="tiles.png" trans="ff00ff" width="482" height="112"/>
   <tile id="0">
@@ -262,7 +262,13 @@
   </object>
   <object id="66" name="boss" type="enemy" gid="55" x="770" y="910" width="51.3596" height="110.134"/>
  </objectgroup>
- <objectgroup color="#ffaaff" id="4" name="influences" locked="1"/>
+ <objectgroup color="#ffaaff" id="4" name="influences">
+  <object id="76" name="Influence" type="Rect" x="160" y="700" width="1366" height="219">
+   <properties>
+    <property name="owner-id" type="int" value="66"/>
+   </properties>
+  </object>
+ </objectgroup>
  <objectgroup color="#0000ff" id="3" name="paths" locked="1"/>
  <objectgroup id="6" name="props" locked="1"/>
 </map>
