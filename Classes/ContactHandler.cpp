@@ -114,10 +114,7 @@ bool OnContactBegin(cocos2d::PhysicsContact& contact) {
 
     /// Projectile & (Unit or Barrel)
     const auto projectileMask { 
-        Utils::CreateMask(
-            core::CategoryBits::PLAYER_PROJECTILE
-            , core::CategoryBits::ENEMY_PROJECTILE
-        )
+        Utils::CreateMask(core::CategoryBits::PLAYER_PROJECTILE, core::CategoryBits::ENEMY_PROJECTILE)
     };
     const bool isProjectile[2] = {
         (bodyMasks[BODY_A] & projectileMask) > 0,
@@ -133,16 +130,14 @@ bool OnContactBegin(cocos2d::PhysicsContact& contact) {
     }
     else if( isProjectile[BODY_A] || isProjectile[BODY_B] ) {
         const auto projectileIndex { isProjectile[BODY_A]? BODY_A: BODY_B };
-
         const auto proj { static_cast<Projectile*>(nodes[projectileIndex]) };
+        proj->SetExplosionState(Projectile::State::HIT_GROUND);
         
         // damage target if possible
         if(isUnit[projectileIndex ^ 1]) {
-            const auto unit { static_cast<Unit*>(nodes[projectileIndex^1]) };
-            unit->AddCurse<Curses::CurseClass::INSTANT>(
-                Curses::CurseHub::ignored, 
-                proj->GetDamage()
-            );
+            const auto unit { static_cast<Unit*>(nodes[projectileIndex ^ 1]) };
+            unit->AddCurse<Curses::CurseClass::INSTANT>(Curses::CurseHub::ignored, proj->GetDamage());
+            proj->SetExplosionState(Projectile::State::HIT_PLAYER);
         } 
         else if( bodyMasks[projectileIndex ^ 1] == Utils::CreateMask(core::CategoryBits::PROPS)) {
             const auto prop { static_cast<props::Prop*>(nodes[projectileIndex^1]) };

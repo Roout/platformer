@@ -152,10 +152,7 @@ void Legs::OnAttack() {
         Utils::CreateMask(core::CategoryBits::ENEMY_PROJECTILE)
     );
     body->setCollisionBitmask(
-        Utils::CreateMask(
-            core::CategoryBits::PLATFORM
-            , core::CategoryBits::BOUNDARY
-        )
+        Utils::CreateMask(core::CategoryBits::PLATFORM, core::CategoryBits::BOUNDARY)
     );
     body->setContactTestBitmask(
         Utils::CreateMask(
@@ -187,7 +184,8 @@ void PlayerFireball::OnAttack() {
     proj->AddAnimator("mc_fireball", "mc/mc_fireball");
     proj->InitializeAnimations({
         std::make_pair(Utils::EnumCast(Projectile::State::IDLE), "walk"),       // sorry the illustrator is a little bit of an idiot
-        std::make_pair(Utils::EnumCast(Projectile::State::EXPLODED), "attack")  // sorry the illustrator is a little bit of an idiot
+        std::make_pair(Utils::EnumCast(Projectile::State::HIT_PLAYER), "attack"),  // sorry the illustrator is a little bit of an idiot
+        std::make_pair(Utils::EnumCast(Projectile::State::HIT_GROUND), "attack")  // sorry the illustrator is a little bit of an idiot
     });
     proj->setScale(scaleFactor);
 
@@ -270,8 +268,7 @@ void BossFireball::OnAttack() {
     proj->InitializeAnimations({
         std::make_pair(Utils::EnumCast(Projectile::State::IDLE),        "walk"),       // sorry the illustrator is a little bit of an idiot
         std::make_pair(Utils::EnumCast(Projectile::State::HIT_PLAYER),  "attack_2"),   // sorry the illustrator is a little bit of an idiot
-        std::make_pair(Utils::EnumCast(Projectile::State::HIT_GROUND),  "attack_1"),   // sorry the illustrator is a little bit of an idiot
-        std::make_pair(Utils::EnumCast(Projectile::State::EXPLODED),    "attack_1")    // sorry the illustrator is a little bit of an idiot
+        std::make_pair(Utils::EnumCast(Projectile::State::HIT_GROUND),  "attack_1")   // sorry the illustrator is a little bit of an idiot
     });
     proj->setScale(scaleFactor);
 
@@ -297,7 +294,7 @@ void BossFireball::OnAttack() {
             core::CategoryBits::HITBOX_SENSOR
             , core::CategoryBits::PROPS
             , core::CategoryBits::BOUNDARY
-            , core::CategoryBits::ENEMY_PROJECTILE
+            , core::CategoryBits::PLAYER_PROJECTILE
             , core::CategoryBits::PLATFORM
         )
     };
@@ -323,7 +320,8 @@ void PlayerSpecial::OnAttack() {
     proj->AddAnimator("mc_special", "mc/mc_special");
     proj->InitializeAnimations({
         std::make_pair(Utils::EnumCast(Projectile::State::IDLE), "walk"),       // sorry the illustrator is a little bit of an idiot
-        std::make_pair(Utils::EnumCast(Projectile::State::EXPLODED), "attack")  // sorry the illustrator is a little bit of an idiot
+        std::make_pair(Utils::EnumCast(Projectile::State::HIT_PLAYER), "attack"),  // sorry the illustrator is a little bit of an idiot
+        std::make_pair(Utils::EnumCast(Projectile::State::HIT_GROUND), "attack")  // sorry the illustrator is a little bit of an idiot
     });
     proj->setScale(scaleFactor);
 
@@ -377,7 +375,8 @@ void SlimeShot::OnAttack() {
     proj->AddAnimator("slime_attack", "slime_attack");
     proj->InitializeAnimations({
         std::make_pair(Utils::EnumCast(Projectile::State::IDLE), "walk"),       // sorry the illustrator is a little bit of an idiot
-        std::make_pair(Utils::EnumCast(Projectile::State::EXPLODED), "attack")  // sorry the illustrator is a little bit of an idiot
+        std::make_pair(Utils::EnumCast(Projectile::State::HIT_PLAYER), "attack"),  // sorry the illustrator is a little bit of an idiot
+        std::make_pair(Utils::EnumCast(Projectile::State::HIT_GROUND), "attack")  // sorry the illustrator is a little bit of an idiot
     });
     proj->setScale(scaleFactor);
 
@@ -482,7 +481,8 @@ void StalactitePart::OnAttack() {
     proj->AddAnimator(name, prefix);
     proj->InitializeAnimations({
         std::make_pair(Utils::EnumCast(Projectile::State::IDLE), "attack"),
-        std::make_pair(Utils::EnumCast(Projectile::State::EXPLODED), "dead") 
+        std::make_pair(Utils::EnumCast(Projectile::State::HIT_PLAYER), "dead"),
+        std::make_pair(Utils::EnumCast(Projectile::State::HIT_GROUND), "dead")
     });
     const auto scaleFactor { 0.095f };
     proj->setScale(scaleFactor);
