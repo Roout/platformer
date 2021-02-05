@@ -31,6 +31,12 @@ enum class State {
     ATTACK_2,
     ATTACK_3,
 
+    // cloud states
+    INIT,
+    EARLY,
+    MID,
+    LATE,
+
     COUNT
 };
 

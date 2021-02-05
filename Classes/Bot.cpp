@@ -23,13 +23,19 @@ std::string GetStateName(State state) {
         { State::IDLE,              "idle" },
         { State::PREPARE_ATTACK,    "prepare_attack" },
         { State::ATTACK,            "attack" },
+        { State::DEAD,              "dead" },
+
         { State::ATTACK_1,          "attack_1" },
         { State::ATTACK_2,          "attack_2" },
         { State::ATTACK_3,          "attack_3" },
-        { State::DEAD,              "dead" }
+
+        { State::INIT,              "walk_1" },
+        { State::EARLY,             "walk_2" },
+        { State::MID,               "walk_3" },
+        { State::LATE,              "walk_4" }
     };
     auto it = mapped.find(state);
-    return (it != mapped.cend()? it->second: "");        
+    return (it != mapped.cend()? it->second: "undefined");        
 }
 
 bool Bot::init() {

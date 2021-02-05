@@ -32,6 +32,7 @@ namespace core {
         WARRIOR, // in fact it's axe-warrior
         BOSS, 
         ARCHER,
+        FIRECLOUD,
         SLIME,
         CANNON,
         STALACTITE, // same as cannon only attack once and from thhe top to bottom
@@ -44,8 +45,9 @@ namespace core {
 
     namespace EntityNames {
         const char* const WARRIOR       = "warrior";
-        const char* const BOSS   = "boss";
+        const char* const BOSS          = "boss";
         const char* const ARCHER        = "archer";
+        const char* const FIRECLOUD     = "cloud";
         const char* const CANNON        = "cannon";
         const char* const STALACTITE    = "stalactite";
         const char* const BOULDER_PUSHER = "old_man";
