@@ -228,6 +228,13 @@ public:
     void OnAttack() override;
 };
 
+class CloudFireball final : public Weapon {
+public:
+    using Weapon::Weapon;
+
+    void OnAttack() override;
+};
+
 class Bow final : public Weapon {
 public:
     using Weapon::Weapon;

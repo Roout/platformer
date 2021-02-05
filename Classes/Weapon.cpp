@@ -11,8 +11,9 @@ using namespace std::literals;
 
 /**
  * TODO: 
- * - remove run-time dependency on UI. It shouldn't be attached to the scene here
- * - remove code repetition: everything except mask is the same!
+ * - [ ] remove run-time dependency on UI. It shouldn't be attached to the scene here
+ * - [ ] remove code repetition: everything except mask is the same!
+ * - [ ] cleanup mess with z-order
  */
 
 void Sword::OnAttack() {
@@ -128,7 +129,7 @@ void Bow::OnAttack() {
     proj->SetCategoryBitmask(categoryMask);
     proj->SetContactTestBitmask(testMask);
     proj->SetLifetime(3.f);
-    map->addChild(proj, 100); /// TODO: clean up this mess with Z-order!
+    map->addChild(proj, 100); 
 }
 
 void Legs::OnAttack() {
@@ -137,7 +138,7 @@ void Legs::OnAttack() {
     const auto map = level->getChildByName("Map");
 
     const auto proj = Projectile::create(this->GetDamage());
-    map->addChild(proj, 100); /// TODO: clean up this mess with Z-order!
+    map->addChild(proj, 100); 
 
     const auto projectile = m_extractor();
     const auto body = cocos2d::PhysicsBody::createCircle(
@@ -226,7 +227,7 @@ void PlayerFireball::OnAttack() {
     
     proj->SetLifetime(5.f);
     proj->addComponent(body);
-    map->addChild(proj, 101); /// TODO: clean up this mess with Z-order!
+    map->addChild(proj, 101); 
 }
 
 // READY -> PREPARATION -> [ ATTACK -> DELAY -> ATTACK ] -> RELOAD -> READY ... 
@@ -307,7 +308,7 @@ void BossFireball::OnAttack() {
     
     proj->SetLifetime(5.f);
     proj->addComponent(body);
-    map->addChild(proj, 101); /// TODO: clean up this mess with Z-order!
+    map->addChild(proj, 101); 
 }
 
 void PlayerSpecial::OnAttack() {
@@ -362,7 +363,7 @@ void PlayerSpecial::OnAttack() {
     
     proj->SetLifetime(5.f);
     proj->addComponent(body);
-    map->addChild(proj, 101); /// TODO: clean up this mess with Z-order!
+    map->addChild(proj, 101); 
 }
 
 void SlimeShot::OnAttack() {
@@ -417,7 +418,62 @@ void SlimeShot::OnAttack() {
     
     proj->SetLifetime(4.f);
     proj->addComponent(body);
-    map->addChild(proj, 101); /// TODO: clean up this mess with Z-order!
+    map->addChild(proj, 101); 
+}
+
+void CloudFireball::OnAttack() {
+    const auto runningScene { cocos2d::Director::getInstance()->getRunningScene() };
+    const auto level = runningScene->getChildByName("Level");
+    const auto map = level->getChildByName("Map");
+    const auto scaleFactor { 0.2f };
+    
+    const auto proj = Projectile::create(this->GetDamage());
+    proj->AddAnimator("fire", "boss/boss_attack");
+    proj->InitializeAnimations({
+        std::make_pair(Utils::EnumCast(Projectile::State::IDLE),        "walk"),      // sorry the illustrator is a little bit of an idiot
+        std::make_pair(Utils::EnumCast(Projectile::State::HIT_PLAYER),  "attack_2"),  // sorry the illustrator is a little bit of an idiot
+        std::make_pair(Utils::EnumCast(Projectile::State::HIT_GROUND),  "attack_1")   // sorry the illustrator is a little bit of an idiot
+    });
+    proj->setScale(scaleFactor);
+
+    const auto projectile = m_extractor();
+    const auto body = cocos2d::PhysicsBody::createBox(
+        projectile.size
+        , cocos2d::PhysicsMaterial{ 1.f, 0.0f, 0.0f }
+        , { -projectile.size.width / 2.f, projectile.size.height }
+    );
+    body->setDynamic(true);
+    body->setGravityEnable(false);
+
+    proj->setAnchorPoint({0.0f, 0.0f});
+    proj->setContentSize(projectile.size);
+    proj->setPosition(projectile.origin);
+    // push projectile
+    m_modifier(body);
+    // ---------------
+    if(body->getVelocity().x > 0.f) {
+        proj->FlipX();
+    }
+
+    const auto testMask {
+        Utils::CreateMask(
+            core::CategoryBits::HITBOX_SENSOR
+            , core::CategoryBits::PROPS
+            , core::CategoryBits::BOUNDARY
+            , core::CategoryBits::PLAYER_PROJECTILE
+            , core::CategoryBits::PLATFORM
+        )
+    };
+    const auto categoryMask {
+        Utils::CreateMask(core::CategoryBits::ENEMY_PROJECTILE)
+    };
+    body->setCollisionBitmask(0);
+    body->setCategoryBitmask(categoryMask);
+    body->setContactTestBitmask(testMask);
+    
+    proj->SetLifetime(4.f);
+    proj->addComponent(body);
+    map->addChild(proj, 101); 
 }
 
 void Stake::OnAttack() {
@@ -455,7 +511,7 @@ void Stake::OnAttack() {
     proj->SetCategoryBitmask(categoryMask);
     proj->SetContactTestBitmask(testMask);
     proj->SetLifetime(3.f);
-    map->addChild(proj, 100); /// TODO: clean up this mess with Z-order!
+    map->addChild(proj, 100); 
 }
 
 StalactitePart::StalactitePart(
@@ -520,5 +576,5 @@ void StalactitePart::OnAttack() {
     
     proj->SetLifetime(5.f);
     proj->addComponent(body);
-    map->addChild(proj, 101); /// TODO: clean up this mess with Z-order!
+    map->addChild(proj, 101); 
 }
