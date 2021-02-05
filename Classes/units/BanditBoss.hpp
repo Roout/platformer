@@ -29,9 +29,14 @@ public:
     void OnEnemyLeave() override;
 
 protected:
+
     enum WeaponClass { 
+        // Generate 2 fireballs while attacking by chains
         ATTACK_1,
-        ATTACK_2,
+        // Dummy weapon used to track down timings and cooldowns of this type of attack.
+        // Instead of creating projectiles it only generates a FireCloud
+        ATTACK_2, 
+        // TODO: implement
         ATTACK_3
     };
 

@@ -26,7 +26,7 @@ FireCloud::FireCloud(size_t id, const cocos2d::Size& contentSize)
     : Bot{ id, core::EntityNames::FIRECLOUD }
 {
     m_contentSize = contentSize;
-    m_physicsBodySize = cocos2d::Size { contentSize.width * 0.875f, contentSize.height };
+    m_physicsBodySize = cocos2d::Size { contentSize.width, contentSize.height * 2.f };
     m_hitBoxSize = m_physicsBodySize;
 }
 
@@ -37,7 +37,7 @@ bool FireCloud::init() {
 
     m_health = 1'000'000'000; // some big value to make cloud indestructable
     // set up lifetime of the cloud
-    constexpr float CLOUD_LIFETIME { 10.f };
+    constexpr float CLOUD_LIFETIME { 5.f };
     m_lifetime = CLOUD_LIFETIME;
 
     return true;
@@ -54,9 +54,7 @@ void FireCloud::update(float dt) {
     // TODO: implement own attack!
     // this->TryAttack();
     this->UpdateState(dt);
-    if(m_currentState != State::DEAD) {
-        this->UpdateAnimation(); 
-    }
+    this->UpdateAnimation(); 
 }
 
 /// Bot interface
@@ -77,12 +75,11 @@ void FireCloud::UpdateState(const float dt) noexcept {
     }
     else if(m_currentState == State::LATE && m_lifetime <= 0.f) {
         m_currentState = State::DEAD;
-        this->OnDeath();
     }
-    else if(m_currentState == State::LATE && m_lifetime >= 0.f) {
+    else if(m_currentState == State::LATE && m_lifetime > 0.f) {
         m_lifetime -= dt;
     }
-    else if(m_finished) {
+    else if(m_finished && m_currentState != State::DEAD) {
         m_currentState = static_cast<State>(Utils::EnumCast(m_currentState) + 1);
         m_finished = false;
     }
@@ -90,11 +87,12 @@ void FireCloud::UpdateState(const float dt) noexcept {
 
 void FireCloud::UpdateAnimation() {
     if(m_currentState != m_previousState) {
-        assert(m_currentState != State::DEAD && "Logic error: DEATH state shouldn't be reached!");
-
         auto isOneTimeAttack { m_currentState != State::LATE };
         auto repeatTimes { isOneTimeAttack ? 1 : dragonBones::Animator::INFINITY_LOOP };
         (void) m_animator->Play(Utils::EnumCast(m_currentState), repeatTimes);
+        if(m_currentState == State::DEAD) {
+            this->OnDeath();
+        }
     }
 }
 
@@ -112,7 +110,7 @@ void FireCloud::AddPhysicsBody() {
         cocos2d::PhysicsMaterial(1.f, 0.1f, 0.1f), 
         {0.f, floorf(m_physicsBodySize.height / 2.f)}
     );
-    body->setDynamic(true);
+    body->setDynamic(false);
     body->setGravityEnable(false);
     body->setRotationEnable(false);
     
@@ -120,16 +118,21 @@ void FireCloud::AddPhysicsBody() {
 }
 
 void FireCloud::AddAnimator() {
-    Unit::AddAnimator();
+    std::string chachedArmatureName = m_dragonBonesName;
+    std::string prefix = "boss/boss_cloud";
+    m_animator = dragonBones::Animator::create(std::move(prefix), std::move(chachedArmatureName));
+    //m_animator->setScale(0.2f);
     m_animator->InitializeAnimations({
         std::make_pair(Utils::EnumCast(State::INIT),    GetStateName(State::INIT)), 
         std::make_pair(Utils::EnumCast(State::EARLY),   GetStateName(State::EARLY)), 
         std::make_pair(Utils::EnumCast(State::MID),     GetStateName(State::MID)), 
-        std::make_pair(Utils::EnumCast(State::LATE),    GetStateName(State::LATE))
+        std::make_pair(Utils::EnumCast(State::LATE),    GetStateName(State::LATE)),
+        std::make_pair(Utils::EnumCast(State::DEAD),    GetStateName(State::LATE))
     });
     m_animator->EndWith([this](){
        this->m_finished = true;
     });
+    this->addChild(m_animator);
 }
 
 void FireCloud::AddWeapons() {

@@ -4,6 +4,7 @@
 #include "Player.hpp"
 #include "Unit.hpp"
 #include "Core.hpp"
+#include "units/FireCloud.hpp"
 
 #include <string>
 
@@ -419,6 +420,21 @@ void SlimeShot::OnAttack() {
     proj->SetLifetime(4.f);
     proj->addComponent(body);
     map->addChild(proj, 101); 
+}
+
+void BossFireCloud::OnAttack() {
+    // TODO: generate a fire cloud
+    const auto runningScene { cocos2d::Director::getInstance()->getRunningScene() };
+    const auto level = runningScene->getChildByName("Level");
+    const auto map = level->getChildByName("Map");
+
+    const auto form = m_extractor();
+    // size_t id, const cocos2d::Size& contentSize
+    // NOTE: id and size don't matter
+    auto cloud = Enemies::FireCloud::create(1, form.size);
+    cloud->setScale(0.2f);
+    cloud->setPosition(form.origin);
+    map->addChild(cloud, 101);
 }
 
 void CloudFireball::OnAttack() {

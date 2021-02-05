@@ -99,7 +99,32 @@ void BanditBoss::Attack1() {
 }
 
 void BanditBoss::Attack2() {
-
+    if(m_weapons[ATTACK_2]->IsReady() && !this->IsDead()) {
+        auto projectilePosition = [this]() -> cocos2d::Rect {
+            const auto attackRange { m_weapons[ATTACK_2]->GetRange()};
+            auto position = this->getPosition();
+            if(m_side == Side::RIGHT) {
+                position.x += m_contentSize.width / 2.f;
+            }
+            else {
+                position.x -= m_contentSize.width / 2.f;//  + attackRange;
+            }
+            // shift a little bit higher to avoid immediate collision with the ground
+            position.y += m_contentSize.height * 2.f;
+            const cocos2d::Rect attackedArea {
+                position,
+                cocos2d::Size{ attackRange, m_contentSize.height * 1.05f } // a little bigger than the designed size
+            };
+            return attackedArea;
+        };
+        auto pushProjectile = [this](cocos2d::PhysicsBody* body) {
+            body->setVelocity({ this->IsLookingLeft()? -400.f: 400.f, 0.f });
+        };
+        m_weapons[ATTACK_2]->LaunchAttack(
+            std::move(projectilePosition), 
+            std::move(pushProjectile)
+        );
+    }
 }
 
 void BanditBoss::Attack3() {
@@ -111,19 +136,19 @@ void BanditBoss::TryAttack() {
     bool attackIsReady {
         !this->IsDead() && 
         m_detectEnemy && 
-        m_weapons[ATTACK_1]->IsReady()
+        m_weapons[ATTACK_2]->IsReady()
     };
     if( target && attackIsReady ) { // attack if possible
         this->LookAt(target->getPosition());
         this->MoveAlong(0.f, 0.f);
-        this->Attack1();
+        this->Attack2();
     } 
 }
 
 void BanditBoss::UpdateState(const float dt) noexcept {
     m_previousState = m_currentState;
 
-    if( m_health <= 0 ) {
+    if(m_health <= 0) {
         m_currentState = State::DEAD;
     } 
     else if(m_weapons[WeaponClass::ATTACK_1]->IsPreparing()) {
@@ -131,6 +156,12 @@ void BanditBoss::UpdateState(const float dt) noexcept {
     }
     else if(m_weapons[WeaponClass::ATTACK_1]->IsAttacking()) {
         m_currentState = State::ATTACK_1;
+    }
+    else if(m_weapons[WeaponClass::ATTACK_2]->IsPreparing()) {
+        m_currentState = State::ATTACK_2;
+    }
+    else if(m_weapons[WeaponClass::ATTACK_2]->IsAttacking()) {
+        m_currentState = State::ATTACK_2;
     }
     else {
         m_currentState = State::IDLE;
@@ -189,10 +220,7 @@ void BanditBoss::AddPhysicsBody() {
     groundSensor->setCollisionBitmask(0);
     groundSensor->setCategoryBitmask(Utils::CreateMask(core::CategoryBits::GROUND_SENSOR));
     groundSensor->setContactTestBitmask(
-        Utils::CreateMask(
-            core::CategoryBits::BOUNDARY
-            , core::CategoryBits::PLATFORM
-        )
+        Utils::CreateMask(core::CategoryBits::BOUNDARY, core::CategoryBits::PLATFORM)
     );
 }
 
@@ -221,6 +249,21 @@ void BanditBoss::AddWeapons() {
         const auto preparationTime { animDuration - attackDuration };
         const auto reloadTime { 2.f };
         m_weapons[WeaponClass::ATTACK_1] = new BossFireball(
+            damage, 
+            range, 
+            preparationTime,
+            attackDuration,
+            reloadTime 
+        );
+    }
+    {
+        const auto damage { 0.f }; // doesn't matter
+        const auto range { 480.f }; // doesn't matter
+        const auto animDuration = m_animator->GetDuration(Utils::EnumCast(State::ATTACK_2));
+        const auto attackDuration { animDuration };
+        const auto preparationTime { 0.f };
+        const auto reloadTime { 5.f };
+        m_weapons[WeaponClass::ATTACK_2] = new BossFireCloud(
             damage, 
             range, 
             preparationTime,
