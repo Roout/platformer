@@ -103,22 +103,27 @@ void BanditBoss::Attack2() {
         auto projectilePosition = [this]() -> cocos2d::Rect {
             const auto attackRange { m_weapons[ATTACK_2]->GetRange()};
             auto position = this->getPosition();
-            if(m_side == Side::RIGHT) {
-                position.x += m_contentSize.width / 2.f;
-            }
-            else {
-                position.x -= m_contentSize.width / 2.f;//  + attackRange;
-            }
+            // if(m_side == Side::RIGHT) {
+            //     position.x += m_contentSize.width / 2.f;
+            // }
+            // else {
+            //     position.x -= m_contentSize.width / 2.f;//  + attackRange;
+            // }
             // shift a little bit higher to avoid immediate collision with the ground
-            position.y += m_contentSize.height * 2.f;
+            position.y += m_contentSize.height;
             const cocos2d::Rect attackedArea {
                 position,
                 cocos2d::Size{ attackRange, m_contentSize.height * 0.35f }
             };
             return attackedArea;
         };
-        auto pushProjectile = [this](cocos2d::PhysicsBody* body) {
-            body->setVelocity({ this->IsLookingLeft()? -400.f: 400.f, 0.f });
+        // isLookingLeft = this->IsLookingLeft()
+        auto pushProjectile = [](cocos2d::PhysicsBody* body) {
+            cocos2d::Vec2 impulse { 0.f, body->getMass() * 160.f };
+            // if (isLookingLeft) {
+            //     impulse.x *= -1.f;
+            // }
+            body->applyImpulse(impulse);
         };
         m_weapons[ATTACK_2]->LaunchAttack(
             std::move(projectilePosition), 
@@ -258,10 +263,10 @@ void BanditBoss::AddWeapons() {
     }
     {
         const auto damage { 0.f }; // doesn't matter
-        const auto range { 120.f }; 
+        const auto range { 180.f }; 
         const auto animDuration = m_animator->GetDuration(Utils::EnumCast(State::ATTACK_2));
-        const auto attackDuration { animDuration };
-        const auto preparationTime { 0.f };
+        const auto attackDuration { 0.4f * animDuration };
+        const auto preparationTime { animDuration - attackDuration };
         const auto reloadTime { 5.f };
         m_weapons[WeaponClass::ATTACK_2] = new BossFireCloud(
             damage, 

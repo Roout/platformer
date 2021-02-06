@@ -37,6 +37,8 @@ private:
 
     void UpdateAnimation() override;
 
+    void UpdatePosition(const float dt) noexcept override;
+
     void OnDeath() override;
     
     void AddPhysicsBody() override;

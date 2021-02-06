@@ -35,6 +35,10 @@ bool FireCloud::init() {
         return false; 
     }
 
+    if(auto healthBar = this->getChildByName("health"); healthBar) {
+        healthBar->removeFromParent();
+    }
+
     m_health = 100; // some big value to make cloud indestructable
     // set up lifetime of the cloud
     constexpr float CLOUD_LIFETIME { 5.f };
@@ -49,6 +53,7 @@ void FireCloud::update(float dt) {
     // custom updates
     this->UpdateDebugLabel();
     this->UpdateWeapons(dt);
+    this->UpdatePosition(dt);
     // TODO: remove cuz it's undestructable
     // this->UpdateCurses(dt);
     // TODO: implement own attack!
@@ -67,6 +72,10 @@ void FireCloud::OnEnemyLeave() {
     m_detectEnemy = false;
 }
 
+void FireCloud::UpdatePosition(const float dt) noexcept {
+    m_movement->Update(dt);
+}
+
 void FireCloud::UpdateState(const float dt) noexcept {
     m_previousState = m_currentState;
 
@@ -82,6 +91,17 @@ void FireCloud::UpdateState(const float dt) noexcept {
     else if(m_finished && m_currentState != State::DEAD) {
         m_currentState = static_cast<State>(Utils::EnumCast(m_currentState) + 1);
         m_finished = false;
+        // stop comming up
+        if(m_currentState == State::LATE) {
+            m_movement->ResetForceY();
+            assert(this->getPhysicsBody() && "Cloud doesn't have physics body");
+            cocos2d::Vec2 impulse { 1.f, 0.f };
+            if (this->IsLookingLeft()) {
+                impulse.x *= -1.f;
+            }
+            m_movement->SetMaxSpeed(240.f);
+            m_movement->Push(impulse.x, impulse.y);
+        }
     }
 }
 
@@ -98,7 +118,6 @@ void FireCloud::UpdateAnimation() {
 
 void FireCloud::OnDeath() {
     this->removeComponent(this->getPhysicsBody());
-    this->getChildByName("health")->removeFromParent();
     m_animator->EndWith([this](){
         this->runAction(cocos2d::RemoveSelf::create(true));
     });
@@ -110,10 +129,14 @@ void FireCloud::AddPhysicsBody() {
         cocos2d::PhysicsMaterial(1.f, 0.1f, 0.1f), 
         {0.f, floorf(m_physicsBodySize.height / 2.f)}
     );
-    body->setDynamic(false);
+    body->setDynamic(true);
     body->setGravityEnable(false);
     body->setRotationEnable(false);
     
+    body->setCollisionBitmask(0);
+    body->setCategoryBitmask(0);
+    body->setContactTestBitmask(0);
+
     this->addComponent(body);
 }
 
@@ -121,7 +144,7 @@ void FireCloud::AddAnimator() {
     std::string chachedArmatureName = m_dragonBonesName;
     std::string prefix = "boss/boss_cloud";
     m_animator = dragonBones::Animator::create(std::move(prefix), std::move(chachedArmatureName));
-    m_animator->setScale(0.2f);
+    m_animator->setScale(0.27f);
     m_animator->InitializeAnimations({
         std::make_pair(Utils::EnumCast(State::INIT),    GetStateName(State::INIT)), 
         std::make_pair(Utils::EnumCast(State::EARLY),   GetStateName(State::EARLY)), 

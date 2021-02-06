@@ -432,9 +432,12 @@ void BossFireCloud::OnAttack() {
     const auto form = m_extractor();
     
     // size_t id, const cocos2d::Size& contentSize
-    // NOTE: id and size don't matter
     auto cloud = Enemies::FireCloud::create(1, form.size);
     if(!boss->IsLookingLeft()) cloud->Turn();
+
+    // push body up
+    auto body = cloud->getPhysicsBody();
+    m_modifier(body);
 
     cloud->setPosition(form.origin);
     map->addChild(cloud, 101);
