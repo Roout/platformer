@@ -34,9 +34,7 @@ public:
     void Update(float dt) noexcept;
     
     /**
-     *  Push the body with predefined impulses (for now 
-     * there are 2 types of impulses: used to jump or fall down).
-     * Can push only along Y-axis for now.
+     *  Push the body with predefined impulses.
      *  Impulses can be adjusted by setting coefficients: x & y. 
      * 
      *  @param x provide impulse horizontal direction 

@@ -42,8 +42,9 @@ void Movement::Update(float [[maybe_unused]] dt) noexcept {
 }
 
 
-void Movement::Push(float [[maybe_unused]] x, float y) noexcept {
+void Movement::Push(float x, float y) noexcept {
     float yJumpSpeed = 0.f;
+
     if(y > 0.f) { // jump
         yJumpSpeed = m_upJumpSpeed;
     }
@@ -51,6 +52,8 @@ void Movement::Push(float [[maybe_unused]] x, float y) noexcept {
         yJumpSpeed = m_downJumpSpeed;
     }
     const auto jumpImpulse { m_body->getMass() * yJumpSpeed };
+    // TODO: introduce the ability to customize horizontal velocity
+    m_impulse.x = m_body->getMass() * m_desiredVelocity * x;
     m_impulse.y = jumpImpulse * y;
 }
 
