@@ -427,12 +427,15 @@ void BossFireCloud::OnAttack() {
     const auto runningScene { cocos2d::Director::getInstance()->getRunningScene() };
     const auto level = runningScene->getChildByName("Level");
     const auto map = level->getChildByName("Map");
+    const auto boss = map->getChildByName<Unit*>(core::EntityNames::BOSS);
 
     const auto form = m_extractor();
+    
     // size_t id, const cocos2d::Size& contentSize
     // NOTE: id and size don't matter
     auto cloud = Enemies::FireCloud::create(1, form.size);
-    cloud->setScale(0.2f);
+    if(!boss->IsLookingLeft()) cloud->Turn();
+
     cloud->setPosition(form.origin);
     map->addChild(cloud, 101);
 }

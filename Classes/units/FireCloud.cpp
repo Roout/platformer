@@ -25,8 +25,8 @@ FireCloud* FireCloud::create(size_t id, const cocos2d::Size& contentSize) {
 FireCloud::FireCloud(size_t id, const cocos2d::Size& contentSize)
     : Bot{ id, core::EntityNames::FIRECLOUD }
 {
-    m_contentSize = contentSize;
-    m_physicsBodySize = cocos2d::Size { contentSize.width, contentSize.height * 2.f };
+    m_contentSize = cocos2d::Size { contentSize.width, contentSize.height * 2.f };
+    m_physicsBodySize = m_contentSize;
     m_hitBoxSize = m_physicsBodySize;
 }
 
@@ -35,7 +35,7 @@ bool FireCloud::init() {
         return false; 
     }
 
-    m_health = 1'000'000'000; // some big value to make cloud indestructable
+    m_health = 100; // some big value to make cloud indestructable
     // set up lifetime of the cloud
     constexpr float CLOUD_LIFETIME { 5.f };
     m_lifetime = CLOUD_LIFETIME;
@@ -121,7 +121,7 @@ void FireCloud::AddAnimator() {
     std::string chachedArmatureName = m_dragonBonesName;
     std::string prefix = "boss/boss_cloud";
     m_animator = dragonBones::Animator::create(std::move(prefix), std::move(chachedArmatureName));
-    //m_animator->setScale(0.2f);
+    m_animator->setScale(0.2f);
     m_animator->InitializeAnimations({
         std::make_pair(Utils::EnumCast(State::INIT),    GetStateName(State::INIT)), 
         std::make_pair(Utils::EnumCast(State::EARLY),   GetStateName(State::EARLY)), 

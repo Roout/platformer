@@ -113,7 +113,7 @@ void BanditBoss::Attack2() {
             position.y += m_contentSize.height * 2.f;
             const cocos2d::Rect attackedArea {
                 position,
-                cocos2d::Size{ attackRange, m_contentSize.height * 1.05f } // a little bigger than the designed size
+                cocos2d::Size{ attackRange, m_contentSize.height * 0.35f }
             };
             return attackedArea;
         };
@@ -258,7 +258,7 @@ void BanditBoss::AddWeapons() {
     }
     {
         const auto damage { 0.f }; // doesn't matter
-        const auto range { 480.f }; // doesn't matter
+        const auto range { 120.f }; 
         const auto animDuration = m_animator->GetDuration(Utils::EnumCast(State::ATTACK_2));
         const auto attackDuration { animDuration };
         const auto preparationTime { 0.f };
