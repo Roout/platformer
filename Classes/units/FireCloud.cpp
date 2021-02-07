@@ -41,7 +41,6 @@ bool FireCloud::init() {
 
     m_health = 100; // some big value to make cloud indestructable
     // set up lifetime of the cloud
-    constexpr float CLOUD_LIFETIME { 5.f };
     m_lifetime = CLOUD_LIFETIME;
 
     return true;
@@ -56,8 +55,7 @@ void FireCloud::update(float dt) {
     this->UpdatePosition(dt);
     // TODO: remove cuz it's undestructable
     // this->UpdateCurses(dt);
-    // TODO: implement own attack!
-    // this->TryAttack();
+    this->TryAttack();
     this->UpdateState(dt);
     this->UpdateAnimation(); 
 }
@@ -74,6 +72,22 @@ void FireCloud::OnEnemyLeave() {
 
 void FireCloud::UpdatePosition(const float dt) noexcept {
     m_movement->Update(dt);
+}
+
+void FireCloud::UpdateWeapons(const float dt) noexcept {
+    Unit::UpdateWeapons(dt);
+    if(m_shells <= 0.f) {
+        m_shellRenewTimer -= dt;
+        if(m_shellRenewTimer <= 0.f) {
+            m_shells = MAX_SHELL_COUNT;
+        }
+    }
+}
+
+void FireCloud::TryAttack() {
+    if (this->NeedAttack()) { // attack if possible
+        this->Attack();
+    } 
 }
 
 void FireCloud::UpdateState(const float dt) noexcept {
@@ -99,7 +113,7 @@ void FireCloud::UpdateState(const float dt) noexcept {
             if (this->IsLookingLeft()) {
                 impulse.x *= -1.f;
             }
-            m_movement->SetMaxSpeed(240.f);
+            m_movement->SetMaxSpeed(CLOUD_SPEED);
             m_movement->Push(impulse.x, impulse.y);
         }
     }
@@ -117,8 +131,8 @@ void FireCloud::UpdateAnimation() {
 }
 
 void FireCloud::OnDeath() {
-    this->removeComponent(this->getPhysicsBody());
     m_animator->EndWith([this](){
+        this->removeComponent(this->getPhysicsBody());
         this->runAction(cocos2d::RemoveSelf::create(true));
     });
 }
@@ -160,10 +174,10 @@ void FireCloud::AddAnimator() {
 
 void FireCloud::AddWeapons() {
     const auto damage { 15.f };
-    const auto range { 50.f };
+    const auto range { 115.f };
     const auto preparationTime { 0.f }; 
-    const auto attackDuration { 0.5f };
-    const auto reloadTime { 0.5f };
+    const auto attackDuration { 0.1f };
+    const auto reloadTime { 0.1f };
     m_weapons[WeaponClass::RANGE] = new CloudFireball(
         damage, 
         range, 
@@ -174,34 +188,39 @@ void FireCloud::AddWeapons() {
 }
 
 void FireCloud::Attack() {
-    if(m_weapons[WeaponClass::RANGE]->IsReady() && !this->IsDead()) {
-        auto projectilePosition = [this]()->cocos2d::Rect {
-            const auto attackRange { m_weapons[WeaponClass::RANGE]->GetRange() };
-            const cocos2d::Size arrowSize { attackRange, floorf(attackRange / 8.5f) };
+    m_shells--;
+    if(m_shells <= 0) m_shellRenewTimer = FireCloud::MAX_SHELL_DELAY;
 
-            auto position = this->getPosition();
-            if (this->IsLookingLeft()) {
-                position.x -= m_contentSize.width / 2.f + arrowSize.width;
-            }
-            else {
-                position.x += m_contentSize.width / 2.f;
-            }
-            position.y += m_contentSize.height / 2.f;
+    auto projectilePosition = [this]()->cocos2d::Rect {
+        const auto attackRange { m_weapons[WeaponClass::RANGE]->GetRange() };
+        const cocos2d::Size fireballSize { attackRange, attackRange * 1.4f };
 
-            return {position, arrowSize};
-        };
-        auto pushProjectile = [this](cocos2d::PhysicsBody* body) {
-            body->setVelocity({ this->IsLookingLeft()? -300.f: 300.f, -600.f });
-        };
-        m_weapons[WeaponClass::RANGE]->LaunchAttack(
-            std::move(projectilePosition), 
-            std::move(pushProjectile)
+        auto position = this->getPosition();
+        position.y -= m_contentSize.height * 0.1f;
+        position.x = static_cast<float>(
+            cocos2d::RandomHelper::random_int(
+                static_cast<int>(position.x - m_contentSize.width / 3.f), 
+                static_cast<int>(position.x + m_contentSize.width / 3.f)
+            )
         );
-    }
+
+        return { position, fireballSize };
+    };
+    auto pushProjectile = [this](cocos2d::PhysicsBody* body) {
+        body->setVelocity({ this->IsLookingLeft()? -300.f: 300.f, -600.f });
+    };
+    m_weapons[WeaponClass::RANGE]->LaunchAttack(
+        std::move(projectilePosition), 
+        std::move(pushProjectile)
+    );
 }
 
 bool FireCloud::NeedAttack() const noexcept {
-    return !this->IsDead() && m_detectEnemy && m_weapons[WeaponClass::RANGE]->IsReady();
+    return (!this->IsDead() 
+        && m_shells 
+        && m_weapons[WeaponClass::RANGE]->IsReady() 
+        && m_currentState == State::LATE
+    );
 }
 
 } // namespace Enemies

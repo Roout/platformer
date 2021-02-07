@@ -462,7 +462,7 @@ void CloudFireball::OnAttack() {
     const auto body = cocos2d::PhysicsBody::createBox(
         projectile.size
         , cocos2d::PhysicsMaterial{ 1.f, 0.0f, 0.0f }
-        , { -projectile.size.width / 2.f, projectile.size.height }
+        , { -projectile.size.width / 2.f, 0.f }
     );
     body->setDynamic(true);
     body->setGravityEnable(false);
@@ -483,7 +483,7 @@ void CloudFireball::OnAttack() {
             , core::CategoryBits::PROPS
             , core::CategoryBits::BOUNDARY
             , core::CategoryBits::PLAYER_PROJECTILE
-            , core::CategoryBits::PLATFORM
+            // , core::CategoryBits::PLATFORM
         )
     };
     const auto categoryMask {
