@@ -36,7 +36,7 @@ protected:
         // Dummy weapon used to track down timings and cooldowns of this type of attack.
         // Instead of creating projectiles it only generates a FireCloud
         ATTACK_2, 
-        // TODO: implement
+        // Jump dealing damage by sweeping chain attack below the boss
         ATTACK_3
     };
 
@@ -49,7 +49,9 @@ private:
 /// unique to boss
 
     void Attack1();
+
     void Attack2();
+
     void Attack3();
 
 /// Bot interface

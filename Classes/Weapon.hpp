@@ -242,6 +242,13 @@ public:
     void OnAttack() override;
 };
 
+class BossChain final : public Weapon {
+public:
+    using Weapon::Weapon;
+
+    void OnAttack() override;
+};
+
 class Bow final : public Weapon {
 public:
     using Weapon::Weapon;

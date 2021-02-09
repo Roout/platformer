@@ -312,6 +312,32 @@ void BossFireball::OnAttack() {
     map->addChild(proj, 101); 
 }
 
+void BossChain::OnAttack() {
+    const auto runningScene { cocos2d::Director::getInstance()->getRunningScene() };
+    const auto level = runningScene->getChildByName("Level");
+    const auto map = level->getChildByName("Map");
+
+    const auto proj = Projectile::create(this->GetDamage());
+    const auto projectile = m_extractor();
+    const auto body = proj->AddPhysicsBody(projectile.size);
+    proj->setPosition(projectile.origin);
+    m_modifier(body);
+    const auto testMask {
+        Utils::CreateMask(
+            core::CategoryBits::PROPS
+            , core::CategoryBits::BOUNDARY
+            , core::CategoryBits::PLAYER_PROJECTILE 
+            , core::CategoryBits::HITBOX_SENSOR 
+        )
+    };
+    const auto categoryMask {
+        Utils::CreateMask(core::CategoryBits::ENEMY_PROJECTILE)
+    };
+    proj->SetCategoryBitmask(categoryMask);
+    proj->SetContactTestBitmask(testMask);
+    map->addChild(proj); 
+}
+
 void PlayerSpecial::OnAttack() {
     const auto runningScene { cocos2d::Director::getInstance()->getRunningScene() };
     const auto level = runningScene->getChildByName("Level");

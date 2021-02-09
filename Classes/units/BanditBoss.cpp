@@ -6,6 +6,7 @@
 #include "../Weapon.hpp"
 #include "../Influence.hpp"
 #include "../Movement.hpp"
+#include "../PhysicsHelper.hpp"
 
 #include "cocos2d.h"
 
@@ -36,7 +37,7 @@ bool BanditBoss::init() {
     if (!Bot::init()) {
         return false; 
     }
-    m_movement->SetMaxSpeed(80.f);
+    m_movement->SetMaxSpeed(280.f);
     return true;
 }
 
@@ -69,6 +70,7 @@ void BanditBoss::OnEnemyLeave() {
 }
 
 void BanditBoss::Attack1() {
+    // TODO: check if I can remove this condition
     if(m_weapons[ATTACK_1]->IsReady() && !this->IsDead()) {
         auto projectilePosition = [this]() -> cocos2d::Rect {
             const auto attackRange { m_weapons[ATTACK_1]->GetRange() * 0.25f };
@@ -104,16 +106,13 @@ void BanditBoss::Attack2() {
             const auto attackRange { m_weapons[ATTACK_2]->GetRange()};
             auto position = this->getPosition();
             position.y += m_contentSize.height;
-            const cocos2d::Rect attackedArea {
-                position,
-                cocos2d::Size{ attackRange, m_contentSize.height * 0.35f }
-            };
-            return attackedArea;
+            return { position, cocos2d::Size{ attackRange, m_contentSize.height * 0.35f } };
         };
         auto pushProjectile = [](cocos2d::PhysicsBody* body) {
             cocos2d::Vec2 impulse { 0.f, body->getMass() * 160.f };
             body->applyImpulse(impulse);
         };
+        // start attack with weapon
         m_weapons[ATTACK_2]->LaunchAttack(
             std::move(projectilePosition), 
             std::move(pushProjectile)
@@ -122,7 +121,24 @@ void BanditBoss::Attack2() {
 }
 
 void BanditBoss::Attack3() {
-
+    auto projectilePosition = [this]() -> cocos2d::Rect {
+        const auto attackRange { m_weapons[ATTACK_3]->GetRange()};
+        auto position = this->getPosition();
+        position.y += m_contentSize.height;
+        return { position, cocos2d::Size{ attackRange, m_contentSize.height * 0.35f } };
+    };
+    auto pushProjectile = [](cocos2d::PhysicsBody* body) {
+        cocos2d::Vec2 impulse { 0.f, body->getMass() * 160.f };
+        body->applyImpulse(impulse);
+    };
+    // create projectile - area where the chains aredealing damage during jump
+    m_weapons[ATTACK_3]->LaunchAttack(
+        std::move(projectilePosition), 
+        std::move(pushProjectile)
+    );
+    // jump
+    m_movement->ResetForce();
+    m_movement->Push(IsLookingLeft()? -1.f: 1.f, 1.f);
 }
 
 void BanditBoss::TryAttack() {
@@ -130,17 +146,20 @@ void BanditBoss::TryAttack() {
     bool attackIsReady {
         !this->IsDead() && 
         m_detectEnemy && 
-        m_weapons[ATTACK_2]->IsReady()
+        m_weapons[ATTACK_3]->IsReady()
     };
     if( target && attackIsReady ) { // attack if possible
         this->LookAt(target->getPosition());
         this->MoveAlong(0.f, 0.f);
-        this->Attack2();
+        this->Attack3();
     } 
 }
 
 void BanditBoss::UpdateState(const float dt) noexcept {
     m_previousState = m_currentState;
+
+    const auto velocity { this->IsDead()? cocos2d::Vec2{ 0.f, 0.f } : this->getPhysicsBody()->getVelocity() };
+    static constexpr float EPS { 0.001f };
 
     if(m_health <= 0) {
         m_currentState = State::DEAD;
@@ -157,14 +176,23 @@ void BanditBoss::UpdateState(const float dt) noexcept {
     else if(m_weapons[WeaponClass::ATTACK_2]->IsAttacking()) {
         m_currentState = State::ATTACK_2;
     }
-    else {
+    else if(m_weapons[WeaponClass::ATTACK_3]->IsPreparing()) {
+        m_currentState = State::ATTACK_3;
+    }
+    else if(m_weapons[WeaponClass::ATTACK_3]->IsAttacking()) {
+        m_currentState = State::ATTACK_3;
+    }
+    else if(helper::IsEqual(velocity.x, 0.f, EPS)) {
         m_currentState = State::IDLE;
+    } 
+    else {
+        m_currentState = State::WALK;
     }
 
 }
 
 void BanditBoss::UpdatePosition(const float dt) noexcept {
-
+    m_movement->Update(dt);
 }
 
 void BanditBoss::UpdateAnimation() {
@@ -228,7 +256,7 @@ void BanditBoss::AddAnimator() {
         std::make_pair(Utils::EnumCast(State::ATTACK_2),  GetStateName(State::ATTACK_2)),
         std::make_pair(Utils::EnumCast(State::ATTACK_3),  GetStateName(State::ATTACK_3)),
         std::make_pair(Utils::EnumCast(State::IDLE),    GetStateName(State::IDLE)),
-        std::make_pair(Utils::EnumCast(State::WALK),    GetStateName(State::WALK)),
+        std::make_pair(Utils::EnumCast(State::WALK),    "move"), // cat changed name! FUCK!
         std::make_pair(Utils::EnumCast(State::DEAD),    GetStateName(State::DEAD))
     });
     this->addChild(m_animator);
@@ -258,6 +286,21 @@ void BanditBoss::AddWeapons() {
         const auto preparationTime { animDuration - attackDuration };
         const auto reloadTime { 5.f };
         m_weapons[WeaponClass::ATTACK_2] = new BossFireCloud(
+            damage, 
+            range, 
+            preparationTime,
+            attackDuration,
+            reloadTime 
+        );
+    }
+    {
+        const auto damage { 10.f }; // doesn't matter
+        const auto range { 300.f }; 
+        const auto animDuration = m_animator->GetDuration(Utils::EnumCast(State::ATTACK_3));
+        const auto attackDuration { 0.4f * animDuration };
+        const auto preparationTime { animDuration - attackDuration };
+        const auto reloadTime { 5.f };
+        m_weapons[WeaponClass::ATTACK_3] = new BossChain(
             damage, 
             range, 
             preparationTime,
