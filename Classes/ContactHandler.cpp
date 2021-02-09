@@ -61,10 +61,7 @@ bool OnContactBegin(cocos2d::PhysicsContact& contact) {
     };
 
     const auto unitMask { 
-        Utils::CreateMask(
-            core::CategoryBits::PLAYER
-            , core::CategoryBits::ENEMY
-        ) 
+        Utils::CreateMask(core::CategoryBits::PLAYER, core::CategoryBits::ENEMY) 
     };
     const bool isUnit[2] = {
         (bodyMasks[BODY_A] & unitMask) > 0,
@@ -184,13 +181,13 @@ bool OnContactSeparate(cocos2d::PhysicsContact& contact) {
     };
 
     if (nodes[BODY_A] && nodes[BODY_B] && (isUnitSensor[BODY_A] || isUnitSensor[BODY_B]) ) {
-        const auto player { static_cast<Unit*>(isUnitSensor[BODY_A]? nodes[BODY_A] : nodes[BODY_B]) };
+        const auto unit { static_cast<Unit*>(isUnitSensor[BODY_A]? nodes[BODY_A] : nodes[BODY_B]) };
         bool onGround {
             isUnitSensor[BODY_A]? 
                 helper::IsEqual(bodies[BODY_A]->getVelocity().y, 0.f, 0.000001f):
                 helper::IsEqual(bodies[BODY_B]->getVelocity().y, 0.f, 0.000001f)
         };
-        player->SetContactWithGround(onGround);
+        unit->SetContactWithGround(onGround);
         return true;
     }
 
