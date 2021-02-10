@@ -123,13 +123,21 @@ void BanditBoss::Attack2() {
 void BanditBoss::Attack3() {
     auto projectilePosition = [this]() -> cocos2d::Rect {
         const auto attackRange { m_weapons[ATTACK_3]->GetRange()};
+        const cocos2d::Size area { attackRange, attackRange };
+
         auto position = this->getPosition();
-        position.y += m_contentSize.height;
-        return { position, cocos2d::Size{ attackRange, m_contentSize.height * 0.35f } };
+        if (this->IsLookingLeft()) {
+            position.x -= m_contentSize.width / 2.f + area.width;
+        }
+        else {
+            position.x += m_contentSize.width / 2.f;
+        }
+        position.y -= m_contentSize.height / 3.f;
+
+        return { position, area };
     };
-    auto pushProjectile = [](cocos2d::PhysicsBody* body) {
-        cocos2d::Vec2 impulse { 0.f, body->getMass() * 160.f };
-        body->applyImpulse(impulse);
+    auto pushProjectile = [this](cocos2d::PhysicsBody* body) {
+        body->setVelocity(this->getPhysicsBody()->getVelocity());
     };
     // create projectile - area where the chains aredealing damage during jump
     m_weapons[ATTACK_3]->LaunchAttack(
@@ -294,12 +302,12 @@ void BanditBoss::AddWeapons() {
         );
     }
     {
-        const auto damage { 10.f }; // doesn't matter
-        const auto range { 300.f }; 
+        const auto damage { 30.f }; // doesn't matter
+        const auto range { 100.f }; 
         const auto animDuration = m_animator->GetDuration(Utils::EnumCast(State::ATTACK_3));
         const auto attackDuration { 0.4f * animDuration };
         const auto preparationTime { animDuration - attackDuration };
-        const auto reloadTime { 5.f };
+        const auto reloadTime { 2.f };
         m_weapons[WeaponClass::ATTACK_3] = new BossChain(
             damage, 
             range, 
