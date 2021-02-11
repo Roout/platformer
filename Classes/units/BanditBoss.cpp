@@ -7,6 +7,7 @@
 #include "../Influence.hpp"
 #include "../Movement.hpp"
 #include "../PhysicsHelper.hpp"
+#include "../LevelScene.hpp"
 
 #include "cocos2d.h"
 
@@ -37,6 +38,7 @@ bool BanditBoss::init() {
     if (!Bot::init()) {
         return false; 
     }
+    m_movement->SetJumpHeight(80.f, LevelScene::GRAVITY);
     m_movement->SetMaxSpeed(280.f);
     return true;
 }

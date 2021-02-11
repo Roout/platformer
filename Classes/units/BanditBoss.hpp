@@ -12,6 +12,13 @@ namespace Enemies {
 class BanditBoss : public Bot {
 public:
 
+    // Defines how high can the body jump
+    // Note, in formula: G = -H / (2*t*t), G and t are already defined base on player
+    // so changing This JUMP_HEIGHT will just tweak 
+    static constexpr float JUMP_HEIGHT { 130.f };
+
+public:
+
     static BanditBoss* create(size_t id, const cocos2d::Size& contentSize);
 
     [[nodiscard]] bool init() override;

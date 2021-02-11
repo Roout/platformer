@@ -7,6 +7,7 @@
 #include "Core.hpp"
 #include "DragonBonesAnimator.hpp"
 #include "Movement.hpp"
+#include "LevelScene.hpp"
 
 #include <cmath>
 
@@ -35,7 +36,7 @@ bool Unit::init() {
     this->AddAnimator();
     this->AddPhysicsBody();
     const auto body { this->getPhysicsBody() };
-    m_movement = std::make_unique<Movement>(body);
+    m_movement = std::make_unique<Movement>(body, LevelScene::GRAVITY, LevelScene::JUMP_HEIGHT);
     this->AddWeapons();
     this->setContentSize(m_contentSize);
 

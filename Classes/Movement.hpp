@@ -14,16 +14,11 @@ namespace cocos2d {
  */
 class Movement final {
 public:
-    // Defines how high can the body jump
-    static constexpr float JUMP_HEIGHT { 130.f };     // up to 3 tiles
-    // Defines how fast the body reach the max height by single jump 
-    static constexpr float TIME_OF_APEX_JUMP { 0.3f };  // standart time
-    // Calculate grvity base on defined constancts: height, time ( G = -H / (2*t*t) )
-    static constexpr float GRAVITY { 
-        -JUMP_HEIGHT / (2 * TIME_OF_APEX_JUMP * TIME_OF_APEX_JUMP) 
-    };
     
-    Movement(cocos2d::PhysicsBody * const body);
+    Movement(cocos2d::PhysicsBody * const body
+        , float gravity
+        , float jumpHeight
+    );
     
     ~Movement();
 
@@ -67,15 +62,18 @@ public:
     void ResetForceY() noexcept;
 
     void SetMaxSpeed(float speed) noexcept;
+
+    void SetJumpHeight(float height, float gravity) noexcept;
+    
 private:
     cocos2d::PhysicsBody * const m_body { nullptr };
 
     // jump speed calculated in runtime base on compile-time constants
-    const float m_upJumpSpeed { 0.f };
+    float m_upJumpSpeed { 0.f };
     // fall speed calculated in runtime base on compile-time constants
-    const float m_downJumpSpeed { 0.f };
+    float m_downJumpSpeed { 0.f };
     // max possible 
-    const float m_maxVelocity { 775.f };
+    float m_maxVelocity { 775.f };
 
     // set by user manually
     float m_desiredVelocity { 200.f };

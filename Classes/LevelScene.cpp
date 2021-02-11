@@ -19,7 +19,6 @@
 
 #include "PhysicsHelper.hpp"
 #include "UserInputHandler.hpp"
-#include "Movement.hpp"
 #include "Utils.hpp"
 #include "SizeDeducer.hpp"
 #include "Interface.hpp"
@@ -30,7 +29,7 @@
 
 #include <unordered_map>
 
-LevelScene::LevelScene(int id): 
+LevelScene::LevelScene(int id) : 
     m_id{ id } 
 {
 }
@@ -38,7 +37,7 @@ LevelScene::LevelScene(int id):
 cocos2d::Scene* LevelScene::createRootScene(int id) {
     const auto root = cocos2d::Scene::createWithPhysics();
     const auto world = root->getPhysicsWorld();
-    world->setGravity(cocos2d::Vec2(0, Movement::GRAVITY));
+    world->setGravity(cocos2d::Vec2(0, GRAVITY));
     world->setSubsteps(2);
 #ifndef COCOS2D_DEBUG
     world->setFixedUpdateRate(60);

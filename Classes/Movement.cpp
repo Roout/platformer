@@ -2,15 +2,18 @@
 #include "Unit.hpp"
 #include "PhysicsHelper.hpp"
 #include "cocos2d.h"
+
 #include "chipmunk/chipmunk.h"
+
 #include <cmath>
 
-Movement::Movement(cocos2d::PhysicsBody * const body):
-    m_body { body },
-    m_upJumpSpeed { sqrtf(2.f * JUMP_HEIGHT * (-GRAVITY)) },
-    m_maxVelocity { floorf(m_upJumpSpeed + 1.f) },
-    m_downJumpSpeed { -GRAVITY * sqrtf(2.f * JUMP_HEIGHT / (-GRAVITY)) }
+Movement::Movement(cocos2d::PhysicsBody * const body
+    , float gravity
+    , float jumpHeight
+):
+    m_body { body }
 {
+    this->SetJumpHeight(jumpHeight, gravity);
     m_body->retain();
 }
 
@@ -99,4 +102,10 @@ void Movement::ResetForceY() noexcept {
 
 void Movement::SetMaxSpeed(float speed) noexcept {
     m_desiredVelocity = speed;
+}
+
+void Movement::SetJumpHeight(float height, float gravity) noexcept {
+    m_upJumpSpeed = sqrtf(2.f * height * (-gravity));
+    m_maxVelocity = floorf(m_upJumpSpeed + 1.f);
+    m_downJumpSpeed = -gravity * sqrtf(2.f * height / (-gravity));
 }

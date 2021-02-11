@@ -11,7 +11,7 @@ BossFightScene::BossFightScene(int id)
 cocos2d::Scene* BossFightScene::createRootScene(int id) {
     const auto root = cocos2d::Scene::createWithPhysics();
     const auto world = root->getPhysicsWorld();
-    world->setGravity(cocos2d::Vec2(0, Movement::GRAVITY));
+    world->setGravity(cocos2d::Vec2(0, LevelScene::GRAVITY));
     world->setSubsteps(2);
 #ifndef COCOS2D_DEBUG
     world->setFixedUpdateRate(60);
