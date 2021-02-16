@@ -61,6 +61,16 @@ private:
 
     void Attack3();
 
+    /**
+     * Check whether Attack3 can be launched.
+     * Consider:
+     * 1. No cooldown
+     * 2. Player exist and is alive
+     * 3. Player is in jump range
+     * 4. No other attacks performed
+     */
+    bool CanLaunchAttack3() const noexcept;
+
 /// Bot interface
 
     void TryAttack() override;

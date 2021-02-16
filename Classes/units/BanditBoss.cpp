@@ -151,6 +151,34 @@ void BanditBoss::Attack3() {
     m_movement->Push(IsLookingLeft()? -1.f: 1.f, 1.f);
 }
 
+bool BanditBoss::CanLaunchAttack3() const noexcept {
+    const auto player = this->getParent()->getChildByName<Unit*>(core::EntityNames::PLAYER);
+    if(player 
+        && !player->IsDead()
+        && m_weapons[ATTACK_3]->IsReady()
+        && this->IsOnGround() // can't jump in the air
+    ) {
+        cocos2d::Size aggroSize { m_contentSize.height * 2.f, m_contentSize.height };
+        const cocos2d::Rect left { 
+            this->getPosition() - cocos2d::Size {aggroSize.width, 0.f}, 
+            aggroSize
+        };
+        const cocos2d::Rect right { 
+            this->getPosition(), 
+            aggroSize
+        };
+
+        const auto playerSize { player->getContentSize() };
+        const cocos2d::Rect boundingBox {
+            player->getPosition() - cocos2d::Vec2{ playerSize.width / 2.f, 0.f }, 
+            playerSize
+        };
+        return (left.intersectsRect(boundingBox) || right.intersectsRect(boundingBox));
+    }
+
+    return false;
+}
+
 void BanditBoss::TryAttack() {
     const auto target = this->getParent()->getChildByName(core::EntityNames::PLAYER);
     bool attackIsReady {
@@ -158,7 +186,7 @@ void BanditBoss::TryAttack() {
         m_detectEnemy && 
         m_weapons[ATTACK_3]->IsReady()
     };
-    if( target && attackIsReady ) { // attack if possible
+    if( this->CanLaunchAttack3() ) { // attack if possible
         this->LookAt(target->getPosition());
         this->MoveAlong(0.f, 0.f);
         this->Attack3();
