@@ -79,16 +79,9 @@ void BanditBoss::update(float dt) {
                 const auto player = target;
                 bool playerIsNear { false };
                 if(player && !player->IsDead()) {
-                    const cocos2d::Rect bossBB { 
-                        this->getPosition() - cocos2d::Vec2{ m_contentSize.width / 2.f, 0.f },
-                        m_contentSize
-                    };
-                    const auto playerSize { player->getContentSize() };
-                    const cocos2d::Rect playerBB {
-                        player->getPosition() - cocos2d::Vec2{ playerSize.width / 2.f, 0.f }, 
-                        playerSize
-                    };
-                    playerIsNear = bossBB.intersectsRect(playerBB);
+                    const auto bossX = this->getPositionX();
+                    const auto playerX = player->getPositionX();
+                    playerIsNear = std::fabs(bossX - playerX) <= m_contentSize.width / 2.f;
                 }
 
                 /// Move towards player:
