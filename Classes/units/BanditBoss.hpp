@@ -17,6 +17,8 @@ public:
     // so changing This JUMP_HEIGHT will just tweak 
     static constexpr float JUMP_HEIGHT { 130.f };
 
+    static constexpr int MAX_HEALTH { 500 };
+
 public:
 
     static BanditBoss* create(size_t id, const cocos2d::Size& contentSize);
@@ -61,6 +63,25 @@ private:
 
     void Attack3();
 
+    /**
+     * Check whether Attack1 can be launched.
+     * Consider:
+     * 1. No cooldown
+     * 2. Player exist and is alive
+     * 3. No other attacks performed
+     */
+    bool CanLaunchAttack1() const noexcept;
+
+    /**
+     * Check whether Attack2 can be launched.
+     * Consider:
+     * 1. No cooldown
+     * 2. Player exist and is alive
+     * 3. health is <= 50% 
+     * 4. No other attacks performed
+     */
+    bool CanLaunchAttack2() const noexcept;
+    
     /**
      * Check whether Attack3 can be launched.
      * Consider:

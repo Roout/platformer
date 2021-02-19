@@ -31,6 +31,7 @@ BanditBoss::BanditBoss(size_t id, const char* dragonBonesName, const cocos2d::Si
     m_contentSize = contentSize;
     m_physicsBodySize = cocos2d::Size { contentSize.width * 0.75f, contentSize.height };
     m_hitBoxSize = m_physicsBodySize;
+    m_health = MAX_HEALTH;
 }
 
 
@@ -51,7 +52,15 @@ void BanditBoss::update(float dt) {
     this->UpdateWeapons(dt);
     this->UpdatePosition(dt); 
     this->UpdateCurses(dt);
-    this->TryAttack();
+    { // AI logic is going here:
+        // if health < 50% -> enable to cast fireCloud
+
+        // if player is in range and attack_3 can be performed -> perform jump attack
+        // else if can't but can attack_1 -> fireballs
+        // else if can cast fireCloud -> cast firecloud
+        // else (fireballs on cd) -> go closer to player
+    }
+    // this->TryAttack();
     this->UpdateState(dt);
     this->UpdateAnimation(); 
 }
@@ -149,6 +158,31 @@ void BanditBoss::Attack3() {
     // jump
     m_movement->ResetForce();
     m_movement->Push(IsLookingLeft()? -1.f: 1.f, 1.f);
+}
+
+bool BanditBoss::CanLaunchAttack1() const noexcept {
+    const auto player = this->getParent()->getChildByName<Unit*>(core::EntityNames::PLAYER);
+    if(player 
+        && !player->IsDead()
+        && m_weapons[ATTACK_1]->IsReady()
+    ) {
+       return true;
+    }
+
+    return false;
+}
+
+bool BanditBoss::CanLaunchAttack2() const noexcept {
+    const auto player = this->getParent()->getChildByName<Unit*>(core::EntityNames::PLAYER);
+    if(player 
+        && !player->IsDead()
+        && m_weapons[ATTACK_2]->IsReady()
+        && this->m_health <= MAX_HEALTH / 2
+    ) {
+        return true;
+    }
+
+    return false;
 }
 
 bool BanditBoss::CanLaunchAttack3() const noexcept {
