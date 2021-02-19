@@ -52,13 +52,56 @@ void BanditBoss::update(float dt) {
     this->UpdateWeapons(dt);
     this->UpdatePosition(dt); 
     this->UpdateCurses(dt);
-    { // AI logic is going here:
-        // if health < 50% -> enable to cast fireCloud
 
-        // if player is in range and attack_3 can be performed -> perform jump attack
-        // else if can't but can attack_1 -> fireballs
-        // else if can cast fireCloud -> cast firecloud
-        // else (fireballs on cd) -> go closer to player
+    {
+        const auto target = this->getParent()->getChildByName<Unit*>(core::EntityNames::PLAYER);
+        if(target && (m_currentState == State::WALK || m_currentState == State::IDLE)) { // AI logic is going here:
+            const bool canMove { !this->IsDead() && m_detectEnemy };
+            
+            if(this->CanLaunchAttack3()) {
+                // if player is in range and attack_3 can be performed -> perform jump attack
+                this->LookAt(target->getPosition());
+                this->MoveAlong(0.f, 0.f);
+                this->Attack3();
+            }
+            else if(this->CanLaunchAttack1()) {
+                // fireballs
+                this->LookAt(target->getPosition());
+                this->MoveAlong(0.f, 0.f);
+                this->Attack1();
+            }
+            else if(this->CanLaunchAttack2()) {
+                this->LookAt(target->getPosition());
+                this->MoveAlong(0.f, 0.f);
+                this->Attack2();
+            }
+            else if(canMove) {
+                const auto player = target;
+                bool playerIsNear { false };
+                if(player && !player->IsDead()) {
+                    const cocos2d::Rect bossBB { 
+                        this->getPosition() - cocos2d::Vec2{ m_contentSize.width / 2.f, 0.f },
+                        m_contentSize
+                    };
+                    const auto playerSize { player->getContentSize() };
+                    const cocos2d::Rect playerBB {
+                        player->getPosition() - cocos2d::Vec2{ playerSize.width / 2.f, 0.f }, 
+                        playerSize
+                    };
+                    playerIsNear = bossBB.intersectsRect(playerBB);
+                }
+
+                /// Move towards player:
+                if(!playerIsNear) {
+                    this->LookAt(target->getPosition());
+                    this->MoveAlong(this->IsLookingLeft()? -1.f: 1.f, 0.f);
+                }
+            }
+            else {
+                this->LookAt(target->getPosition());
+                this->MoveAlong(0.f, 0.f);
+            }
+        }
     }
     // this->TryAttack();
     this->UpdateState(dt);
@@ -67,7 +110,7 @@ void BanditBoss::update(float dt) {
 
 /// Unique to warrior
 void BanditBoss::AttachNavigator(Path&& path) {
-   
+    (void) path;
 }
 
 /// Bot interface
@@ -160,11 +203,13 @@ void BanditBoss::Attack3() {
     m_movement->Push(IsLookingLeft()? -1.f: 1.f, 1.f);
 }
 
+// FIREBALLS
 bool BanditBoss::CanLaunchAttack1() const noexcept {
     const auto player = this->getParent()->getChildByName<Unit*>(core::EntityNames::PLAYER);
     if(player 
         && !player->IsDead()
         && m_weapons[ATTACK_1]->IsReady()
+        && m_detectEnemy
     ) {
        return true;
     }
@@ -172,6 +217,7 @@ bool BanditBoss::CanLaunchAttack1() const noexcept {
     return false;
 }
 
+// FIRECLOUD
 bool BanditBoss::CanLaunchAttack2() const noexcept {
     const auto player = this->getParent()->getChildByName<Unit*>(core::EntityNames::PLAYER);
     if(player 
@@ -185,6 +231,7 @@ bool BanditBoss::CanLaunchAttack2() const noexcept {
     return false;
 }
 
+// JUMP + CHAINS
 bool BanditBoss::CanLaunchAttack3() const noexcept {
     const auto player = this->getParent()->getChildByName<Unit*>(core::EntityNames::PLAYER);
     if(player 
