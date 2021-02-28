@@ -134,7 +134,8 @@ bool AppDelegate::applicationDidFinishLaunching() {
 
     // create a scene. it's an autorelease object
     constexpr auto id  { 4 };
-    const auto scene = BossFightScene::createRootScene(id);
+    // const auto scene = BossFightScene::createRootScene(id);
+    const auto scene = LevelScene::createRootScene(id);
     // run
     director->runWithScene(scene);
 
