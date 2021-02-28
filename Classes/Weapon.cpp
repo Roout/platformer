@@ -185,9 +185,9 @@ void PlayerFireball::OnAttack() {
     const auto proj = Projectile::create(this->GetDamage());
     proj->AddAnimator("mc_fireball", "mc/mc_fireball");
     proj->InitializeAnimations({
-        std::make_pair(Utils::EnumCast(Projectile::State::IDLE), "walk"),       // sorry the illustrator is a little bit of an idiot
-        std::make_pair(Utils::EnumCast(Projectile::State::HIT_PLAYER), "attack"),  // sorry the illustrator is a little bit of an idiot
-        std::make_pair(Utils::EnumCast(Projectile::State::HIT_GROUND), "attack")  // sorry the illustrator is a little bit of an idiot
+        std::make_pair(Utils::EnumCast(Projectile::State::IDLE), "walk"),           // sorry the illustrator is a little bit of an idiot
+        std::make_pair(Utils::EnumCast(Projectile::State::HIT_PLAYER), "attack_1"),   // sorry the illustrator is a little bit of an idiot
+        std::make_pair(Utils::EnumCast(Projectile::State::HIT_GROUND), "attack_2")    // sorry the illustrator is a little bit of an idiot
     });
     proj->setScale(scaleFactor);
 
