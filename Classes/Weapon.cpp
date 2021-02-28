@@ -269,8 +269,8 @@ void BossFireball::OnAttack() {
     proj->AddAnimator("fireball", "boss/boss_fireball");
     proj->InitializeAnimations({
         std::make_pair(Utils::EnumCast(Projectile::State::IDLE),        "walk"),       // sorry the illustrator is a little bit of an idiot
-        std::make_pair(Utils::EnumCast(Projectile::State::HIT_PLAYER),  "attack_2"),   // sorry the illustrator is a little bit of an idiot
-        std::make_pair(Utils::EnumCast(Projectile::State::HIT_GROUND),  "attack_1")   // sorry the illustrator is a little bit of an idiot
+        std::make_pair(Utils::EnumCast(Projectile::State::HIT_PLAYER),  "attack_1"),   // sorry the illustrator is a little bit of an idiot
+        std::make_pair(Utils::EnumCast(Projectile::State::HIT_GROUND),  "attack_2")   // sorry the illustrator is a little bit of an idiot
     });
     proj->setScale(scaleFactor);
 
