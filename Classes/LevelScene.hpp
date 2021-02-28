@@ -3,10 +3,22 @@
 
 #include <memory>
 #include "cocos2d.h"
+#include "TileMapParser.hpp"
 
-class TileMapParser;
+class LevelScene : public cocos2d::Scene {
+public:
 
-class LevelScene final : public cocos2d::Scene {
+/// Constants which define jump height and time for PLAYER!
+/// NOTE! GRAVITY is fully based on player!
+    // Defines how high can the body jump
+    static constexpr float JUMP_HEIGHT { 130.f };     // up to 3 tiles
+    // Defines how fast the body reach the max height by single jump 
+    static constexpr float TIME_OF_APEX_JUMP { 0.3f };  // standart time
+    // Define gravity for this level
+    static constexpr float GRAVITY {  // Calculate gravity base on defined constancts: height, time ( G = -H / (2*t*t) )
+        -JUMP_HEIGHT / (2 * TIME_OF_APEX_JUMP * TIME_OF_APEX_JUMP) 
+    };
+
 public:
 
     [[nodiscard]] static cocos2d::Scene* createRootScene(int id);
@@ -35,10 +47,10 @@ public:
 
     LevelScene& operator=(const LevelScene&) = delete;
 
-private:
+protected:
 	LevelScene(int id);
 
-    void InitTileMapObjects(cocos2d::FastTMXTiledMap * map);
+    virtual void InitTileMapObjects(cocos2d::FastTMXTiledMap * map);
 
     std::unique_ptr<TileMapParser> m_parser { nullptr };
 

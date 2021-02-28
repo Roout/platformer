@@ -14,7 +14,8 @@ class Projectile : public cocos2d::Node {
 public:
     enum class State : std::uint8_t {
         IDLE = 0,
-        EXPLODED,
+        HIT_PLAYER,
+        HIT_GROUND,
         UNDEFINED,
         COUNT
     };
@@ -34,6 +35,15 @@ public:
     void resume() override;
 
     void FlipX() noexcept; 
+
+    /**
+     * Possible values: 
+     * - Projectile::State::HIT_PLAYER
+     * - Projectile::State::HIT_GROUND
+     */
+    void SetExplosionState(const State state) noexcept {
+        m_explosionAnimation = state;
+    }
 
     /**
      * This function tells whether this prjectile still exist or not.
@@ -107,6 +117,9 @@ private:
      */
     void UpdateAnimation();
 
+    // data members
+private:
+
     /**
      * Keep track of projectile lifetime. When 'm_lifeTime' <= 0.f
      * projectile should disappear.
@@ -118,6 +131,8 @@ private:
     State m_previousState { State::UNDEFINED };
     
     State m_currentState { State::UNDEFINED };
+
+    State m_explosionAnimation { State::HIT_PLAYER };
     
     dragonBones::Animator * m_animator{ nullptr };
 

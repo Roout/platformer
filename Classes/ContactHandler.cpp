@@ -61,10 +61,7 @@ bool OnContactBegin(cocos2d::PhysicsContact& contact) {
     };
 
     const auto unitMask { 
-        Utils::CreateMask(
-            core::CategoryBits::PLAYER
-            , core::CategoryBits::ENEMY
-        ) 
+        Utils::CreateMask(core::CategoryBits::PLAYER, core::CategoryBits::ENEMY) 
     };
     const bool isUnit[2] = {
         (bodyMasks[BODY_A] & unitMask) > 0,
@@ -114,10 +111,7 @@ bool OnContactBegin(cocos2d::PhysicsContact& contact) {
 
     /// Projectile & (Unit or Barrel)
     const auto projectileMask { 
-        Utils::CreateMask(
-            core::CategoryBits::PLAYER_PROJECTILE
-            , core::CategoryBits::ENEMY_PROJECTILE
-        )
+        Utils::CreateMask(core::CategoryBits::PLAYER_PROJECTILE, core::CategoryBits::ENEMY_PROJECTILE)
     };
     const bool isProjectile[2] = {
         (bodyMasks[BODY_A] & projectileMask) > 0,
@@ -133,16 +127,14 @@ bool OnContactBegin(cocos2d::PhysicsContact& contact) {
     }
     else if( isProjectile[BODY_A] || isProjectile[BODY_B] ) {
         const auto projectileIndex { isProjectile[BODY_A]? BODY_A: BODY_B };
-
         const auto proj { static_cast<Projectile*>(nodes[projectileIndex]) };
+        proj->SetExplosionState(Projectile::State::HIT_GROUND);
         
         // damage target if possible
         if(isUnit[projectileIndex ^ 1]) {
-            const auto unit { static_cast<Unit*>(nodes[projectileIndex^1]) };
-            unit->AddCurse<Curses::CurseClass::INSTANT>(
-                Curses::CurseHub::ignored, 
-                proj->GetDamage()
-            );
+            const auto unit { static_cast<Unit*>(nodes[projectileIndex ^ 1]) };
+            unit->AddCurse<Curses::CurseClass::INSTANT>(Curses::CurseHub::ignored, proj->GetDamage());
+            proj->SetExplosionState(Projectile::State::HIT_PLAYER);
         } 
         else if( bodyMasks[projectileIndex ^ 1] == Utils::CreateMask(core::CategoryBits::PROPS)) {
             const auto prop { static_cast<props::Prop*>(nodes[projectileIndex^1]) };
@@ -189,13 +181,13 @@ bool OnContactSeparate(cocos2d::PhysicsContact& contact) {
     };
 
     if (nodes[BODY_A] && nodes[BODY_B] && (isUnitSensor[BODY_A] || isUnitSensor[BODY_B]) ) {
-        const auto player { static_cast<Unit*>(isUnitSensor[BODY_A]? nodes[BODY_A] : nodes[BODY_B]) };
+        const auto unit { static_cast<Unit*>(isUnitSensor[BODY_A]? nodes[BODY_A] : nodes[BODY_B]) };
         bool onGround {
             isUnitSensor[BODY_A]? 
                 helper::IsEqual(bodies[BODY_A]->getVelocity().y, 0.f, 0.000001f):
                 helper::IsEqual(bodies[BODY_B]->getVelocity().y, 0.f, 0.000001f)
         };
-        player->SetContactWithGround(onGround);
+        unit->SetContactWithGround(onGround);
         return true;
     }
 

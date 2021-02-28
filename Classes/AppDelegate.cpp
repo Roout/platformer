@@ -24,6 +24,7 @@
 
 #include "AppDelegate.h"
 #include "LevelScene.hpp"
+#include "BossFightScene.hpp"
 
 // #define USE_AUDIO_ENGINE 1
 // #define USE_SIMPLE_AUDIO_ENGINE 1
@@ -133,7 +134,8 @@ bool AppDelegate::applicationDidFinishLaunching() {
 
     // create a scene. it's an autorelease object
     constexpr auto id  { 4 };
-    const auto scene = LevelScene::createRootScene(id);
+    const auto scene = BossFightScene::createRootScene(id);
+    // const auto scene = LevelScene::createRootScene(id);
     // run
     director->runWithScene(scene);
 

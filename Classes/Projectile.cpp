@@ -50,7 +50,9 @@ void Projectile::resume() {
 }
 
 void Projectile::UpdatePhysicsBody() noexcept {
-    if (m_currentState != m_previousState && m_currentState == State::EXPLODED) {
+    if (m_currentState != m_previousState 
+        && (m_currentState == State::HIT_PLAYER || m_currentState == State::HIT_GROUND)
+    ) {
         this->removeComponent(this->getPhysicsBody());
     }
 }
@@ -65,7 +67,7 @@ void Projectile::UpdateState(const float dt) noexcept {
     m_previousState = m_currentState;
 
     if (m_lifeTime <= 0.f) {
-        m_currentState = State::EXPLODED;
+        m_currentState = m_explosionAnimation;
         if (!m_animator) {
             this->runAction(cocos2d::RemoveSelf::create(true));
         }
@@ -86,7 +88,7 @@ void Projectile::FlipX() noexcept {
 
 void Projectile::UpdateAnimation() {
     if (m_currentState != m_previousState) {
-        const auto isOneTimeAttack { m_currentState == State::EXPLODED };
+        const auto isOneTimeAttack { m_currentState == State::HIT_PLAYER || m_currentState == State::HIT_GROUND };
         const auto repeatTimes { isOneTimeAttack ? 1 : dragonBones::Animator::INFINITY_LOOP };
         (void) m_animator->Play(Utils::EnumCast(m_currentState), repeatTimes);
         if(!this->IsAlive()) {
@@ -115,15 +117,13 @@ Projectile::Projectile(float damage) :
 }
 
 void Projectile::SetContactTestBitmask(size_t mask) noexcept {
-    const auto body = this->getPhysicsBody();
-    if(body) {
+    if(const auto body = this->getPhysicsBody(); body) {
         body->setContactTestBitmask(mask);
     }
 }
 
 void Projectile::SetCategoryBitmask(size_t mask) noexcept {
-    const auto body = this->getPhysicsBody();
-    if(body) {
+    if(const auto body = this->getPhysicsBody(); body) {
         body->setCategoryBitmask(mask);
     }
 }

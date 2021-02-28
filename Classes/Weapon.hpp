@@ -126,7 +126,7 @@ protected:
     // projectile velocity: direction & speed
     std::function<void(cocos2d::PhysicsBody*)> m_modifier{};
 
-private:
+protected:
     enum class State : std::uint16_t {
         // weapon is ready to initiate an attack
         READY,
@@ -149,7 +149,7 @@ private:
         m_timer = m_durations[next];
     }
 
-private:
+protected:
 
     std::array<float, Utils::EnumSize<State>()> m_durations;
 
@@ -196,6 +196,24 @@ public:
     void OnAttack() override;
 };
 
+class BossFireball final : public Weapon {
+public:
+    using Weapon::Weapon;
+
+    void OnAttack() override;
+
+    void UpdateState(const float dt) noexcept override;
+
+private:
+
+    static constexpr float DELAY { 0.3f };
+
+    // Delay between fireball spawn 
+    float m_delay { DELAY };
+
+    bool m_attackedTwice { false };
+};
+
 class PlayerSpecial final : public Weapon {
 public:
     using Weapon::Weapon;
@@ -204,6 +222,27 @@ public:
 };
 
 class SlimeShot final : public Weapon {
+public:
+    using Weapon::Weapon;
+
+    void OnAttack() override;
+};
+
+class CloudFireball final : public Weapon {
+public:
+    using Weapon::Weapon;
+
+    void OnAttack() override;
+};
+
+class BossFireCloud final : public Weapon {
+public:
+    using Weapon::Weapon;
+
+    void OnAttack() override;
+};
+
+class BossChain final : public Weapon {
 public:
     using Weapon::Weapon;
 

@@ -24,6 +24,7 @@ namespace {
 			{ core::EntityNames::WARRIOR, core::EnemyClass::WARRIOR }
 			, { core::EntityNames::ARCHER, core::EnemyClass::ARCHER }
 			, { core::EntityNames::CANNON, core::EnemyClass::CANNON }
+			, { core::EntityNames::BOSS, core::EnemyClass::BOSS }
 			, { core::EntityNames::STALACTITE, core::EnemyClass::STALACTITE }
 			, { core::EntityNames::SPEARMAN, core::EnemyClass::SPEARMAN }
 			, { core::EntityNames::SLIME, core::EnemyClass::SLIME }

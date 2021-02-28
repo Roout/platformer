@@ -16,12 +16,26 @@ namespace Enemies {
 enum class State {
     UNDEFINED,
     
+    // movement:
     PATROL,
     PURSUIT,
+    WALK,
+    
     IDLE,
     PREPARE_ATTACK,
     ATTACK,
     DEAD,
+
+    // boss states
+    ATTACK_1,
+    ATTACK_2,
+    ATTACK_3,
+
+    // cloud states
+    INIT,
+    EARLY,
+    MID,
+    LATE,
 
     COUNT
 };

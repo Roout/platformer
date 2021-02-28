@@ -1,1 +1,5 @@
+<<<<<<< HEAD
 {"imagePath":"cloud_tex.png","width":1024,"height":1024,"name":"cloud","SubTexture":[{"width":368,"y":495,"height":305,"name":"Asset 4","x":369},{"width":546,"y":1,"height":363,"name":"3","x":1},{"width":366,"y":366,"height":428,"name":"2","x":1},{"width":183,"y":495,"height":234,"name":"1","x":739},{"width":330,"y":1,"height":492,"name":"5","x":549}]}
+=======
+{"width":1024,"SubTexture":[{"width":357,"y":1281,"height":369,"name":"2","x":441},{"width":183,"y":1,"height":234,"name":"1","x":780},{"width":330,"y":1,"height":492,"name":"5","x":1},{"width":438,"y":1281,"height":303,"name":"1 (5)","x":1},{"width":444,"y":973,"height":306,"name":"1 (6)","x":1},{"width":474,"y":679,"height":298,"name":"1 (2)","x":508},{"width":448,"y":343,"height":334,"name":"1 (3)","x":333},{"width":451,"y":979,"height":300,"name":"1 (7)","x":447},{"width":505,"y":679,"height":292,"name":"1 (1)","x":1},{"width":475,"y":1652,"height":274,"name":"1 (8)","x":1},{"width":445,"y":1,"height":340,"name":"1 (4)","x":333}],"height":2048,"name":"cloud","imagePath":"cloud_tex.png"}
+>>>>>>> 70

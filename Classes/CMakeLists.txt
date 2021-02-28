@@ -11,6 +11,7 @@ set(sources)
 
 list(APPEND headers
     LevelScene.hpp
+    BossFightScene.hpp
     PauseNode.hpp
     DebugScreen.hpp
     DeathScreen.hpp
@@ -25,6 +26,8 @@ list(APPEND headers
     Spider.hpp
     Spearman.hpp
     units/Cannon.hpp
+    units/FireCloud.hpp
+    units/BanditBoss.hpp
     objects/Stalactite.hpp
     Influence.hpp
     Path.hpp
@@ -53,6 +56,7 @@ list(APPEND headers
 
 list(APPEND sources
     LevelScene.cpp
+    BossFightScene.cpp
     ContactHandler.cpp
     Unit.cpp
     Player.cpp
@@ -63,6 +67,8 @@ list(APPEND sources
     Slime.cpp
     Archer.cpp
     units/Cannon.cpp
+    units/FireCloud.cpp
+    units/BanditBoss.cpp
     objects/Stalactite.cpp
     BoulderPusher.cpp
     Spider.cpp
