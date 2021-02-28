@@ -156,7 +156,7 @@ void BanditBoss::Attack2() {
             return { position, cocos2d::Size{ attackRange, m_contentSize.height * 0.35f } };
         };
         auto pushProjectile = [](cocos2d::PhysicsBody* body) {
-            cocos2d::Vec2 impulse { 0.f, body->getMass() * 160.f };
+            cocos2d::Vec2 impulse { 0.f, body->getMass() * 190.f };
             body->applyImpulse(impulse);
         };
         // start attack with weapon
@@ -392,7 +392,7 @@ void BanditBoss::AddWeapons() {
     }
     {
         const auto damage { 0.f }; // doesn't matter
-        const auto range { 180.f }; 
+        const auto range { 130.f }; 
         const auto animDuration = m_animator->GetDuration(Utils::EnumCast(State::ATTACK_2));
         const auto attackDuration { 0.4f * animDuration };
         const auto preparationTime { animDuration - attackDuration };
