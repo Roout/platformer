@@ -27,6 +27,10 @@ void Dash::update(float dt) {
             // restore speed
             unit->SetMaxSpeed(Player::MAX_SPEED);
         }
+        else {
+            auto unit = static_cast<Unit*>(_owner);
+            unit->ResetForces(false, true);
+        }
     }
 
     m_cooldownTimer.Update(dt);
