@@ -19,11 +19,11 @@ Dash* Dash::create(float cooldown) {
 }
 
 void Dash::update(float dt) {
-    if (!m_dashTimer.IsFinished()) {
+    auto unit = static_cast<Unit*>(_owner);
+    if (_owner && !unit->IsDead() && !m_dashTimer.IsFinished()) {
         m_dashTimer.Update(dt);
         if (m_dashTimer.IsFinished()) {
             // on dash end 
-            auto unit = static_cast<Unit*>(_owner);
             // TODO: add callback
             // restore speed
             unit->SetMaxSpeed(Player::MAX_SPEED);
@@ -36,7 +36,6 @@ void Dash::update(float dt) {
             }
         }
         else {
-            auto unit = static_cast<Unit*>(_owner);
             unit->ResetForces(false, true);
         }
     }
@@ -45,12 +44,14 @@ void Dash::update(float dt) {
 }
 
 void Dash::Initiate(float dashDuration) noexcept {
-    if (m_dashTimer.IsFinished() 
+    auto unit = static_cast<Unit*>(_owner);
+    if (_owner 
+        && !unit->IsDead() 
+        && m_dashTimer.IsFinished() 
         && m_cooldownTimer.IsFinished()
     ) {
         m_dashTimer.Start(dashDuration);
         m_cooldownTimer.Start(m_cooldown);
-        auto unit = static_cast<Unit*>(_owner);
         {
             auto body = unit->getPhysicsBody();
             auto chipBody { body->getCPBody() };
