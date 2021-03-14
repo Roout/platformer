@@ -61,6 +61,8 @@ public:
     /// Movement interface
 
     void SetMaxSpeed(float speed) noexcept;
+    
+    void ResetForces(bool x, bool y) noexcept;
 
     /**
      * @param direction define the direction of movement by unit vector
