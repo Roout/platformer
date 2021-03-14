@@ -67,6 +67,10 @@ void Unit::resume() {
     m_animator->resume();
 }
 
+void Unit::SetMaxSpeed(float speed) noexcept {
+    m_movement->SetMaxSpeed(speed);
+}
+
 void Unit::MoveAlong(const cocos2d::Vec2& direction) noexcept {
     return this->MoveAlong(direction.x, direction.y);
 }

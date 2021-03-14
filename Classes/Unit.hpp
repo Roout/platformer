@@ -60,6 +60,8 @@ public:
     inline cocos2d::Size GetHitBox() const noexcept;
     /// Movement interface
 
+    void SetMaxSpeed(float speed) noexcept;
+
     /**
      * @param direction define the direction of movement by unit vector
      * Possible values are: { 1, 0 }, {-1, 0 }, { 0, 1 }, { 0, -1 }, { 0, 0 }, { 1, 1 }, {-1, -1 }
