@@ -35,15 +35,19 @@ UserInputHandler::Input UserInputHandler::Input::Create(WinKeyCode keyCode) noex
     else if(keyCode == WinKeyCode::KEY_E) {
         input.specialAttack = true;
     }
+    else if(keyCode == WinKeyCode::KEY_Q) {
+        input.dash = true;
+    }
     
     return input;
 }
 
-void UserInputHandler::Input::Merge(Input&& input) noexcept {
+void UserInputHandler::Input::Merge(const Input& input) noexcept {
     jump = input.jump;
     meleeAttack = input.meleeAttack;
     rangeAttack = input.rangeAttack;
     specialAttack = input.specialAttack;
+    dash = input.dash;
     if(input.dx) {
         dx = input.dx;
     }
@@ -61,6 +65,7 @@ UserInputHandler::UserInputHandler(Player * const player) :
         WinKeyCode::KEY_SPACE,
         WinKeyCode::KEY_F, // simple sword attack
         WinKeyCode::KEY_G, // fireball
+        WinKeyCode::KEY_Q, // dash
         WinKeyCode::KEY_E  // special attack
     }
 {
@@ -92,6 +97,7 @@ void UserInputHandler::Reset() {
     m_lastInput.meleeAttack = false;
     m_lastInput.rangeAttack = false;
     m_lastInput.specialAttack = false;
+    m_lastInput.dash = false;
 }
 
 void UserInputHandler::OnKeyPressed(
@@ -153,6 +159,9 @@ void UserInputHandler::OnKeyPressed(
     else if(m_lastInput.specialAttack) {
         m_player->StartSpecialAttack();
     }
+    else if(m_lastInput.dash) {
+        m_player->InitiateDash();
+    }
 }
 
 void UserInputHandler::OnKeyRelease(
@@ -173,6 +182,9 @@ void UserInputHandler::OnKeyRelease(
     }
     else if(released.rangeAttack) {
         m_lastInput.rangeAttack = false;
+    }
+    else if(released.rangeAttack) {
+        m_lastInput.dash = false;
     }
     else if(released.specialAttack) {
         m_lastInput.specialAttack = false;
