@@ -4,11 +4,13 @@
 #include "cocos2d.h"
 #include "EasyTimer.hpp"
 
+#include "chipmunk/cpVect.h"
+
 /** TODO:
  * - [x] inner cooldown like a weapon has 
  *       so that it will be impossible to move using only dashes
  * - [x] state accessor: is running or is stopped
- * - [x] stops body when it ends
+ * - [x] restore previous state of the body when the dash stops
 */
 
 class Dash : public cocos2d::Component {
@@ -25,6 +27,8 @@ public:
 
     bool IsOnCooldown() const noexcept;
 
+    void ResetSavedBodyState() noexcept;
+
 private:
 
     Dash(float cooldown)
@@ -40,10 +44,18 @@ private:
 
     EasyTimer m_cooldownTimer{}; 
 
+    /**
+     * Stores physics body's state 
+     */
+    cpVect m_forces;
+    cpVect m_velocity;
 };
 
 inline bool Dash::IsFinished() const noexcept {
     return m_dashTimer.IsFinished();
+}
+inline void Dash::ResetSavedBodyState() noexcept {
+    m_forces = m_velocity = { 0.f, 0.f };
 }
 
 inline bool Dash::IsRunning() const noexcept {

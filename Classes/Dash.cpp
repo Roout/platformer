@@ -2,6 +2,8 @@
 #include "Unit.hpp"
 #include "Player.hpp"
 
+#include "chipmunk/chipmunk.h"
+
 #include <cassert>
 
 Dash* Dash::create(float cooldown) {
@@ -20,12 +22,18 @@ void Dash::update(float dt) {
     if (!m_dashTimer.IsFinished()) {
         m_dashTimer.Update(dt);
         if (m_dashTimer.IsFinished()) {
-            // TODO: add callback
             // on dash end 
             auto unit = static_cast<Unit*>(_owner);
-            unit->MoveAlong(0, 0);
+            // TODO: add callback
             // restore speed
             unit->SetMaxSpeed(Player::MAX_SPEED);
+            unit->ResetForces(true, true);
+            {
+                auto body = unit->getPhysicsBody();
+                auto chipBody { body->getCPBody() };
+                cpBodySetForce(chipBody, m_forces);
+                cpBodySetVelocity(chipBody, m_velocity);
+            }
         }
         else {
             auto unit = static_cast<Unit*>(_owner);
@@ -42,9 +50,16 @@ void Dash::Initiate(float dashDuration) noexcept {
     ) {
         m_dashTimer.Start(dashDuration);
         m_cooldownTimer.Start(m_cooldown);
-        // speed up unit
         auto unit = static_cast<Unit*>(_owner);
+        {
+            auto body = unit->getPhysicsBody();
+            auto chipBody { body->getCPBody() };
+            m_forces = cpBodyGetForce(chipBody);
+            m_velocity = cpBodyGetVelocity(chipBody);
+        }
+        // speed up unit
         unit->SetMaxSpeed(600.f);
+        unit->MoveAlong(0.f, 0.f);
         unit->MoveAlong((unit->IsLookingLeft()? -1.f: 1.f), 0.f);
     }
 }

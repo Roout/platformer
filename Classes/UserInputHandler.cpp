@@ -1,8 +1,10 @@
 #include "UserInputHandler.hpp"
 #include "Player.hpp"
 #include "PhysicsHelper.hpp"
-#include "cocos2d.h"
 #include "Movement.hpp"
+#include "Dash.hpp"
+
+#include "cocos2d.h"
 
 #include <algorithm> // std::find
 
@@ -108,7 +110,8 @@ void UserInputHandler::OnKeyPressed(
     m_lastInput.Merge(Input::Create(keyCode));
 
     const bool canBeControlled {
-        m_player->m_currentState != Player::State::DASH
+        (m_player->m_currentState != Player::State::DASH)
+        && !m_lastInput.dash
     };
 
     /**
@@ -183,7 +186,10 @@ void UserInputHandler::OnKeyRelease(
     // TODO: release up and left/right is ongoing!
     if(released.dx && released.dx == m_lastInput.dx) {
         // reset only dx!
-        if(!dashed) {
+        if(dashed) {
+            m_player->m_dash->ResetSavedBodyState();
+        }
+        else {
             m_player->m_movement->ResetForceX();
         }
         m_lastInput.dx = 0;
