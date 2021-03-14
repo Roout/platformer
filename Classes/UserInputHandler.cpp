@@ -106,6 +106,11 @@ void UserInputHandler::OnKeyPressed(
 ) {
     const auto lastInputCopy { m_lastInput };
     m_lastInput.Merge(Input::Create(keyCode));
+
+    const bool canBeControlled {
+        m_player->m_currentState != Player::State::DASH
+    };
+
     /**
      * first jump from the ground   - m_lastInput.jump && m_player->IsOnGround()
      * first jump from the air      - m_lastInput.jump && m_lastInput.jumpCounter < 2
@@ -120,18 +125,20 @@ void UserInputHandler::OnKeyPressed(
     if( (m_lastInput.jump && m_player->IsOnGround()) || 
         (m_lastInput.jump && m_lastInput.jumpCounter < MAX_JUMP_COUNT)
     ) {
-        m_player->MoveAlong(0.f, 1.f);
+        if(canBeControlled) {
+            m_player->MoveAlong(0.f, 1.f);
 
-        if(m_player->IsOnGround()) {
-            m_lastInput.jumpCounter = 1;
-        }
-        else {
-            // jump in the air - first jump or second - doesn't matter
-            m_lastInput.jumpCounter = MAX_JUMP_COUNT;
+            if(m_player->IsOnGround()) {
+                m_lastInput.jumpCounter = 1;
+            }
+            else {
+                // jump in the air - first jump or second - doesn't matter
+                m_lastInput.jumpCounter = MAX_JUMP_COUNT;
+            }
         }
     }
 
-    if(m_lastInput.dx == 1) {
+    if(m_lastInput.dx == 1 && canBeControlled) {
         // reset only dx!
         m_player->m_movement->ResetForceX();
         m_player->FinishSpecialAttack();
@@ -140,7 +147,7 @@ void UserInputHandler::OnKeyPressed(
             m_player->Turn();
         }
     }
-    else if(m_lastInput.dx == -1) {
+    else if(m_lastInput.dx == -1 && canBeControlled) {
         // reset only dx!
         m_player->m_movement->ResetForceX();
         m_player->FinishSpecialAttack();
@@ -150,17 +157,17 @@ void UserInputHandler::OnKeyPressed(
         }
     }
 
-    if(m_lastInput.meleeAttack) {
+    if(m_lastInput.dash) {
+        m_player->InitiateDash();
+    }
+    else if(m_lastInput.meleeAttack && canBeControlled) {
         m_player->MeleeAttack();
     }
-    else if(m_lastInput.rangeAttack) {
+    else if(m_lastInput.rangeAttack && canBeControlled) {
         m_player->RangeAttack();
     }
-    else if(m_lastInput.specialAttack) {
+    else if(m_lastInput.specialAttack && canBeControlled) {
         m_player->StartSpecialAttack();
-    }
-    else if(m_lastInput.dash) {
-        m_player->InitiateDash();
     }
 }
 
@@ -170,10 +177,15 @@ void UserInputHandler::OnKeyRelease(
 ) {
     const auto lastInputCopy { m_lastInput };
     const Input released { Input::Create(keyCode) };
+
+    const bool dashed { m_player->m_currentState == Player::State::DASH };
+
     // TODO: release up and left/right is ongoing!
     if(released.dx && released.dx == m_lastInput.dx) {
         // reset only dx!
-        m_player->m_movement->ResetForceX();
+        if(!dashed) {
+            m_player->m_movement->ResetForceX();
+        }
         m_lastInput.dx = 0;
     }
 
@@ -183,7 +195,7 @@ void UserInputHandler::OnKeyRelease(
     else if(released.rangeAttack) {
         m_lastInput.rangeAttack = false;
     }
-    else if(released.rangeAttack) {
+    else if(released.dash) {
         m_lastInput.dash = false;
     }
     else if(released.specialAttack) {

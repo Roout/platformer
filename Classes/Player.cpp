@@ -366,7 +366,13 @@ void Player::RangeAttack() {
         m_weapons[WeaponClass::MELEE]->IsAttacking() || 
         m_weapons[WeaponClass::MELEE]->IsPreparing()
     };
-    if (!usingMelee && m_weapons[WeaponClass::RANGE]->IsReady() && !this->IsDead()) {
+    bool canAttack {
+        !usingMelee 
+        && m_weapons[WeaponClass::RANGE]->IsReady() 
+        && !this->IsDead()
+        && m_currentState != State::DASH
+    };
+    if (canAttack) {
         auto projectilePosition = [this]() -> cocos2d::Rect {
             const auto attackRange { m_weapons[WeaponClass::RANGE]->GetRange() };
             const cocos2d::Size fireballSize { attackRange, floorf(attackRange * 0.8f) };
@@ -398,13 +404,23 @@ void Player::MeleeAttack() {
         m_weapons[WeaponClass::RANGE]->IsAttacking() || 
         m_weapons[WeaponClass::RANGE]->IsPreparing()
     };
-    if (!usingRange) {
+    bool canAttack {
+        !usingRange 
+        && !this->IsDead()
+        && m_currentState != State::DASH
+    };
+    if (canAttack) {
         this->Attack();
     }
 }
 
 void Player::SpecialAttack() {
-    if (m_weapons[WeaponClass::SPECIAL]->IsReady() && !this->IsDead()) {
+    bool canAttack {
+        m_weapons[WeaponClass::SPECIAL]->IsReady()
+        && !this->IsDead()
+        && m_currentState != State::DASH
+    };
+    if (canAttack) {
         auto projectilePosition = [this]() -> cocos2d::Rect {
             const auto attackRange { m_weapons[WeaponClass::SPECIAL]->GetRange() };
             const cocos2d::Size slashSize { attackRange * 1.8f, attackRange };
@@ -450,6 +466,7 @@ void Player::StartSpecialAttack() {
         && !usingSpecial 
         && m_currentState != State::DEAD 
         && m_currentState != State::WALK
+        && m_currentState != State::DASH
     ) {
         m_scheduleSpecialAttack = true;
     }
