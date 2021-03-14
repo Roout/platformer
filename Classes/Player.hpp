@@ -2,12 +2,15 @@
 #define PLAYER_HPP
 
 #include "Unit.hpp"
+
 #include <memory>
 
 class SmoothFollower;
+class Dash;
 
 class Player final : public Unit {
 public:
+    inline static constexpr float MAX_SPEED { 200.f }; 
 
     inline static constexpr float DAMAGE_ON_CONTACT { 7.f }; 
 
@@ -31,6 +34,7 @@ private:
         DEAD,
         WALK,
         JUMP,
+        DASH,
         MELEE_ATTACK, // simple attack
         RANGE_ATTACK, // fireball attack
         PREPARE_RANGE_ATTACK,
@@ -59,6 +63,8 @@ private:
     void RangeAttack();
 
     void MeleeAttack();
+
+    void InitiateDash();
 
 //==== Special Attack
     void SpecialAttack();
@@ -98,7 +104,8 @@ private:
     bool m_scheduleSpecialAttack { false };
 
     bool m_finishSpecialAttack { false };
-};
 
+    Dash * m_dash { nullptr };
+};
 
 #endif // PLAYER_HPP

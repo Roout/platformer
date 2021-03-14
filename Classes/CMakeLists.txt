@@ -52,6 +52,8 @@ list(APPEND headers
     PhysicsHelper.hpp
     Curses.hpp
     CurseHub.hpp
+    EasyTimer.hpp
+    Dash.hpp
 )
 
 list(APPEND sources
@@ -89,6 +91,7 @@ list(APPEND sources
     Curses.cpp
     CurseHub.cpp
     Projectile.cpp
+    Dash.cpp
 )
 
 # create static library
