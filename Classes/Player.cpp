@@ -9,11 +9,14 @@
 #include "DeathScreen.hpp"
 #include "DragonBonesAnimator.hpp"
 #include "Movement.hpp"
+#include "Dash.hpp"
 
 #include <unordered_map>
 #include <algorithm>
 #include <cassert>
 #include <cmath>
+
+static constexpr float DASH_COOLDOWN { 0.7f };
 
 Player* Player::create(const cocos2d::Size& contentSize) {
     auto pRet { new (std::nothrow) Player(contentSize) };
@@ -40,7 +43,11 @@ bool Player::init() {
     }    
     m_follower = std::make_unique<SmoothFollower>(this);
     m_inputHandler = std::make_unique<UserInputHandler>(this);
-    m_movement->SetMaxSpeed(200.f);
+    m_movement->SetMaxSpeed(MAX_SPEED);
+    // add dash component
+    m_dash = Dash::create(DASH_COOLDOWN);
+    this->addComponent(m_dash);
+    // =====
 
     // handle INVINCIBLE event
     auto listener = cocos2d::EventListenerCustom::create("INVINCIBLE", [this](cocos2d::EventCustom *) {
@@ -65,6 +72,7 @@ std::string Player::GetStateName(Player::State state) {
         { Player::State::JUMP, "jump" },
         { Player::State::WALK, "walk" },
         { Player::State::DEAD, "dead" },
+        { Player::State::DASH, "dash" },
         { Player::State::PREPARE_RANGE_ATTACK, "prep_attack_2" },
         { Player::State::SPECIAL_PHASE_1, "special_phase_1" },
         { Player::State::SPECIAL_PHASE_2, "special_phase_2" },
@@ -86,6 +94,7 @@ void Player::AddAnimator() {
         { Utils::EnumCast(State::DEAD), GetStateName(State::DEAD) },
         { Utils::EnumCast(State::IDLE), GetStateName(State::IDLE) },
         { Utils::EnumCast(State::JUMP), GetStateName(State::JUMP) },
+        { Utils::EnumCast(State::DASH), GetStateName(State::DASH) },
         { Utils::EnumCast(State::WALK), GetStateName(State::WALK) },
         { Utils::EnumCast(State::SPECIAL_PHASE_1), GetStateName(State::SPECIAL_PHASE_1) },
         { Utils::EnumCast(State::SPECIAL_PHASE_2), GetStateName(State::SPECIAL_PHASE_2) },
@@ -178,16 +187,19 @@ void Player::UpdateDebugLabel() noexcept {
 }
 
 void Player::UpdateAnimation() {
+    const std::array<State, 8u> oneTimers {
+        State::MELEE_ATTACK,
+        State::JUMP,
+        State::DASH,
+        State::DEAD,
+        State::RANGE_ATTACK,
+        State::PREPARE_RANGE_ATTACK,
+        State::SPECIAL_PHASE_1,
+        State::SPECIAL_PHASE_3
+    };
     if(m_currentState != m_previousState) {
         int repeatTimes { dragonBones::Animator::INFINITY_LOOP };
-        if (m_currentState == State::MELEE_ATTACK 
-            || m_currentState == State::JUMP 
-            || m_currentState == State::DEAD 
-            || m_currentState == State::RANGE_ATTACK 
-            || m_currentState == State::PREPARE_RANGE_ATTACK 
-            || m_currentState == State::SPECIAL_PHASE_1 
-            || m_currentState == State::SPECIAL_PHASE_3 
-        ) {
+        if (std::find(oneTimers.cbegin(), oneTimers.cend(), m_currentState) != oneTimers.cend()) {
             repeatTimes = 1;
         }
         (void) m_animator->Play(Utils::EnumCast(m_currentState), repeatTimes);
@@ -243,6 +255,9 @@ void Player::UpdateState(const float dt) noexcept {
     else if(m_health <= 0) {
         m_currentState = State::DEAD;
     }
+    else if(m_dash->IsRunning()) {
+        m_currentState = State::DASH;
+    }
     else if(m_weapons[WeaponClass::RANGE]->IsPreparing()) {
         m_currentState = State::PREPARE_RANGE_ATTACK;
     }
@@ -277,8 +292,8 @@ void Player::UpdateState(const float dt) noexcept {
     else if(m_currentState == State::SPECIAL_PHASE_2) {
         // do nothing as player is charging a special attack
         // it can be aborted if 
-        // - [ ] player moved
-        // - [ ] release button 
+        // - [x] player moved
+        // - [x] release button 
     }
     else if(!this->IsOnGround()) {
         m_currentState = State::JUMP;
@@ -338,6 +353,13 @@ void Player::AddWeapons() {
         );
     }
 };
+
+void Player::InitiateDash() {
+    const float duration { m_animator->GetDuration(Utils::EnumCast(State::DASH)) };
+    if(!m_dash->IsOnCooldown()) {
+        m_dash->Initiate(duration);
+    }
+}
 
 void Player::RangeAttack() {
     bool usingMelee {
