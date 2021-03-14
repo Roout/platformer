@@ -356,7 +356,13 @@ void Player::AddWeapons() {
 
 void Player::InitiateDash() {
     const float duration { m_animator->GetDuration(Utils::EnumCast(State::DASH)) };
-    if(!m_dash->IsOnCooldown()) {
+    bool canDash = !m_dash->IsOnCooldown();
+    for(size_t i = 0; i < m_weapons.size() && canDash; i++) {
+        if(m_weapons[i] != nullptr) {
+            canDash = !(m_weapons[i]->IsPreparing() || m_weapons[i]->IsAttacking());
+        }
+    }
+    if(canDash) {
         m_dash->Initiate(duration);
     }
 }
