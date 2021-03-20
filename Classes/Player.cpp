@@ -66,7 +66,9 @@ void Player::RecieveDamage(int damage) noexcept {
 
 std::string Player::GetStateName(Player::State state) {
     static std::unordered_map<Player::State, std::string> mapped {
-        { Player::State::MELEE_ATTACK, "attack_1" },
+        { Player::State::MELEE_ATTACK_1, "attack_1_1" },
+        { Player::State::MELEE_ATTACK_2, "attack_1_2" },
+        { Player::State::MELEE_ATTACK_3, "attack_1_3" },
         { Player::State::RANGE_ATTACK, "attack_2" },
         { Player::State::IDLE, "idle" },
         { Player::State::JUMP, "jump" },
@@ -88,7 +90,9 @@ void Player::AddAnimator() {
     m_animator = dragonBones::Animator::create(std::move(prefix), std::move(chachedArmatureName));
     m_animator->setScale(0.1f); // TODO: introduce multi-resolution scaling
     m_animator->InitializeAnimations(std::initializer_list<std::pair<size_t, std::string>> {
-        { Utils::EnumCast(State::MELEE_ATTACK), GetStateName(State::MELEE_ATTACK) },
+        { Utils::EnumCast(State::MELEE_ATTACK_1), GetStateName(State::MELEE_ATTACK_1) },
+        { Utils::EnumCast(State::MELEE_ATTACK_2), GetStateName(State::MELEE_ATTACK_2) },
+        { Utils::EnumCast(State::MELEE_ATTACK_3), GetStateName(State::MELEE_ATTACK_3) },
         { Utils::EnumCast(State::RANGE_ATTACK), GetStateName(State::RANGE_ATTACK) }, 
         { Utils::EnumCast(State::PREPARE_RANGE_ATTACK), std::string("idle") },
         { Utils::EnumCast(State::DEAD), GetStateName(State::DEAD) },
@@ -187,8 +191,10 @@ void Player::UpdateDebugLabel() noexcept {
 }
 
 void Player::UpdateAnimation() {
-    const std::array<State, 8u> oneTimers {
-        State::MELEE_ATTACK,
+    const std::array<State, 10u> oneTimers {
+        State::MELEE_ATTACK_1,
+        State::MELEE_ATTACK_2,
+        State::MELEE_ATTACK_3,
         State::JUMP,
         State::DASH,
         State::DEAD,
@@ -229,6 +235,11 @@ bool Player::IsInvincible() const noexcept {
 void Player::UpdateState(const float dt) noexcept {
     m_previousState = m_currentState;
 
+    static const std::array<State, 3> basicSwordAttacks { 
+        State::MELEE_ATTACK_1, 
+        State::MELEE_ATTACK_2, 
+        State::MELEE_ATTACK_3
+    };
     const auto velocity { this->IsDead()? cocos2d::Vec2{ 0.f, 0.f } : this->getPhysicsBody()->getVelocity() };
     static constexpr float EPS { 0.001f };
 
@@ -265,10 +276,13 @@ void Player::UpdateState(const float dt) noexcept {
         m_currentState = State::RANGE_ATTACK;
     }
     else if(m_weapons[WeaponClass::MELEE]->IsPreparing()) {
-        m_currentState = State::MELEE_ATTACK;
+        if(std::find(basicSwordAttacks.cbegin(), basicSwordAttacks.cend(), m_currentState) == basicSwordAttacks.cend()) {
+            m_currentState = basicSwordAttacks[cocos2d::RandomHelper::random_int(0, 2)];
+        }
     }
     else if(m_weapons[WeaponClass::MELEE]->IsAttacking()) {
-        m_currentState = State::MELEE_ATTACK;
+        // TODO: no need to update anything
+        // m_currentState = State::MELEE_ATTACK;
     }
     else if(m_weapons[WeaponClass::SPECIAL]->IsPreparing()) {
         m_currentState = State::SPECIAL_PHASE_3;
@@ -309,11 +323,23 @@ void Player::UpdateState(const float dt) noexcept {
 void Player::AddWeapons() {
     // create weapon (TODO: it should be read from config)
     {
+        const float EPS { 0.001f };
         const auto damage { 25.f };
         const auto range { 80.f };
-        const auto animDuration = m_animator->GetDuration(Utils::EnumCast(State::MELEE_ATTACK));
-        const auto attackDuration { 0.5f * animDuration };
-        const auto preparationTime { animDuration - attackDuration };
+        // the duration of each type of simple attack MUST BE same
+        const float animDuration[3] = {
+            m_animator->GetDuration(Utils::EnumCast(State::MELEE_ATTACK_1)),
+            m_animator->GetDuration(Utils::EnumCast(State::MELEE_ATTACK_2)),
+            m_animator->GetDuration(Utils::EnumCast(State::MELEE_ATTACK_3))
+        };
+
+        assert(helper::IsEqual(animDuration[0], animDuration[1], EPS) 
+            && helper::IsEqual(animDuration[1], animDuration[2], EPS) 
+            && "Sword attack animations have different duration"
+        );
+        
+        const auto attackDuration { 0.5f * animDuration[0] };
+        const auto preparationTime { animDuration[0] - attackDuration };
         const auto reloadTime { 0.f };
         m_weapons[WeaponClass::MELEE] = new Sword(
             damage, 

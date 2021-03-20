@@ -35,7 +35,9 @@ private:
         WALK,
         JUMP,
         DASH,
-        MELEE_ATTACK, // simple attack
+        MELEE_ATTACK_1, // simple attack
+        MELEE_ATTACK_2, // simple attack
+        MELEE_ATTACK_3, // simple attack
         RANGE_ATTACK, // fireball attack
         PREPARE_RANGE_ATTACK,
         SPECIAL_PHASE_1,
