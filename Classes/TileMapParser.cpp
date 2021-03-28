@@ -1,5 +1,4 @@
 #include "TileMapParser.hpp"
-#include "cocos2d.h"
 
 #include "Utils.hpp"
 #include "TileMapHelper.hpp"
@@ -16,6 +15,8 @@
 #include <cassert>
 #include <cstdint>
 #include <unordered_map>
+
+#include "cocos2d.h"
 
 namespace {
 

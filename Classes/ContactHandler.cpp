@@ -1,17 +1,17 @@
 #include "ContactHandler.hpp"
-
-#include "cocos2d.h"
-
 #include "Utils.hpp"
 #include "Core.hpp"
-#include "Unit.hpp"
-#include "Bot.hpp"
-#include "Player.hpp"
 #include "PhysicsHelper.hpp"
 #include "Traps.hpp"
 #include "Props.hpp"
 #include "Projectile.hpp"
 #include "CurseHub.hpp"
+
+#include "cocos2d.h"
+
+#include "units/Unit.hpp"
+#include "units/Bot.hpp"
+#include "units/Player.hpp"
 
 namespace contact {
 

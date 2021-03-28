@@ -1,7 +1,7 @@
 #ifndef ENEMIES_FIRECLOUD_HPP
 #define ENEMIES_FIRECLOUD_HPP
 
-#include "../Bot.hpp"
+#include "Bot.hpp"
 #include "../Utils.hpp"
 
 namespace Enemies {

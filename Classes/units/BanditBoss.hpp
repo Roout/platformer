@@ -3,8 +3,9 @@
 
 #include <memory>
 
+#include "Bot.hpp"
+
 #include "../Navigator.hpp"
-#include "../Bot.hpp"
 #include "../Path.hpp"
 
 namespace Enemies {

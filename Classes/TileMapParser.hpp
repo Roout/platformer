@@ -6,7 +6,9 @@
 #include <array>
 #include <memory>
 #include <unordered_map>
+
 #include "math/CCGeometry.h" // cocos2d::Rect, cocos2d::Vec2
+
 #include "Core.hpp"
 #include "Utils.hpp"
 

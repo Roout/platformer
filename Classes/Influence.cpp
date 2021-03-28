@@ -1,7 +1,8 @@
 #include "Influence.hpp"
-#include "Bot.hpp"
-#include "Player.hpp"
 #include "Core.hpp"
+
+#include "units/Bot.hpp"
+#include "units/Player.hpp"
 
 Influence* Influence::create(
     Enemies::Bot* bot, 

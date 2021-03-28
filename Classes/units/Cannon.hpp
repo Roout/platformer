@@ -1,7 +1,7 @@
 #ifndef ENEMIES_CANNON_HPP
 #define ENEMIES_CANNON_HPP
 
-#include "../Bot.hpp"
+#include "Bot.hpp"
 
 namespace Enemies {
 

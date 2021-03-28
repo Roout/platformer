@@ -1,6 +1,7 @@
 #include "Dash.hpp"
-#include "Unit.hpp"
-#include "Player.hpp"
+
+#include "units/Unit.hpp"
+#include "units/Player.hpp"
 
 #include "chipmunk/chipmunk.h"
 

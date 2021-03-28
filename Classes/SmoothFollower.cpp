@@ -1,6 +1,7 @@
 #include "SmoothFollower.hpp"
 #include "PhysicsHelper.hpp"
-#include "Unit.hpp"
+#include "units/Unit.hpp"
+
 #include "cocos2d.h"
 
 #include <cmath>

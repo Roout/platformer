@@ -1,5 +1,5 @@
 #include "Curses.hpp"
-#include "Unit.hpp"
+#include "units/Unit.hpp"
 
 Curses::DPS::DPS(size_t id, float damagePerSecond, float duration):
     Curse{ id },

@@ -1,9 +1,9 @@
 #include "Stalactite.hpp"
+#include "Player.hpp"
 
 #include "cocos2d.h"
 #include <string>
 
-#include "../Player.hpp"
 #include "../Core.hpp"
 #include "../DragonBonesAnimator.hpp"
 #include "../Weapon.hpp"

@@ -1,6 +1,7 @@
 #include "Navigator.hpp"
 #include "PhysicsHelper.hpp"
-#include "Bot.hpp"
+
+#include "units/Bot.hpp"
 
 #include <cassert>
 #include <utility>

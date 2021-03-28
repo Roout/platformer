@@ -1,11 +1,11 @@
 #include "Warrior.hpp"
-
 #include "Player.hpp"
-#include "Core.hpp"
-#include "DragonBonesAnimator.hpp"
-#include "Weapon.hpp"
-#include "Influence.hpp"
-#include "Movement.hpp"
+
+#include "../Core.hpp"
+#include "../DragonBonesAnimator.hpp"
+#include "../Weapon.hpp"
+#include "../Influence.hpp"
+#include "../Movement.hpp"
 
 #include "cocos2d.h"
 

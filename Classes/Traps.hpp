@@ -6,6 +6,8 @@
 #include "Utils.hpp"
 #include "Curses.hpp"
 
+#include "units/Unit.hpp"
+
 #include <limits>
 
 namespace Traps {

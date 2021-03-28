@@ -1,6 +1,8 @@
 #ifndef PHYSICS_HELPER_HPP
 #define PHYSICS_HELPER_HPP
 
+#include "cocos/math/Vec2.h"
+
 namespace helper {
     
     constexpr bool IsEqual(const float a, const float b, const float eps) noexcept {

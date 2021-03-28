@@ -1,6 +1,7 @@
 #include "HealthBar.hpp"
-#include "Unit.hpp"
 #include "PhysicsHelper.hpp"
+
+#include "units/Unit.hpp"
 
 HealthBar * HealthBar::create( const Unit* const unit) {
     auto pRet = new (std::nothrow) HealthBar(unit);

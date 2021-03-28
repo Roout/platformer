@@ -1,8 +1,8 @@
 #include "Movement.hpp"
-#include "Unit.hpp"
 #include "PhysicsHelper.hpp"
-#include "cocos2d.h"
+#include "units/Unit.hpp"
 
+#include "cocos2d.h"
 #include "chipmunk/chipmunk.h"
 
 #include <cmath>

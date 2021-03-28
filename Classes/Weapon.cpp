@@ -1,9 +1,10 @@
+#include "Core.hpp"
+#include "Utils.hpp"
 #include "Weapon.hpp"
 #include "Projectile.hpp"
-#include "Utils.hpp"
-#include "Player.hpp"
-#include "Unit.hpp"
-#include "Core.hpp"
+
+#include "units/Player.hpp"
+#include "units/Unit.hpp"
 #include "units/FireCloud.hpp"
 
 #include <string>

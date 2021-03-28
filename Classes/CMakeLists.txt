@@ -16,19 +16,19 @@ list(APPEND headers
     DebugScreen.hpp
     DeathScreen.hpp
     ContactHandler.hpp
-    Unit.hpp
-    Player.hpp
-    Bot.hpp
-    Warrior.hpp
-    Slime.hpp
-    Archer.hpp
-    BoulderPusher.hpp
-    Spider.hpp
-    Spearman.hpp
+    units/Unit.hpp
+    units/Player.hpp
+    units/Bot.hpp
+    units/Warrior.hpp
+    units/Slime.hpp
+    units/Archer.hpp
+    units/BoulderPusher.hpp
+    units/Spider.hpp
+    units/Spearman.hpp
     units/Cannon.hpp
     units/FireCloud.hpp
     units/BanditBoss.hpp
-    objects/Stalactite.hpp
+    units/Stalactite.hpp
     Influence.hpp
     Path.hpp
     Navigator.hpp
@@ -60,21 +60,21 @@ list(APPEND sources
     LevelScene.cpp
     BossFightScene.cpp
     ContactHandler.cpp
-    Unit.cpp
-    Player.cpp
     Influence.cpp
     Navigator.cpp
-    Bot.cpp
-    Warrior.cpp
-    Slime.cpp
-    Archer.cpp
+    units/Unit.cpp
+    units/Player.cpp
+    units/Bot.cpp
+    units/Warrior.cpp
+    units/Slime.cpp
+    units/Archer.cpp
     units/Cannon.cpp
     units/FireCloud.cpp
     units/BanditBoss.cpp
-    objects/Stalactite.cpp
-    BoulderPusher.cpp
-    Spider.cpp
-    Spearman.cpp
+    units/Stalactite.cpp
+    units/BoulderPusher.cpp
+    units/Spider.cpp
+    units/Spearman.cpp
     PauseNode.cpp
     DebugScreen.cpp
     DragonBonesAnimator.cpp

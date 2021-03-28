@@ -1,6 +1,6 @@
 #include "BanditBoss.hpp"
+#include "Player.hpp"
 
-#include "../Player.hpp"
 #include "../Core.hpp"
 #include "../DragonBonesAnimator.hpp"
 #include "../Weapon.hpp"

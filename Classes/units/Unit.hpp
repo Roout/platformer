@@ -1,7 +1,7 @@
 #ifndef UNIT_HPP
 #define UNIT_HPP
 
-#include "CurseHub.hpp"
+#include "../CurseHub.hpp"
 #include <memory>
 #include <array>
 

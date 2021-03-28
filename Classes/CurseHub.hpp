@@ -7,8 +7,6 @@
 #include <array>
 #include <limits>
 
-class Unit;
-
 namespace Curses {
     /**
      * The curses manager which belongs to unit. 

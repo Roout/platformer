@@ -1,7 +1,7 @@
 #ifndef STALACTITE_HPP
 #define STALACTITE_HPP
 
-#include "../Bot.hpp"
+#include "Bot.hpp"
 
 namespace Enemies {
 

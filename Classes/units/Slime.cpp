@@ -1,9 +1,9 @@
 #include "Slime.hpp"
 
-#include "Weapon.hpp"
-#include "DragonBonesAnimator.hpp"
-#include "Core.hpp"
-#include "Movement.hpp"
+#include "../Weapon.hpp"
+#include "../DragonBonesAnimator.hpp"
+#include "../Core.hpp"
+#include "../Movement.hpp"
 
 #include <memory>
 

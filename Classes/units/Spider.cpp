@@ -1,10 +1,10 @@
 #include "Spider.hpp"
-#include "Path.hpp"
-#include "Navigator.hpp"
-#include "DragonBonesAnimator.hpp"
-#include "Core.hpp"
-#include "Weapon.hpp"
-#include "Movement.hpp"
+#include "../Path.hpp"
+#include "../Navigator.hpp"
+#include "../DragonBonesAnimator.hpp"
+#include "../Core.hpp"
+#include "../Weapon.hpp"
+#include "../Movement.hpp"
 
 #include <cmath>
 

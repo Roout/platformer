@@ -1,20 +1,22 @@
-#ifndef ENEMIES_SLIME_HPP
-#define ENEMIES_SLIME_HPP
+#ifndef WARRIOR_HPP
+#define WARRIOR_HPP
 
 #include <memory>
 
-#include "Navigator.hpp"
+#include "../Navigator.hpp"
+#include "../Path.hpp"
+
 #include "Bot.hpp"
-#include "Path.hpp"
 
 namespace Enemies {
 
-class Slime : public Bot {
+class Warrior : public Bot {
 public:
-    static Slime* create(size_t id, const cocos2d::Size& contentSizee);
 
-    bool init() override;
+    static Warrior* create(size_t id, const cocos2d::Size& contentSize);
 
+    [[nodiscard]] bool init() override;
+    
     void update(float dt) override;
 
 /// Unique to warrior
@@ -27,17 +29,23 @@ public:
 
     void OnEnemyLeave() override;
 
+protected:
+    enum WeaponClass { MELEE };
+
+    Warrior(size_t id, const char* dragonBonesName, const cocos2d::Size& contentSize);
+
+    void AddWeapons() override;
+
 private:
-    enum WeaponClass { RANGE };
 
-    Slime(size_t id, const char * name, const cocos2d::Size& contentSizee);
+/// Unique to warrior
 
-    /// Unique to slime
+    void Pursue(Unit * target) noexcept;
 
     void Patrol() noexcept;
 
-    /// Bot's interface
-
+/// Bot interface
+   
     void UpdateState(const float dt) noexcept override;
 
     void UpdatePosition(const float dt) noexcept override;
@@ -50,12 +58,6 @@ private:
 
     void AddAnimator() override;
 
-    bool NeedAttack() const noexcept override;
-    
-    void AddWeapons() override;
-
-    void Attack() override;
-    
 /// Properties
 private:
     std::unique_ptr<Navigator> m_navigator { nullptr };
@@ -63,4 +65,4 @@ private:
 
 } // namespace Enemies
 
-#endif // ENEMIES_SLIME_HPP
+#endif // WARRIOR_HPP
