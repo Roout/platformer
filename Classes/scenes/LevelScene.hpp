@@ -3,7 +3,7 @@
 
 #include <memory>
 #include "cocos2d.h"
-#include "TileMapParser.hpp"
+#include "../TileMapParser.hpp"
 
 class LevelScene : public cocos2d::Scene {
 public:

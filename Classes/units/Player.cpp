@@ -7,10 +7,11 @@
 #include "../Core.hpp"
 #include "../SizeDeducer.hpp"
 #include "../Weapon.hpp"
-#include "../DeathScreen.hpp"
 #include "../DragonBonesAnimator.hpp"
 #include "../Movement.hpp"
 #include "../Dash.hpp"
+
+#include "../scenes/DeathScreen.hpp"
 
 #include <unordered_map>
 #include <algorithm>

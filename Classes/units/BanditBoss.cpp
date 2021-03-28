@@ -7,7 +7,8 @@
 #include "../Influence.hpp"
 #include "../Movement.hpp"
 #include "../PhysicsHelper.hpp"
-#include "../LevelScene.hpp"
+
+#include "../scenes/LevelScene.hpp"
 
 #include "cocos2d.h"
 

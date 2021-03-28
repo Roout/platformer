@@ -2,8 +2,8 @@
 
 #include "ui/CocosGUI.h"
 
-#include "units/Player.hpp"
-#include "Core.hpp"
+#include "../units/Player.hpp"
+#include "../Core.hpp"
 
 namespace screen {
 

@@ -7,7 +7,8 @@
 #include "../Core.hpp"
 #include "../DragonBonesAnimator.hpp"
 #include "../Movement.hpp"
-#include "../LevelScene.hpp"
+
+#include "../scenes/LevelScene.hpp"
 
 #include <cmath>
 

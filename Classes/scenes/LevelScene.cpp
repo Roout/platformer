@@ -1,29 +1,29 @@
 #include "LevelScene.hpp"
-
-#include "units/Warrior.hpp"
-#include "units/Slime.hpp"
-#include "units/Archer.hpp"
-#include "units/Cannon.hpp"
-#include "units/BanditBoss.hpp"
-#include "units/Stalactite.hpp"
-#include "units/BoulderPusher.hpp"
-#include "units/Spider.hpp"
-#include "units/Spearman.hpp"
-#include "units/Player.hpp"
-
-#include "Platform.hpp"
-#include "Props.hpp"
-#include "Traps.hpp"
-
-#include "PhysicsHelper.hpp"
-#include "UserInputHandler.hpp"
-#include "Utils.hpp"
-#include "SizeDeducer.hpp"
 #include "Interface.hpp"
-#include "TileMapParser.hpp"
-#include "Path.hpp"
-#include "ContactHandler.hpp"
-#include "ParallaxBackground.hpp"
+
+#include "../units/Warrior.hpp"
+#include "../units/Slime.hpp"
+#include "../units/Archer.hpp"
+#include "../units/Cannon.hpp"
+#include "../units/BanditBoss.hpp"
+#include "../units/Stalactite.hpp"
+#include "../units/BoulderPusher.hpp"
+#include "../units/Spider.hpp"
+#include "../units/Spearman.hpp"
+#include "../units/Player.hpp"
+
+#include "../Platform.hpp"
+#include "../Props.hpp"
+#include "../Traps.hpp"
+
+#include "../PhysicsHelper.hpp"
+#include "../UserInputHandler.hpp"
+#include "../Utils.hpp"
+#include "../SizeDeducer.hpp"
+#include "../TileMapParser.hpp"
+#include "../Path.hpp"
+#include "../ContactHandler.hpp"
+#include "../ParallaxBackground.hpp"
 
 #include <unordered_map>
 

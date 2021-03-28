@@ -10,12 +10,13 @@ set(headers)
 set(sources)
 
 list(APPEND headers
-    LevelScene.hpp
-    BossFightScene.hpp
-    PauseNode.hpp
-    DebugScreen.hpp
-    DeathScreen.hpp
-    ContactHandler.hpp
+    scenes/Interface.hpp
+    scenes/LevelScene.hpp
+    scenes/BossFightScene.hpp
+    scenes/PauseNode.hpp
+    scenes/DebugScreen.hpp
+    scenes/DeathScreen.hpp
+
     units/Unit.hpp
     units/Player.hpp
     units/Bot.hpp
@@ -29,6 +30,8 @@ list(APPEND headers
     units/FireCloud.hpp
     units/BanditBoss.hpp
     units/Stalactite.hpp
+    
+    ContactHandler.hpp
     Influence.hpp
     Path.hpp
     Navigator.hpp
@@ -47,7 +50,6 @@ list(APPEND headers
     SizeDeducer.hpp
     SmoothFollower.hpp
     HealthBar.hpp
-    Interface.hpp
     Traps.hpp
     PhysicsHelper.hpp
     Curses.hpp
@@ -57,11 +59,12 @@ list(APPEND headers
 )
 
 list(APPEND sources
-    LevelScene.cpp
-    BossFightScene.cpp
-    ContactHandler.cpp
-    Influence.cpp
-    Navigator.cpp
+    scenes/LevelScene.cpp
+    scenes/BossFightScene.cpp
+    scenes/PauseNode.cpp
+    scenes/DebugScreen.cpp
+    scenes/DeathScreen.cpp
+
     units/Unit.cpp
     units/Player.cpp
     units/Bot.cpp
@@ -75,10 +78,11 @@ list(APPEND sources
     units/BoulderPusher.cpp
     units/Spider.cpp
     units/Spearman.cpp
-    PauseNode.cpp
-    DebugScreen.cpp
+
+    ContactHandler.cpp
+    Influence.cpp
+    Navigator.cpp
     DragonBonesAnimator.cpp
-    DeathScreen.cpp
     Movement.cpp
     SmoothFollower.cpp
     UserInputHandler.cpp

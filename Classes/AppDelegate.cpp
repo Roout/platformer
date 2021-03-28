@@ -23,8 +23,9 @@
  ****************************************************************************/
 
 #include "AppDelegate.h"
-#include "LevelScene.hpp"
-#include "BossFightScene.hpp"
+
+#include "scenes/LevelScene.hpp"
+#include "scenes/BossFightScene.hpp"
 
 // #define USE_AUDIO_ENGINE 1
 // #define USE_SIMPLE_AUDIO_ENGINE 1
