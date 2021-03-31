@@ -15,7 +15,7 @@
 
 class Dash : public cocos2d::Component {
 public:
-    static Dash* create(float cooldown);
+    static Dash* create(float cooldown, float initSpeed, float dashSpeed);
     
     void update(float dt) override;
 
@@ -31,17 +31,20 @@ public:
 
 private:
 
-    Dash(float cooldown)
+    Dash(float cooldown, float initSpeed, float dashSpeed)
         : m_cooldown { cooldown }
+        , m_initialSpeed { initSpeed }
+        , m_dashSpeed { dashSpeed }
     {}
 
     /// Properties
 private:
     
-    const float m_cooldown { 0.f };
+    const float m_cooldown{ 0.f };
+    float m_initialSpeed{ 0.f };
+    float m_dashSpeed{ 0.f };
 
     EasyTimer m_dashTimer{}; 
-
     EasyTimer m_cooldownTimer{}; 
 
     /**

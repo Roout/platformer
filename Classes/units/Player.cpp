@@ -46,8 +46,9 @@ bool Player::init() {
     m_follower = std::make_unique<SmoothFollower>(this);
     m_inputHandler = std::make_unique<UserInputHandler>(this);
     m_movement->SetMaxSpeed(MAX_SPEED);
+    
     // add dash component
-    m_dash = Dash::create(DASH_COOLDOWN);
+    m_dash = Dash::create(DASH_COOLDOWN, MAX_SPEED, DASH_SPEED);
     this->addComponent(m_dash);
     // =====
 
