@@ -8,6 +8,8 @@
 #include "../Navigator.hpp"
 #include "../Path.hpp"
 
+class Dash;
+
 namespace Enemies {
 
 class BanditBoss : public Bot {
@@ -16,7 +18,9 @@ public:
     // Defines how high can the body jump
     // Note, in formula: G = -H / (2*t*t), G and t are already defined base on player
     // so changing This JUMP_HEIGHT will just tweak 
-    static constexpr float JUMP_HEIGHT { 130.f };
+    static constexpr float JUMP_HEIGHT { 80.f };
+
+    static constexpr float DASH_SPEED { 600.f };
 
     static constexpr int MAX_HEALTH { 500 };
 
@@ -47,7 +51,8 @@ protected:
         // Instead of creating projectiles it only generates a FireCloud
         FIRECLOUD_ATTACK,   // animation name: attack_2 
         // Jump dealing damage by sweeping chain attack below the boss
-        SWEEP_ATTACK        // animation name: attack_3
+        SWEEP_ATTACK,       // animation name: attack_3
+        DASH
     };
 
     BanditBoss(size_t id, const char* dragonBonesName, const cocos2d::Size& contentSize);
@@ -63,6 +68,8 @@ private:
     void LaunchFirecloud();
 
     void LaunchSweepAttack();
+
+    void LaunchDash();
 
     /**
      * Check whether FIREBALL_ATTACK can be launched.
@@ -93,6 +100,17 @@ private:
      */
     bool CanLaunchSweepAttack() const noexcept;
 
+    /**
+     * Check whether DASH can be launched.
+     * Consider:
+     * 1. No cooldown
+     * 2. Player exist and is alive
+     * 3. health <= 50%? only after [finishing fire cloud call]
+     * 4. health > 50%? player is quite far from the boss
+     * 5. No other attacks performed
+     */
+    bool CanLaunchDash() const noexcept;
+
 /// Bot interface
 
     void TryAttack() override;
@@ -112,6 +130,7 @@ private:
 /// Properties
 private:
     std::unique_ptr<Navigator> m_navigator { nullptr };
+    Dash *m_dash { nullptr };
 };
 
 } // namespace Enemies

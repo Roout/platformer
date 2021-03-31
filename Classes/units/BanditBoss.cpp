@@ -6,6 +6,7 @@
 #include "../Weapon.hpp"
 #include "../Influence.hpp"
 #include "../Movement.hpp"
+#include "../Dash.hpp"
 #include "../PhysicsHelper.hpp"
 
 #include "../scenes/LevelScene.hpp"
@@ -13,6 +14,16 @@
 #include "cocos2d.h"
 
 namespace Enemies {
+
+/**
+ * Can't introduce this function to the weapon class because 
+ * can't define what is being busy mean for different units so it's 
+ * using internal linkage
+ */
+static inline bool IsBusy(Weapon * weapon) noexcept {
+    assert(weapon);
+    return (weapon->IsPreparing() || weapon->IsAttacking());
+}
 
 BanditBoss* BanditBoss::create(size_t id, const cocos2d::Size& contentSize ) {
     auto pRet { new (std::nothrow) BanditBoss(id, core::EntityNames::BOSS, contentSize) };
@@ -40,8 +51,15 @@ bool BanditBoss::init() {
     if (!Bot::init()) {
         return false; 
     }
-    m_movement->SetJumpHeight(80.f, LevelScene::GRAVITY);
-    m_movement->SetMaxSpeed(280.f);
+    const float initialSpeed { 280.f };
+    const float dashCooldown { 20.f };
+
+    m_movement->SetJumpHeight(JUMP_HEIGHT, LevelScene::GRAVITY);
+    m_movement->SetMaxSpeed(initialSpeed);
+
+    m_dash = Dash::create(dashCooldown, initialSpeed, DASH_SPEED);
+    this->addComponent(m_dash);
+    
     return true;
 }
 
@@ -71,7 +89,7 @@ void BanditBoss::OnEnemyLeave() {
 }
 
 void BanditBoss::LaunchFireballs() {
-    assert(m_weapons[FIRECLOUD_ATTACK]->IsReady() 
+    assert(m_weapons[FIREBALL_ATTACK]->IsReady() 
         && !this->IsDead() 
         && "You don't check confition beforehand"
     );
@@ -126,6 +144,10 @@ void BanditBoss::LaunchFirecloud() {
 }
 
 void BanditBoss::LaunchSweepAttack() {
+    assert(m_weapons[SWEEP_ATTACK]->IsReady() 
+        && !this->IsDead() 
+        && "You don't check confition beforehand"
+    );
     auto projectilePosition = [this]() -> cocos2d::Rect {
         const auto attackRange { m_weapons[SWEEP_ATTACK]->GetRange()};
         const cocos2d::Size area { attackRange, attackRange };
@@ -152,6 +174,11 @@ void BanditBoss::LaunchSweepAttack() {
     // jump
     m_movement->ResetForce();
     m_movement->Push(IsLookingLeft()? -1.f: 1.f, 1.f);
+}
+
+void BanditBoss::LaunchDash() {
+    const auto duration { m_animator->GetDuration(Utils::EnumCast(State::DASH)) };
+    m_dash->Initiate(duration);
 }
 
 // FIREBALLS
@@ -211,11 +238,51 @@ bool BanditBoss::CanLaunchSweepAttack() const noexcept {
     return false;
 }
 
+/**
+ * Check whether DASH can be launched.
+ * Consider:
+ * 1. No cooldown
+ * 2. Player exist and is alive (user make sure that it's true)
+ * 3. health <= 50%? only after [finishing fire cloud call]
+ * 4. health > 50%? player is quite far from the boss
+ * 5. No other attacks performed
+ */
+bool BanditBoss::CanLaunchDash() const noexcept {
+    const float duration { m_animator->GetDuration(Utils::EnumCast(State::DASH)) };
+    bool canDash = !m_dash->IsOnCooldown() 
+        && std::none_of(m_weapons.cbegin(), m_weapons.cend(), [](Weapon* weapon) {
+            return (weapon && IsBusy(weapon));
+    });
+
+    if(canDash) {
+        // health <= 50%? only after [finishing fire cloud call]
+        bool needDash = (m_health <= MAX_HEALTH / 2 
+            && m_previousState == State::FIRECLOUD_ATTACK 
+            && m_currentState != m_previousState
+        );
+        const auto bossX = this->getPositionX();
+        const auto player = this->getParent()->getChildByName<Unit*>(core::EntityNames::PLAYER);
+        const auto playerX = player->getPositionX();
+        const auto dashDistance = duration * DASH_SPEED;
+        // health > 50%? player is quite far from the boss
+        needDash = needDash || (m_health > MAX_HEALTH / 2
+            && std::fabs(bossX - playerX) >= dashDistance * 0.75f // slice down the distance of the dash
+        );
+        return needDash;
+    }
+    return false;
+}
+
 void BanditBoss::TryAttack() {
     const auto target = this->getParent()->getChildByName<Unit*>(core::EntityNames::PLAYER);
     const auto canBeInterrupted = (m_currentState == State::WALK || m_currentState == State::IDLE);
     if(target && !this->IsDead() && canBeInterrupted) {
-        if(this->CanLaunchSweepAttack()) {
+        if(this->CanLaunchDash()) {
+            this->LookAt(target->getPosition());
+            this->MoveAlong(0.f, 0.f);
+            this->LaunchDash();
+        }
+        else if(this->CanLaunchSweepAttack()) {
             // if player is in range and attack_3 can be performed -> perform jump attack
             this->LookAt(target->getPosition());
             this->MoveAlong(0.f, 0.f);
@@ -235,7 +302,7 @@ void BanditBoss::TryAttack() {
         else if(m_detectEnemy) {
             const auto player = target;
             bool playerIsNear { false };
-            if(player && !player->IsDead()) {
+            if(!player->IsDead()) {
                 const auto bossX = this->getPositionX();
                 const auto playerX = player->getPositionX();
                 playerIsNear = std::fabs(bossX - playerX) <= m_contentSize.width / 2.f;
@@ -252,11 +319,6 @@ void BanditBoss::TryAttack() {
             this->MoveAlong(0.f, 0.f);
         }
     }
-}
-
-static inline bool IsBusy(Weapon * weapon) noexcept {
-    assert(weapon);
-    return weapon->IsPreparing() || weapon->IsAttacking();
 }
 
 void BanditBoss::UpdateState(const float dt) noexcept {
@@ -276,6 +338,9 @@ void BanditBoss::UpdateState(const float dt) noexcept {
     }
     else if(IsBusy(m_weapons[WeaponClass::SWEEP_ATTACK])) {
         m_currentState = State::SWEEP_ATTACK;
+    }
+    else if(m_dash->IsRunning()) {
+        m_currentState = State::DASH;
     }
     else if(helper::IsEqual(velocity.x, 0.f, EPS)) {
         m_currentState = State::IDLE;
@@ -345,15 +410,19 @@ void BanditBoss::AddAnimator() {
     std::string chachedArmatureName = m_dragonBonesName;
     std::string prefix = m_dragonBonesName + "/" + m_dragonBonesName;
     m_animator = dragonBones::Animator::create(std::move(prefix), std::move(chachedArmatureName));
-    m_animator->setScale(0.2f); // TODO: introduce multi-resolution scaling
-    m_animator->InitializeAnimations({
+    // TODO: introduce multi-resolution scaling
+    m_animator->setScale(0.2f); 
+
+    std::initializer_list<std::pair<size_t, std::string>> animations {
         std::make_pair(Utils::EnumCast(State::FIREBALL_ATTACK),     GetStateName(State::FIREBALL_ATTACK)),
         std::make_pair(Utils::EnumCast(State::FIRECLOUD_ATTACK),    GetStateName(State::FIRECLOUD_ATTACK)),
         std::make_pair(Utils::EnumCast(State::SWEEP_ATTACK),        GetStateName(State::SWEEP_ATTACK)),
+        std::make_pair(Utils::EnumCast(State::DASH),                GetStateName(State::DASH)),
         std::make_pair(Utils::EnumCast(State::IDLE),                GetStateName(State::IDLE)),
         std::make_pair(Utils::EnumCast(State::WALK),                "move"),
         std::make_pair(Utils::EnumCast(State::DEAD),                GetStateName(State::DEAD))
-    });
+    };
+    m_animator->InitializeAnimations(animations);
     this->addChild(m_animator);
 }
 

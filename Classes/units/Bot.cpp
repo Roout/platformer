@@ -21,6 +21,8 @@ std::string GetStateName(State state) {
         { State::PATROL,            "walk" },
         { State::PURSUIT,           "walk" },
         { State::WALK,              "walk" },
+        { State::DASH,              "dash" },
+        
         { State::IDLE,              "idle" },
         { State::PREPARE_ATTACK,    "prepare_attack" },
         { State::ATTACK,            "attack" },
