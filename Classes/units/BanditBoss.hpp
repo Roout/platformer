@@ -42,12 +42,12 @@ protected:
 
     enum WeaponClass { 
         // Generate 2 fireballs while attacking by chains
-        ATTACK_1,
+        FIREBALL_ATTACK,    // animation name: attack_1
         // Dummy weapon used to track down timings and cooldowns of this type of attack.
         // Instead of creating projectiles it only generates a FireCloud
-        ATTACK_2, 
+        FIRECLOUD_ATTACK,   // animation name: attack_2 
         // Jump dealing damage by sweeping chain attack below the boss
-        ATTACK_3
+        SWEEP_ATTACK        // animation name: attack_3
     };
 
     BanditBoss(size_t id, const char* dragonBonesName, const cocos2d::Size& contentSize);
@@ -58,40 +58,40 @@ private:
 
 /// unique to boss
 
-    void Attack1();
+    void LaunchFireballs();
 
-    void Attack2();
+    void LaunchFirecloud();
 
-    void Attack3();
+    void LaunchSweepAttack();
 
     /**
-     * Check whether Attack1 can be launched.
+     * Check whether FIREBALL_ATTACK can be launched.
      * Consider:
      * 1. No cooldown
      * 2. Player exist and is alive
      * 3. No other attacks performed
      */
-    bool CanLaunchAttack1() const noexcept;
+    bool CanLaunchFireballs() const noexcept;
 
     /**
-     * Check whether Attack2 can be launched.
+     * Check whether FIRECLOUD_ATTACK can be launched.
      * Consider:
      * 1. No cooldown
      * 2. Player exist and is alive
      * 3. health is <= 50% 
      * 4. No other attacks performed
      */
-    bool CanLaunchAttack2() const noexcept;
+    bool CanLaunchFirecloud() const noexcept;
     
     /**
-     * Check whether Attack3 can be launched.
+     * Check whether SWEEP_ATTACK can be launched.
      * Consider:
      * 1. No cooldown
      * 2. Player exist and is alive
      * 3. Player is in jump range
      * 4. No other attacks performed
      */
-    bool CanLaunchAttack3() const noexcept;
+    bool CanLaunchSweepAttack() const noexcept;
 
 /// Bot interface
 

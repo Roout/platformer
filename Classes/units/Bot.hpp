@@ -27,9 +27,9 @@ enum class State {
     DEAD,
 
     // boss states
-    ATTACK_1,
-    ATTACK_2,
-    ATTACK_3,
+    FIREBALL_ATTACK,
+    FIRECLOUD_ATTACK,
+    SWEEP_ATTACK,
 
     // cloud states
     INIT,

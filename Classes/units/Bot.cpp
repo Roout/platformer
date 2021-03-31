@@ -26,9 +26,9 @@ std::string GetStateName(State state) {
         { State::ATTACK,            "attack" },
         { State::DEAD,              "dead" },
 
-        { State::ATTACK_1,          "attack_1" },
-        { State::ATTACK_2,          "attack_2" },
-        { State::ATTACK_3,          "attack_3" },
+        { State::FIREBALL_ATTACK,   "attack_1" },
+        { State::FIRECLOUD_ATTACK,  "attack_2" },
+        { State::SWEEP_ATTACK,      "attack_3" },
 
         { State::INIT,              "walk_1" },
         { State::EARLY,             "walk_2" },
