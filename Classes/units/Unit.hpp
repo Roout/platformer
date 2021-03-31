@@ -147,7 +147,7 @@ protected:
     // keep all weapons that the unit may use
     // 3 is maximum because the boss has 3 types of attack
     // Note: in this case weapons are equivalent of the skills
-    std::array<Weapon *, 3U> m_weapons;
+    std::array<Weapon *, 5U> m_weapons;
 
     // retain when add as child
     dragonBones::Animator *m_animator { nullptr };
