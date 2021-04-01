@@ -365,6 +365,29 @@ void BossChainSwing::OnAttack() {
     map->addChild(proj); 
 }
 
+// READY -> PREPARATION -> [ ATTACK -> DELAY -> ATTACK ] -> RELOAD -> READY ... 
+void BossChainSwing::UpdateState(const float dt) noexcept {
+    if(m_state != State::READY) {
+        m_timer -= dt;
+        if(m_timer <= 0.f) {
+            this->NextState();
+            if(m_state == State::ATTACK) {
+                this->OnAttack();
+                m_delay = DELAY;
+                m_attackedTwice = false;
+            }
+        } 
+        else if(m_state == State::ATTACK) { // timer > 0
+            m_delay -= dt;
+            if(m_delay <= 0.f && !m_attackedTwice) {
+                this->OnAttack();
+                m_delay = DELAY;
+                m_attackedTwice = true;
+            }
+        }
+    }
+}
+
 void PlayerSpecial::OnAttack() {
     const auto runningScene { cocos2d::Director::getInstance()->getRunningScene() };
     const auto level = runningScene->getChildByName("Level");

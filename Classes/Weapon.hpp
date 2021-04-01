@@ -254,6 +254,18 @@ public:
     using Weapon::Weapon;
 
     void OnAttack() override;
+
+    void UpdateState(const float dt) noexcept override;
+
+private:
+
+    // delay was choosen base on animation duration
+    static constexpr float DELAY { 0.3f };
+
+    // Delay between fireball spawn 
+    float m_delay { DELAY };
+
+    bool m_attackedTwice { false };
 };
 
 class Bow final : public Weapon {
