@@ -31,6 +31,8 @@ enum class State {
     FIREBALL_ATTACK,
     FIRECLOUD_ATTACK,
     SWEEP_ATTACK,
+    BASIC_ATTACK,
+    BASIC_WALK,
 
     // cloud states
     INIT,

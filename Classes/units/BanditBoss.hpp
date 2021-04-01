@@ -55,8 +55,14 @@ protected:
         FIRECLOUD_ATTACK,   // animation name: attack_2 
         // Jump dealing damage by sweeping chain attack below the boss
         SWEEP_ATTACK,       // animation name: attack_3
-        DASH
+        DASH,
+        BASIC_ATTACK,       // animation name: basic_attack
+        COUNT
     };
+
+    static_assert(WeaponClass::COUNT <= std::tuple_size<decltype(m_weapons)>::value 
+        && "You don't have enough weapon slots"
+    );
 
     BanditBoss(size_t id, const char* dragonBonesName, const cocos2d::Size& contentSize);
 
@@ -73,6 +79,8 @@ private:
     void LaunchSweepAttack();
 
     void LaunchDash();
+
+    void LaunchBasicAttack();
 
     /**
      * Check whether FIREBALL_ATTACK can be launched.
@@ -113,6 +121,16 @@ private:
      * 5. No other attacks performed
      */
     bool CanLaunchDash() const noexcept;
+    
+    /**
+     * Check whether BASIC_ATTACK can be launched.
+     * Consider:
+     * 1. Weapon is ready
+     * 2. Sweep attack is on cd
+     * 3. Player is close enough to attack him
+     * 4. No other attacks performed
+     */
+    bool CanLaunchBasicAttack() const noexcept;
 
 /// Bot interface
 

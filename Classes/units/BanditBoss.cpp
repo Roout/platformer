@@ -88,7 +88,7 @@ void BanditBoss::OnEnemyLeave() {
 void BanditBoss::LaunchFireballs() {
     assert(m_weapons[FIREBALL_ATTACK]->IsReady() 
         && !this->IsDead() 
-        && "You don't check confition beforehand"
+        && "You don't check condition beforehand"
     );
     auto projectilePosition = [this]() -> cocos2d::Rect {
         const auto attackRange { m_weapons[FIREBALL_ATTACK]->GetRange() * 0.25f };
@@ -120,7 +120,7 @@ void BanditBoss::LaunchFireballs() {
 void BanditBoss::LaunchFirecloud() {
     assert(m_weapons[FIRECLOUD_ATTACK]->IsReady() 
         && !this->IsDead() 
-        && "You don't check confition beforehand"
+        && "You don't check condition beforehand"
     );
 
     auto projectilePosition = [this]() -> cocos2d::Rect {
@@ -143,7 +143,7 @@ void BanditBoss::LaunchFirecloud() {
 void BanditBoss::LaunchSweepAttack() {
     assert(m_weapons[SWEEP_ATTACK]->IsReady() 
         && !this->IsDead() 
-        && "You don't check confition beforehand"
+        && "You don't check condition beforehand"
     );
     auto projectilePosition = [this]() -> cocos2d::Rect {
         const auto attackRange { m_weapons[SWEEP_ATTACK]->GetRange()};
@@ -271,6 +271,65 @@ bool BanditBoss::CanLaunchDash() const noexcept {
     return false;
 }
 
+void BanditBoss::LaunchBasicAttack() {
+    assert(m_weapons[BASIC_ATTACK]->IsReady() 
+        && !this->IsDead() 
+        && "You don't check condition beforehand"
+    );
+    auto projectilePosition = [this]() -> cocos2d::Rect {
+        const auto attackRange { m_weapons[BASIC_ATTACK]->GetRange()};
+        const cocos2d::Size area { attackRange, attackRange / 4.f };
+
+        auto position = this->getPosition();
+        if (this->IsLookingLeft()) {
+            position.x -= m_contentSize.width / 2.f + area.width;
+        }
+        else {
+            position.x += m_contentSize.width / 2.f;
+        }
+        position.y += m_contentSize.height / 4.f;
+
+        return { position, area };
+    };
+    auto pushProjectile = [this](cocos2d::PhysicsBody* body) {
+        body->setVelocity(this->getPhysicsBody()->getVelocity());
+    };
+    // create projectile - area where the chains are dealing damage
+    m_weapons[BASIC_ATTACK]->LaunchAttack(
+        std::move(projectilePosition), 
+        std::move(pushProjectile)
+    );
+}
+
+/**
+ * Check whether BASIC_ATTACK can be launched.
+ * Consider:
+ * 1. Weapon is ready
+ * 2. Sweep attack is on cd
+ * 3. Player is close enough to attack him
+ * 4. No other attacks performed
+ */
+bool BanditBoss::CanLaunchBasicAttack() const noexcept {
+    const auto player = this->getParent()->getChildByName<Unit*>(core::EntityNames::PLAYER);
+    assert(player && !this->IsDead() && "Expected to be called only satisfying those conditions");
+    if(m_weapons[BASIC_ATTACK]->IsReady()) {
+        const auto attackRange { m_weapons[BASIC_ATTACK]->GetRange()};
+        const cocos2d::Rect aggroArea { 
+            this->getPosition() - cocos2d::Vec2 { attackRange + m_contentSize.width / 2.f, 0.f }, 
+            cocos2d::Size { 2 * attackRange + m_contentSize.width, m_contentSize.height } // aggro area size
+        };
+        const auto playerSize { player->getContentSize() };
+        const cocos2d::Rect boundingBox {
+            // substract half cuz it has anchor point bottom-middle
+            player->getPosition() - cocos2d::Vec2{ playerSize.width / 2.f, 0.f }, 
+            playerSize
+        };
+        return aggroArea.intersectsRect(boundingBox);
+    }
+
+    return false;
+}
+
 void BanditBoss::TryAttack() {
     const auto target = this->getParent()->getChildByName<Unit*>(core::EntityNames::PLAYER);
     const auto canBeInterrupted = (m_currentState == State::WALK || m_currentState == State::IDLE);
@@ -281,10 +340,16 @@ void BanditBoss::TryAttack() {
             this->LaunchDash();
         }
         else if(this->CanLaunchSweepAttack()) {
-            // if player is in range and attack_3 can be performed -> perform jump attack
+            // if player is in range and SWEEP can be performed -> perform jump attack
             this->LookAt(target->getPosition());
             this->MoveAlong(0.f, 0.f);
             this->LaunchSweepAttack();
+        }
+        else if(this->CanLaunchBasicAttack()) {
+            // if player is in range and SWING can be performed -> invoke basic attack
+            this->LookAt(target->getPosition());
+            this->MoveAlong(0.f, 0.f);
+            this->LaunchBasicAttack();
         }
         else if(this->CanLaunchFireballs()) {
             // fireballs
@@ -336,6 +401,9 @@ void BanditBoss::UpdateState(const float dt) noexcept {
     }
     else if(IsBusy(m_weapons[WeaponClass::SWEEP_ATTACK])) {
         m_currentState = State::SWEEP_ATTACK;
+    }
+    else if(IsBusy(m_weapons[WeaponClass::BASIC_ATTACK])) {
+        m_currentState = State::BASIC_ATTACK;
     }
     else if(m_dash->IsRunning()) {
         m_currentState = State::DASH;
@@ -415,6 +483,8 @@ void BanditBoss::AddAnimator() {
         std::make_pair(Utils::EnumCast(State::FIREBALL_ATTACK),     GetStateName(State::FIREBALL_ATTACK)),
         std::make_pair(Utils::EnumCast(State::FIRECLOUD_ATTACK),    GetStateName(State::FIRECLOUD_ATTACK)),
         std::make_pair(Utils::EnumCast(State::SWEEP_ATTACK),        GetStateName(State::SWEEP_ATTACK)),
+        std::make_pair(Utils::EnumCast(State::BASIC_ATTACK),        GetStateName(State::BASIC_ATTACK)),
+        std::make_pair(Utils::EnumCast(State::BASIC_WALK),          GetStateName(State::BASIC_WALK)),
         std::make_pair(Utils::EnumCast(State::DASH),                GetStateName(State::DASH)),
         std::make_pair(Utils::EnumCast(State::IDLE),                GetStateName(State::IDLE)),
         std::make_pair(Utils::EnumCast(State::WALK),                "move"),
@@ -456,13 +526,28 @@ void BanditBoss::AddWeapons() {
         );
     }
     {
-        const auto damage { 30.f }; // doesn't matter
+        const auto damage { 30.f };
         const auto range { 100.f }; 
         const auto animDuration = m_animator->GetDuration(Utils::EnumCast(State::SWEEP_ATTACK));
         const auto attackDuration { 0.4f * animDuration };
         const auto preparationTime { animDuration - attackDuration };
+        const auto reloadTime { 8.f };
+        m_weapons[WeaponClass::SWEEP_ATTACK] = new BossChainSweep(
+            damage, 
+            range, 
+            preparationTime,
+            attackDuration,
+            reloadTime 
+        );
+    }
+    {
+        const auto damage { 15.f };
+        const auto range { 140.f }; 
+        const auto animDuration = m_animator->GetDuration(Utils::EnumCast(State::BASIC_ATTACK));
+        const auto attackDuration { 0.8f * animDuration };
+        const auto preparationTime { animDuration - attackDuration };
         const auto reloadTime { 2.f };
-        m_weapons[WeaponClass::SWEEP_ATTACK] = new BossChain(
+        m_weapons[WeaponClass::BASIC_ATTACK] = new BossChainSwing(
             damage, 
             range, 
             preparationTime,

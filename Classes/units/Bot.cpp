@@ -31,6 +31,8 @@ std::string GetStateName(State state) {
         { State::FIREBALL_ATTACK,   "attack_1" },
         { State::FIRECLOUD_ATTACK,  "attack_2" },
         { State::SWEEP_ATTACK,      "attack_3" },
+        { State::BASIC_ATTACK,      "basic_attack" },
+        { State::BASIC_WALK,        "basic_walk" },
 
         { State::INIT,              "walk_1" },
         { State::EARLY,             "walk_2" },

@@ -242,7 +242,14 @@ public:
     void OnAttack() override;
 };
 
-class BossChain final : public Weapon {
+class BossChainSweep final : public Weapon {
+public:
+    using Weapon::Weapon;
+
+    void OnAttack() override;
+};
+
+class BossChainSwing final : public Weapon {
 public:
     using Weapon::Weapon;
 
