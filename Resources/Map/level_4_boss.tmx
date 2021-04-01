@@ -262,8 +262,8 @@
   </object>
   <object id="66" name="boss" type="enemy" gid="55" x="770" y="910" width="51.3596" height="110.134"/>
  </objectgroup>
- <objectgroup color="#ffaaff" id="4" name="influences" locked="1">
-  <object id="76" name="Influence" type="Rect" x="160" y="700" width="1366" height="219">
+ <objectgroup color="#ffaaff" id="4" name="influences">
+  <object id="76" name="Influence" type="Rect" x="160" y="642" width="1366" height="277">
    <properties>
     <property name="owner-id" type="int" value="66"/>
    </properties>
