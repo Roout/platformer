@@ -20,7 +20,10 @@ public:
     // so changing This JUMP_HEIGHT will just tweak 
     static constexpr float JUMP_HEIGHT { 80.f };
 
+    static constexpr float INITIAL_SPEED { 280.f };
+
     static constexpr float DASH_SPEED { 600.f };
+    static constexpr float DASH_COOLDOWN { 13.f };
 
     static constexpr int MAX_HEALTH { 500 };
 

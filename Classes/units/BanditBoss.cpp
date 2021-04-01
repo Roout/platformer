@@ -51,13 +51,10 @@ bool BanditBoss::init() {
     if (!Bot::init()) {
         return false; 
     }
-    const float initialSpeed { 280.f };
-    const float dashCooldown { 20.f };
-
     m_movement->SetJumpHeight(JUMP_HEIGHT, LevelScene::GRAVITY);
-    m_movement->SetMaxSpeed(initialSpeed);
+    m_movement->SetMaxSpeed(INITIAL_SPEED);
 
-    m_dash = Dash::create(dashCooldown, initialSpeed, DASH_SPEED);
+    m_dash = Dash::create(DASH_COOLDOWN, INITIAL_SPEED, DASH_SPEED);
     this->addComponent(m_dash);
     
     return true;
@@ -266,6 +263,7 @@ bool BanditBoss::CanLaunchDash() const noexcept {
         const auto dashDistance = duration * DASH_SPEED;
         // health > 50%? player is quite far from the boss
         needDash = needDash || (m_health > MAX_HEALTH / 2
+            && m_health <= static_cast<int>(MAX_HEALTH * 0.8f)
             && std::fabs(bossX - playerX) >= dashDistance * 0.75f // slice down the distance of the dash
         );
         return needDash;
