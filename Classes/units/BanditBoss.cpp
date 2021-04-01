@@ -52,9 +52,9 @@ bool BanditBoss::init() {
         return false; 
     }
     m_movement->SetJumpHeight(JUMP_HEIGHT, LevelScene::GRAVITY);
-    m_movement->SetMaxSpeed(INITIAL_SPEED);
+    m_movement->SetMaxSpeed(BASIC_WALK_SPEED);
 
-    m_dash = Dash::create(DASH_COOLDOWN, INITIAL_SPEED, DASH_SPEED);
+    m_dash = Dash::create(DASH_COOLDOWN, BASIC_WALK_SPEED, DASH_SPEED);
     this->addComponent(m_dash);
     
     return true;
@@ -332,7 +332,10 @@ bool BanditBoss::CanLaunchBasicAttack() const noexcept {
 
 void BanditBoss::TryAttack() {
     const auto target = this->getParent()->getChildByName<Unit*>(core::EntityNames::PLAYER);
-    const auto canBeInterrupted = (m_currentState == State::WALK || m_currentState == State::IDLE);
+    const auto canBeInterrupted = (m_currentState == State::WALK 
+        || m_currentState == State::IDLE
+        || m_currentState == State::BASIC_WALK
+    );
     if(target && !this->IsDead() && canBeInterrupted) {
         if(this->CanLaunchDash()) {
             this->LookAt(target->getPosition());
@@ -410,8 +413,13 @@ void BanditBoss::UpdateState(const float dt) noexcept {
     }
     else if(helper::IsEqual(velocity.x, 0.f, EPS)) {
         m_currentState = State::IDLE;
-    } 
+    }
+    else if(m_health > MAX_HEALTH / 2) {
+        m_movement->SetMaxSpeed(BASIC_WALK_SPEED);
+        m_currentState = State::BASIC_WALK;
+    }
     else {
+        m_movement->SetMaxSpeed(WALK_SPEED);
         m_currentState = State::WALK;
     }
 
@@ -423,7 +431,11 @@ void BanditBoss::UpdatePosition(const float dt) noexcept {
 
 void BanditBoss::UpdateAnimation() {
     if(m_currentState != m_previousState) {
-        const auto isInfinity { m_currentState == State::IDLE || m_currentState == State::WALK };
+        const auto isInfinity { 
+            m_currentState == State::IDLE 
+            || m_currentState == State::WALK 
+            || m_currentState == State::BASIC_WALK 
+        };
         const auto repeatTimes { isInfinity ? dragonBones::Animator::INFINITY_LOOP: 1 };
         (void) m_animator->Play(Utils::EnumCast(m_currentState), repeatTimes);
         if(this->IsDead()) {
