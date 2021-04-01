@@ -313,7 +313,7 @@ void BossFireball::OnAttack() {
     map->addChild(proj, 101); 
 }
 
-void BossChain::OnAttack() {
+void BossChainSweep::OnAttack() {
     const auto runningScene { cocos2d::Director::getInstance()->getRunningScene() };
     const auto level = runningScene->getChildByName("Level");
     const auto map = level->getChildByName("Map");
@@ -337,6 +337,55 @@ void BossChain::OnAttack() {
     proj->SetCategoryBitmask(categoryMask);
     proj->SetContactTestBitmask(testMask);
     map->addChild(proj); 
+}
+
+void BossChainSwing::OnAttack() {
+    const auto runningScene { cocos2d::Director::getInstance()->getRunningScene() };
+    const auto level = runningScene->getChildByName("Level");
+    const auto map = level->getChildByName("Map");
+
+    const auto proj = Projectile::create(this->GetDamage());
+    const auto projectile = m_extractor();
+    const auto body = proj->AddPhysicsBody(projectile.size);
+    proj->setPosition(projectile.origin);
+    m_modifier(body);
+    const auto testMask {
+        Utils::CreateMask(
+            core::CategoryBits::PROPS
+            , core::CategoryBits::BOUNDARY
+            , core::CategoryBits::PLAYER_PROJECTILE 
+            , core::CategoryBits::HITBOX_SENSOR 
+        )
+    };
+    const auto categoryMask {
+        Utils::CreateMask(core::CategoryBits::ENEMY_PROJECTILE)
+    };
+    proj->SetCategoryBitmask(categoryMask);
+    proj->SetContactTestBitmask(testMask);
+    map->addChild(proj); 
+}
+
+// READY -> PREPARATION -> [ ATTACK -> DELAY -> ATTACK ] -> RELOAD -> READY ... 
+void BossChainSwing::UpdateState(const float dt) noexcept {
+    if(m_state != State::READY) {
+        m_timer -= dt;
+        if(m_timer <= 0.f) {
+            this->NextState();
+            if(m_state == State::ATTACK) {
+                this->OnAttack();
+                m_delay = DELAY;
+                m_attackedTwice = false;
+            }
+        } 
+        else if(m_state == State::ATTACK) { // timer > 0
+            m_delay -= dt;
+            if(m_delay <= 0.f && !m_attackedTwice) {
+                this->OnAttack();
+                m_delay = DELAY;
+                m_attackedTwice = true;
+            }
+        }
+    }
 }
 
 void PlayerSpecial::OnAttack() {

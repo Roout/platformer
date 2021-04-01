@@ -1,14 +1,13 @@
 #include "Dash.hpp"
 
 #include "units/Unit.hpp"
-#include "units/Player.hpp"
 
 #include "chipmunk/chipmunk.h"
 
 #include <cassert>
 
-Dash* Dash::create(float cooldown) {
-    auto pRet = new(std::nothrow) Dash(cooldown);
+Dash* Dash::create(float cooldown, float initSpeed, float dashSpeed) {
+    auto pRet = new(std::nothrow) Dash(cooldown, initSpeed, dashSpeed);
     if(pRet && pRet->init()) {
         pRet->autorelease();
     }
@@ -27,7 +26,7 @@ void Dash::update(float dt) {
             // on dash end 
             // TODO: add callback
             // restore speed
-            unit->SetMaxSpeed(Player::MAX_SPEED);
+            unit->SetMaxSpeed(m_initialSpeed);
             unit->ResetForces(true, true);
             {
                 auto body = unit->getPhysicsBody();
@@ -60,7 +59,7 @@ void Dash::Initiate(float dashDuration) noexcept {
             m_velocity = cpBodyGetVelocity(chipBody);
         }
         // speed up unit
-        unit->SetMaxSpeed(600.f);
+        unit->SetMaxSpeed(m_dashSpeed);
         unit->MoveAlong(0.f, 0.f);
         unit->MoveAlong((unit->IsLookingLeft()? -1.f: 1.f), 0.f);
     }

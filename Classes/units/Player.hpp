@@ -10,9 +10,9 @@ class Dash;
 
 class Player final : public Unit {
 public:
-    inline static constexpr float MAX_SPEED { 200.f }; 
-
-    inline static constexpr float DAMAGE_ON_CONTACT { 7.f }; 
+    static constexpr float MAX_SPEED { 200.f }; 
+    static constexpr float DASH_SPEED { 600.f }; 
+    static constexpr float DAMAGE_ON_CONTACT { 7.f }; 
 
     static Player* create(const cocos2d::Size& contentSize);
 

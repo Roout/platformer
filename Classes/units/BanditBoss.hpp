@@ -8,6 +8,8 @@
 #include "../Navigator.hpp"
 #include "../Path.hpp"
 
+class Dash;
+
 namespace Enemies {
 
 class BanditBoss : public Bot {
@@ -16,7 +18,13 @@ public:
     // Defines how high can the body jump
     // Note, in formula: G = -H / (2*t*t), G and t are already defined base on player
     // so changing This JUMP_HEIGHT will just tweak 
-    static constexpr float JUMP_HEIGHT { 130.f };
+    static constexpr float JUMP_HEIGHT { 80.f };
+
+    static constexpr float BASIC_WALK_SPEED { 190.f };
+    static constexpr float WALK_SPEED { 280.f };
+
+    static constexpr float DASH_SPEED { 600.f };
+    static constexpr float DASH_COOLDOWN { 13.f };
 
     static constexpr int MAX_HEALTH { 500 };
 
@@ -42,13 +50,20 @@ protected:
 
     enum WeaponClass { 
         // Generate 2 fireballs while attacking by chains
-        ATTACK_1,
+        FIREBALL_ATTACK,    // animation name: attack_1
         // Dummy weapon used to track down timings and cooldowns of this type of attack.
         // Instead of creating projectiles it only generates a FireCloud
-        ATTACK_2, 
+        FIRECLOUD_ATTACK,   // animation name: attack_2 
         // Jump dealing damage by sweeping chain attack below the boss
-        ATTACK_3
+        SWEEP_ATTACK,       // animation name: attack_3
+        DASH,
+        BASIC_ATTACK,       // animation name: basic_attack
+        COUNT
     };
+
+    static_assert(WeaponClass::COUNT <= std::tuple_size<decltype(m_weapons)>::value 
+        && "You don't have enough weapon slots"
+    );
 
     BanditBoss(size_t id, const char* dragonBonesName, const cocos2d::Size& contentSize);
 
@@ -58,40 +73,65 @@ private:
 
 /// unique to boss
 
-    void Attack1();
+    void LaunchFireballs();
 
-    void Attack2();
+    void LaunchFirecloud();
 
-    void Attack3();
+    void LaunchSweepAttack();
+
+    void LaunchDash();
+
+    void LaunchBasicAttack();
 
     /**
-     * Check whether Attack1 can be launched.
+     * Check whether FIREBALL_ATTACK can be launched.
      * Consider:
      * 1. No cooldown
      * 2. Player exist and is alive
      * 3. No other attacks performed
      */
-    bool CanLaunchAttack1() const noexcept;
+    bool CanLaunchFireballs() const noexcept;
 
     /**
-     * Check whether Attack2 can be launched.
+     * Check whether FIRECLOUD_ATTACK can be launched.
      * Consider:
      * 1. No cooldown
      * 2. Player exist and is alive
      * 3. health is <= 50% 
      * 4. No other attacks performed
      */
-    bool CanLaunchAttack2() const noexcept;
+    bool CanLaunchFirecloud() const noexcept;
     
     /**
-     * Check whether Attack3 can be launched.
+     * Check whether SWEEP_ATTACK can be launched.
      * Consider:
      * 1. No cooldown
      * 2. Player exist and is alive
      * 3. Player is in jump range
      * 4. No other attacks performed
      */
-    bool CanLaunchAttack3() const noexcept;
+    bool CanLaunchSweepAttack() const noexcept;
+
+    /**
+     * Check whether DASH can be launched.
+     * Consider:
+     * 1. No cooldown
+     * 2. Player exist and is alive
+     * 3. health <= 50%? only after [finishing fire cloud call]
+     * 4. health > 50%? player is quite far from the boss
+     * 5. No other attacks performed
+     */
+    bool CanLaunchDash() const noexcept;
+    
+    /**
+     * Check whether BASIC_ATTACK can be launched.
+     * Consider:
+     * 1. Weapon is ready
+     * 2. Sweep attack is on cd
+     * 3. Player is close enough to attack him
+     * 4. No other attacks performed
+     */
+    bool CanLaunchBasicAttack() const noexcept;
 
 /// Bot interface
 
@@ -112,6 +152,7 @@ private:
 /// Properties
 private:
     std::unique_ptr<Navigator> m_navigator { nullptr };
+    Dash *m_dash { nullptr };
 };
 
 } // namespace Enemies

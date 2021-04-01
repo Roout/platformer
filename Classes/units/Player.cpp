@@ -46,8 +46,9 @@ bool Player::init() {
     m_follower = std::make_unique<SmoothFollower>(this);
     m_inputHandler = std::make_unique<UserInputHandler>(this);
     m_movement->SetMaxSpeed(MAX_SPEED);
+    
     // add dash component
-    m_dash = Dash::create(DASH_COOLDOWN);
+    m_dash = Dash::create(DASH_COOLDOWN, MAX_SPEED, DASH_SPEED);
     this->addComponent(m_dash);
     // =====
 
@@ -384,12 +385,11 @@ void Player::AddWeapons() {
 
 void Player::InitiateDash() {
     const float duration { m_animator->GetDuration(Utils::EnumCast(State::DASH)) };
-    bool canDash = !m_dash->IsOnCooldown();
-    for(size_t i = 0; i < m_weapons.size() && canDash; i++) {
-        if(m_weapons[i] != nullptr) {
-            canDash = !(m_weapons[i]->IsPreparing() || m_weapons[i]->IsAttacking());
-        }
-    }
+    const bool canDash = !m_dash->IsOnCooldown() 
+        && std::none_of(m_weapons.cbegin(), m_weapons.cend(), [](Weapon* weapon) {
+            return weapon && (weapon->IsPreparing() || weapon->IsAttacking());
+    });
+
     if(canDash) {
         m_dash->Initiate(duration);
     }

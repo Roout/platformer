@@ -20,16 +20,19 @@ enum class State {
     PATROL,
     PURSUIT,
     WALK,
+    DASH,
     
     IDLE,
     PREPARE_ATTACK,
     ATTACK,
     DEAD,
 
-    // boss states
-    ATTACK_1,
-    ATTACK_2,
-    ATTACK_3,
+    // boss special states
+    FIREBALL_ATTACK,
+    FIRECLOUD_ATTACK,
+    SWEEP_ATTACK,
+    BASIC_ATTACK,
+    BASIC_WALK,
 
     // cloud states
     INIT,
