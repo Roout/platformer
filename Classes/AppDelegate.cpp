@@ -85,48 +85,44 @@ bool AppDelegate::applicationDidFinishLaunching() {
     auto glview = director->getOpenGLView();
     if(!glview) {
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32) || (CC_TARGET_PLATFORM == CC_PLATFORM_MAC) || (CC_TARGET_PLATFORM == CC_PLATFORM_LINUX)
-		glview = GLViewImpl::createWithRect("Platformer", cocos2d::Rect(0, 0, mediumResolutionSize.width, mediumResolutionSize.height), 1.f, true);
+        float frameZoomFactor = 1.f;
+        bool resizable = true;
+		glview = GLViewImpl::createWithRect(
+            "Platformer", 
+            cocos2d::Rect(0, 0, mediumResolutionSize.width, mediumResolutionSize.height), 
+            frameZoomFactor, 
+            resizable
+        );
 #else
         glview = GLViewImpl::create("Platformer");
 #endif
         director->setOpenGLView(glview);
     }
-
-	//
-	// director->setProjection(Director::Projection::_2D);
-	
     // turn on display FPS
     director->setDisplayStats(true);
-
-    // set FPS. the default value is 1.0/60 if you don't call this
+    // set FPS. the default value is 1.0 / 60 if you don't call this
     director->setAnimationInterval(1.0f / 60);
-
     // Set the design resolution
     glview->setDesignResolutionSize(designResolutionSize.width, designResolutionSize.height, ResolutionPolicy::NO_BORDER);
     auto frameSize = glview->getFrameSize();
 
 	float scaleFactor = 1.f;
     // if the frame's height is larger than the height of medium size.
-    if (frameSize.height > mediumResolutionSize.height)
-    {       
-		FileUtils::getInstance()->addSearchPath("large");///2048, 1536
+    if (frameSize.height > mediumResolutionSize.height) {       
+		FileUtils::getInstance()->addSearchPath("large"); /// 2048, 1536
 		scaleFactor = largeResolutionSize.height / designResolutionSize.height;
        // director->setContentScaleFactor(MIN(largeResolutionSize.height/designResolutionSize.height, largeResolutionSize.width/designResolutionSize.width));
     }
     // if the frame's height is larger than the height of small size.
-    else if (frameSize.height > smallResolutionSize.height)
-    {  
-		FileUtils::getInstance()->addSearchPath("medium");///1024, 768
+    else if (frameSize.height > smallResolutionSize.height) {  
+		FileUtils::getInstance()->addSearchPath("medium"); /// 1024, 768
 		scaleFactor = mediumResolutionSize.height / designResolutionSize.height;
-
         //director->setContentScaleFactor(MIN(mediumResolutionSize.height/designResolutionSize.height, mediumResolutionSize.width/designResolutionSize.width));
     }
     // if the frame's height is smaller than the height of medium size.
-    else
-    {    
-		FileUtils::getInstance()->addSearchPath("small");///480, 320
+    else {    
+		FileUtils::getInstance()->addSearchPath("small"); /// 480, 320
 		scaleFactor = smallResolutionSize.height / designResolutionSize.height;
-
        // director->setContentScaleFactor(MIN(smallResolutionSize.height/designResolutionSize.height, smallResolutionSize.width/designResolutionSize.width));
     }
 	director->setContentScaleFactor(scaleFactor);
@@ -135,8 +131,8 @@ bool AppDelegate::applicationDidFinishLaunching() {
 
     // create a scene. it's an autorelease object
     constexpr auto id  { 4 };
-    const auto scene = BossFightScene::createRootScene(id);
-    // const auto scene = LevelScene::createRootScene(id);
+    // const auto scene = BossFightScene::createRootScene(id);
+    const auto scene = LevelScene::createRootScene(id);
     // run
     director->runWithScene(scene);
 
