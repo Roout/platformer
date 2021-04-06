@@ -24,8 +24,8 @@ void SmoothFollower::UpdateMapPosition(const float dt) {
     const auto origin = cocos2d::Director::getInstance()->getVisibleOrigin();
     
     const cocos2d::Rect bounds { 
-        visible - mapSize + cocos2d::Size{ origin.x, origin.y }, 
-        mapSize - visible - cocos2d::Size{ origin.x, origin.y }
+        visible - mapSize - cocos2d::Size{ origin.x, origin.y }, 
+        mapSize - visible + cocos2d::Size{ 2.f * origin.x, 2.f * origin.y }
     };
     const cocos2d::Vec2 before { this->x, this->y };
 
@@ -34,11 +34,11 @@ void SmoothFollower::UpdateMapPosition(const float dt) {
     static constexpr auto alpha { 0.3f }; 
     static constexpr auto eps { 1.f }; 
     // depends on how high/low is the player
-    const auto betta = target.y / tileMap->getContentSize().height;
+    const auto betta = target.y / visible.height;
     // this shift define how much it's shown below/above player.
     // The higher is the player the less he can see above himself and 
     // more below
-    const auto shift = cocos2d::Vec2{ 0.f, 10.f - 40.f * betta };
+    const auto shift = cocos2d::Vec2{0.f, 10.f - 40.f * betta };
 
     // *this * (1.f - alpha) + other * alpha;
     // a * (1 - x) + b * x = a - ax + bx = x(b - a) + a
