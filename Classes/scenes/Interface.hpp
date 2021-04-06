@@ -79,7 +79,7 @@ private:
 
         const auto node = DeathScreen::create();
         node->setAnchorPoint(cocos2d::Vec2::ANCHOR_MIDDLE);
-        node->setPosition(visibleSize / 2.f);
+        node->setPosition(origin + visibleSize / 2.f);
 
         this->addChild(node);
         m_lastDisplayedScreen = Display::DEATH;
@@ -92,7 +92,7 @@ private:
 
             const auto node = screen::DebugScreen::create();
             node->setAnchorPoint(cocos2d::Vec2::ANCHOR_MIDDLE);
-            node->setPosition(visibleSize / 2.f);
+            node->setPosition(origin + visibleSize / 2.f);
 
             this->addChild(node);
             m_lastDisplayedScreen = Display::DEBUG;
@@ -108,7 +108,7 @@ private:
             
             auto node = PauseNode::create();
             node->setAnchorPoint(cocos2d::Vec2::ANCHOR_MIDDLE);
-            node->setPosition(visibleSize / 2.f);
+            node->setPosition(origin + visibleSize / 2.f);
 
             this->addChild(node);
             m_lastDisplayedScreen = Display::PAUSE;
