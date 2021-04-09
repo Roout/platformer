@@ -180,6 +180,7 @@ void Player::MoveAlong(float x, float y) noexcept {
 void Player::pause() {
     Unit::pause();
     if(!this->IsDead()) {
+        m_movement->ResetForce();
         // prevent to being called onExit() when the player is dead and is being detached!
         m_inputHandler->Reset();
     }
