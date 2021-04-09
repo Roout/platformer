@@ -18,8 +18,6 @@
 #include <cassert>
 #include <cmath>
 
-static constexpr float DASH_COOLDOWN { 0.7f };
-
 Player* Player::create(const cocos2d::Size& contentSize) {
     auto pRet { new (std::nothrow) Player(contentSize) };
     if( pRet && pRet->init()) {
@@ -163,6 +161,16 @@ void Player::MoveAlong(float x, float y) noexcept {
         }
         m_movement->ResetForceY();
         m_movement->Push(x, y);
+        // reset all active weapons
+        std::for_each(m_weapons.begin(), m_weapons.end(), [](Weapon * weapon) {
+            if(weapon && (weapon->IsPreparing() || weapon->IsAttacking())) {
+                weapon->ForceReload();
+            }
+        });
+        this->FinishSpecialAttack();
+        // reset states to invoke JUMP animation (if the player already jumping!)
+        m_previousState = State::IDLE;
+        m_currentState = State::IDLE;
     }
     else {
         m_movement->Move(x, y);
@@ -261,6 +269,8 @@ void Player::UpdateState(const float dt) noexcept {
         assert(!m_finishSpecialAttack && "Isn't consumed");
     }
     
+    const auto isOnGround = this->IsOnGround();
+
     if(!player.intersectsRect(boundary)) { 
         // out of level boundaries
         m_currentState = State::DEAD;
@@ -312,7 +322,7 @@ void Player::UpdateState(const float dt) noexcept {
         // - [x] player moved
         // - [x] release button 
     }
-    else if(!this->IsOnGround()) {
+    else if(!isOnGround) {
         m_currentState = State::JUMP;
     } 
     else if(helper::IsEqual(velocity.x, 0.f, EPS)) {
@@ -508,6 +518,7 @@ void Player::StartSpecialAttack() {
 
 void Player::OnSpecialAttackEnd() {
     m_finishSpecialAttack = false;
+    m_scheduleSpecialAttack = false; 
 
     switch(m_currentState) {
         case State::SPECIAL_PHASE_1: {
@@ -516,7 +527,7 @@ void Player::OnSpecialAttackEnd() {
         } break;
         case State::SPECIAL_PHASE_2: { // this is phase when player is charging sword attack
             // interrupt charging
-            // invoke special wweapon attack!
+            // invoke special weapon attack!
             this->SpecialAttack();
             // switch to phase 3
             m_currentState = State::SPECIAL_PHASE_3;
@@ -530,7 +541,7 @@ void Player::OnSpecialAttackEnd() {
 }
 
 void Player::FinishSpecialAttack() {
-    if( m_currentState == State::SPECIAL_PHASE_1 || 
+    if (m_currentState == State::SPECIAL_PHASE_1 || 
         m_currentState == State::SPECIAL_PHASE_2 || 
         m_currentState == State::SPECIAL_PHASE_3
     ) {

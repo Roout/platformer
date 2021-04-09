@@ -133,10 +133,6 @@ void UserInputHandler::OnKeyPressed(
     ) {
         if (canBeControlled) {
             m_player->MoveAlong(0.f, 1.f);
-            if (m_lastInput.jumpCounter > 0) {
-                const size_t REPEAT_TIMES = 1U;
-                m_player->m_animator->Play(Utils::EnumCast(Player::State::JUMP), REPEAT_TIMES);
-            }
             if (m_player->IsOnGround()) {
                 m_lastInput.jumpCounter = 1;
             }

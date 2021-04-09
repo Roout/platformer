@@ -116,6 +116,11 @@ public:
         return m_range;
     }
 
+    void ForceReload() noexcept {
+        m_state = Weapon::State::RELOAD;
+        m_timer = m_durations[Utils::EnumCast(m_state)];
+    }
+
 protected:
 
     virtual void OnAttack() = 0;
