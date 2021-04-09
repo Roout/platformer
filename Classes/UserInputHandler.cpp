@@ -53,7 +53,10 @@ void UserInputHandler::Input::Merge(const Input& input) noexcept {
     rangeAttack = input.rangeAttack;
     specialAttack = input.specialAttack;
     dash = input.dash;
-    if (input.dx) {
+    if (input.dx == dx) {
+        dx += input.dx;
+    }
+    else if (input.dx) {
         dx = input.dx;
     }
 }  
@@ -96,7 +99,6 @@ UserInputHandler::UserInputHandler(Player * const player) :
 }
 
 void UserInputHandler::Reset() {
-    m_player->m_movement->ResetForce();
     m_lastInput.dx = 0;
     m_lastInput.jump = 0;
     m_lastInput.meleeAttack = false;
@@ -143,7 +145,7 @@ void UserInputHandler::OnKeyPressed(
         }
     }
 
-    if (m_lastInput.dx == 1 && canBeControlled) {
+    if (m_lastInput.dx > 0 && canBeControlled) {
         // reset only dx!
         m_player->FinishSpecialAttack();
         // Don't reset if player is moving in the same direction 
@@ -158,7 +160,7 @@ void UserInputHandler::OnKeyPressed(
             m_player->Turn();
         }
     }
-    else if (m_lastInput.dx == -1 && canBeControlled) {
+    else if (m_lastInput.dx < 0 && canBeControlled) {
         // reset only dx!
         m_player->FinishSpecialAttack();
         // Don't reset if player is moving in the same direction 
@@ -187,25 +189,32 @@ void UserInputHandler::OnKeyPressed(
     }
 }
 
+static inline void Decrease(int& value) noexcept {
+    if(value > 0) value--;
+    else if(value < 0) value++;
+}
+
+static inline bool HasSameSigh(int lhs, int rhs) noexcept {
+    return (lhs >= 0 && rhs >= 0) || (lhs < 0 && rhs < 0);
+}
+
 void UserInputHandler::OnKeyRelease(
     WinKeyCode keyCode, 
     cocos2d::Event* event
 ) {
     const auto lastInputCopy { m_lastInput };
-    const Input released { Input::Create(keyCode) };
-
+    const auto released { Input::Create(keyCode) };
     const bool dashed { m_player->m_currentState == Player::State::DASH };
 
-    // TODO: release up and left/right is ongoing!
-    if (released.dx && released.dx == m_lastInput.dx) {
+    if (released.dx && HasSameSigh(released.dx, m_lastInput.dx)) {
+        Decrease(m_lastInput.dx);
         // reset only dx!
         if (dashed) {
             m_player->m_dash->ResetSavedBodyState();
         }
-        else {
+        else if(!m_lastInput.dx) {
             m_player->m_movement->ResetForceX();
         }
-        m_lastInput.dx = 0;
     }
 
     if (released.meleeAttack) {
