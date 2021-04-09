@@ -145,8 +145,14 @@ void UserInputHandler::OnKeyPressed(
 
     if (m_lastInput.dx == 1 && canBeControlled) {
         // reset only dx!
-        m_player->m_movement->ResetForceX();
         m_player->FinishSpecialAttack();
+        // Don't reset if player is moving in the same direction 
+        const auto xVel = m_player->getPhysicsBody()->getVelocity().x;
+        if(xVel < 0.f) {
+            // Player is moving in other direction
+            m_player->m_movement->ResetForceX();
+        }
+        // no need to reset the forceX!
         m_player->MoveAlong(1.f, 0.f);
         if (m_player->IsLookingLeft()) {
             m_player->Turn();
@@ -154,8 +160,13 @@ void UserInputHandler::OnKeyPressed(
     }
     else if (m_lastInput.dx == -1 && canBeControlled) {
         // reset only dx!
-        m_player->m_movement->ResetForceX();
         m_player->FinishSpecialAttack();
+        // Don't reset if player is moving in the same direction 
+        const auto xVel = m_player->getPhysicsBody()->getVelocity().x;
+        if(xVel > 0.f) {
+            // Player is moving in other direction
+            m_player->m_movement->ResetForceX();
+        }
         m_player->MoveAlong(-1.f, 0.f);
         if (!m_player->IsLookingLeft()) {
             m_player->Turn();
