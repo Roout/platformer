@@ -1,6 +1,8 @@
 #ifndef UNIQUE_UTILS_HPP
 #define UNIQUE_UTILS_HPP
 
+#include <cstddef>
+
 namespace Utils {
     /**
      * Work with enumerations: 
@@ -31,12 +33,12 @@ namespace Utils {
 	}
 
     /**
-     * Generate numbers in range (0, 2^64].
+     * Generate numbers in range (0, std::numeric_limits<size_t>::max()].
      * Overflow is possible. (no check performed)
      */
     class LinearGenerator final {
     public:
-        LinearGenerator(size_t value = 0U) : 
+        LinearGenerator(size_t value = 0ULL) : 
             m_value { value } {}
 
         size_t Next() const noexcept {
@@ -44,7 +46,7 @@ namespace Utils {
         }
 
     private:
-        mutable size_t m_value { 0 };
+        mutable size_t m_value { 0ULL };
     };
 }
 
