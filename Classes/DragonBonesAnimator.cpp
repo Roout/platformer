@@ -32,9 +32,9 @@ namespace dragonBones {
     void Animator::update(float [[maybe_unused]] dt) {
         if(m_lastAnimationState && 
             m_lastAnimationState->isCompleted() &&
-            m_completionHandler.has_value()
+            m_completionHandler
         ) {
-            (*m_completionHandler)();
+            m_completionHandler();
         }
     }
 
@@ -79,7 +79,7 @@ namespace dragonBones {
     }
 
     void Animator::EndWith(std::function<void()>&& handler) {
-        m_completionHandler.emplace(std::move(handler));
+        m_completionHandler = std::move(handler);
     }
 
     void Animator::InitializeAnimations(std::initializer_list<std::pair<std::size_t, std::string>> animations) {

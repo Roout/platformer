@@ -3,7 +3,6 @@
 
 #include <unordered_map>
 #include <string>
-#include <optional>
 #include <initializer_list>
 #include <functional>
 #include <limits>
@@ -67,7 +66,7 @@ namespace dragonBones {
         CCArmatureDisplay *m_armatureDisplay { nullptr };
         AnimationState *m_lastAnimationState { nullptr };
         std::size_t m_lastAnimationId { NONE };
-        std::optional<std::function<void()>> m_completionHandler {};
+        std::function<void()> m_completionHandler {};
 
         std::string m_armatureName;
         std::string m_prefix;
