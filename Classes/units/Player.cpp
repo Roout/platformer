@@ -268,8 +268,6 @@ void Player::UpdateState(const float dt) noexcept {
         this->OnSpecialAttackEnd();
         assert(!m_finishSpecialAttack && "Isn't consumed");
     }
-    
-    const auto isOnGround = this->IsOnGround();
 
     if(!player.intersectsRect(boundary)) { 
         // out of level boundaries
@@ -322,7 +320,7 @@ void Player::UpdateState(const float dt) noexcept {
         // - [x] player moved
         // - [x] release button 
     }
-    else if(!isOnGround) {
+    else if(!this->IsOnGround()) {
         m_currentState = State::JUMP;
     } 
     else if(helper::IsEqual(velocity.x, 0.f, EPS)) {
