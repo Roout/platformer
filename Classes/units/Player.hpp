@@ -11,6 +11,7 @@ class Dash;
 class Player final : public Unit {
 public:
     static constexpr float MAX_SPEED { 200.f }; 
+    static constexpr float DASH_COOLDOWN { 0.7f };
     static constexpr float DASH_SPEED { 600.f }; 
     static constexpr float DAMAGE_ON_CONTACT { 7.f }; 
 
