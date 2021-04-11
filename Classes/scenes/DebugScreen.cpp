@@ -1,9 +1,11 @@
 #include "DebugScreen.hpp"
-
 #include "ui/CocosGUI.h"
 
 #include "../units/Player.hpp"
 #include "../Core.hpp"
+#include "../Settings.hpp"
+
+#include <array>
 
 namespace screen {
 
@@ -21,8 +23,9 @@ DebugScreen* DebugScreen::create() {
 
 bool DebugScreen::init() {
     namespace ui = cocos2d::ui;
+    using Debug = settings::DebugMode;
 
-    if(!cocos2d::Node::init()) {
+    if (!cocos2d::Node::init()) {
         return false;
     }
     this->setName(NAME);
@@ -30,79 +33,61 @@ bool DebugScreen::init() {
     auto scene = cocos2d::Director::getInstance()->getRunningScene();
     auto map = scene->getChildByName("Level")->getChildByName("Map");
     auto world = scene->getPhysicsWorld();
-    if(!world) {
-        return false;
+    if (!world) return false;
+
+    using OptionKind = Debug::OptionKind;
+
+    std::array<cocos2d::Label*, Utils::EnumSize<OptionKind>()> captions {
+        cocos2d::Label::createWithTTF("Physics debug ", "fonts/arial.ttf", 25)
+        , cocos2d::Label::createWithTTF("Be invincible ", "fonts/arial.ttf", 25)
+        , cocos2d::Label::createWithTTF("Show state    ", "fonts/arial.ttf", 25)
+    };
+    std::array<ui::CheckBox*, Utils::EnumSize<OptionKind>()> checkboxes { nullptr };
+
+    for(auto caption: captions) {
+        caption->setTextColor(cocos2d::Color4B::WHITE);
+        caption->setAnchorPoint(cocos2d::Vec2::ANCHOR_MIDDLE);
     }
 
-    m_physicsWorldMask = world->getDebugDrawMask();
-    m_isInvincible = map->getChildByName<Player*>(core::EntityNames::PLAYER)->IsInvincible();
-
-    auto physicsCaption = cocos2d::Label::createWithTTF("Physics debug ", "fonts/arial.ttf", 25);
-    auto godModeCaption = cocos2d::Label::createWithTTF("Be invincible ", "fonts/arial.ttf", 25);
-
-    physicsCaption->setTextColor(cocos2d::Color4B::WHITE);
-    godModeCaption->setTextColor(cocos2d::Color4B::WHITE);
-
-    auto physicsCheckbox = ui::CheckBox::create(
-        "cocosui/check_box_normal.png"
-        ,"cocosui/check_box_normal_press.png"
-        ,"cocosui/check_box_active.png"
-        ,"cocosui/check_box_normal_disable.png"
-        ,"cocosui/check_box_active_disable.png"
-    );
-    auto godModeCheckbox = ui::CheckBox::create(
-        "cocosui/check_box_normal.png"
-        ,"cocosui/check_box_normal_press.png"
-        ,"cocosui/check_box_active.png"
-        ,"cocosui/check_box_normal_disable.png"
-        ,"cocosui/check_box_active_disable.png"
-    );
-
-    if (m_physicsWorldMask == cocos2d::PhysicsWorld::DEBUGDRAW_ALL) {
-        physicsCheckbox->setSelected(true);
-    }
-    if (m_isInvincible) {
-        godModeCheckbox->setSelected(true);
+    for(auto& checkbox: checkboxes) {
+        checkbox = ui::CheckBox::create(
+            "cocosui/check_box_normal.png"
+            ,"cocosui/check_box_normal_press.png"
+            ,"cocosui/check_box_active.png"
+            ,"cocosui/check_box_normal_disable.png"
+            ,"cocosui/check_box_active_disable.png"
+        );
+        checkbox->setAnchorPoint({0.f, 0.5f});
     }
 
-    physicsCheckbox->addTouchEventListener([this](cocos2d::Ref* sender, ui::Widget::TouchEventType type) {
-        switch (type) {
-            case ui::Widget::TouchEventType::BEGAN: break;
-            case ui::Widget::TouchEventType::ENDED: {
-                auto scene = cocos2d::Director::getInstance()->getRunningScene();
-                auto world = scene->getPhysicsWorld();
-                if(world) {
-                    this->SwitchPhysicsDebugMode();
-                }
-            } break;
-            default: break;
-        }
-    });
-    godModeCheckbox->addTouchEventListener([this](cocos2d::Ref* sender, ui::Widget::TouchEventType type) {
-        switch (type) {
-            case ui::Widget::TouchEventType::BEGAN: break;
-            case ui::Widget::TouchEventType::ENDED: {
-                auto scene = cocos2d::Director::getInstance()->getRunningScene();
-                // push custom event about invicibility
-                /// TODO: port to some manage system or config 
-                /// to be able to change the name of event at one place
-                cocos2d::EventCustom event("INVINCIBLE");
-                m_isInvincible = m_isInvincible? false: true;
-                auto level = scene->getChildByName("Level");
-                this->getEventDispatcher()->resumeEventListenersForTarget(level, true);
-                level->getEventDispatcher()->dispatchEvent(&event);
-                this->getEventDispatcher()->pauseEventListenersForTarget(level, true);
-            } break;
-            default: break;
-        }
-    });
+    for (size_t i = 0; i < Utils::EnumSize<OptionKind>(); i++) {
+        const auto kind = Utils::EnumCast<Debug::OptionKind>(i);
+        const auto isEnabled = Debug::GetInstance().IsEnabled(kind);
+        checkboxes[i]->setSelected(isEnabled);
+    }
 
-    physicsCaption->setAnchorPoint(cocos2d::Vec2::ANCHOR_MIDDLE);
-    godModeCaption->setAnchorPoint(cocos2d::Vec2::ANCHOR_MIDDLE);
-    physicsCheckbox->setAnchorPoint({0.f, 0.5f});
-    godModeCheckbox->setAnchorPoint({0.f, 0.5f});
+    for (size_t i = 0; i < Utils::EnumSize<OptionKind>(); i++) {
+        const auto kind = Utils::EnumCast<Debug::OptionKind>(i);
+        auto listener = [this, kind](cocos2d::Ref* sender, ui::Widget::TouchEventType type) {
+            switch (type) {
+                case ui::Widget::TouchEventType::BEGAN: break;
+                case ui::Widget::TouchEventType::ENDED: {
+                    Debug::GetInstance().Toggle(kind);
+                    if (kind == Debug::OptionKind::kPhysics) {
+                        auto scene = cocos2d::Director::getInstance()->getRunningScene();
+                        if (auto world = scene->getPhysicsWorld(); world != nullptr) {
+                            this->SwitchPhysicsDebugMode();
+                        }
+                    }
+                } break;
+                default: break;
+            }
+        };
+        checkboxes[i]->addTouchEventListener(listener);
+    }
     
     const auto visibleSize = cocos2d::Director::getInstance()->getVisibleSize();
+    // const auto origin = cocos2d::Director::getInstance()->getOrigin();
 
     auto background = cocos2d::DrawNode::create();
     background->setAnchorPoint(cocos2d::Vec2::ANCHOR_MIDDLE);
@@ -114,18 +99,39 @@ bool DebugScreen::init() {
     this->addChild(background);
 
     auto shiftY { rightTop.y * 0.8f } ;
-    physicsCaption->setPosition({ -physicsCheckbox->getContentSize().width / 2.f, shiftY } );
-    auto shiftX = physicsCaption->getPositionX() + physicsCaption->getContentSize().width / 2.f + 10.f;
-    physicsCheckbox->setPosition({shiftX, shiftY});
+    captions[Utils::EnumCast(OptionKind::kPhysics)]->setPosition(
+        -checkboxes[Utils::EnumCast(OptionKind::kPhysics)]->getContentSize().width / 2.f
+        , shiftY 
+    );
+    auto shiftX = captions[Utils::EnumCast(OptionKind::kPhysics)]->getPositionX() 
+                + captions[Utils::EnumCast(OptionKind::kPhysics)]->getContentSize().width / 2.f + 10.f;
+    checkboxes[Utils::EnumCast(OptionKind::kPhysics)]->setPosition({shiftX, shiftY});
 
-    godModeCaption->setPosition({ physicsCaption->getPositionX(), shiftY - godModeCaption->getContentSize().height } );
-    godModeCheckbox->setPosition({ physicsCheckbox->getPositionX(), godModeCaption->getPositionY() });
+    captions[Utils::EnumCast(OptionKind::kInvicible)]->setPosition(
+        captions[Utils::EnumCast(OptionKind::kPhysics)]->getPositionX()
+        , shiftY - captions[Utils::EnumCast(OptionKind::kInvicible)]->getContentSize().height
+    );
+    checkboxes[Utils::EnumCast(OptionKind::kInvicible)]->setPosition({ 
+        checkboxes[Utils::EnumCast(OptionKind::kPhysics)]->getPositionX()
+        , captions[Utils::EnumCast(OptionKind::kInvicible)]->getPositionY() 
+    });
 
-    background->addChild(physicsCaption);
-    background->addChild(physicsCheckbox);
-    background->addChild(godModeCaption);
-    background->addChild(godModeCheckbox);
+    captions[Utils::EnumCast(OptionKind::kState)]->setPosition(
+        captions[Utils::EnumCast(OptionKind::kInvicible)]->getPositionX()
+        , captions[Utils::EnumCast(OptionKind::kInvicible)]->getPositionY() 
+        - captions[Utils::EnumCast(OptionKind::kState)]->getContentSize().height 
+    );
+    checkboxes[Utils::EnumCast(OptionKind::kState)]->setPosition({
+        checkboxes[Utils::EnumCast(OptionKind::kInvicible)]->getPositionX()
+        , captions[Utils::EnumCast(OptionKind::kState)]->getPositionY()
+    });
 
+    for(auto caption: captions) {
+        background->addChild(caption);
+    }
+    for(auto checkbox: checkboxes) {
+        background->addChild(checkbox);
+    }
     return true;
 };
 
@@ -153,16 +159,16 @@ void DebugScreen::onExit() {
  *  static const int DEBUGDRAW_ALL;         ///< draw all
  */
 void DebugScreen::SwitchPhysicsDebugMode() noexcept {
-    if(m_physicsWorldMask == cocos2d::PhysicsWorld::DEBUGDRAW_ALL) {
-        m_physicsWorldMask = cocos2d::PhysicsWorld::DEBUGDRAW_NONE;
-    }
-    else {
-        m_physicsWorldMask = cocos2d::PhysicsWorld::DEBUGDRAW_ALL;
+    using Debug = settings::DebugMode;
+
+    auto mask = cocos2d::PhysicsWorld::DEBUGDRAW_NONE;
+    if (Debug::GetInstance().IsEnabled(Debug::OptionKind::kPhysics)) {
+        mask = cocos2d::PhysicsWorld::DEBUGDRAW_ALL;
     }
     auto scene = cocos2d::Director::getInstance()->getRunningScene();
     auto world = scene->getPhysicsWorld();
-    if(world) {
-        world->setDebugDrawMask(m_physicsWorldMask);
+    if (world) {
+        world->setDebugDrawMask(mask);
     }
 }
 

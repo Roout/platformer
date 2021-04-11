@@ -8,6 +8,7 @@
 #include "../DragonBonesAnimator.hpp"
 #include "../Core.hpp"
 #include "../Movement.hpp"
+#include "../Settings.hpp"
 
 #include <memory>
 #include <limits>
@@ -89,7 +90,7 @@ bool Bot::NeedAttack() const noexcept {
 
 void Bot::TryAttack() {
     const auto target = this->getParent()->getChildByName(core::EntityNames::PLAYER);
-    if( target && this->NeedAttack() ) { // attack if possible
+    if (target && this->NeedAttack()) { // attack if possible
         this->LookAt(target->getPosition());
         this->MoveAlong(0.f, 0.f);
         this->Attack();
@@ -97,8 +98,15 @@ void Bot::TryAttack() {
 }
 
 void Bot::UpdateDebugLabel() noexcept {
-    auto state = this->getChildByName<cocos2d::Label*>("state");
-    state->setString(GetStateName(m_currentState));
+    using Debug = settings::DebugMode;
+    const auto state = this->getChildByName<cocos2d::Label*>("state");
+    bool isEnabled = Debug::GetInstance().IsEnabled(Debug::OptionKind::kState);
+    if (state && isEnabled) {
+        state->setString(GetStateName(m_currentState));
+    }
+    else if (state && !isEnabled) {
+        state->setString("");
+    }
 }
 
 void Bot::AttachInfluenceArea(const cocos2d::Rect& area) {

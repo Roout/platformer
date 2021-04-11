@@ -10,6 +10,7 @@
 #include "../DragonBonesAnimator.hpp"
 #include "../Movement.hpp"
 #include "../Dash.hpp"
+#include "../Settings.hpp"
 
 #include "../scenes/DeathScreen.hpp"
 
@@ -49,18 +50,12 @@ bool Player::init() {
     m_dash = Dash::create(DASH_COOLDOWN, MAX_SPEED, DASH_SPEED);
     this->addComponent(m_dash);
     // =====
-
-    // handle INVINCIBLE event
-    auto listener = cocos2d::EventListenerCustom::create("INVINCIBLE", [this](cocos2d::EventCustom *) {
-        this->m_isInvincible = m_isInvincible? false : true;
-    });
-    const auto dispatcher = this->getEventDispatcher();
-    dispatcher->addEventListenerWithSceneGraphPriority(listener, this);
     return true;
 }
 
 void Player::RecieveDamage(int damage) noexcept {
-    if(!m_isInvincible) {
+    using Debug = settings::DebugMode;
+    if (!Debug::GetInstance().IsEnabled(Debug::OptionKind::kInvicible)) {
         Unit::RecieveDamage(damage);
     }
 }
@@ -198,8 +193,15 @@ void Player::update(float dt) {
 }
 
 void Player::UpdateDebugLabel() noexcept {
+    using Debug = settings::DebugMode;
     const auto state = this->getChildByName<cocos2d::Label*>("state");
-    state->setString(this->GetStateName(m_currentState));
+    bool isEnabled = Debug::GetInstance().IsEnabled(Debug::OptionKind::kState);
+    if (state && isEnabled) {
+        state->setString(this->GetStateName(m_currentState));
+    }
+    else if (state && !isEnabled) {
+        state->setString("");
+    }
 }
 
 void Player::UpdateAnimation() {
@@ -239,10 +241,6 @@ void Player::OnDeath() {
         this->runAction(cocos2d::RemoveSelf::create(true));
     });
 };
-
-bool Player::IsInvincible() const noexcept {
-    return m_isInvincible;
-}
 
 void Player::UpdateState(const float dt) noexcept {
     m_previousState = m_currentState;

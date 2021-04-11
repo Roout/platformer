@@ -15,6 +15,7 @@
 #include "../Platform.hpp"
 #include "../Props.hpp"
 #include "../Traps.hpp"
+#include "../Settings.hpp"
 
 #include "../PhysicsHelper.hpp"
 #include "../UserInputHandler.hpp"
@@ -40,7 +41,12 @@ cocos2d::Scene* LevelScene::createRootScene(int id) {
 #ifndef COCOS2D_DEBUG
     world->setFixedUpdateRate(60);
 #endif 
-    world->setDebugDrawMask(cocos2d::PhysicsWorld::DEBUGDRAW_NONE);
+    using Debug = settings::DebugMode;
+    const auto isEnabled = Debug::GetInstance().IsEnabled(Debug::OptionKind::kPhysics);
+    world->setDebugDrawMask(isEnabled? 
+        cocos2d::PhysicsWorld::DEBUGDRAW_ALL : 
+        cocos2d::PhysicsWorld::DEBUGDRAW_NONE
+    );
 
     const auto uInterface = Interface::create();
     const auto level = LevelScene::create(id);
