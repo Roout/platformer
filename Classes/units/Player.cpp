@@ -193,8 +193,15 @@ void Player::update(float dt) {
 }
 
 void Player::UpdateDebugLabel() noexcept {
+    using Debug = settings::DebugMode;
     const auto state = this->getChildByName<cocos2d::Label*>("state");
-    state->setString(this->GetStateName(m_currentState));
+    bool isEnabled = Debug::GetInstance().IsEnabled(Debug::OptionKind::kState);
+    if (state && isEnabled) {
+        state->setString(this->GetStateName(m_currentState));
+    }
+    else if (state && !isEnabled) {
+        state->setString("");
+    }
 }
 
 void Player::UpdateAnimation() {

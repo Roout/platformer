@@ -50,11 +50,10 @@ bool Unit::init() {
     this->addChild(bar);
 
     // add state lable:
-    const auto state = cocos2d::Label::createWithTTF("state", "fonts/arial.ttf", 15);
+    const auto state = cocos2d::Label::createWithTTF("", "fonts/arial.ttf", 15);
     state->setName("state");
     state->setPosition(0.f, bar->getPositionY() + bar->getContentSize().height + 8.f);
-    this->addChild(state);
-    
+    this->addChild(state);    
     return true;
 }
 
