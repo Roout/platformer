@@ -5,6 +5,8 @@
 #include "../units/Player.hpp"
 #include "../Core.hpp"
 
+#include <array>
+
 namespace screen {
 
 DebugScreen* DebugScreen::create() {
@@ -22,7 +24,7 @@ DebugScreen* DebugScreen::create() {
 bool DebugScreen::init() {
     namespace ui = cocos2d::ui;
 
-    if(!cocos2d::Node::init()) {
+    if (!cocos2d::Node::init()) {
         return false;
     }
     this->setName(NAME);
@@ -30,42 +32,47 @@ bool DebugScreen::init() {
     auto scene = cocos2d::Director::getInstance()->getRunningScene();
     auto map = scene->getChildByName("Level")->getChildByName("Map");
     auto world = scene->getPhysicsWorld();
-    if(!world) {
-        return false;
-    }
+    if (!world) return false;
 
     m_physicsWorldMask = world->getDebugDrawMask();
     m_isInvincible = map->getChildByName<Player*>(core::EntityNames::PLAYER)->IsInvincible();
+    // m_displayState
 
-    auto physicsCaption = cocos2d::Label::createWithTTF("Physics debug ", "fonts/arial.ttf", 25);
-    auto godModeCaption = cocos2d::Label::createWithTTF("Be invincible ", "fonts/arial.ttf", 25);
+    enum OptionKind { kPhysics, kInvicible, kState };
 
-    physicsCaption->setTextColor(cocos2d::Color4B::WHITE);
-    godModeCaption->setTextColor(cocos2d::Color4B::WHITE);
+    std::array<cocos2d::Label*, 3U> captions {
+        cocos2d::Label::createWithTTF("Physics debug ", "fonts/arial.ttf", 25)
+        , cocos2d::Label::createWithTTF("Be invincible ", "fonts/arial.ttf", 25)
+        , cocos2d::Label::createWithTTF("Show state    ", "fonts/arial.ttf", 25)
+    };
+    std::array<ui::CheckBox*, 3U> checkboxes { nullptr };
 
-    auto physicsCheckbox = ui::CheckBox::create(
-        "cocosui/check_box_normal.png"
-        ,"cocosui/check_box_normal_press.png"
-        ,"cocosui/check_box_active.png"
-        ,"cocosui/check_box_normal_disable.png"
-        ,"cocosui/check_box_active_disable.png"
-    );
-    auto godModeCheckbox = ui::CheckBox::create(
-        "cocosui/check_box_normal.png"
-        ,"cocosui/check_box_normal_press.png"
-        ,"cocosui/check_box_active.png"
-        ,"cocosui/check_box_normal_disable.png"
-        ,"cocosui/check_box_active_disable.png"
-    );
+    for(auto caption: captions) {
+        caption->setTextColor(cocos2d::Color4B::WHITE);
+        caption->setAnchorPoint(cocos2d::Vec2::ANCHOR_MIDDLE);
+    }
+    for(auto& checkbox: checkboxes) {
+        checkbox = ui::CheckBox::create(
+            "cocosui/check_box_normal.png"
+            ,"cocosui/check_box_normal_press.png"
+            ,"cocosui/check_box_active.png"
+            ,"cocosui/check_box_normal_disable.png"
+            ,"cocosui/check_box_active_disable.png"
+        );
+        checkbox->setAnchorPoint({0.f, 0.5f});
+    }
 
     if (m_physicsWorldMask == cocos2d::PhysicsWorld::DEBUGDRAW_ALL) {
-        physicsCheckbox->setSelected(true);
+        checkboxes[kPhysics]->setSelected(true);
     }
     if (m_isInvincible) {
-        godModeCheckbox->setSelected(true);
+        checkboxes[kInvicible]->setSelected(true);
+    }
+    if (m_displayState) {
+        checkboxes[kState]->setSelected(true);
     }
 
-    physicsCheckbox->addTouchEventListener([this](cocos2d::Ref* sender, ui::Widget::TouchEventType type) {
+    checkboxes[kPhysics]->addTouchEventListener([this](cocos2d::Ref* sender, ui::Widget::TouchEventType type) {
         switch (type) {
             case ui::Widget::TouchEventType::BEGAN: break;
             case ui::Widget::TouchEventType::ENDED: {
@@ -78,7 +85,7 @@ bool DebugScreen::init() {
             default: break;
         }
     });
-    godModeCheckbox->addTouchEventListener([this](cocos2d::Ref* sender, ui::Widget::TouchEventType type) {
+    checkboxes[kInvicible]->addTouchEventListener([this](cocos2d::Ref* sender, ui::Widget::TouchEventType type) {
         switch (type) {
             case ui::Widget::TouchEventType::BEGAN: break;
             case ui::Widget::TouchEventType::ENDED: {
@@ -96,13 +103,19 @@ bool DebugScreen::init() {
             default: break;
         }
     });
-
-    physicsCaption->setAnchorPoint(cocos2d::Vec2::ANCHOR_MIDDLE);
-    godModeCaption->setAnchorPoint(cocos2d::Vec2::ANCHOR_MIDDLE);
-    physicsCheckbox->setAnchorPoint({0.f, 0.5f});
-    godModeCheckbox->setAnchorPoint({0.f, 0.5f});
+    checkboxes[kState]->addTouchEventListener([this](cocos2d::Ref* sender, ui::Widget::TouchEventType type) {
+        switch (type) {
+            case ui::Widget::TouchEventType::BEGAN: break;
+            case ui::Widget::TouchEventType::ENDED: {
+                m_displayState = m_displayState? false: true;
+                // auto scene = cocos2d::Director::getInstance()->getRunningScene();
+            } break;
+            default: break;
+        }
+    });
     
     const auto visibleSize = cocos2d::Director::getInstance()->getVisibleSize();
+    // const auto origin = cocos2d::Director::getInstance()->getOrigin();
 
     auto background = cocos2d::DrawNode::create();
     background->setAnchorPoint(cocos2d::Vec2::ANCHOR_MIDDLE);
@@ -114,18 +127,34 @@ bool DebugScreen::init() {
     this->addChild(background);
 
     auto shiftY { rightTop.y * 0.8f } ;
-    physicsCaption->setPosition({ -physicsCheckbox->getContentSize().width / 2.f, shiftY } );
-    auto shiftX = physicsCaption->getPositionX() + physicsCaption->getContentSize().width / 2.f + 10.f;
-    physicsCheckbox->setPosition({shiftX, shiftY});
+    captions[kPhysics]->setPosition(
+        -checkboxes[kPhysics]->getContentSize().width / 2.f
+        , shiftY 
+    );
+    auto shiftX = captions[kPhysics]->getPositionX() + captions[kPhysics]->getContentSize().width / 2.f + 10.f;
+    checkboxes[kPhysics]->setPosition({shiftX, shiftY});
 
-    godModeCaption->setPosition({ physicsCaption->getPositionX(), shiftY - godModeCaption->getContentSize().height } );
-    godModeCheckbox->setPosition({ physicsCheckbox->getPositionX(), godModeCaption->getPositionY() });
+    captions[kInvicible]->setPosition(
+        captions[kPhysics]->getPositionX()
+        , shiftY - captions[kInvicible]->getContentSize().height
+    );
+    checkboxes[kInvicible]->setPosition({ checkboxes[kPhysics]->getPositionX(), captions[kInvicible]->getPositionY() });
 
-    background->addChild(physicsCaption);
-    background->addChild(physicsCheckbox);
-    background->addChild(godModeCaption);
-    background->addChild(godModeCheckbox);
+    captions[kState]->setPosition(
+        captions[kInvicible]->getPositionX()
+        , captions[kInvicible]->getPositionY() - captions[kState]->getContentSize().height 
+    );
+    checkboxes[kState]->setPosition({
+        checkboxes[kInvicible]->getPositionX()
+        , captions[kState]->getPositionY()
+    });
 
+    for(auto caption: captions) {
+        background->addChild(caption);
+    }
+    for(auto checkbox: checkboxes) {
+        background->addChild(checkbox);
+    }
     return true;
 };
 
