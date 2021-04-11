@@ -122,7 +122,7 @@ void Bow::OnAttack() {
             , core::CategoryBits::PROPS
             , core::CategoryBits::BOUNDARY
             , core::CategoryBits::PLAYER_PROJECTILE
-            , core::CategoryBits::PLATFORM
+            // , core::CategoryBits::PLATFORM
         )
     };
     const auto categoryMask {
@@ -217,7 +217,7 @@ void PlayerFireball::OnAttack() {
             , core::CategoryBits::PROPS
             , core::CategoryBits::BOUNDARY
             , core::CategoryBits::ENEMY_PROJECTILE
-            , core::CategoryBits::PLATFORM
+            // , core::CategoryBits::PLATFORM
         )
     };
     const auto categoryMask {
@@ -298,7 +298,7 @@ void BossFireball::OnAttack() {
             , core::CategoryBits::PROPS
             , core::CategoryBits::BOUNDARY
             , core::CategoryBits::PLAYER_PROJECTILE
-            , core::CategoryBits::PLATFORM
+            // , core::CategoryBits::PLATFORM
         )
     };
     const auto categoryMask {
@@ -428,7 +428,7 @@ void PlayerSpecial::OnAttack() {
             , core::CategoryBits::PROPS
             , core::CategoryBits::BOUNDARY
             , core::CategoryBits::ENEMY_PROJECTILE
-            , core::CategoryBits::PLATFORM
+            // , core::CategoryBits::PLATFORM
         )
     };
     const auto categoryMask {
@@ -483,7 +483,7 @@ void SlimeShot::OnAttack() {
             , core::CategoryBits::PROPS
             , core::CategoryBits::BOUNDARY
             , core::CategoryBits::PLAYER_PROJECTILE
-            , core::CategoryBits::PLATFORM
+            // , core::CategoryBits::PLATFORM
         )
     };
     const auto categoryMask {
@@ -599,8 +599,8 @@ void Stake::OnAttack() {
             core::CategoryBits::HITBOX_SENSOR
             , core::CategoryBits::PROPS
             , core::CategoryBits::BOUNDARY
-            , core::CategoryBits::PLATFORM
             , core::CategoryBits::PLAYER_PROJECTILE
+            // , core::CategoryBits::PLATFORM
         )
     };
     const auto categoryMask {
