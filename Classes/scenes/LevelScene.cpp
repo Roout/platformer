@@ -10,6 +10,7 @@
 #include "../units/BoulderPusher.hpp"
 #include "../units/Spider.hpp"
 #include "../units/Spearman.hpp"
+#include "../units/Wolf.hpp"
 #include "../units/Player.hpp"
 
 #include "../Platform.hpp"
@@ -318,6 +319,14 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                         spearman->setPosition(form.m_rect.origin + cocos2d::Size{ contentSize.width / 2.f, contentSize.height });
                         map->addChild(spearman, zOrder);
                         warriors.emplace(form.m_id, spearman);
+                        pathIdByUnitId.emplace(form.m_id, form.m_pathId);
+                    } break;
+                    case core::EnemyClass::WOLF: {
+                        const auto wolf { Enemies::Wolf::create(form.m_id, contentSize) };
+                        wolf->setName(core::EntityNames::WOLF);
+                        wolf->setPosition(form.m_rect.origin + cocos2d::Size{ contentSize.width / 2.f, contentSize.height });
+                        map->addChild(wolf, zOrder);
+                        warriors.emplace(form.m_id, wolf);
                         pathIdByUnitId.emplace(form.m_id, form.m_pathId);
                     } break;
                     case core::EnemyClass::ARCHER: {

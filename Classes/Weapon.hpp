@@ -194,6 +194,13 @@ public:
     void OnAttack() override;
 };
 
+class Maw final : public Weapon {
+public:
+    using Weapon::Weapon;
+
+    void OnAttack() override;
+};
+
 class PlayerFireball final : public Weapon {
 public:
     using Weapon::Weapon;
