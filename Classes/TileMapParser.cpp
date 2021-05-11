@@ -27,6 +27,7 @@ namespace {
 			, { core::EntityNames::CANNON, core::EnemyClass::CANNON }
 			, { core::EntityNames::BOSS, core::EnemyClass::BOSS }
 			, { core::EntityNames::WOLF, core::EnemyClass::WOLF }
+			, { core::EntityNames::WASP, core::EnemyClass::WASP }
 			, { core::EntityNames::STALACTITE, core::EnemyClass::STALACTITE }
 			, { core::EntityNames::SPEARMAN, core::EnemyClass::SPEARMAN }
 			, { core::EntityNames::SLIME, core::EnemyClass::SLIME }

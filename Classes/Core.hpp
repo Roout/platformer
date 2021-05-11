@@ -35,6 +35,7 @@ namespace core {
         FIRECLOUD,
         SLIME,
         WOLF,
+        WASP,
         CANNON,
         STALACTITE, // same as cannon only attack once and from thhe top to bottom
         BOULDER_PUSHER,
@@ -55,6 +56,7 @@ namespace core {
         const char* const SPIDER        = "spider";
         const char* const SLIME         = "slime";
         const char* const WOLF          = "wolf";
+        const char* const WASP          = "wasp";
         const char* const SPEARMAN      = "spear_man";
         const char* const PLAYER        = "player";
     }

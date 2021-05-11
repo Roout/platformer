@@ -21,6 +21,7 @@ list(APPEND headers
     units/Player.hpp
     units/Bot.hpp
     units/Wolf.hpp
+    units/Wasp.hpp
     units/Warrior.hpp
     units/Slime.hpp
     units/Archer.hpp
@@ -70,6 +71,7 @@ list(APPEND sources
     units/Player.cpp
     units/Bot.cpp
     units/Wolf.cpp
+    units/Wasp.cpp
     units/Warrior.cpp
     units/Slime.cpp
     units/Archer.cpp

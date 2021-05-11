@@ -11,6 +11,7 @@
 #include "../units/Spider.hpp"
 #include "../units/Spearman.hpp"
 #include "../units/Wolf.hpp"
+#include "../units/Wasp.hpp"
 #include "../units/Player.hpp"
 
 #include "../Platform.hpp"
@@ -327,6 +328,14 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                         wolf->setPosition(form.m_rect.origin + cocos2d::Size{ contentSize.width / 2.f, contentSize.height });
                         map->addChild(wolf, zOrder);
                         warriors.emplace(form.m_id, wolf);
+                        pathIdByUnitId.emplace(form.m_id, form.m_pathId);
+                    } break;
+                    case core::EnemyClass::WASP: {
+                        const auto wasp { Enemies::Wasp::create(form.m_id, contentSize) };
+                        wasp->setName(core::EntityNames::WASP);
+                        wasp->setPosition(form.m_rect.origin + cocos2d::Size{ contentSize.width / 2.f, contentSize.height });
+                        map->addChild(wasp, zOrder);
+                        warriors.emplace(form.m_id, wasp);
                         pathIdByUnitId.emplace(form.m_id, form.m_pathId);
                     } break;
                     case core::EnemyClass::ARCHER: {
