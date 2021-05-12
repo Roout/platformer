@@ -103,7 +103,10 @@ bool OnContactBegin(cocos2d::PhysicsContact& contact) {
     if(isUnit[BODY_A] && isUnit[BODY_B]) {
         const auto enemyMask { Utils::CreateMask(core::CategoryBits::ENEMY) };
         const auto playerIndex { (bodyMasks[BODY_A] & enemyMask) ? BODY_B: BODY_A };
-        const auto enemiesCount { (bodyMasks[BODY_A] & enemyMask) + (bodyMasks[BODY_B] & enemyMask) };
+        const auto enemiesCount { 
+            ((bodyMasks[BODY_A] & enemyMask) > 0) 
+            + ((bodyMasks[BODY_B] & enemyMask) > 0) 
+        };
         if (enemiesCount == 1) {
             const auto player { static_cast<Unit*>(nodes[playerIndex]) };
             const auto enemy { static_cast<Enemies::Bot*>(nodes[playerIndex^1]) };
@@ -219,7 +222,10 @@ bool OnContactSeparate(cocos2d::PhysicsContact& contact) {
     if(isUnit[BODY_A] && isUnit[BODY_B]) {
         const auto enemyMask { Utils::CreateMask(core::CategoryBits::ENEMY) };
         const auto playerIndex { (bodyMasks[BODY_A] & enemyMask) > 0 ? BODY_B: BODY_A };
-        const auto enemiesCount { (bodyMasks[BODY_A] & enemyMask) + (bodyMasks[BODY_B] & enemyMask) };
+        const auto enemiesCount { 
+            ((bodyMasks[BODY_A] & enemyMask) > 0) 
+            + ((bodyMasks[BODY_B] & enemyMask) > 0) 
+        };
         if (enemiesCount == 1) {
             const auto player { static_cast<Unit*>(nodes[playerIndex]) };
             const auto enemy { static_cast<Enemies::Bot*>(nodes[playerIndex^1]) };
