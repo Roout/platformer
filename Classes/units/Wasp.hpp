@@ -24,6 +24,8 @@ private:
 
     void OnEnemyLeave() override;
 
+    bool NeedAttack() const noexcept override;
+
     void Attack() override;
 
     void Pursue(Unit * target) noexcept override;

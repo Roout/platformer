@@ -23,7 +23,7 @@ Wasp* Wasp::Wasp::create(size_t id, const cocos2d::Size& contentSize) {
 }
 
 bool Wasp::init() {
-    if (!Warrior::init() ) {
+    if (!Warrior::init()) {
         return false; 
     }
     m_movement->SetMaxSpeed(35.f);
@@ -33,6 +33,8 @@ bool Wasp::init() {
 Wasp::Wasp(size_t id, const char * name, const cocos2d::Size& contentSize)
     : Warrior{ id, name, contentSize }
 {
+    m_physicsBodySize = m_contentSize * 0.8f;
+    m_hitBoxSize = cocos2d::Size { m_contentSize.width * 0.75f, m_contentSize.height };
 }
 
 void Wasp::AddWeapons() {
@@ -54,21 +56,21 @@ void Wasp::Attack() {
     if(m_weapons[WeaponClass::MELEE]->IsReady() && !this->IsDead()) {
         auto projectilePosition = [this]() -> cocos2d::Rect {
             const auto attackRange { m_weapons[WeaponClass::MELEE]->GetRange() };
-            const cocos2d::Size spearSize { attackRange, attackRange / 4.f };
+            const cocos2d::Size stingSize { attackRange, attackRange / 4.f };
 
             auto position = this->getPosition();
             if (this->IsLookingLeft()) {
-                position.x -= m_contentSize.width / 2.f + spearSize.width;
+                position.x -= m_contentSize.width / 2.f + stingSize.width;
             }
             else {
                 position.x += m_contentSize.width / 2.f;
             }
-            position.y += m_contentSize.height / 3.f - spearSize.height / 2.f;
+            position.y += m_contentSize.height / 8.f;
 
-            return { position, spearSize };
+            return { position, stingSize };
         };
-        auto pushProjectile = [this](cocos2d::PhysicsBody* body){
-            body->setVelocity(this->getPhysicsBody()->getVelocity());
+        auto pushProjectile = [](cocos2d::PhysicsBody* body) {
+            // body->setVelocity(this->getPhysicsBody()->getVelocity());
         };
         m_weapons[WeaponClass::MELEE]->LaunchAttack(
             std::move(projectilePosition), 
@@ -79,59 +81,49 @@ void Wasp::Attack() {
 
 void Wasp::Pursue(Unit * target) noexcept {
     if (!this->IsDead() && target && !target->IsDead()) {
-        // min distance required for the attack
-        const auto minAttackDistance { floorf(
-            target->GetHitBox().width / 2.f // shift to bottom left\right corner
-            + m_weapons[WeaponClass::MELEE]->GetRange() * 0.75f   // shift by weapon length (not 1.0f to be able to reach the target by attack!)
-            + m_contentSize.width / 2.f     // shift by size where the weapon's attack will be created
-        )};
-        // possible destinations (bottom middle of this unit)
-        const float xTargets[2] = { 
-            target->getPositionX() + minAttackDistance,
-            target->getPositionX() - minAttackDistance,
-        };
-
-        const auto deltaHeight = target->GetHitBox().height - m_hitBoxSize.height;
-        CCASSERT(deltaHeight >= 0.f, "Height mismatch");
-
-        const float yTargets[2] = { 
-            // max Y
-            target->getPositionY() + floorf(deltaHeight * 0.75f) /* delta hitbox sizes along Y (of both units) */,
-            // min Y
-            target->getPositionY() - floorf(m_hitBoxSize.height * 0.75f) /* { my hitbox Y size } * 0.75 */,
-        };
-        // choose the closest target in our influence field!
-        const cocos2d::Vec2 targets[4] = {
-            cocos2d::Vec2 { xTargets[0], yTargets[0] }
-            , { xTargets[0], yTargets[1] }
-            , { xTargets[1], yTargets[0] }
-            , { xTargets[1], yTargets[1] }
-        };
-        float distanceSquared[4]; 
-        {
-            size_t targetIndex = 0;
-            for (auto&d: distanceSquared) {
-                d = (targets[targetIndex++] - this->getPosition()).lengthSquared();
-            }
-        }
-
-        // find the closest point from the ones where unit won't fall down
-        int choosenIndex { -1 };
-        auto distance { distanceSquared[0] };
-        for(int i = 0; i < 4; i++) {
-            if(m_influence->Contains(targets[i]) && distanceSquared[i] <= distance) {
-                choosenIndex = i;
-                distance = distanceSquared[i];
-            }
-        }
-        auto destination = this->getPosition();
-        if(choosenIndex != -1) { // every target lead to falling down or other shit
-            destination = targets[choosenIndex]; // target->getPosition(); 
-        }
-        // move to target along X-axis;
-        // Pass own Y-axis coordinate to not move along Y-axis
-        m_navigator->VisitCustomPoint(destination);
+        m_navigator->VisitCustomPoint(
+            target->getPosition() + cocos2d::Vec2{0.f, target->GetHitBox().height / 2.f}
+        );
     }
+}
+
+bool Wasp::NeedAttack() const noexcept {
+    constexpr auto MELEE { 0U };
+    bool attackIsReady {
+        !this->IsDead() && 
+        m_detectEnemy && 
+        m_weapons[MELEE]->IsReady()
+    };
+    bool enemyIsClose = false;
+    if (attackIsReady) {
+        const auto target = this->getParent()->getChildByName<const Unit*>(core::EntityNames::PLAYER);
+        // use some simple algorithm to determine whether a player is close enough to the target
+        // to perform an attack
+        if(target && !target->IsDead()) {
+            // TODO: this is code replication!!!! (see above Wasp::Attack())
+            // calc position of the stinger:
+            const auto attackRange { m_weapons[WeaponClass::MELEE]->GetRange() };
+            const cocos2d::Size stingSize { attackRange, attackRange / 4.4f };
+            auto position = this->getPosition();
+            if (this->IsLookingLeft()) {
+                position.x -= m_contentSize.width / 2.f + stingSize.width;
+            }
+            else {
+                position.x += m_contentSize.width / 2.f;
+            }
+            position.y += m_contentSize.height / 8.f;
+
+            const auto radius = m_weapons[MELEE]->GetRange() * 0.75f;
+            const auto targetHitbox = target->GetHitBox();
+            const cocos2d::Rect lhs { 
+                target->getPosition() - cocos2d::Vec2{ targetHitbox.width / 2.f, 0.f },
+                targetHitbox
+            };
+            const cocos2d::Rect rhs { position, stingSize };
+            enemyIsClose = lhs.intersectsRect(rhs);
+        }
+    }
+    return attackIsReady && enemyIsClose;
 }
 
 void Wasp::AttachNavigator(Path&& path) {
