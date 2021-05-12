@@ -21,7 +21,7 @@ public:
 
 /// Unique to warrior
 
-    void AttachNavigator(Path&& path);
+    virtual void AttachNavigator(Path&& path);
     
 /// Bot interface
 
@@ -30,20 +30,22 @@ public:
     void OnEnemyLeave() override;
 
 protected:
+
     enum WeaponClass { MELEE };
 
     Warrior(size_t id, const char* dragonBonesName, const cocos2d::Size& contentSize);
 
     void AddWeapons() override;
 
-private:
-
 /// Unique to warrior
 
-    void Pursue(Unit * target) noexcept;
+    virtual void Pursue(Unit * target) noexcept;
 
-    void Patrol() noexcept;
+    virtual void Patrol() noexcept;
+    
+    void AddPhysicsBody() override;
 
+private:
 /// Bot interface
    
     void UpdateState(const float dt) noexcept override;
@@ -53,13 +55,11 @@ private:
     void UpdateAnimation() override;
 
     void OnDeath() override;
-    
-    void AddPhysicsBody() override;
 
     void AddAnimator() override;
 
 /// Properties
-private:
+protected:
     std::unique_ptr<Navigator> m_navigator { nullptr };
 };
 

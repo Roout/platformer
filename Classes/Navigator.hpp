@@ -21,6 +21,8 @@ public:
 
     void FollowPath();
 
+    void SetPrecision(float precision) noexcept;
+
     /// helper methods
 private:
    
@@ -43,6 +45,7 @@ private:
     /// internal data
     size_t                  m_choosenWaypointIndex { 0 };
     bool                    m_isFollowingPath { true };
+    float                   m_checkPrecision { 4.f };
 
     static constexpr size_t failure { std::numeric_limits<size_t>::max() };
 };

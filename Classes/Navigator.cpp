@@ -16,8 +16,8 @@ Navigator::Navigator(Enemies::Bot * owner, Path&& path) :
 
 void Navigator::Update(float dt) {
     auto target { m_customTarget };
-    if(m_isFollowingPath) {
-        if(const auto [reachedX, reachedY] = this->ReachedDestination(); reachedX && reachedY ) {
+    if (m_isFollowingPath) {
+        if (const auto [reachedX, reachedY] = this->ReachedDestination(); reachedX && reachedY) {
             m_choosenWaypointIndex = this->FindDestination(m_choosenWaypointIndex);
             m_owner->MoveAlong(0.f, 0.f);
         }
@@ -36,7 +36,7 @@ void Navigator::FollowPath() {
 }
 
 void Navigator::MoveTo(const cocos2d::Vec2& destination) {
-    if(m_owner && !m_owner->IsDead()) {
+    if (m_owner && !m_owner->IsDead()) {
         auto AsDirection = [](float x) {
             return x > 0.f? 1.f: -1.f;
         };
@@ -46,7 +46,7 @@ void Navigator::MoveTo(const cocos2d::Vec2& destination) {
             reachedX? 0.f: AsDirection(vec.x), 
             reachedY? 0.f: AsDirection(vec.y)
         };
-        if(dir.x != 0.f || dir.y != 0.f) { // ignore when the command is to stop (0.f, 0.f)
+        if (dir.x != 0.f) { // ignore when the command is to stop (0.f, 0.f)
             m_owner->LookAt(destination);
         }
         m_owner->MoveAlong(dir);
@@ -60,14 +60,14 @@ size_t Navigator::FindDestination(size_t from) {
 }
 
 std::pair<bool, bool> Navigator::ReachedDestination() const noexcept {
-    cocos2d::Vec2 destination = m_customTarget;
-    if(m_isFollowingPath) {
-        destination = m_path.m_waypoints[m_choosenWaypointIndex];
-    }
-    constexpr auto checkPrecision { 4.f };
-    const auto reachedX = fabs(destination.x - m_owner->getPosition().x) <= checkPrecision;
-    const auto reachedY = fabs(destination.y - m_owner->getPosition().y) <= checkPrecision;
+    cocos2d::Vec2 destination = m_isFollowingPath? m_path.m_waypoints[m_choosenWaypointIndex]: m_customTarget;
+    const auto reachedX = fabs(destination.x - m_owner->getPosition().x) <= m_checkPrecision;
+    const auto reachedY = fabs(destination.y - m_owner->getPosition().y) <= m_checkPrecision;
     return { reachedX, reachedY };
+}
+
+void Navigator::SetPrecision(float precision) noexcept {
+    m_checkPrecision = precision;
 }
 
 size_t Navigator::FindClosestPathPoint(const cocos2d::Vec2& position) const {
