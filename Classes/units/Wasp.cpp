@@ -33,13 +33,13 @@ bool Wasp::init() {
 Wasp::Wasp(size_t id, const char * name, const cocos2d::Size& contentSize)
     : Warrior{ id, name, contentSize }
 {
-    m_physicsBodySize = m_contentSize * 0.8f;
-    m_hitBoxSize = cocos2d::Size { m_contentSize.width * 0.75f, m_contentSize.height };
+    m_physicsBodySize = cocos2d::Size { m_contentSize.width * 0.5f,  m_contentSize.height * 0.8f};
+    m_hitBoxSize = cocos2d::Size { m_contentSize.width * 0.6f, m_contentSize.height * 0.9f };
 }
 
 void Wasp::AddWeapons() {
     const auto damage { 10.f };
-    const auto range { 20.f };
+    const auto range { 15.f };
     const auto attackDuration { 0.2f };
     const auto preparationTime { m_animator->GetDuration(Utils::EnumCast(State::ATTACK)) - attackDuration };
     const auto reloadTime { 0.6f };
@@ -60,12 +60,12 @@ void Wasp::Attack() {
 
             auto position = this->getPosition();
             if (this->IsLookingLeft()) {
-                position.x -= m_contentSize.width / 2.f + stingSize.width;
+                position.x -= m_hitBoxSize.width / 2.f + stingSize.width;
             }
             else {
-                position.x += m_contentSize.width / 2.f;
+                position.x += m_hitBoxSize.width / 2.f;
             }
-            position.y += m_contentSize.height / 8.f;
+            position.y += m_hitBoxSize.height / 8.f;
 
             return { position, stingSize };
         };
@@ -106,12 +106,12 @@ bool Wasp::NeedAttack() const noexcept {
             const cocos2d::Size stingSize { attackRange, attackRange / 4.4f };
             auto position = this->getPosition();
             if (this->IsLookingLeft()) {
-                position.x -= m_contentSize.width / 2.f + stingSize.width;
+                position.x -= m_hitBoxSize.width / 2.f + stingSize.width;
             }
             else {
-                position.x += m_contentSize.width / 2.f;
+                position.x += m_hitBoxSize.width / 2.f;
             }
-            position.y += m_contentSize.height / 8.f;
+            position.y += m_hitBoxSize.height / 8.f;
 
             const auto radius = m_weapons[MELEE]->GetRange() * 0.75f;
             const auto targetHitbox = target->GetHitBox();
