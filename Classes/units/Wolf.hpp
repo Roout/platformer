@@ -19,6 +19,16 @@ private:
     void AddWeapons() override;
 
     void Attack() override;
+
+    void OnEnemyIntrusion() override;
+
+    void OnEnemyLeave() override;
+
+    bool NeedAttack() const noexcept override;
+
+private:
+    static constexpr float PURSUE_SPEED = 200.f;
+    static constexpr float PATROL_SPEED = 100.f;
 };
 
 } // namespace Enemies
