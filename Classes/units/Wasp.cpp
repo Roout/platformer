@@ -88,11 +88,10 @@ void Wasp::Pursue(Unit * target) noexcept {
 }
 
 bool Wasp::NeedAttack() const noexcept {
-    constexpr auto MELEE { 0U };
     bool attackIsReady {
         !this->IsDead() && 
         m_detectEnemy && 
-        m_weapons[MELEE]->IsReady()
+        m_weapons[WeaponClass::MELEE]->IsReady()
     };
     bool enemyIsClose = false;
     if (attackIsReady) {
@@ -113,7 +112,7 @@ bool Wasp::NeedAttack() const noexcept {
             }
             position.y += m_hitBoxSize.height / 8.f;
 
-            const auto radius = m_weapons[MELEE]->GetRange() * 0.75f;
+            const auto radius = m_weapons[WeaponClass::MELEE]->GetRange() * 0.75f;
             const auto targetHitbox = target->GetHitBox();
             const cocos2d::Rect lhs { 
                 target->getPosition() - cocos2d::Vec2{ targetHitbox.width / 2.f, 0.f },

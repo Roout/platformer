@@ -68,7 +68,7 @@ void Warrior::Pursue(Unit * target) noexcept {
     if(!this->IsDead() && target && !target->IsDead()) {
         const auto shift { floorf(
             target->GetHitBox().width / 2.f // shift to bottom left\right corner
-            + m_weapons[WeaponClass::MELEE]->GetRange() * 0.75f   // shift by weapon length (not 1.0f to be able to reach the target by attack!)
+            + m_weapons[WeaponClass::MELEE]->GetRange() * 0.3f   // shift by weapon length (not 1.0f to be able to reach the target by attack!)
             + m_contentSize.width / 2.f     // shift by size where the weapon's attack will be created
         )};
         // possible destinations (bottom middle of this unit)
@@ -96,7 +96,7 @@ void Warrior::Pursue(Unit * target) noexcept {
         int choosenIndex { -1 };
         float xDistance { xDistances[0] };
         for(int i = 0; i < 2; i++) {
-            if(acceptable[i] &&  xDistances[i] <= xDistance) {
+            if(acceptable[i] && xDistances[i] <= xDistance) {
                 choosenIndex = i;
                 xDistance = xDistances[i];
             }
