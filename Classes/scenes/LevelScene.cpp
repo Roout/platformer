@@ -220,6 +220,7 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
     boulderPushers.reserve(10);
     spiders.reserve(20);
 
+    constexpr int PLAYER_ZORDER = 100;
     for(size_t i = 0; i < Utils::EnumSize<core::CategoryName>(); i++) {
         const auto category { static_cast<core::CategoryName>(i) };
         const auto parsedForms { m_parser->Peek(category) };
@@ -229,7 +230,7 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                 const auto hero { Player::create(contentSize) };
                 hero->setName(core::EntityNames::PLAYER);
                 hero->setPosition( form.m_rect.origin + cocos2d::Size{ contentSize.width / 2.f, contentSize.height } );
-                map->addChild(hero, 100);
+                map->addChild(hero, PLAYER_ZORDER);
             } 
             else if(form.m_type == core::CategoryName::PLATFORM) {
                 const auto platform = Platform::create(form.m_rect.size);
@@ -326,7 +327,7 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                         const auto wolf { Enemies::Wolf::create(form.m_id, contentSize) };
                         wolf->setName(core::EntityNames::WOLF);
                         wolf->setPosition(form.m_rect.origin + cocos2d::Size{ contentSize.width / 2.f, contentSize.height });
-                        map->addChild(wolf, zOrder);
+                        map->addChild(wolf, PLAYER_ZORDER + 1);
                         warriors.emplace(form.m_id, wolf);
                         pathIdByUnitId.emplace(form.m_id, form.m_pathId);
                     } break;
@@ -334,7 +335,7 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                         const auto wasp { Enemies::Wasp::create(form.m_id, contentSize) };
                         wasp->setName(core::EntityNames::WASP);
                         wasp->setPosition(form.m_rect.origin + cocos2d::Size{ contentSize.width / 2.f, contentSize.height });
-                        map->addChild(wasp, zOrder);
+                        map->addChild(wasp, PLAYER_ZORDER + 1);
                         warriors.emplace(form.m_id, wasp);
                         pathIdByUnitId.emplace(form.m_id, form.m_pathId);
                     } break;

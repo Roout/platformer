@@ -38,7 +38,7 @@ Wolf::Wolf(size_t id, const char * name, const cocos2d::Size& contentSize)
 
 void Wolf::AddWeapons() {
     const auto damage { 20.f };
-    const auto range { 15.f };
+    const auto range { 10.f };
     const auto attackDuration { 0.2f };
     const auto preparationTime { m_animator->GetDuration(Utils::EnumCast(State::ATTACK)) - attackDuration };
     const auto reloadTime { 0.4f };
