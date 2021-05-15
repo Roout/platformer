@@ -180,26 +180,18 @@ public:
     void OnAttack() override;
 };
 
-class Axe final : public Weapon {
+class GenericAttack final : public Weapon {
 public:
     using Weapon::Weapon;
 
     void OnAttack() override;
 };
 
-class Spear final : public Weapon {
-public:
-    using Weapon::Weapon;
+using Axe = GenericAttack;
 
-    void OnAttack() override;
-};
+using Spear = GenericAttack;
 
-class Maw final : public Weapon {
-public:
-    using Weapon::Weapon;
-
-    void OnAttack() override;
-};
+using Maw = GenericAttack;
 
 class PlayerFireball final : public Weapon {
 public:
@@ -254,12 +246,7 @@ public:
     void OnAttack() override;
 };
 
-class BossChainSweep final : public Weapon {
-public:
-    using Weapon::Weapon;
-
-    void OnAttack() override;
-};
+using BossChainSweep = GenericAttack;
 
 class BossChainSwing final : public Weapon {
 public:

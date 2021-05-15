@@ -44,59 +44,7 @@ void Sword::OnAttack() {
     map->addChild(proj); 
 }
 
-void Axe::OnAttack() {
-    const auto runningScene { cocos2d::Director::getInstance()->getRunningScene() };
-    const auto level = runningScene->getChildByName("Level");
-    const auto map = level->getChildByName("Map");
-    
-    const auto proj = Projectile::create(this->GetDamage());
-    const auto projectile = m_extractor();
-    const auto body = proj->AddPhysicsBody(projectile.size);
-    proj->setPosition(projectile.origin);
-    m_modifier(body);
-    const auto testMask {
-        Utils::CreateMask(
-            core::CategoryBits::HITBOX_SENSOR
-            , core::CategoryBits::PROPS
-            , core::CategoryBits::BOUNDARY
-            , core::CategoryBits::PLAYER_PROJECTILE 
-        )
-    };
-    const auto categoryMask {
-        Utils::CreateMask(core::CategoryBits::ENEMY_PROJECTILE)
-    };
-    proj->SetCategoryBitmask(categoryMask);
-    proj->SetContactTestBitmask(testMask);
-    map->addChild(proj);
-}
-
-void Spear::OnAttack() {
-    const auto runningScene { cocos2d::Director::getInstance()->getRunningScene() };
-    const auto level = runningScene->getChildByName("Level");
-    const auto map = level->getChildByName("Map");
-    
-    const auto proj = Projectile::create(this->GetDamage());
-    const auto projectile = m_extractor();
-    const auto body = proj->AddPhysicsBody(projectile.size);
-    proj->setPosition(projectile.origin);
-    m_modifier(body);
-    const auto testMask {
-        Utils::CreateMask(
-            core::CategoryBits::HITBOX_SENSOR
-            , core::CategoryBits::PROPS
-            , core::CategoryBits::BOUNDARY
-            , core::CategoryBits::PLAYER_PROJECTILE 
-        )
-    };
-    const auto categoryMask {
-        Utils::CreateMask(core::CategoryBits::ENEMY_PROJECTILE)
-    };
-    proj->SetCategoryBitmask(categoryMask);
-    proj->SetContactTestBitmask(testMask);
-    map->addChild(proj);
-}
-
-void Maw::OnAttack() {
+void GenericAttack::OnAttack() {
     const auto runningScene { cocos2d::Director::getInstance()->getRunningScene() };
     const auto level = runningScene->getChildByName("Level");
     const auto map = level->getChildByName("Map");
@@ -184,6 +132,10 @@ void Legs::OnAttack() {
     body->setContactTestBitmask(
         Utils::CreateMask(
             core::CategoryBits::HITBOX_SENSOR
+
+
+
+            
             , core::CategoryBits::PROPS
             , core::CategoryBits::PLAYER_PROJECTILE
         )
@@ -335,32 +287,6 @@ void BossFireball::OnAttack() {
     proj->SetLifetime(5.f);
     proj->addComponent(body);
     map->addChild(proj, 101); 
-}
-
-void BossChainSweep::OnAttack() {
-    const auto runningScene { cocos2d::Director::getInstance()->getRunningScene() };
-    const auto level = runningScene->getChildByName("Level");
-    const auto map = level->getChildByName("Map");
-
-    const auto proj = Projectile::create(this->GetDamage());
-    const auto projectile = m_extractor();
-    const auto body = proj->AddPhysicsBody(projectile.size);
-    proj->setPosition(projectile.origin);
-    m_modifier(body);
-    const auto testMask {
-        Utils::CreateMask(
-            core::CategoryBits::PROPS
-            , core::CategoryBits::BOUNDARY
-            , core::CategoryBits::PLAYER_PROJECTILE 
-            , core::CategoryBits::HITBOX_SENSOR 
-        )
-    };
-    const auto categoryMask {
-        Utils::CreateMask(core::CategoryBits::ENEMY_PROJECTILE)
-    };
-    proj->SetCategoryBitmask(categoryMask);
-    proj->SetContactTestBitmask(testMask);
-    map->addChild(proj); 
 }
 
 void BossChainSwing::OnAttack() {
@@ -533,7 +459,7 @@ void BossFireCloud::OnAttack() {
     
     // size_t id, const cocos2d::Size& contentSize
     auto cloud = Enemies::FireCloud::create(1, form.size);
-    if(!boss->IsLookingLeft()) cloud->Turn();
+    if (!boss->IsLookingLeft()) cloud->Turn();
 
     // push body up
     auto body = cloud->getPhysicsBody();
