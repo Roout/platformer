@@ -100,27 +100,17 @@ bool Wolf::NeedAttack() const noexcept {
         // use some simple algorithm to determine whether a player is close enough to the target
         // to perform an attack
         if(target && !target->IsDead()) {
-            // TODO: this is code replication!!!! (see above Wasp::Attack())
             // calc position of the maw:
-            const auto attackRange { m_weapons[WeaponClass::MELEE]->GetRange() };
-            const cocos2d::Size mawSize { attackRange, attackRange * 1.6f };
-
-            auto position = this->getPosition();
-            if (this->IsLookingLeft()) {
-                position.x -= m_hitBoxSize.width / 2.f + mawSize.width;
-            }
-            else {
-                position.x += m_hitBoxSize.width / 2.f;
-            }
-            position.y += m_hitBoxSize.height / 3.f;
-
             const auto radius = m_weapons[WeaponClass::MELEE]->GetRange() * 0.75f;
             const auto targetHitbox = target->GetHitBox();
             const cocos2d::Rect lhs { 
                 target->getPosition() - cocos2d::Vec2{ targetHitbox.width / 2.f, 0.f },
                 targetHitbox
             };
-            const cocos2d::Rect rhs { position, mawSize };
+            const cocos2d::Rect rhs { // check attack in both directions
+                this->getPosition() - cocos2d::Vec2 { m_contentSize.width / 2.f + radius, -m_hitBoxSize.height / 3.f },
+                cocos2d::Size { m_contentSize.width + 2.f * radius, 0.f }
+            };
             enemyIsClose = lhs.intersectsRect(rhs);
         }
     }
