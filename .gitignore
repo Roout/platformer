@@ -3,3 +3,6 @@
 CMakeSettings.json
 build/
 cocos2d/
+!Resources/
+Resources/*
+!Resources/screenshots/
