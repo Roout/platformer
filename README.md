@@ -1,56 +1,85 @@
-# Welcome to 2d platformer game  
+# Platformer 2D
   
-For now it's just a test project. My wish is to finish the game. The final step will be publishing the game to 
-the google play.
+This is an attempt to make a 2D Platformer game and complete the whole development cycle.  
+The final step will be publishing the game to the google play.
 
-Target platforms:  
-- android;
-- win32.
+Target platforms:
 
-## Roadmap  
+- Android
+- Linux
+- Windows
 
-### v0.0 Set up the project  
-Consist of linking dragonbones library and setting up the compilable and linkable game project.  
-- [x] add Dragon Bones  
-	+ adapted sources of the current version of the [dragon bones](https://github.com/DragonBones/DragonBonesCPP/tree/dev) to new version of the [cocos2dx v4.0](https://github.com/cocos2d/cocos2d-x/tree/cocos2d-x-4.0). It may be useless though.  
-	+ added cmake files for the dragon bones to compile it as static library   
-	+ changed root CMakeLists file (link dragonBones library to target)  
-- [x] add git  
-- [x] change required cmake version to compile ( switched to `target_precompile_headers` so minimum cmake version is 3.16)  
-  
-### v0.1 Basic game structure  
-- [x] add character: model and view as rectangle  
-- [x] add simple map [256 * 16]  
-- [x] implement character movement without physics  
-- [x] implement own physics system  
-  
-### v0.2 Add weapon system!  
-- [x] create weapon system  
-- [x] add melee weapons  
-- [x] extend unit class: add health bar and weapon holder  
-- [x] add basic trap  
-- [x] switched to chipmunk and update movement system  
-- [x] refactoring  
+Now works only on windows.
 
-### v0.3 Add enemies  
-- [ ] add automatic behavior to enemies:  
-	- [x] aggro (field of influence): define area in json file waypoints where the enemy is active and will attack anyone who cross it  
-	- [ ] communication  
-	- [ ] attacking:  
-		- [x] axe   
-		- [ ] bow  
-		- [ ] throwing boulders  
-	- [x] pursuit  
-	- [x] patrol (pathfinding): define path graph in json file waypoints  
-	- [ ] defence   
-	- [ ] anything else? Does it actually fit the genre    
-  
-**v0.4** Boss  
-- [ ] add boss  
+## Tools
 
----
-Current step: **v0.3**
+1. [Dragon Bones](https://github.com/Roout/adp-dragon-bones)
+2. [Cocos2dx v4.0 engine](https://github.com/cocos2d/cocos2d-x) + tools needed by this engine (Python, etc)
+3. CMake 3.16 or higher
+4. MSVC compiler with c++17 or higher
+5. [Tiled 1.2](https://www.mapeditor.org/)
+6. [Texture Packer](https://www.codeandweb.com/texturepacker)
 
+## Progress
 
+You can see the current progress at videos below.  
+FPS is not steady due to potato laptop: it doesn't like recording...  
 
+### Ability showcast
 
+Current player's abilities:
+
+| Key | Description |
+|-----|-------------|
+| A, D | Move left-right |
+| W, space | Jump and double jump |
+| F | Sword attack. Has 3 types of animations: top, mid, bottom |
+| E | Special attack, has cast time, deals more damage |
+| G | Fireball attack |
+| Q | Dash |
+
+Images:
+
+[walkthrough 1](/Resources/screenshots/walkthrough-1.PNG)
+[walkthrough 2](/Resources/screenshots/walkthrough-2.PNG)
+[walkthrough 3](/Resources/screenshots/walkthrough-3.PNG)
+[walkthrough 4](/Resources/screenshots/walkthrough-4.PNG)
+
+You can see more here: [Youtube link](https://youtu.be/KvYxr2vZ7zo)
+
+### Level walkthough
+
+You can perceive level as a sandbox. Level boarders are shown on the debug screen.  
+Now sandbox contains only boxes and typical platforms. Can be restarted and paused.  
+Debug mode has several usefull flags:
+
+- show physics level boundaries
+- invicibility
+- current state of the player and NPCs
+
+Images:
+[debug](/Resources/screenshots/debug.PNG)
+
+You can see more here: [Youtube link](https://youtu.be/IM8e4cO3_FY)
+
+### Boss fight
+
+First boss is a forest bandit. Boss has following abitilies:
+
+| Ability | Description |
+|---------|-------------|
+| Chain's attack | Slow attack aheade of yourself: doesn't move and attack 3 times, each attack longer than previous |
+| Fireballs | Send several fireballs |
+| Jump with chain attack | Deal damage on attack |
+| Dash | Special attack, has cast time, deals more damage |
+| Summon fire cloud | Calls fire cloud which attack with fireballs from the sky and doesn't depend on boss |
+
+Images:
+[boss](/Resources/screenshots/boss.PNG)
+
+You can see more here: [Youtube link](https://youtu.be/i9K5rqW_JoM)
+
+## Credits
+
+[Andrew Sadovnikov](https://itch.io/profile/andrwood) - graphics/animations
+[Sergei Nevstruev](https://github.com/Roout) - programming
