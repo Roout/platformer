@@ -38,12 +38,11 @@ Current player's abilities:
 | G | Fireball attack |
 | Q | Dash |
 
-Images:
-
-[walkthrough 1](/Resources/screenshots/walkthrough-1.PNG)
-[walkthrough 2](/Resources/screenshots/walkthrough-2.PNG)
-[walkthrough 3](/Resources/screenshots/walkthrough-3.PNG)
-[walkthrough 4](/Resources/screenshots/walkthrough-4.PNG)
+Images:  
+<img src="/Resources/screenshots/walkthrough-1.PNG" alt="walkthrough" width="60%" height:="60%"/>
+<img src="/Resources/screenshots/walkthrough-2.PNG" alt="walkthrough" width="60%" height:="60%"/>
+<img src="/Resources/screenshots/walkthrough-3.PNG" alt="walkthrough" width="60%" height:="60%"/>
+<img src="/Resources/screenshots/walkthrough-4.PNG" alt="walkthrough" width="60%" height:="60%"/>
 
 You can see more here: [Youtube link](https://youtu.be/KvYxr2vZ7zo)
 
@@ -57,8 +56,8 @@ Debug mode has several usefull flags:
 - invicibility
 - current state of the player and NPCs
 
-Images:
-[debug](/Resources/screenshots/debug.PNG)
+Images:  
+<img src="/Resources/screenshots/debug.PNG" alt="debug" width="60%" height:="60%"/>
 
 You can see more here: [Youtube link](https://youtu.be/IM8e4cO3_FY)
 
@@ -68,18 +67,18 @@ First boss is a forest bandit. Boss has following abitilies:
 
 | Ability | Description |
 |---------|-------------|
-| Chain's attack | Slow attack aheade of yourself: doesn't move and attack 3 times, each attack longer than previous |
+| Chain's attack | Slow attack ahead of yourself: doesn't move and attack 3 times, each attack longer than previous |
 | Fireballs | Send several fireballs |
 | Jump with chain attack | Deal damage on attack |
 | Dash | Special attack, has cast time, deals more damage |
 | Summon fire cloud | Calls fire cloud which attack with fireballs from the sky and doesn't depend on boss |
 
-Images:
-[boss](/Resources/screenshots/boss.PNG)
+Images:  
+<img src="/Resources/screenshots/boss.PNG" alt="boss" width="60%" height:="60%"/>
 
 You can see more here: [Youtube link](https://youtu.be/i9K5rqW_JoM)
 
 ## Credits
 
-[Andrew Sadovnikov](https://itch.io/profile/andrwood) - graphics/animations
+[Andrew Sadovnikov](https://itch.io/profile/andrwood) - graphics/animations  
 [Sergei Nevstruev](https://github.com/Roout) - programming
