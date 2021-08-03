@@ -1,9 +1,5 @@
-.vscode
+.vscode/
+.vs/
+CMakeSettings.json
 build/
-<<<<<<< HEAD
 cocos2d/
-=======
-*.a
-*.lib
-*.dll
->>>>>>> 70
