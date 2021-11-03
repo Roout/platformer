@@ -44,7 +44,7 @@ bool OnContactBegin(cocos2d::PhysicsContact& contact) {
     // i.e. basicaly it's unit and other collidable body
     if (isUnitSensor[BODY_A] || isUnitSensor[BODY_B]) {
         Unit * unit { static_cast<Unit*>(isUnitSensor[BODY_A]? nodes[BODY_A] : nodes[BODY_B]) };
-        unit->SetContactWithGround(true);
+        unit->EnableContactWithGround();
 
         return true;
     } 
@@ -193,7 +193,12 @@ bool OnContactSeparate(cocos2d::PhysicsContact& contact) {
                 helper::IsEqual(bodies[BODY_A]->getVelocity().y, 0.f, 0.000001f):
                 helper::IsEqual(bodies[BODY_B]->getVelocity().y, 0.f, 0.000001f)
         };
-        unit->SetContactWithGround(onGround);
+        if (onGround) {
+            unit->EnableContactWithGround();
+        }
+        else {
+            unit->DisableContactWithGround();
+        }
         return true;
     }
 

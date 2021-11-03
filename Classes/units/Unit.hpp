@@ -40,15 +40,16 @@ public:
     [[nodiscard]] inline int GetHealth() const noexcept;
 
     /**
-     * TODO: remove this shit and add 2 normal methods
-     * 
      * Invoked from event listener on contact between sensor attached to 
      * unit's physics body and ground (e.g. platform).
-     * 
-     * @param[in] hasContactWithGround
-     *      Variable indicate whether unit's sensor is in contact with froun or not.
      */
-    inline void SetContactWithGround(bool hasContactWithGround) noexcept;
+    inline void EnableContactWithGround() noexcept;
+
+    /**
+     * Invoked from event listener on breaking contact between 
+     * sensor attached to unit's physics body and ground (e.g. platform).
+     */
+    inline void DisableContactWithGround() noexcept;
 
     template<curses::CurseClass type, class ...Args>
     void AddCurse(size_t id, Args&&... args);
@@ -171,8 +172,11 @@ inline int Unit::GetHealth() const noexcept {
     return m_health;
 }
 
-inline void Unit::SetContactWithGround(bool hasContactWithGround) noexcept {
-    m_hasContactWithGround = hasContactWithGround;
+inline void Unit::EnableContactWithGround() noexcept {
+    m_hasContactWithGround = true;
+}
+inline void Unit::DisableContactWithGround() noexcept {
+    m_hasContactWithGround = false;
 }
 
 template<curses::CurseClass type, class ...Args>
