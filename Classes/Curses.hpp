@@ -3,7 +3,7 @@
 
 class Unit;
 
-namespace Curses {
+namespace curses {
 
     static constexpr float UNLIMITED { -100.f };
 
@@ -50,14 +50,14 @@ namespace Curses {
         void EffectUnit(Unit * const unit) noexcept override;
 
         [[nodiscard]] bool CanEffect() const noexcept override {
-            return m_cooldown <= 0.f;
+            return m_cooldown <= 0.f && !IsExpired();
         }
 
         [[nodiscard]] bool IsExpired() const noexcept override {
             return m_duration != UNLIMITED && m_duration <= 0.f;
         }
 
-    private:
+    protected:
 
         const float m_damage { 0.f };
         
@@ -67,9 +67,14 @@ namespace Curses {
     
     class Instant final : public DPS {
     public:
+        /**
+         * Duration big enough for curse to deal some damage once
+         * and expire before coldown turns 0
+         */
+        static constexpr float DURATION { 0.5f };
 
         Instant(size_t id, float damage) : 
-            DPS{ id, damage, 1.f }
+            DPS{ id, damage, DURATION }
         {};
 
     };
@@ -90,6 +95,7 @@ namespace Curses {
     struct get_curse<CurseClass::INSTANT> {
         using identity = Instant;
     };
-};
+
+}; // namespace curses 
 
 #endif // CURSES_HPP

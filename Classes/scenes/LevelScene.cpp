@@ -267,7 +267,7 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                 map->addChild(border);
             }
             else if(form.m_type == core::CategoryName::SPIKES) {
-                const auto trap = Traps::Spikes::create(form.m_rect.size);
+                const auto trap = traps::Spikes::create(form.m_rect.size);
                 trap->setPosition(form.m_rect.origin + form.m_rect.size / 2.f);
                 map->addChild(trap);
             }

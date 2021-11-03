@@ -10,7 +10,7 @@
 
 #include <limits>
 
-namespace Traps {
+namespace traps {
 
     /**
      * Do damage every m_maxCooldown seconds to each body it can influence
@@ -71,7 +71,7 @@ namespace Traps {
         }
 
         void CurseTarget(Unit * const unit) override {
-            unit->AddCurse<Curses::CurseClass::DPS>(this->GetId(), m_damage, Curses::UNLIMITED);
+            unit->AddCurse<curses::CurseClass::DPS>(this->GetId(), m_damage, curses::UNLIMITED);
         };
 
     private:

@@ -40,6 +40,8 @@ public:
     [[nodiscard]] inline int GetHealth() const noexcept;
 
     /**
+     * TODO: remove this shit and add 2 normal methods
+     * 
      * Invoked from event listener on contact between sensor attached to 
      * unit's physics body and ground (e.g. platform).
      * 
@@ -48,8 +50,8 @@ public:
      */
     inline void SetContactWithGround(bool hasContactWithGround) noexcept;
 
-    template<Curses::CurseClass type, class ...Args>
-    void AddCurse(size_t id, Args&&... args) noexcept;
+    template<curses::CurseClass type, class ...Args>
+    void AddCurse(size_t id, Args&&... args);
 
     inline void RemoveCurse(size_t id) noexcept;
 
@@ -140,12 +142,12 @@ protected:
 
     int m_health { 100 };
 
-    Curses::CurseHub m_curses { this };
+    curses::CurseHub m_curses { this };
 
     std::unique_ptr<Movement> m_movement { nullptr };
     
     // keep all weapons that the unit may use
-    // 3 is maximum because the boss has 3 types of attack
+    // 5 is maximum because the boss has 5 types of attack
     // Note: in this case weapons are equivalent of the skills
     std::array<Weapon *, 5U> m_weapons;
 
@@ -173,8 +175,8 @@ inline void Unit::SetContactWithGround(bool hasContactWithGround) noexcept {
     m_hasContactWithGround = hasContactWithGround;
 }
 
-template<Curses::CurseClass type, class ...Args>
-void Unit::AddCurse(size_t id, Args&&... args) noexcept {
+template<curses::CurseClass type, class ...Args>
+void Unit::AddCurse(size_t id, Args&&... args) {
     m_curses.AddCurse<type>(id, std::forward<Args>(args)...);
 }
 
