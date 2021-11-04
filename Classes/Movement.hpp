@@ -20,22 +20,27 @@ public:
         , float jumpHeight
     );
     
+    Movement(Movement const&) = delete;
+    Movement& operator= (Movement const&) = delete;
+
+    Movement(Movement&&) = delete;
+    Movement& operator= (Movement&&) = delete;
+
     ~Movement();
 
     /**
      * Each frame applies forces or impulses which are scheduled by Push/Move
-     * @param dt may be unused
      */
-    void Update(float dt) noexcept;
+    void Update() noexcept;
     
     /**
      *  Push the body with predefined impulses.
      *  Impulses can be adjusted by setting coefficients: x & y. 
      * 
      *  @param x provide impulse horizontal direction 
-     * and coefficient (work as simple multiplier of impulse)
+     * coefficient (work as simple multiplier of impulse)
      *  @param y provide impulse vertical direction 
-     * and coefficient (work as simple multiplier of impulse)
+     * coefficient (work as simple multiplier of impulse)
      * 
      * Expect: x, y = [-1.f, 1.f]
      */

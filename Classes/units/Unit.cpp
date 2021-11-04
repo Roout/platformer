@@ -152,7 +152,7 @@ void Unit::UpdateWeapons(const float dt) noexcept {
 
 void Unit::UpdatePosition(const float dt) noexcept {
     if(!this->IsDead()) {
-        m_movement->Update(dt);
+        m_movement->Update();
     }
 }
 

@@ -130,7 +130,7 @@ void Spider::UpdatePosition(const float dt) noexcept {
     if(!this->IsDead()) {
         m_navigator->Update(dt);
     }
-    m_movement->Update(dt);
+    m_movement->Update();
 };
 
 void Spider::UpdateAnimation() {

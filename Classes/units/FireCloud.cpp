@@ -71,7 +71,7 @@ void FireCloud::OnEnemyLeave() {
 }
 
 void FireCloud::UpdatePosition(const float dt) noexcept {
-    m_movement->Update(dt);
+    m_movement->Update();
 }
 
 void FireCloud::UpdateWeapons(const float dt) noexcept {

@@ -166,7 +166,7 @@ void Warrior::UpdatePosition(const float dt) noexcept {
         }
         // update
         m_navigator->Update(dt);
-        m_movement->Update(dt);
+        m_movement->Update();
     }
 }
 

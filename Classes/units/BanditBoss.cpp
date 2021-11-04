@@ -426,7 +426,7 @@ void BanditBoss::UpdateState(const float dt) noexcept {
 }
 
 void BanditBoss::UpdatePosition(const float dt) noexcept {
-    m_movement->Update(dt);
+    m_movement->Update();
 }
 
 void BanditBoss::UpdateAnimation() {
