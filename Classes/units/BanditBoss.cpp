@@ -130,7 +130,7 @@ void BanditBoss::LaunchFirecloud() {
         return { position, cocos2d::Size{ attackRange, m_contentSize.height * 0.35f } };
     };
     auto pushProjectile = [](cocos2d::PhysicsBody* body) {
-        cocos2d::Vec2 impulse { 0.f, body->getMass() * 190.f };
+        cocos2d::Vec2 impulse { 0.f, 190.f };
         body->applyImpulse(impulse);
     };
     // start attack with weapon
@@ -456,7 +456,6 @@ void BanditBoss::AddPhysicsBody() {
     Unit::AddPhysicsBody();
     // change masks for physics body
     const auto body { this->getPhysicsBody() };
-    // body->setMass(25.f);
     body->setContactTestBitmask(Utils::CreateMask(core::CategoryBits::PLATFORM));
     body->setCategoryBitmask(Utils::CreateMask(core::CategoryBits::ENEMY));
     body->setCollisionBitmask(

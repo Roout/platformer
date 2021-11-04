@@ -100,7 +100,6 @@ void BoulderPusher::AddPhysicsBody() {
     Unit::AddPhysicsBody();
     // change masks for physics body
     const auto body { this->getPhysicsBody() };
-    // body->setMass(25.f);
     body->setCategoryBitmask(Utils::CreateMask(core::CategoryBits::ENEMY));
     body->setContactTestBitmask(Utils::CreateMask(core::CategoryBits::PLATFORM));
     body->setCollisionBitmask(
@@ -185,7 +184,7 @@ void BoulderPusher::Attack() {
             return { position, stoneSize };
         };
         auto pushProjectile = [isLookingLeft = this->IsLookingLeft()](cocos2d::PhysicsBody* body) {
-            cocos2d::Vec2 impulse { body->getMass() * 200.f, 0.f };
+            cocos2d::Vec2 impulse { 200.f, 0.f };
             if (isLookingLeft) {
                 impulse.x *= -1.f;
             }

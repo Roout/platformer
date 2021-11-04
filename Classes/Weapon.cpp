@@ -120,7 +120,6 @@ void Legs::OnAttack() {
         , cocos2d::PhysicsMaterial{ 0.1f, 0.2f, 0.7f }
     );
     body->setDynamic(true);
-    // body->setMass(10.f);
     body->setGravityEnable(true);
     body->setRotationEnable(true);
     body->setCategoryBitmask(

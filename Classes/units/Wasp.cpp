@@ -141,7 +141,6 @@ void Wasp::AddPhysicsBody() {
         cocos2d::PhysicsMaterial(1.f, 0.1f, 0.1f), 
         {0.f, floorf(m_physicsBodySize.height / 2.f)}
     );
-    // body->setMass(25.f);
     body->setDynamic(true);
     body->setGravityEnable(false);
     body->setRotationEnable(false);
