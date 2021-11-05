@@ -56,8 +56,8 @@ void Spider::onExit() {
     cocos2d::Node::onExit();
 }
 
-void Spider::MoveAlong(float x, float y) noexcept {
-    m_movement->Move(x, y);
+void Spider::MoveAlong(Movement::Direction dir) noexcept {
+    m_movement->Move(dir);
 }
 
 
@@ -146,23 +146,23 @@ void Spider::UpdateAnimation() {
 
 void Spider::OnDeath() {
     // Interface
-    this->getChildByName("health")->removeFromParent();
+    getChildByName("health")->removeFromParent();
     // Physics
-    const auto body = this->getPhysicsBody();
+    const auto body = getPhysicsBody();
     const auto hitBoxTag { Utils::EnumCast(core::CategoryBits::HITBOX_SENSOR) };
     const auto hitBoxSensor { body->getShape(hitBoxTag) };
     body->setGravityEnable(true);
     hitBoxSensor->setContactTestBitmask(0); // don't cause any damage to player
     // Movement
-    m_movement->ResetForce(); // reset forces
-    m_movement->Push(0.f, -0.1f); // push down
+    m_movement->Stop(Movement::Axis::XY);
+    m_movement->Push(Movement::Direction::DOWN, 0.1f);
     // Animation
     m_animator->EndWith([this]() {
-        if(this->m_web) {
-            this->m_web->removeFromParent();
-            this->m_web = nullptr;
+        if (m_web) {
+            m_web->removeFromParent();
+            m_web = nullptr;
         }
-        this->runAction(cocos2d::RemoveSelf::create(true));
+        runAction(cocos2d::RemoveSelf::create(true));
     });
 };
 

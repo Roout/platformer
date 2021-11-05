@@ -2,6 +2,8 @@
 #define UNIT_HPP
 
 #include "../CurseHub.hpp"
+#include "../Movement.hpp"
+
 #include <memory>
 #include <array>
 
@@ -11,7 +13,6 @@ namespace dragonBones {
     class Animator;
 }
 class Weapon;
-class Movement;
 
 class Unit : public cocos2d::Node { 
 public:
@@ -67,20 +68,9 @@ public:
     
     void ResetForces(bool x, bool y) noexcept;
 
-    /**
-     * @param direction define the direction of movement by unit vector
-     * Possible values are: { 1, 0 }, {-1, 0 }, { 0, 1 }, { 0, -1 }, { 0, 0 }, { 1, 1 }, {-1, -1 }
-     * { 0, 0 } - means to stop movement 
-     */
-    void MoveAlong(const cocos2d::Vec2& direction) noexcept;
+    virtual void MoveAlong(Movement::Direction) noexcept;
 
-    /**
-     * @param x defines the horizontal direction of movement by unit vector
-     * @param y defines the vectical direction of movement by unit vector
-     * Possible values are: { 1, 0 }, {-1, 0 }, { 0, 1 }, { 0, -1 }, { 0, 0 }, { 1, 1 }, {-1, -1 }
-     * { 0, 0 } - means to stop movement 
-     */
-    virtual void MoveAlong(float x, float y) noexcept;
+    void Stop(Movement::Axis) noexcept;
 
     void Turn() noexcept;
 

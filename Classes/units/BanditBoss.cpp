@@ -130,7 +130,7 @@ void BanditBoss::LaunchFirecloud() {
         return { position, cocos2d::Size{ attackRange, m_contentSize.height * 0.35f } };
     };
     auto pushProjectile = [](cocos2d::PhysicsBody* body) {
-        cocos2d::Vec2 impulse { 0.f, 190.f };
+        cocos2d::Vec2 impulse { 0.f, body->getMass() * 190.f };
         body->applyImpulse(impulse);
     };
     // start attack with weapon
@@ -142,15 +142,15 @@ void BanditBoss::LaunchFirecloud() {
 
 void BanditBoss::LaunchSweepAttack() {
     assert(m_weapons[SWEEP_ATTACK]->IsReady() 
-        && !this->IsDead() 
+        && !IsDead() 
         && "You don't check condition beforehand"
     );
     auto projectilePosition = [this]() -> cocos2d::Rect {
         const auto attackRange { m_weapons[SWEEP_ATTACK]->GetRange()};
         const cocos2d::Size area { attackRange, attackRange };
 
-        auto position = this->getPosition();
-        if (this->IsLookingLeft()) {
+        auto position = getPosition();
+        if (IsLookingLeft()) {
             position.x -= m_contentSize.width / 2.f + area.width;
         }
         else {
@@ -161,7 +161,7 @@ void BanditBoss::LaunchSweepAttack() {
         return { position, area };
     };
     auto pushProjectile = [this](cocos2d::PhysicsBody* body) {
-        body->setVelocity(this->getPhysicsBody()->getVelocity());
+        body->setVelocity(getPhysicsBody()->getVelocity());
     };
     // create projectile - area where the chains aredealing damage during jump
     m_weapons[SWEEP_ATTACK]->LaunchAttack(
@@ -169,8 +169,11 @@ void BanditBoss::LaunchSweepAttack() {
         std::move(pushProjectile)
     );
     // jump
-    m_movement->ResetForce();
-    m_movement->Push(IsLookingLeft()? -1.f: 1.f, 1.f);
+    using Move = Movement::Direction;
+    
+    Stop(Movement::Axis::XY);
+    m_movement->Push(Move::UP);
+    m_movement->Push(IsLookingLeft()? Move::LEFT: Move::RIGHT);
 }
 
 void BanditBoss::LaunchDash() {
@@ -339,30 +342,30 @@ void BanditBoss::TryAttack() {
     if(target && !this->IsDead() && canBeInterrupted) {
         if(this->CanLaunchDash()) {
             this->LookAt(target->getPosition());
-            this->MoveAlong(0.f, 0.f);
+            Stop(Movement::Axis::XY);
             this->LaunchDash();
         }
         else if(this->CanLaunchSweepAttack()) {
             // if player is in range and SWEEP can be performed -> perform jump attack
             this->LookAt(target->getPosition());
-            this->MoveAlong(0.f, 0.f);
+            Stop(Movement::Axis::XY);
             this->LaunchSweepAttack();
         }
         else if(this->CanLaunchBasicAttack()) {
             // if player is in range and SWING can be performed -> invoke basic attack
             this->LookAt(target->getPosition());
-            this->MoveAlong(0.f, 0.f);
+            Stop(Movement::Axis::XY);
             this->LaunchBasicAttack();
         }
         else if(this->CanLaunchFireballs()) {
             // fireballs
             this->LookAt(target->getPosition());
-            this->MoveAlong(0.f, 0.f);
+            Stop(Movement::Axis::XY);
             this->LaunchFireballs();
         }
         else if(this->CanLaunchFirecloud()) {
             this->LookAt(target->getPosition());
-            this->MoveAlong(0.f, 0.f);
+            Stop(Movement::Axis::XY);
             this->LaunchFirecloud();
         }
         else if(m_detectEnemy) {
@@ -377,12 +380,13 @@ void BanditBoss::TryAttack() {
             /// Move towards player:
             if(!playerIsNear) {
                 this->LookAt(target->getPosition());
-                this->MoveAlong(this->IsLookingLeft()? -1.f: 1.f, 0.f);
+                using Move = Movement::Direction;
+                MoveAlong(IsLookingLeft()? Move::LEFT: Move::RIGHT);
             }
         }
         else {
             this->LookAt(target->getPosition());
-            this->MoveAlong(0.f, 0.f);
+            Stop(Movement::Axis::XY);
         }
     }
 }

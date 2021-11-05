@@ -81,7 +81,8 @@ private:
 
     void AddAnimator() override;
 
-    void MoveAlong(float x, float y) noexcept override;
+    // TODO: maybe seperate jumping/falling with simple right\left move
+    void MoveAlong(Movement::Direction) noexcept override;
 
     Player(const cocos2d::Size& contentSize);
 

@@ -48,60 +48,70 @@ void Movement::Update() noexcept {
     m_body->setVelocity({ xClamp, yClamp });
 }
 
-
-void Movement::Push(float x, float y) noexcept {
-    float yJumpSpeed = 0.f;
-
-    if (y > 0.f) { // jump
-        yJumpSpeed = m_upJumpSpeed;
-    }
-    else if (y < 0.f) { // fall (usefull for spiders on death)
-        yJumpSpeed = m_downJumpSpeed;
-    }
-    const auto jumpImpulse { m_body->getMass() * yJumpSpeed };
-    // TODO: introduce the ability to customize horizontal velocity
-    m_impulse.x = m_body->getMass() * m_desiredVelocity * x;
-    m_impulse.y = jumpImpulse * y;
-}
-
-void Movement::Move(float x, float y) noexcept {
-    const auto force { m_body->getMass() * m_desiredVelocity * 20.f };
-
-    if (x == 0.f && y == 0.f) {
-        ResetForce();
-    }
-    else {
-        m_force = { force * x, force * y };
+void Movement::Push(Direction dir, float scale) noexcept {
+    assert(scale > 0.f);
+    const float mass = m_body->getMass();
+    switch (dir) {
+        case Direction::UP: {
+            m_impulse.y = mass * m_upJumpSpeed * scale; 
+        } break;
+        case Direction::DOWN: {
+            m_impulse.y = -mass * m_downJumpSpeed * scale; 
+        } break;
+        case Direction::LEFT: {
+            m_impulse.x = -mass * m_desiredVelocity * scale;
+        } break;
+        case Direction::RIGHT: {
+            m_impulse.x = mass * m_desiredVelocity * scale;
+        } break;
+        default: assert(false && "Unreachable"); break;
     }
 }
 
-void Movement::ResetForce() noexcept {
-    auto chipBody { m_body->getCPBody() };
-    m_force.x = m_force.y = m_impulse.x = m_impulse.y = 0.f;
-    cpBodySetForce(chipBody, {0.f, 0.f});
-    cpBodySetVelocity(chipBody, {0.f, 0.f});
+void Movement::Move(Direction dir, float scale) noexcept {
+    assert(scale > 0.f);
+
+    const auto force { m_body->getMass() * m_desiredVelocity * 20.f};
+    
+    switch (dir) {
+        case Direction::UP: {
+            m_force.y = force * scale;
+        } break;
+        case Direction::DOWN: {
+            m_force.y = -force * scale;
+        } break;
+        case Direction::LEFT: {
+            m_force.x = -force * scale;
+        } break;
+        case Direction::RIGHT: {
+            m_force.x = force * scale;
+        } break;
+        default: assert(false && "Unreachable"); break;
+    }
 }
 
-void Movement::ResetForceX() noexcept {
-    auto chipBody { m_body->getCPBody() };
-    auto force { cpBodyGetForce(chipBody) };
-    auto velocity { cpBodyGetVelocity(chipBody) };
-    force.x = velocity.x = 0.f;
-    cpBodySetForce(chipBody, force);
-    cpBodySetVelocity(chipBody, velocity);
-    // reset internal settings
-    m_force.x = m_impulse.x = 0.f;
-}
-
-void Movement::ResetForceY() noexcept {
+void Movement::Stop(Axis axis) noexcept {
     auto chipBody { m_body->getCPBody() };
     auto force { cpBodyGetForce(chipBody) };
     auto velocity { cpBodyGetVelocity(chipBody) };
-    force.y = velocity.y = 0.f;
+
+    switch (axis) {
+        case Axis::X: {
+            force.x = velocity.x = 0.f;
+            m_force.x = m_impulse.x = 0.f;
+        } break;
+        case Axis::Y: {
+            force.y = velocity.y = 0.f;
+            m_force.y = m_impulse.y = 0.f;
+        } break;
+        case Axis::XY: {
+            force = velocity = { 0.f, 0.f };
+            m_force = m_impulse = { 0.f, 0.f };
+        } break;
+    }
+
     cpBodySetForce(chipBody, force);
     cpBodySetVelocity(chipBody, velocity);
-    // reset internal settings
-    m_force.y = m_impulse.y = 0.f;
 }
 
 void Movement::SetMaxSpeed(float speed) noexcept {

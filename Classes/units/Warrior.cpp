@@ -155,14 +155,14 @@ void Warrior::UpdatePosition(const float dt) noexcept {
         m_weapons[WeaponClass::MELEE]->IsAttacking() || 
         m_weapons[WeaponClass::MELEE]->IsPreparing() 
     };
-    if(m_weapons[WeaponClass::MELEE]->IsReloading()) {
+    if (m_weapons[WeaponClass::MELEE]->IsReloading()) {
         // stop
-        m_movement->ResetForce();
+        Stop(Movement::Axis::XY);
     }
-    else if(!initiateAttack) {
-        if(m_detectEnemy) { // update target
-            auto target = this->getParent()->getChildByName<Unit *>(core::EntityNames::PLAYER);
-            this->Pursue(target);
+    else if (!initiateAttack) {
+        if (m_detectEnemy) { // update target
+            auto target = getParent()->getChildByName<Unit *>(core::EntityNames::PLAYER);
+            Pursue(target);
         }
         // update
         m_navigator->Update(dt);

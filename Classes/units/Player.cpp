@@ -146,36 +146,39 @@ void Player::UpdatePosition(const float dt) noexcept {
     }
 }
 
-void Player::MoveAlong(float x, float y) noexcept {
-    if (!helper::IsEqual(y, 0.f, 0.0001f) ) {
+void Player::MoveAlong(Movement::Direction dir) noexcept {
+    using Move = Movement::Direction;
+
+    if (dir == Move::UP || dir == Move::DOWN) {
         // need to be called earlier because forces will be reseted 
         // and method @IsOnGround will fail
         const auto body { this->getPhysicsBody() };
-        if(!helper::IsEqual(body->getVelocity().y, 0.f, 0.001f) ) {
+        bool moveAlongY = !helper::IsEqual(body->getVelocity().y, 0.f, 0.001f);
+        if (moveAlongY) {
             m_hasContactWithGround = false;
         }
-        m_movement->ResetForceY();
-        m_movement->Push(x, y);
+        m_movement->Stop(Movement::Axis::XY);
+        m_movement->Push(dir);
         // reset all active weapons
         std::for_each(m_weapons.begin(), m_weapons.end(), [](Weapon * weapon) {
-            if(weapon && (weapon->IsPreparing() || weapon->IsAttacking())) {
+            if (weapon && (weapon->IsPreparing() || weapon->IsAttacking())) {
                 weapon->ForceReload();
             }
         });
-        this->FinishSpecialAttack();
+        FinishSpecialAttack();
         // reset states to invoke JUMP animation (if the player already jumping!)
         m_previousState = State::IDLE;
         m_currentState = State::IDLE;
     }
     else {
-        m_movement->Move(x, y);
+        m_movement->Move(dir);
     }
 }
 
 void Player::pause() {
     Unit::pause();
-    if(!this->IsDead()) {
-        m_movement->ResetForce();
+    if (!IsDead()) {
+        Stop(Movement::Axis::XY);
         // prevent to being called onExit() when the player is dead and is being detached!
         m_inputHandler->Reset();
     }

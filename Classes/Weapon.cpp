@@ -131,10 +131,6 @@ void Legs::OnAttack() {
     body->setContactTestBitmask(
         Utils::CreateMask(
             core::CategoryBits::HITBOX_SENSOR
-
-
-
-            
             , core::CategoryBits::PROPS
             , core::CategoryBits::PLAYER_PROJECTILE
         )

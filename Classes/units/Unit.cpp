@@ -71,23 +71,26 @@ void Unit::SetMaxSpeed(float speed) noexcept {
     m_movement->SetMaxSpeed(speed);
 }
 
-void Unit::ResetForces(bool x, bool y) noexcept {
-    if(x && y) m_movement->ResetForce();
-    else if(x) m_movement->ResetForceX();
-    else if(y) m_movement->ResetForceY();
+void Unit::MoveAlong(Movement::Direction dir) noexcept {
+    assert(m_movement);
+
+    using Move = Movement::Direction;
+    switch (dir) {
+        case Move::UP: [[fallthrough]];
+        case Move::DOWN: {
+            m_movement->Push(dir); 
+        } break;
+        case Move::LEFT: [[fallthrough]];
+        case Move::RIGHT: { 
+            m_movement->Move(dir);
+        } break;
+        default: assert(false && "Unreachable");
+    }
 }
 
-void Unit::MoveAlong(const cocos2d::Vec2& direction) noexcept {
-    return this->MoveAlong(direction.x, direction.y);
-}
-
-void Unit::MoveAlong(float x, float y) noexcept {
-    if (!helper::IsEqual(y, 0.f, 0.0001f)) {
-        m_movement->Push(x, y);
-    }
-    else {
-        m_movement->Move(x, y);
-    }
+void Unit::Stop(Movement::Axis axis) noexcept {
+    assert(m_movement);
+    m_movement->Stop(axis);
 }
 
 void Unit::Turn() noexcept {

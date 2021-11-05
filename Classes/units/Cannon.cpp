@@ -171,10 +171,10 @@ void Cannon::AddWeapons() {
 }
 
 void Cannon::TryAttack() {
-    const auto target = this->getParent()->getChildByName(core::EntityNames::PLAYER);
-    if( target && this->NeedAttack() ) { // attack if possible
-        this->MoveAlong(0.f, 0.f);
-        this->Attack();
+    const auto target = getParent()->getChildByName(core::EntityNames::PLAYER);
+    if (target && NeedAttack()) { // attack if possible
+        Stop(Movement::Axis::XY);
+        Attack();
     } 
 }
 

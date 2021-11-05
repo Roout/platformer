@@ -131,8 +131,8 @@ void Wasp::AttachNavigator(Path&& path) {
     m_navigator->SetPrecision(15.f);
 }
 
-void Wasp::MoveAlong(float x, float y) noexcept {
-    m_movement->Move(x, y);
+void Wasp::MoveAlong(Movement::Direction dir) noexcept {
+    m_movement->Move(dir);
 }
 
 void Wasp::AddPhysicsBody() {

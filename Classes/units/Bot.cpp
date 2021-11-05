@@ -89,11 +89,11 @@ bool Bot::NeedAttack() const noexcept {
 }
 
 void Bot::TryAttack() {
-    const auto target = this->getParent()->getChildByName(core::EntityNames::PLAYER);
-    if (target && this->NeedAttack()) { // attack if possible
-        this->LookAt(target->getPosition());
-        this->MoveAlong(0.f, 0.f);
-        this->Attack();
+    const auto target = getParent()->getChildByName(core::EntityNames::PLAYER);
+    if (target && NeedAttack()) { // attack if possible
+        LookAt(target->getPosition());
+        Stop(Movement::Axis::XY);
+        Attack();
     } 
 }
 

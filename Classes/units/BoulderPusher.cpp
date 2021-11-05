@@ -184,7 +184,7 @@ void BoulderPusher::Attack() {
             return { position, stoneSize };
         };
         auto pushProjectile = [isLookingLeft = this->IsLookingLeft()](cocos2d::PhysicsBody* body) {
-            cocos2d::Vec2 impulse { 200.f, 0.f };
+            cocos2d::Vec2 impulse { body->getMass() * 200.f, 0.f };
             if (isLookingLeft) {
                 impulse.x *= -1.f;
             }

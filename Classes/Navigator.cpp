@@ -1,10 +1,25 @@
 #include "Navigator.hpp"
+#include "Movement.hpp"
 #include "PhysicsHelper.hpp"
 
 #include "units/Bot.hpp"
 
 #include <cassert>
 #include <utility>
+
+namespace {
+    Movement::Direction GetHorizontalDirection(float x) noexcept {
+        assert(x != 0.f);
+        return x > 0.f? Movement::Direction::RIGHT
+            : Movement::Direction::LEFT;
+    }
+
+    Movement::Direction GetVerticalDirection(float y) noexcept {
+        assert(y != 0.f);
+        return y > 0.f? Movement::Direction::UP
+            : Movement::Direction::DOWN;
+    }
+} // namespace 
 
 Navigator::Navigator(Enemies::Bot * owner, Path&& path) :
     m_owner { owner },
@@ -17,13 +32,13 @@ Navigator::Navigator(Enemies::Bot * owner, Path&& path) :
 void Navigator::Update(float dt) {
     auto target { m_customTarget };
     if (m_isFollowingPath) {
-        if (const auto [reachedX, reachedY] = this->ReachedDestination(); reachedX && reachedY) {
+        if (auto [reachedX, reachedY] = ReachedDestination(); reachedX && reachedY) {
             m_choosenWaypointIndex = this->FindDestination(m_choosenWaypointIndex);
-            m_owner->MoveAlong(0.f, 0.f);
+            m_owner->Stop(Movement::Axis::XY);
         }
         target = m_path.m_waypoints[m_choosenWaypointIndex];
     }
-    this->MoveTo(target);
+    MoveTo(target);
 }
 
 void Navigator::VisitCustomPoint(const cocos2d::Vec2& destination) {
@@ -37,20 +52,27 @@ void Navigator::FollowPath() {
 
 void Navigator::MoveTo(const cocos2d::Vec2& destination) {
     if (m_owner && !m_owner->IsDead()) {
-        auto AsDirection = [](float x) {
-            return x > 0.f? 1.f: -1.f;
-        };
-        const auto [reachedX, reachedY] = this->ReachedDestination();
-        const auto vec { destination - m_owner->getPosition() };
-        const cocos2d::Vec2 dir {
-            reachedX? 0.f: AsDirection(vec.x), 
-            reachedY? 0.f: AsDirection(vec.y)
-        };
-        if (dir.x != 0.f) { // ignore when the command is to stop (0.f, 0.f)
-            m_owner->LookAt(destination);
+        const auto [reachedX, reachedY] = ReachedDestination();
+        const auto direction { destination - m_owner->getPosition() };
+
+        if (reachedX && reachedY) {
+            m_owner->Stop(Movement::Axis::XY);
         }
-        m_owner->MoveAlong(dir);
-    }       
+        else if (reachedX) {
+            m_owner->Stop(Movement::Axis::X);
+            m_owner->MoveAlong(GetVerticalDirection(direction.y));
+        }
+        else if (reachedY) {
+            m_owner->Stop(Movement::Axis::Y);
+            m_owner->LookAt(destination);
+            m_owner->MoveAlong(GetHorizontalDirection(direction.x));
+        }
+        else {
+            m_owner->LookAt(destination);
+            m_owner->MoveAlong(GetHorizontalDirection(direction.x)); // X-axis
+            m_owner->MoveAlong(GetVerticalDirection(direction.y)); // Y-axis
+        }
+    }
 }
 
 size_t Navigator::FindDestination(size_t from) {

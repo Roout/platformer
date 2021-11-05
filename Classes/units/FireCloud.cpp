@@ -93,28 +93,26 @@ void FireCloud::TryAttack() {
 void FireCloud::UpdateState(const float dt) noexcept {
     m_previousState = m_currentState;
 
-    if(m_currentState == State::UNDEFINED) {
+    if (m_currentState == State::UNDEFINED) {
         m_currentState = State::INIT;
     }
-    else if(m_currentState == State::LATE && m_lifetime <= 0.f) {
+    else if (m_currentState == State::LATE && m_lifetime <= 0.f) {
         m_currentState = State::DEAD;
     }
-    else if(m_currentState == State::LATE && m_lifetime > 0.f) {
+    else if (m_currentState == State::LATE && m_lifetime > 0.f) {
         m_lifetime -= dt;
     }
-    else if(m_finished && m_currentState != State::DEAD) {
+    else if (m_finished && m_currentState != State::DEAD) {
         m_currentState = static_cast<State>(Utils::EnumCast(m_currentState) + 1);
         m_finished = false;
         // stop comming up
-        if(m_currentState == State::LATE) {
-            m_movement->ResetForceY();
-            assert(this->getPhysicsBody() && "Cloud doesn't have physics body");
-            cocos2d::Vec2 impulse { 1.f, 0.f };
-            if (this->IsLookingLeft()) {
-                impulse.x *= -1.f;
-            }
+        if (m_currentState == State::LATE) {
+            Stop(Movement::Axis::Y);
+            assert(getPhysicsBody() && "Cloud doesn't have physics body");
+
             m_movement->SetMaxSpeed(CLOUD_SPEED);
-            m_movement->Push(impulse.x, impulse.y);
+            using Move = Movement::Direction;
+            m_movement->Push(IsLookingLeft()? Move::LEFT: Move::RIGHT);
         }
     }
 }

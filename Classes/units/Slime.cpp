@@ -98,13 +98,13 @@ void Slime::UpdateState(const float dt) noexcept {
 }
 
 void Slime::UpdatePosition(const float dt) noexcept {
-    if(!m_detectEnemy) {
+    if (!m_detectEnemy) {
         // update
         m_navigator->Update(dt);
         m_movement->Update();
     }
     else {
-        m_movement->ResetForce();
+        Stop(Movement::Axis::XY);
     }
 }
 
