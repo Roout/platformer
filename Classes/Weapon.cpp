@@ -88,13 +88,13 @@ void Bow::OnAttack() {
         proj->FlipX();
     }
 
+    body->setCollisionBitmask(Utils::CreateMask(core::CategoryBits::BOUNDARY));
     const auto testMask {
         Utils::CreateMask(
             core::CategoryBits::HITBOX_SENSOR
             , core::CategoryBits::PROPS
             , core::CategoryBits::BOUNDARY
             , core::CategoryBits::PLAYER_PROJECTILE
-            // , core::CategoryBits::PLATFORM
         )
     };
     const auto categoryMask {
