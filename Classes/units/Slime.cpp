@@ -194,13 +194,12 @@ void Slime::AddWeapons() {
     const auto preparationTime { duration * 0.6f }; /// TODO: update animation!
     const auto attackDuration { duration - preparationTime };
     const auto reloadTime { 0.5f };
-    m_weapons[WeaponClass::RANGE] = new SlimeShot(
+    m_weapons[WeaponClass::RANGE].reset(new SlimeShot(
         damage, 
         range, 
         preparationTime,
         attackDuration,
-        reloadTime 
-    );
+        reloadTime));
 }
 
 void Slime::Attack() {

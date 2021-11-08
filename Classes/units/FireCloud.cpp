@@ -176,13 +176,12 @@ void FireCloud::AddWeapons() {
     const auto preparationTime { 0.f }; 
     const auto attackDuration { 0.1f };
     const auto reloadTime { 0.1f };
-    m_weapons[WeaponClass::RANGE] = new CloudFireball(
+    m_weapons[WeaponClass::RANGE].reset(new CloudFireball(
         damage, 
         range, 
         preparationTime,
         attackDuration,
-        reloadTime 
-    );
+        reloadTime));
 }
 
 void FireCloud::Attack() {

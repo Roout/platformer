@@ -161,13 +161,12 @@ void Cannon::AddWeapons() {
     const auto preparationTime { m_animator->GetDuration(Utils::EnumCast(State::ATTACK)) }; /// TODO: update animation!
     const auto attackDuration { 0.1f };
     const auto reloadTime { 0.3f };
-    m_weapons[WeaponClass::RANGE] = new Stake(
+    m_weapons[WeaponClass::RANGE].reset(new Stake(
         damage, 
         range, 
         preparationTime,
         attackDuration,
-        reloadTime 
-    );
+        reloadTime));
 }
 
 void Cannon::TryAttack() {

@@ -246,13 +246,12 @@ void Warrior::AddWeapons() {
     const auto attackDuration { 0.15f };
     const auto preparationTime { m_animator->GetDuration(Utils::EnumCast(State::ATTACK)) - attackDuration };
     const auto reloadTime { 0.5f };
-    m_weapons[WeaponClass::MELEE] = new Axe(
+    m_weapons[WeaponClass::MELEE].reset(new Axe(
         damage, 
         range, 
         preparationTime,
         attackDuration,
-        reloadTime 
-    );
+        reloadTime));
 }
 
 } // namespace Enemies

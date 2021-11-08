@@ -43,13 +43,12 @@ void Wasp::AddWeapons() {
     const auto attackDuration { 0.2f };
     const auto preparationTime { m_animator->GetDuration(Utils::EnumCast(State::ATTACK)) - attackDuration };
     const auto reloadTime { 0.6f };
-    m_weapons[WeaponClass::MELEE] = new Maw(
+    m_weapons[WeaponClass::MELEE].reset(new Maw(
         damage, 
         range, 
         preparationTime,
         attackDuration,
-        reloadTime 
-    );
+        reloadTime));
 }
 
 void Wasp::Attack() {

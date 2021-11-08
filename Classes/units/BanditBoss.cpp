@@ -20,7 +20,7 @@ namespace Enemies {
  * can't define what is being busy mean for different units so it's 
  * using internal linkage
  */
-static inline bool IsBusy(Weapon * weapon) noexcept {
+static inline bool IsBusy(const std::unique_ptr<Weapon>& weapon) noexcept {
     assert(weapon);
     return (weapon->IsPreparing() || weapon->IsAttacking());
 }
@@ -250,7 +250,7 @@ bool BanditBoss::CanLaunchSweepAttack() const noexcept {
 bool BanditBoss::CanLaunchDash() const noexcept {
     const float duration { m_animator->GetDuration(Utils::EnumCast(State::DASH)) };
     bool canDash = !m_dash->IsOnCooldown() 
-        && std::none_of(m_weapons.cbegin(), m_weapons.cend(), [](Weapon* weapon) {
+        && std::none_of(m_weapons.cbegin(), m_weapons.cend(), [](const std::unique_ptr<Weapon>& weapon) {
             return (weapon && IsBusy(weapon));
     });
 
@@ -517,13 +517,12 @@ void BanditBoss::AddWeapons() {
         const auto attackDuration { 0.4f * animDuration };
         const auto preparationTime { animDuration - attackDuration };
         const auto reloadTime { 2.f };
-        m_weapons[WeaponClass::FIREBALL_ATTACK] = new BossFireball(
+        m_weapons[WeaponClass::FIREBALL_ATTACK].reset(new BossFireball(
             damage, 
             range, 
             preparationTime,
             attackDuration,
-            reloadTime 
-        );
+            reloadTime));
     }
     {
         const auto damage { 0.f }; // doesn't matter
@@ -532,13 +531,12 @@ void BanditBoss::AddWeapons() {
         const auto attackDuration { 0.4f * animDuration };
         const auto preparationTime { animDuration - attackDuration };
         const auto reloadTime { 5.f };
-        m_weapons[WeaponClass::FIRECLOUD_ATTACK] = new BossFireCloud(
+        m_weapons[WeaponClass::FIRECLOUD_ATTACK].reset(new BossFireCloud(
             damage, 
             range, 
             preparationTime,
             attackDuration,
-            reloadTime 
-        );
+            reloadTime));
     }
     {
         const auto damage { 30.f };
@@ -547,13 +545,12 @@ void BanditBoss::AddWeapons() {
         const auto attackDuration { 0.4f * animDuration };
         const auto preparationTime { animDuration - attackDuration };
         const auto reloadTime { 8.f };
-        m_weapons[WeaponClass::SWEEP_ATTACK] = new BossChainSweep(
+        m_weapons[WeaponClass::SWEEP_ATTACK].reset(new BossChainSweep(
             damage, 
             range, 
             preparationTime,
             attackDuration,
-            reloadTime 
-        );
+            reloadTime));
     }
     {
         const auto damage { 15.f };
@@ -562,13 +559,12 @@ void BanditBoss::AddWeapons() {
         const auto attackDuration { 0.8f * animDuration };
         const auto preparationTime { animDuration - attackDuration };
         const auto reloadTime { 2.f };
-        m_weapons[WeaponClass::BASIC_ATTACK] = new BossChainSwing(
+        m_weapons[WeaponClass::BASIC_ATTACK].reset(new BossChainSwing(
             damage, 
             range, 
             preparationTime,
             attackDuration,
-            reloadTime 
-        );
+            reloadTime));
     }
 }
 

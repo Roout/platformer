@@ -155,13 +155,12 @@ void BoulderPusher::AddWeapons() {
     const auto preparationTime { 0.4f };
     const auto attackDuration { m_animator->GetDuration(Utils::EnumCast(State::ATTACK)) - preparationTime };
     const auto reloadTime { 1.5f };
-    m_weapons[WeaponClass::RANGE] = new Legs(
+    m_weapons[WeaponClass::RANGE].reset(new Legs(
         damage, 
         range, 
         preparationTime,
         attackDuration,
-        reloadTime 
-    );
+        reloadTime));
 }
 
 bool BoulderPusher::NeedAttack() const noexcept {

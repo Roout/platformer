@@ -198,14 +198,13 @@ void Stalactite::AddWeapons() {
     const auto preparationTime { m_animator->GetDuration(Utils::EnumCast(State::PREPARE_ATTACK)) };
     const auto attackDuration { m_animator->GetDuration(Utils::EnumCast(State::ATTACK)) };
     const auto reloadTime { 0.3f };
-    m_weapons[WeaponClass::RANGE] = new StalactitePart(
+    m_weapons[WeaponClass::RANGE].reset(new StalactitePart(
         damage, 
         range, 
         preparationTime,
         attackDuration,
         reloadTime,
-        m_index
-    );
+        m_index));
 }
 
 

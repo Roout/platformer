@@ -157,13 +157,12 @@ void Archer::AddWeapons() {
     const auto preparationTime { m_animator->GetDuration(Utils::EnumCast(State::ATTACK)) }; /// TODO: update animation!
     const auto attackDuration { 0.1f };
     const auto reloadTime { 0.5f };
-    m_weapons[WeaponClass::RANGE] = new Bow(
+    m_weapons[WeaponClass::RANGE].reset(new Bow(
         damage, 
         range, 
         preparationTime,
         attackDuration,
-        reloadTime 
-    );
+        reloadTime));
 }
 
 void Archer::Attack() {

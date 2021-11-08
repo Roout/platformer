@@ -160,7 +160,7 @@ void Player::MoveAlong(Movement::Direction dir) noexcept {
         m_movement->Stop(Movement::Axis::XY);
         m_movement->Push(dir);
         // reset all active weapons
-        std::for_each(m_weapons.begin(), m_weapons.end(), [](Weapon * weapon) {
+        std::for_each(m_weapons.begin(), m_weapons.end(), [](std::unique_ptr<Weapon>& weapon) {
             if (weapon && (weapon->IsPreparing() || weapon->IsAttacking())) {
                 weapon->ForceReload();
             }
@@ -354,13 +354,12 @@ void Player::AddWeapons() {
         const auto attackDuration { 0.5f * animDuration[0] };
         const auto preparationTime { animDuration[0] - attackDuration };
         const auto reloadTime { 0.f };
-        m_weapons[WeaponClass::MELEE] = new Sword(
+        m_weapons[WeaponClass::MELEE].reset(new Sword(
             damage, 
             range, 
             preparationTime,
             attackDuration,
-            reloadTime 
-        );
+            reloadTime));
     }
     {
         const auto damage { 25.f };
@@ -368,13 +367,12 @@ void Player::AddWeapons() {
         const auto preparationTime { 0.f };
         const auto attackDuration { m_animator->GetDuration(Utils::EnumCast(State::RANGE_ATTACK))  };
         const auto reloadTime { 0.f };
-        m_weapons[WeaponClass::RANGE] = new PlayerFireball(
+        m_weapons[WeaponClass::RANGE].reset(new PlayerFireball(
             damage, 
             range, 
             preparationTime,
             attackDuration,
-            reloadTime 
-        );
+            reloadTime));
     }
     {
         const auto damage { 55.f };
@@ -383,20 +381,19 @@ void Player::AddWeapons() {
         const auto attackDuration { 0.75f * animDuration };
         const auto preparationTime { animDuration - attackDuration };
         const auto reloadTime { 0.f };
-        m_weapons[WeaponClass::SPECIAL] = new PlayerSpecial(
+        m_weapons[WeaponClass::SPECIAL].reset(new PlayerSpecial(
             damage, 
             range, 
             preparationTime,
             attackDuration,
-            reloadTime 
-        );
+            reloadTime));
     }
 };
 
 void Player::InitiateDash() {
     const float duration { m_animator->GetDuration(Utils::EnumCast(State::DASH)) };
     const bool canDash = !m_dash->IsOnCooldown() 
-        && std::none_of(m_weapons.cbegin(), m_weapons.cend(), [](Weapon* weapon) {
+        && std::none_of(m_weapons.cbegin(), m_weapons.cend(), [](const std::unique_ptr<Weapon>& weapon) {
             return weapon && (weapon->IsPreparing() || weapon->IsAttacking());
     });
 

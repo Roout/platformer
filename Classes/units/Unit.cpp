@@ -16,16 +16,6 @@ Unit::Unit(const std::string& dragonBonesName) :
     m_curses { this },
     m_dragonBonesName { dragonBonesName }
 {
-    m_weapons.fill(nullptr);
-}
-
-Unit::~Unit() {
-    for(auto p: m_weapons) {
-        if(p) {
-            delete p;
-            p = nullptr;
-        }
-    }
 }
 
 bool Unit::init() {

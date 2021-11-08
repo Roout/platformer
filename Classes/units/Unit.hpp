@@ -17,8 +17,6 @@ class Weapon;
 class Unit : public cocos2d::Node { 
 public:
 
-    ~Unit();
-
     [[nodiscard]] bool init() override;
 
     void pause() override;
@@ -66,8 +64,6 @@ public:
 
     void SetMaxSpeed(float speed) noexcept;
     
-    void ResetForces(bool x, bool y) noexcept;
-
     virtual void MoveAlong(Movement::Direction) noexcept;
 
     void Stop(Movement::Axis) noexcept;
@@ -140,7 +136,7 @@ protected:
     // keep all weapons that the unit may use
     // 5 is maximum because the boss has 5 types of attack
     // Note: in this case weapons are equivalent of the skills
-    std::array<Weapon *, 5U> m_weapons;
+    std::array<std::unique_ptr<Weapon>, 5U> m_weapons;
 
     // retain when add as child
     dragonBones::Animator *m_animator { nullptr };

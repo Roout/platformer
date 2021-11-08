@@ -40,13 +40,12 @@ void Spearman::AddWeapons() {
     const auto attackDuration { 0.2f };
     const auto preparationTime { m_animator->GetDuration(Utils::EnumCast(State::ATTACK)) - attackDuration };
     const auto reloadTime { 1.4f };
-    m_weapons[WeaponClass::MELEE] = new Spear(
+    m_weapons[WeaponClass::MELEE].reset(new Spear(
         damage, 
         range, 
         preparationTime,
         attackDuration,
-        reloadTime 
-    );
+        reloadTime));
 }
 
 void Spearman::Attack() {
