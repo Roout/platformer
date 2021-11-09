@@ -70,10 +70,10 @@ void Spider::CreateWebAt(const cocos2d::Vec2& start) {
 }
 
 void Spider::UpdateWeb() {
-    if(m_web) {
+    if (m_web) {
         m_web->clear();
         const auto shiftY { m_contentSize.height * 0.6f };
-        auto assMiddle = this->getPosition() + cocos2d::Vec2{ 0.f, shiftY}; 
+        auto assMiddle = getPosition() + cocos2d::Vec2{ 0.f, shiftY}; 
         m_web->drawLine(m_webStart, assMiddle, cocos2d::Color4F::WHITE);        
     }
 }
@@ -81,12 +81,15 @@ void Spider::UpdateWeb() {
 void Spider::update(float dt) {
     cocos2d::Node::update(dt);
     // custom updates
-    this->UpdateDebugLabel();
-    this->UpdatePosition(dt);
-    this->UpdateWeb(); 
-    this->UpdateCurses(dt);
-    this->UpdateState(dt);
-    this->UpdateAnimation(); 
+    UpdateDebugLabel();
+    // Spider's dead body still moves!!!
+    UpdatePosition(dt);
+    if (!IsDead()) {
+        UpdateCurses(dt);
+    }
+    UpdateWeb(); 
+    UpdateState(dt);
+    UpdateAnimation(); 
 };
 
 void Spider::OnEnemyIntrusion() {
@@ -107,9 +110,11 @@ void Spider::AttachNavigator(Path&& path) {
 
 void Spider::TryAttack() {
     // do nothing as it doens't attack
+    assert(false && "It shouldn't be called");
 };
 
-bool Spider::NeedAttack() const noexcept{
+bool Spider::NeedAttack() const noexcept {
+    assert(false && "It shouldn't be called");
     return false; // spider doesn't attack at least for now
 };
 

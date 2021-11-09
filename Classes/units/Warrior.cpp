@@ -44,13 +44,15 @@ void Warrior::update(float dt) {
     // update components
     cocos2d::Node::update(dt);
     // custom updates
-    this->UpdateDebugLabel();
-    this->UpdateWeapons(dt);
-    this->UpdatePosition(dt); 
-    this->UpdateCurses(dt);
-    this->TryAttack();
-    this->UpdateState(dt);
-    this->UpdateAnimation(); 
+    UpdateDebugLabel();
+    if (!IsDead()) {
+        UpdateWeapons(dt);
+        UpdatePosition(dt); 
+        TryAttack();
+        UpdateCurses(dt);
+    }
+    UpdateState(dt);
+    UpdateAnimation(); 
 }
 
 /// Unique to warrior
@@ -151,6 +153,8 @@ void Warrior::UpdateState(const float dt) noexcept {
 }
 
 void Warrior::UpdatePosition(const float dt) noexcept {
+    assert(!IsDead());
+
     auto initiateAttack { 
         m_weapons[WeaponClass::MELEE]->IsAttacking() || 
         m_weapons[WeaponClass::MELEE]->IsPreparing() 

@@ -42,13 +42,15 @@ void Slime::update(float dt) {
     // update components
     cocos2d::Node::update(dt);
     // custom updates
-    this->UpdateDebugLabel();
-    this->UpdateWeapons(dt);
-    this->UpdatePosition(dt); 
-    this->UpdateCurses(dt);
-    this->TryAttack();
-    this->UpdateState(dt);
-    this->UpdateAnimation(); 
+    UpdateDebugLabel();
+    if (!IsDead()) {
+        UpdateWeapons(dt);
+        UpdatePosition(dt); 
+        TryAttack();
+        UpdateCurses(dt);
+    }
+    UpdateState(dt);
+    UpdateAnimation(); 
 }
 
 void Slime::AttachNavigator(Path&& path) {
@@ -98,6 +100,7 @@ void Slime::UpdateState(const float dt) noexcept {
 }
 
 void Slime::UpdatePosition(const float dt) noexcept {
+    assert(!IsDead());
     if (!m_detectEnemy) {
         // update
         m_navigator->Update(dt);
@@ -169,7 +172,8 @@ void Slime::AddPhysicsBody() {
 }
 
 bool Slime::NeedAttack() const noexcept {
-    return !this->IsDead() && m_detectEnemy && m_weapons[WeaponClass::RANGE]->IsReady();
+    assert(!IsDead());
+    return m_detectEnemy && m_weapons[WeaponClass::RANGE]->IsReady();
 }
 
 void Slime::AddAnimator() {
@@ -203,30 +207,31 @@ void Slime::AddWeapons() {
 }
 
 void Slime::Attack() {
-    if(m_weapons[WeaponClass::RANGE]->IsReady() && !this->IsDead()) {
-        auto projectilePosition = [this]() -> cocos2d::Rect {
-            const auto attackRange { m_weapons[WeaponClass::RANGE]->GetRange() };
-            const cocos2d::Size waterballSize { attackRange, floorf(attackRange * 0.8f) };
+    assert(!IsDead());
+    assert(m_weapons[WeaponClass::RANGE]->IsReady());
 
-            auto position = this->getPosition();
-            if (this->IsLookingLeft()) {
-                position.x -= m_contentSize.width / 2.f ;
-            }
-            else {
-                position.x += m_contentSize.width / 2.f;
-            }
-            position.y += floorf(m_contentSize.height * 0.3f);
+    auto projectilePosition = [this]() -> cocos2d::Rect {
+        const auto attackRange { m_weapons[WeaponClass::RANGE]->GetRange() };
+        const cocos2d::Size waterballSize { attackRange, floorf(attackRange * 0.8f) };
 
-            return { position, waterballSize };
-        };
-        auto pushProjectile = [this](cocos2d::PhysicsBody* body) {
-            body->setVelocity({ this->IsLookingLeft()? -450.f: 450.f, 0.f });
-        };
-        m_weapons[WeaponClass::RANGE]->LaunchAttack(
-            std::move(projectilePosition), 
-            std::move(pushProjectile)
-        );
-    }
+        auto position = getPosition();
+        if (IsLookingLeft()) {
+            position.x -= m_contentSize.width / 2.f ;
+        }
+        else {
+            position.x += m_contentSize.width / 2.f;
+        }
+        position.y += floorf(m_contentSize.height * 0.3f);
+
+        return { position, waterballSize };
+    };
+    auto pushProjectile = [this](cocos2d::PhysicsBody* body) {
+        body->setVelocity({ IsLookingLeft()? -450.f: 450.f, 0.f });
+    };
+    m_weapons[WeaponClass::RANGE]->LaunchAttack(
+        std::move(projectilePosition), 
+        std::move(pushProjectile)
+    );
 }
 
 }// namespace Enemies

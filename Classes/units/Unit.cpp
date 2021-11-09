@@ -11,6 +11,7 @@
 #include "../scenes/LevelScene.hpp"
 
 #include <cmath>
+#include <cassert>
 
 Unit::Unit(const std::string& dragonBonesName) :
     m_curses { this },
@@ -104,52 +105,53 @@ void Unit::RecieveDamage(int damage) noexcept {
 }
 
 void Unit::Attack() {
-    if(m_weapons.front()->IsReady() && !this->IsDead()) {
-        auto projectilePosition = [this]() -> cocos2d::Rect {
-            const auto attackRange { m_weapons.front()->GetRange() };
+    assert(!IsDead());
+    assert(m_weapons.front()->IsReady());
 
-            auto position = this->getPosition();
-            if(m_side == Side::RIGHT) {
-                position.x += m_contentSize.width / 2.f;
-            }
-            else {
-                position.x -= m_contentSize.width / 2.f + attackRange;
-            }
-            // shift a little bit higher to avoid immediate collision with the ground
-            position.y += m_contentSize.height * 0.05f;
-            cocos2d::Rect attackedArea {
-                position,
-                cocos2d::Size{ attackRange, m_contentSize.height * 1.05f } // a little bigger than the designed size
-            };
-            return attackedArea;
+    auto projectilePosition = [this]() -> cocos2d::Rect {
+        const auto attackRange { m_weapons.front()->GetRange() };
+
+        auto position = getPosition();
+        if (m_side == Side::RIGHT) {
+            position.x += m_contentSize.width / 2.f;
+        }
+        else {
+            position.x -= m_contentSize.width / 2.f + attackRange;
+        }
+        // shift a little bit higher to avoid immediate collision with the ground
+        position.y += m_contentSize.height * 0.05f;
+        cocos2d::Rect attackedArea {
+            position,
+            cocos2d::Size{ attackRange, m_contentSize.height * 1.05f } // a little bigger than the designed size
         };
-        auto pushProjectile = [this](cocos2d::PhysicsBody* body){
-            body->setVelocity(this->getPhysicsBody()->getVelocity());
-        };
-        m_weapons.front()->LaunchAttack(
-            std::move(projectilePosition), 
-            std::move(pushProjectile)
-        );
-    }
+        return attackedArea;
+    };
+    auto pushProjectile = [this](cocos2d::PhysicsBody* body){
+        body->setVelocity(getPhysicsBody()->getVelocity());
+    };
+    m_weapons.front()->LaunchAttack(
+        std::move(projectilePosition), 
+        std::move(pushProjectile)
+    );
 }
 
 void Unit::UpdateWeapons(const float dt) noexcept {
-    if(!this->IsDead()) {
-        for(auto& weapon: m_weapons) {
-            if(weapon) {
-                weapon->UpdateState(dt);
-            }
+    assert(!IsDead());
+    
+    for (auto& weapon: m_weapons) {
+        if (weapon) {
+            weapon->UpdateState(dt);
         }
     }
 }
 
 void Unit::UpdatePosition(const float dt) noexcept {
-    if(!this->IsDead()) {
-        m_movement->Update();
-    }
+    assert(!IsDead());
+    m_movement->Update();
 }
 
 void Unit::UpdateCurses(const float dt) noexcept {
+    assert(!IsDead());
     m_curses.Update(dt);
 }
 
@@ -158,7 +160,6 @@ bool Unit::IsOnGround() const noexcept {
     constexpr float EPS { 0.000001f };  
     return helper::IsEqual(velocity.y, 0.f, EPS) && m_hasContactWithGround;
 }
-
 
 void Unit::AddPhysicsBody() {
     const auto body = cocos2d::PhysicsBody::createBox(

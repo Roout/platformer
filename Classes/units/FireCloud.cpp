@@ -47,17 +47,18 @@ bool FireCloud::init() {
 }
 
 void FireCloud::update(float dt) {
-     // update components
     cocos2d::Node::update(dt);
     // custom updates
-    this->UpdateDebugLabel();
-    this->UpdateWeapons(dt);
-    this->UpdatePosition(dt);
-    // TODO: remove cuz it's undestructable
-    // this->UpdateCurses(dt);
-    this->TryAttack();
-    this->UpdateState(dt);
-    this->UpdateAnimation(); 
+    UpdateDebugLabel();
+    if (!IsDead()) {
+        UpdateWeapons(dt);
+        UpdatePosition(dt);
+        // TODO: remove cuz it's undestructable
+        // UpdateCurses(dt);
+        TryAttack();
+    }
+    UpdateState(dt);
+    UpdateAnimation(); 
 }
 
 /// Bot interface
@@ -213,11 +214,10 @@ void FireCloud::Attack() {
 }
 
 bool FireCloud::NeedAttack() const noexcept {
-    return (!this->IsDead() 
-        && m_shells 
+    assert(!IsDead());
+    return (m_shells 
         && m_weapons[WeaponClass::RANGE]->IsReady() 
-        && m_currentState == State::LATE
-    );
+        && m_currentState == State::LATE);
 }
 
 } // namespace Enemies

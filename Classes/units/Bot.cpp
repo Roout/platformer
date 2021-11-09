@@ -61,9 +61,9 @@ Bot::Bot(size_t id, const std::string& dragonBonesName):
 }
 
 bool Bot::NeedAttack() const noexcept {
+    assert(!IsDead());
     constexpr auto MELEE { 0U };
-    bool attackIsReady {
-        !this->IsDead() && 
+    bool attackIsReady { 
         m_detectEnemy && 
         m_weapons[MELEE]->IsReady()
     };
@@ -89,6 +89,7 @@ bool Bot::NeedAttack() const noexcept {
 }
 
 void Bot::TryAttack() {
+    assert(!IsDead());
     const auto target = getParent()->getChildByName(core::EntityNames::PLAYER);
     if (target && NeedAttack()) { // attack if possible
         LookAt(target->getPosition());

@@ -42,11 +42,13 @@ bool Stalactite::init() {
 void Stalactite::update(float dt) {
     // update components
     cocos2d::Node::update(dt);
-    this->UpdateWeapons(dt);
-    this->UpdateCurses(dt);
-    this->TryAttack();
-    this->UpdateState(dt);
-    this->UpdateAnimation(); 
+    if (!IsDead()) {
+        UpdateWeapons(dt);
+        TryAttack();
+        UpdateCurses(dt);
+    }
+    UpdateState(dt);
+    UpdateAnimation(); 
 }
 
 void Stalactite::OnEnemyIntrusion() {
@@ -73,6 +75,9 @@ Stalactite::Stalactite(
 }
 
 void Stalactite::Attack() {
+    assert(!IsDead());
+    assert(m_weapons[WeaponClass::RANGE]->IsReady());
+    
     auto projectilePosition = [this]()->cocos2d::Rect {
         const auto attackRange { m_weapons[WeaponClass::RANGE]->GetRange() };
         const cocos2d::Size stalactite { m_contentSize / m_scale };
@@ -91,14 +96,16 @@ void Stalactite::Attack() {
 }
 
 void Stalactite::TryAttack() {
-    if(this->NeedAttack()) { // attack if possible
-        this->Attack();
+    assert(!IsDead());
+    
+    if (NeedAttack()) { // attack if possible
+        Attack();
     } 
 }
 
 bool Stalactite::NeedAttack() const noexcept {
-    return !this->IsDead() 
-        && !m_alreadyAttacked 
+    assert(!IsDead());
+    return !m_alreadyAttacked 
         && m_detectEnemy 
         && m_weapons[WeaponClass::RANGE]->IsReady();
 }

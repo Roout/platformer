@@ -42,12 +42,14 @@ void Cannon::update(float dt) {
      // update components
     cocos2d::Node::update(dt);
     // custom updates
-    this->UpdateDebugLabel();
-    this->UpdateWeapons(dt);
-    this->UpdateCurses(dt);
-    this->TryAttack();
-    this->UpdateState(dt);
-    this->UpdateAnimation(); 
+    UpdateDebugLabel();
+    if (!IsDead()) {
+        UpdateWeapons(dt);
+        TryAttack();
+        UpdateCurses(dt);
+    }
+    UpdateState(dt);
+    UpdateAnimation(); 
 }
 
 void Cannon::onEnter() {
@@ -170,6 +172,8 @@ void Cannon::AddWeapons() {
 }
 
 void Cannon::TryAttack() {
+    assert(!IsDead());
+
     const auto target = getParent()->getChildByName(core::EntityNames::PLAYER);
     if (target && NeedAttack()) { // attack if possible
         Stop(Movement::Axis::XY);
@@ -178,34 +182,35 @@ void Cannon::TryAttack() {
 }
 
 void Cannon::Attack() {
-    if(m_weapons[WeaponClass::RANGE]->IsReady() && !this->IsDead()) {
-        auto projectilePosition = [this]()->cocos2d::Rect {
-            const auto attackRange { m_weapons[WeaponClass::RANGE]->GetRange() };
-            const cocos2d::Size stake { attackRange, floorf(attackRange / 8.5f) };
+    assert(!IsDead());
+    assert(m_weapons[WeaponClass::RANGE]->IsReady());
 
-            auto position = this->getPosition();
-            if (this->IsLookingLeft()) {
-                position.x -= m_contentSize.width / 2.f + stake.width;
-            }
-            else {
-                position.x += m_contentSize.width / 2.f;
-            }
-            position.y += m_contentSize.height / 2.f - stake.height / 2.f;
+    auto projectilePosition = [this]()->cocos2d::Rect {
+        const auto attackRange { m_weapons[WeaponClass::RANGE]->GetRange() };
+        const cocos2d::Size stake { attackRange, floorf(attackRange / 8.5f) };
 
-            return {position, stake};
-        };
-        auto pushProjectile = [this](cocos2d::PhysicsBody* body) {
-            body->setVelocity({ this->IsLookingLeft()? -450.f: 450.f, 0.f });
-        };
-        m_weapons[WeaponClass::RANGE]->LaunchAttack(
-            std::move(projectilePosition), 
-            std::move(pushProjectile)
-        );
-    }
+        auto position = this->getPosition();
+        if (IsLookingLeft()) {
+            position.x -= m_contentSize.width / 2.f + stake.width;
+        }
+        else {
+            position.x += m_contentSize.width / 2.f;
+        }
+        position.y += m_contentSize.height / 2.f - stake.height / 2.f;
+
+        return {position, stake};
+    };
+    auto pushProjectile = [this](cocos2d::PhysicsBody* body) {
+        body->setVelocity({ IsLookingLeft()? -450.f: 450.f, 0.f });
+    };
+    m_weapons[WeaponClass::RANGE]->LaunchAttack(
+        std::move(projectilePosition), 
+        std::move(pushProjectile)
+    );
 }
 
 bool Cannon::NeedAttack() const noexcept {
-    return !this->IsDead() && m_detectEnemy && m_weapons[WeaponClass::RANGE]->IsReady();
+    return m_detectEnemy && m_weapons[WeaponClass::RANGE]->IsReady();
 }
 
 } // namespace Enemies

@@ -13,17 +13,21 @@
 
 #include "cocos2d.h"
 
-namespace Enemies {
-
+namespace {
 /**
  * Can't introduce this function to the weapon class because 
  * can't define what is being busy mean for different units so it's 
  * using internal linkage
  */
-static inline bool IsBusy(const std::unique_ptr<Weapon>& weapon) noexcept {
+inline bool IsBusy(const std::unique_ptr<Weapon>& weapon) noexcept {
     assert(weapon);
     return (weapon->IsPreparing() || weapon->IsAttacking());
 }
+
+} // namespace {
+
+namespace Enemies {
+
 
 BanditBoss* BanditBoss::create(size_t id, const cocos2d::Size& contentSize ) {
     auto pRet { new (std::nothrow) BanditBoss(id, core::EntityNames::BOSS, contentSize) };
@@ -61,16 +65,17 @@ bool BanditBoss::init() {
 }
 
 void BanditBoss::update(float dt) {
-    // update components
     cocos2d::Node::update(dt);
     // custom updates
-    this->UpdateDebugLabel();
-    this->UpdateWeapons(dt);
-    this->UpdatePosition(dt); 
-    this->UpdateCurses(dt);
-    this->TryAttack();
-    this->UpdateState(dt);
-    this->UpdateAnimation(); 
+    UpdateDebugLabel();
+    if (!IsDead()) {
+        UpdateWeapons(dt);
+        UpdatePosition(dt); 
+        TryAttack();
+        UpdateCurses(dt);
+    }
+    UpdateState(dt);
+    UpdateAnimation(); 
 }
 
 /// Unique to warrior
@@ -334,51 +339,52 @@ bool BanditBoss::CanLaunchBasicAttack() const noexcept {
 }
 
 void BanditBoss::TryAttack() {
+    assert(!IsDead());
     const auto target = this->getParent()->getChildByName<Unit*>(core::EntityNames::PLAYER);
     const auto canBeInterrupted = (m_currentState == State::WALK 
         || m_currentState == State::IDLE
         || m_currentState == State::BASIC_WALK
     );
-    if(target && !this->IsDead() && canBeInterrupted) {
-        if(this->CanLaunchDash()) {
+    if (target && canBeInterrupted) {
+        if (this->CanLaunchDash()) {
             this->LookAt(target->getPosition());
             Stop(Movement::Axis::XY);
             this->LaunchDash();
         }
-        else if(this->CanLaunchSweepAttack()) {
+        else if (this->CanLaunchSweepAttack()) {
             // if player is in range and SWEEP can be performed -> perform jump attack
             this->LookAt(target->getPosition());
             Stop(Movement::Axis::XY);
             this->LaunchSweepAttack();
         }
-        else if(this->CanLaunchBasicAttack()) {
+        else if (this->CanLaunchBasicAttack()) {
             // if player is in range and SWING can be performed -> invoke basic attack
             this->LookAt(target->getPosition());
             Stop(Movement::Axis::XY);
             this->LaunchBasicAttack();
         }
-        else if(this->CanLaunchFireballs()) {
+        else if (this->CanLaunchFireballs()) {
             // fireballs
             this->LookAt(target->getPosition());
             Stop(Movement::Axis::XY);
             this->LaunchFireballs();
         }
-        else if(this->CanLaunchFirecloud()) {
+        else if (this->CanLaunchFirecloud()) {
             this->LookAt(target->getPosition());
             Stop(Movement::Axis::XY);
             this->LaunchFirecloud();
         }
-        else if(m_detectEnemy) {
+        else if (m_detectEnemy) {
             const auto player = target;
             bool playerIsNear { false };
-            if(!player->IsDead()) {
+            if (!player->IsDead()) {
                 const auto bossX = this->getPositionX();
                 const auto playerX = player->getPositionX();
                 playerIsNear = std::fabs(bossX - playerX) <= m_contentSize.width / 2.f;
             }
 
             /// Move towards player:
-            if(!playerIsNear) {
+            if (!playerIsNear) {
                 this->LookAt(target->getPosition());
                 using Move = Movement::Direction;
                 MoveAlong(IsLookingLeft()? Move::LEFT: Move::RIGHT);
@@ -427,10 +433,6 @@ void BanditBoss::UpdateState(const float dt) noexcept {
         m_currentState = State::WALK;
     }
 
-}
-
-void BanditBoss::UpdatePosition(const float dt) noexcept {
-    m_movement->Update();
 }
 
 void BanditBoss::UpdateAnimation() {
