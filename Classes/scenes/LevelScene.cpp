@@ -29,6 +29,27 @@
 #include "../ParallaxBackground.hpp"
 
 #include <unordered_map>
+#include <functional>
+
+namespace {
+
+/**
+ * Use when traversal order doesn't matter
+ */
+void EnumerateDepth(cocos2d::Node *root, std::function<void(cocos2d::Node*)> modifier) {
+    std::vector<cocos2d::Node*> queued { root };
+    while (!queued.empty()) {
+        auto back = queued.back();
+        queued.pop_back();
+        // process
+        std::invoke(modifier, back);
+        // add children to queue
+        const auto& children { back->getChildren() };
+        queued.insert(queued.end(), children.cbegin(), children.cend());
+    }
+}
+
+} // namespace {
 
 LevelScene::LevelScene(int id) : 
     m_id{ id } 
@@ -76,25 +97,25 @@ bool LevelScene::init() {
 		return false;
 	}
     
-    this->setName("Level");
-	this->scheduleUpdate();
+    setName("Level");
+	scheduleUpdate();
 
     m_tmxFile = cocos2d::StringUtils::format("Map/level_%d.tmx", m_id);
     	
-    const auto tileMap { cocos2d::FastTMXTiledMap::create(m_tmxFile) };
+    auto tileMap { cocos2d::FastTMXTiledMap::create(m_tmxFile) };
     tileMap->setName("Map");
-    this->addChild(tileMap);
+    addChild(tileMap);
 
     // add parallax background
     auto back = Background::create(tileMap->getContentSize());
     tileMap->addChild(back, -1);
 
     // mark untouchable layers:
-    for(auto& child: tileMap->getChildren()) {
-        child->setName("Untouchable");
+    for (auto& child: tileMap->getChildren()) {
+        child->setTag(EXIST_ON_RESTART_TAG);
     }
 
-    this->Restart();    
+    Restart();    
     
     back->setAnchorPoint({0.f, 0.f});
     back->setPosition(-tileMap->getPosition());
@@ -122,11 +143,11 @@ void LevelScene::pause() {
     // - scheduler
     // - actions
     cocos2d::Node::pause();
-    const auto map = this->getChildByName("Map");
-    map->pause();
-    for(auto& child: map->getChildren()) {
-        child->pause();
-    }
+
+    auto map = getChildByName("Map");
+    EnumerateDepth(map, [](cocos2d::Node* node) {
+        node->pause();
+    });
     // pause physic world
     const auto runningScene { cocos2d::Director::getInstance()->getRunningScene() };
     runningScene->getPhysicsWorld()->setSpeed(0.f);
@@ -139,11 +160,10 @@ void LevelScene::resume() {
     // - actions
     cocos2d::Node::resume();
     // resume all children of the tilemap
-    const auto map = this->getChildByName("Map");
-    for(const auto child: map->getChildren()) {
-        child->resume();
-    }
-    map->resume();
+    auto map = getChildByName("Map");
+    EnumerateDepth(map, [](cocos2d::Node* node) {
+        node->resume();
+    });
     // resume physic world
     const auto runningScene { cocos2d::Director::getInstance()->getRunningScene() };
     runningScene->getPhysicsWorld()->setSpeed(1.0);
@@ -152,22 +172,16 @@ void LevelScene::resume() {
 void LevelScene::Restart() {
     // Tilemap:
     // - remove children exсept layers and objects.
-    const auto tileMap = this->getChildByName<cocos2d::FastTMXTiledMap*>("Map");
-    std::vector<cocos2d::Node*> scheduledForRemove;
-    scheduledForRemove.reserve(100);
-    for(auto& child: tileMap->getChildren()) {
-        if(child->getName() != "Untouchable") {
-            scheduledForRemove.emplace_back(child);
+    auto tileMap = getChildByName<cocos2d::FastTMXTiledMap*>("Map");
+    for (auto child: tileMap->getChildren()) {
+        if (child->getTag() != EXIST_ON_RESTART_TAG) {
+            child->removeFromParent();
         }
     }
-    for(auto & child : scheduledForRemove) {
-        child->removeFromParent();
-    }
-    this->InitTileMapObjects(tileMap);
+    InitTileMapObjects(tileMap);
    
     // - reset position
     const auto player { tileMap->getChildByName(core::EntityNames::PLAYER) };
-
     const auto visibleSize = cocos2d::Director::getInstance()->getVisibleSize();
 	const auto origin = cocos2d::Director::getInstance()->getVisibleOrigin();
     const auto mapShift { player->getPosition() 
@@ -267,7 +281,7 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                 map->addChild(border);
             }
             else if(form.m_type == core::CategoryName::SPIKES) {
-                const auto trap = Traps::Spikes::create(form.m_rect.size);
+                const auto trap = traps::Spikes::create(form.m_rect.size);
                 trap->setPosition(form.m_rect.origin + form.m_rect.size / 2.f);
                 map->addChild(trap);
             }

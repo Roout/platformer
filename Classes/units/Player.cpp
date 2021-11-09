@@ -31,7 +31,7 @@ Player* Player::create(const cocos2d::Size& contentSize) {
 }
 
 Player::Player(const cocos2d::Size& contentSize) 
-    : Unit { "mc" }
+    : Unit { core::EntityNames::PLAYER }
 {
     m_contentSize = contentSize;
     m_physicsBodySize = cocos2d::Size { contentSize.width / 2.f, contentSize.height };
@@ -141,41 +141,44 @@ void Player::setPosition(const cocos2d::Vec2& position) {
 
 void Player::UpdatePosition(const float dt) noexcept {
     if(!this->IsDead()) {
-        m_movement->Update(dt);
+        m_movement->Update();
         m_follower->UpdateMapPosition(dt);
     }
 }
 
-void Player::MoveAlong(float x, float y) noexcept {
-    if (!helper::IsEqual(y, 0.f, 0.0001f) ) {
+void Player::MoveAlong(Movement::Direction dir) noexcept {
+    using Move = Movement::Direction;
+
+    if (dir == Move::UP || dir == Move::DOWN) {
         // need to be called earlier because forces will be reseted 
         // and method @IsOnGround will fail
         const auto body { this->getPhysicsBody() };
-        if(!helper::IsEqual(body->getVelocity().y, 0.f, 0.001f) ) {
+        bool moveAlongY = !helper::IsEqual(body->getVelocity().y, 0.f, 0.001f);
+        if (moveAlongY) {
             m_hasContactWithGround = false;
         }
-        m_movement->ResetForceY();
-        m_movement->Push(x, y);
+        m_movement->Stop(Movement::Axis::XY);
+        m_movement->Push(dir);
         // reset all active weapons
-        std::for_each(m_weapons.begin(), m_weapons.end(), [](Weapon * weapon) {
-            if(weapon && (weapon->IsPreparing() || weapon->IsAttacking())) {
+        std::for_each(m_weapons.begin(), m_weapons.end(), [](std::unique_ptr<Weapon>& weapon) {
+            if (weapon && (weapon->IsPreparing() || weapon->IsAttacking())) {
                 weapon->ForceReload();
             }
         });
-        this->FinishSpecialAttack();
+        FinishSpecialAttack();
         // reset states to invoke JUMP animation (if the player already jumping!)
         m_previousState = State::IDLE;
         m_currentState = State::IDLE;
     }
     else {
-        m_movement->Move(x, y);
+        m_movement->Move(dir);
     }
 }
 
 void Player::pause() {
     Unit::pause();
-    if(!this->IsDead()) {
-        m_movement->ResetForce();
+    if (!IsDead()) {
+        Stop(Movement::Axis::XY);
         // prevent to being called onExit() when the player is dead and is being detached!
         m_inputHandler->Reset();
     }
@@ -184,12 +187,14 @@ void Player::pause() {
 void Player::update(float dt) {
     cocos2d::Node::update(dt);
      
-    this->UpdateDebugLabel();
-    this->UpdateWeapons(dt);
-    this->UpdatePosition(dt); 
-    this->UpdateCurses(dt);
-    this->UpdateState(dt);
-    this->UpdateAnimation(); 
+    UpdateDebugLabel();
+    if (!IsDead()) {
+        UpdateWeapons(dt);
+        UpdatePosition(dt); 
+        UpdateCurses(dt);
+    }
+    UpdateState(dt);
+    UpdateAnimation(); 
 }
 
 void Player::UpdateDebugLabel() noexcept {
@@ -351,13 +356,12 @@ void Player::AddWeapons() {
         const auto attackDuration { 0.5f * animDuration[0] };
         const auto preparationTime { animDuration[0] - attackDuration };
         const auto reloadTime { 0.f };
-        m_weapons[WeaponClass::MELEE] = new Sword(
+        m_weapons[WeaponClass::MELEE].reset(new Sword(
             damage, 
             range, 
             preparationTime,
             attackDuration,
-            reloadTime 
-        );
+            reloadTime));
     }
     {
         const auto damage { 25.f };
@@ -365,13 +369,12 @@ void Player::AddWeapons() {
         const auto preparationTime { 0.f };
         const auto attackDuration { m_animator->GetDuration(Utils::EnumCast(State::RANGE_ATTACK))  };
         const auto reloadTime { 0.f };
-        m_weapons[WeaponClass::RANGE] = new PlayerFireball(
+        m_weapons[WeaponClass::RANGE].reset(new PlayerFireball(
             damage, 
             range, 
             preparationTime,
             attackDuration,
-            reloadTime 
-        );
+            reloadTime));
     }
     {
         const auto damage { 55.f };
@@ -380,20 +383,19 @@ void Player::AddWeapons() {
         const auto attackDuration { 0.75f * animDuration };
         const auto preparationTime { animDuration - attackDuration };
         const auto reloadTime { 0.f };
-        m_weapons[WeaponClass::SPECIAL] = new PlayerSpecial(
+        m_weapons[WeaponClass::SPECIAL].reset(new PlayerSpecial(
             damage, 
             range, 
             preparationTime,
             attackDuration,
-            reloadTime 
-        );
+            reloadTime));
     }
 };
 
 void Player::InitiateDash() {
     const float duration { m_animator->GetDuration(Utils::EnumCast(State::DASH)) };
     const bool canDash = !m_dash->IsOnCooldown() 
-        && std::none_of(m_weapons.cbegin(), m_weapons.cend(), [](Weapon* weapon) {
+        && std::none_of(m_weapons.cbegin(), m_weapons.cend(), [](const std::unique_ptr<Weapon>& weapon) {
             return weapon && (weapon->IsPreparing() || weapon->IsAttacking());
     });
 
@@ -410,82 +412,85 @@ void Player::RangeAttack() {
     bool canAttack {
         !usingMelee 
         && m_weapons[WeaponClass::RANGE]->IsReady() 
-        && !this->IsDead()
+        && !IsDead()
         && m_currentState != State::DASH
     };
-    if (canAttack) {
-        auto projectilePosition = [this]() -> cocos2d::Rect {
-            const auto attackRange { m_weapons[WeaponClass::RANGE]->GetRange() };
-            const cocos2d::Size fireballSize { attackRange, floorf(attackRange * 0.8f) };
+    if (!canAttack) return;
 
-            auto position = this->getPosition();
-            if (this->IsLookingLeft()) {
-                position.x -= m_contentSize.width / 2.f ;
-            }
-            else {
-                position.x += m_contentSize.width / 2.f;
-            }
-            position.y += floorf(m_contentSize.height * 0.3f);
+    auto projectilePosition = [this]() -> cocos2d::Rect {
+        const auto attackRange { m_weapons[WeaponClass::RANGE]->GetRange() };
+        const cocos2d::Size fireballSize { attackRange, floorf(attackRange * 0.8f) };
 
-            return { position, fireballSize };
-        };
-        
-        auto pushProjectile = [this](cocos2d::PhysicsBody* body) {
-            body->setVelocity({ this->IsLookingLeft()? -450.f: 450.f, 0.f });
-        };
-        m_weapons[WeaponClass::RANGE]->LaunchAttack(
-            std::move(projectilePosition), 
-            std::move(pushProjectile)
-        );
-    }
+        auto position = getPosition();
+        if (IsLookingLeft()) {
+            position.x -= m_contentSize.width / 2.f ;
+        }
+        else {
+            position.x += m_contentSize.width / 2.f;
+        }
+        position.y += floorf(m_contentSize.height * 0.3f);
+
+        return { position, fireballSize };
+    };
+    
+    auto pushProjectile = [this](cocos2d::PhysicsBody* body) {
+        body->setVelocity({ IsLookingLeft()? -450.f: 450.f, 0.f });
+    };
+    m_weapons[WeaponClass::RANGE]->LaunchAttack(
+        std::move(projectilePosition), 
+        std::move(pushProjectile)
+    );
 }
 
 void Player::MeleeAttack() {
+    assert(m_weapons.front());
+
     bool usingRange {
         m_weapons[WeaponClass::RANGE]->IsAttacking() || 
         m_weapons[WeaponClass::RANGE]->IsPreparing()
     };
     bool canAttack {
         !usingRange 
-        && !this->IsDead()
+        && !IsDead()
+        && m_weapons.front()->IsReady()
         && m_currentState != State::DASH
     };
     if (canAttack) {
-        this->Attack();
+        Attack();
     }
 }
 
 void Player::SpecialAttack() {
     bool canAttack {
         m_weapons[WeaponClass::SPECIAL]->IsReady()
-        && !this->IsDead()
+        && !IsDead()
         && m_currentState != State::DASH
     };
-    if (canAttack) {
-        auto projectilePosition = [this]() -> cocos2d::Rect {
-            const auto attackRange { m_weapons[WeaponClass::SPECIAL]->GetRange() };
-            const cocos2d::Size slashSize { attackRange * 1.8f, attackRange };
+    if (!canAttack) return;
 
-            auto position = this->getPosition();
-            if (this->IsLookingLeft()) {
-                position.x -= m_contentSize.width / 2.f ;
-            }
-            else {
-                position.x += m_contentSize.width / 2.f;
-            }
-            position.y += floorf(m_contentSize.height * 0.1f);
+    auto projectilePosition = [this]() -> cocos2d::Rect {
+        const auto attackRange { m_weapons[WeaponClass::SPECIAL]->GetRange() };
+        const cocos2d::Size slashSize { attackRange * 1.8f, attackRange };
 
-            return { position, slashSize };
-        };
-        
-        auto pushProjectile = [this](cocos2d::PhysicsBody* body) {
-            body->setVelocity({ this->IsLookingLeft()? -550.f: 550.f, 0.f });
-        };
-        m_weapons[WeaponClass::SPECIAL]->LaunchAttack(
-            std::move(projectilePosition), 
-            std::move(pushProjectile)
-        );
-    }
+        auto position = getPosition();
+        if (IsLookingLeft()) {
+            position.x -= m_contentSize.width / 2.f ;
+        }
+        else {
+            position.x += m_contentSize.width / 2.f;
+        }
+        position.y += floorf(m_contentSize.height * 0.1f);
+
+        return { position, slashSize };
+    };
+    
+    auto pushProjectile = [this](cocos2d::PhysicsBody* body) {
+        body->setVelocity({ IsLookingLeft()? -550.f: 550.f, 0.f });
+    };
+    m_weapons[WeaponClass::SPECIAL]->LaunchAttack(
+        std::move(projectilePosition), 
+        std::move(pushProjectile)
+    );
 }
 
 void Player::StartSpecialAttack() {
@@ -547,30 +552,31 @@ void Player::FinishSpecialAttack() {
 }
 
 void Player::Attack() {
-    if(m_weapons.front()->IsReady() && !this->IsDead()) {
-        auto projectilePosition = [this]() -> cocos2d::Rect {
-            const auto attackRange { m_weapons.front()->GetRange() };
+    assert(!IsDead());
+    assert(m_weapons.front()->IsReady());
 
-            auto position = this->getPosition();
-            if(m_side == Side::RIGHT) {
-                position.x += m_contentSize.width / 2.f;
-            }
-            else {
-                position.x -= m_contentSize.width / 2.f + attackRange;
-            }
-            position.y += m_contentSize.height * 0.25f;
-            cocos2d::Rect attackedArea {
-                position,
-                cocos2d::Size{ attackRange, m_contentSize.height * 0.5f }
-            };
-            return attackedArea;
+    auto projectilePosition = [this]() -> cocos2d::Rect {
+        const auto attackRange { m_weapons.front()->GetRange() };
+
+        auto position = getPosition();
+        if (m_side == Side::RIGHT) {
+            position.x += m_contentSize.width / 2.f;
+        }
+        else {
+            position.x -= m_contentSize.width / 2.f + attackRange;
+        }
+        position.y += m_contentSize.height * 0.25f;
+        cocos2d::Rect attackedArea {
+            position,
+            cocos2d::Size{ attackRange, m_contentSize.height * 0.5f }
         };
-        auto pushProjectile = [this](cocos2d::PhysicsBody* body){
-            body->setVelocity(this->getPhysicsBody()->getVelocity());
-        };
-        m_weapons.front()->LaunchAttack(
-            std::move(projectilePosition), 
-            std::move(pushProjectile)
-        );
-    }
+        return attackedArea;
+    };
+    auto pushProjectile = [this](cocos2d::PhysicsBody* body){
+        body->setVelocity(getPhysicsBody()->getVelocity());
+    };
+    m_weapons.front()->LaunchAttack(
+        std::move(projectilePosition), 
+        std::move(pushProjectile)
+    );
 }

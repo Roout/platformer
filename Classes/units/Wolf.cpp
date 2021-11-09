@@ -42,40 +42,40 @@ void Wolf::AddWeapons() {
     const auto attackDuration { 0.2f };
     const auto preparationTime { m_animator->GetDuration(Utils::EnumCast(State::ATTACK)) - attackDuration };
     const auto reloadTime { 0.4f };
-    m_weapons[WeaponClass::MELEE] = new Maw(
+    m_weapons[WeaponClass::MELEE].reset(new Maw(
         damage, 
         range, 
         preparationTime,
         attackDuration,
-        reloadTime 
-    );
+        reloadTime));
 }
 
 void Wolf::Attack() {
-    if (m_weapons[WeaponClass::MELEE]->IsReady() && !this->IsDead()) {
-        auto projectilePosition = [this]() -> cocos2d::Rect {
-            const auto attackRange { m_weapons[WeaponClass::MELEE]->GetRange() };
-            const cocos2d::Size mawSize { attackRange, attackRange * 2.f };
+    assert(!IsDead());
+    assert(m_weapons[WeaponClass::MELEE]->IsReady());
 
-            auto position = this->getPosition();
-            if (this->IsLookingLeft()) {
-                position.x -= m_hitBoxSize.width / 2.f + mawSize.width;
-            }
-            else {
-                position.x += m_hitBoxSize.width / 2.f;
-            }
-            position.y += m_hitBoxSize.height / 3.f;
+    auto projectilePosition = [this]() -> cocos2d::Rect {
+        const auto attackRange { m_weapons[WeaponClass::MELEE]->GetRange() };
+        const cocos2d::Size mawSize { attackRange, attackRange * 2.f };
 
-            return { position, mawSize };
-        };
-        auto pushProjectile = [this](cocos2d::PhysicsBody* body) {
-            body->setVelocity(this->getPhysicsBody()->getVelocity());
-        };
-        m_weapons[WeaponClass::MELEE]->LaunchAttack(
-            std::move(projectilePosition), 
-            std::move(pushProjectile)
-        );
-    }
+        auto position = getPosition();
+        if (IsLookingLeft()) {
+            position.x -= m_hitBoxSize.width / 2.f + mawSize.width;
+        }
+        else {
+            position.x += m_hitBoxSize.width / 2.f;
+        }
+        position.y += m_hitBoxSize.height / 3.f;
+
+        return { position, mawSize };
+    };
+    auto pushProjectile = [this](cocos2d::PhysicsBody* body) {
+        body->setVelocity(getPhysicsBody()->getVelocity());
+    };
+    m_weapons[WeaponClass::MELEE]->LaunchAttack(
+        std::move(projectilePosition), 
+        std::move(pushProjectile)
+    );
 }
 
 void Wolf::OnEnemyIntrusion() {
@@ -89,14 +89,15 @@ void Wolf::OnEnemyLeave() {
 }
 
 bool Wolf::NeedAttack() const noexcept {
+    assert(!IsDead());
+
     bool attackIsReady {
-        !this->IsDead() && 
         m_detectEnemy && 
         m_weapons[WeaponClass::MELEE]->IsReady()
     };
     bool enemyIsClose = false;
     if (attackIsReady) {
-        const auto target = this->getParent()->getChildByName<const Unit*>(core::EntityNames::PLAYER);
+        const auto target = getParent()->getChildByName<const Unit*>(core::EntityNames::PLAYER);
         // use some simple algorithm to determine whether a player is close enough to the target
         // to perform an attack
         if(target && !target->IsDead()) {
@@ -108,7 +109,7 @@ bool Wolf::NeedAttack() const noexcept {
                 targetHitbox
             };
             const cocos2d::Rect rhs { // check attack in both directions
-                this->getPosition() - cocos2d::Vec2 { m_contentSize.width / 2.f + radius, -m_hitBoxSize.height / 3.f },
+                getPosition() - cocos2d::Vec2 { m_contentSize.width / 2.f + radius, -m_hitBoxSize.height / 3.f },
                 cocos2d::Size { m_contentSize.width + 2.f * radius, 0.f }
             };
             enemyIsClose = lhs.intersectsRect(rhs);

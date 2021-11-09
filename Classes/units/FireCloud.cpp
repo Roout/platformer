@@ -47,17 +47,18 @@ bool FireCloud::init() {
 }
 
 void FireCloud::update(float dt) {
-     // update components
     cocos2d::Node::update(dt);
     // custom updates
-    this->UpdateDebugLabel();
-    this->UpdateWeapons(dt);
-    this->UpdatePosition(dt);
-    // TODO: remove cuz it's undestructable
-    // this->UpdateCurses(dt);
-    this->TryAttack();
-    this->UpdateState(dt);
-    this->UpdateAnimation(); 
+    UpdateDebugLabel();
+    if (!IsDead()) {
+        UpdateWeapons(dt);
+        UpdatePosition(dt);
+        // TODO: remove cuz it's undestructable
+        // UpdateCurses(dt);
+        TryAttack();
+    }
+    UpdateState(dt);
+    UpdateAnimation(); 
 }
 
 /// Bot interface
@@ -71,7 +72,7 @@ void FireCloud::OnEnemyLeave() {
 }
 
 void FireCloud::UpdatePosition(const float dt) noexcept {
-    m_movement->Update(dt);
+    m_movement->Update();
 }
 
 void FireCloud::UpdateWeapons(const float dt) noexcept {
@@ -93,28 +94,26 @@ void FireCloud::TryAttack() {
 void FireCloud::UpdateState(const float dt) noexcept {
     m_previousState = m_currentState;
 
-    if(m_currentState == State::UNDEFINED) {
+    if (m_currentState == State::UNDEFINED) {
         m_currentState = State::INIT;
     }
-    else if(m_currentState == State::LATE && m_lifetime <= 0.f) {
+    else if (m_currentState == State::LATE && m_lifetime <= 0.f) {
         m_currentState = State::DEAD;
     }
-    else if(m_currentState == State::LATE && m_lifetime > 0.f) {
+    else if (m_currentState == State::LATE && m_lifetime > 0.f) {
         m_lifetime -= dt;
     }
-    else if(m_finished && m_currentState != State::DEAD) {
+    else if (m_finished && m_currentState != State::DEAD) {
         m_currentState = static_cast<State>(Utils::EnumCast(m_currentState) + 1);
         m_finished = false;
         // stop comming up
-        if(m_currentState == State::LATE) {
-            m_movement->ResetForceY();
-            assert(this->getPhysicsBody() && "Cloud doesn't have physics body");
-            cocos2d::Vec2 impulse { 1.f, 0.f };
-            if (this->IsLookingLeft()) {
-                impulse.x *= -1.f;
-            }
+        if (m_currentState == State::LATE) {
+            Stop(Movement::Axis::Y);
+            assert(getPhysicsBody() && "Cloud doesn't have physics body");
+
             m_movement->SetMaxSpeed(CLOUD_SPEED);
-            m_movement->Push(impulse.x, impulse.y);
+            using Move = Movement::Direction;
+            m_movement->Push(IsLookingLeft()? Move::LEFT: Move::RIGHT);
         }
     }
 }
@@ -178,13 +177,12 @@ void FireCloud::AddWeapons() {
     const auto preparationTime { 0.f }; 
     const auto attackDuration { 0.1f };
     const auto reloadTime { 0.1f };
-    m_weapons[WeaponClass::RANGE] = new CloudFireball(
+    m_weapons[WeaponClass::RANGE].reset(new CloudFireball(
         damage, 
         range, 
         preparationTime,
         attackDuration,
-        reloadTime 
-    );
+        reloadTime));
 }
 
 void FireCloud::Attack() {
@@ -216,11 +214,10 @@ void FireCloud::Attack() {
 }
 
 bool FireCloud::NeedAttack() const noexcept {
-    return (!this->IsDead() 
-        && m_shells 
+    assert(!IsDead());
+    return (m_shells 
         && m_weapons[WeaponClass::RANGE]->IsReady() 
-        && m_currentState == State::LATE
-    );
+        && m_currentState == State::LATE);
 }
 
 } // namespace Enemies

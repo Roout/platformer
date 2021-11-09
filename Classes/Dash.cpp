@@ -27,7 +27,7 @@ void Dash::update(float dt) {
             // TODO: add callback
             // restore speed
             unit->SetMaxSpeed(m_initialSpeed);
-            unit->ResetForces(true, true);
+            unit->Stop(Movement::Axis::XY);
             {
                 auto body = unit->getPhysicsBody();
                 auto chipBody { body->getCPBody() };
@@ -36,7 +36,7 @@ void Dash::update(float dt) {
             }
         }
         else {
-            unit->ResetForces(false, true);
+            unit->Stop(Movement::Axis::Y);
         }
     }
 
@@ -53,14 +53,15 @@ void Dash::Initiate(float dashDuration) noexcept {
         m_dashTimer.Start(dashDuration);
         m_cooldownTimer.Start(m_cooldown);
         {
-            auto body = unit->getPhysicsBody();
+            auto body { unit->getPhysicsBody() };
             auto chipBody { body->getCPBody() };
             m_forces = cpBodyGetForce(chipBody);
             m_velocity = cpBodyGetVelocity(chipBody);
         }
         // speed up unit
         unit->SetMaxSpeed(m_dashSpeed);
-        unit->MoveAlong(0.f, 0.f);
-        unit->MoveAlong((unit->IsLookingLeft()? -1.f: 1.f), 0.f);
+        unit->Stop(Movement::Axis::XY);
+        unit->MoveAlong(unit->IsLookingLeft()? Movement::Direction::LEFT
+            : Movement::Direction::RIGHT);
     }
 }

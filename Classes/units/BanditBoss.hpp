@@ -139,8 +139,6 @@ private:
    
     void UpdateState(const float dt) noexcept override;
 
-    void UpdatePosition(const float dt) noexcept override;
-
     void UpdateAnimation() override;
 
     void OnDeath() override;

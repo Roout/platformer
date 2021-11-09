@@ -11,21 +11,12 @@
 #include "../scenes/LevelScene.hpp"
 
 #include <cmath>
+#include <cassert>
 
 Unit::Unit(const std::string& dragonBonesName) :
     m_curses { this },
     m_dragonBonesName { dragonBonesName }
 {
-    m_weapons.fill(nullptr);
-}
-
-Unit::~Unit() {
-    for(auto p: m_weapons) {
-        if(p) {
-            delete p;
-            p = nullptr;
-        }
-    }
 }
 
 bool Unit::init() {
@@ -71,23 +62,26 @@ void Unit::SetMaxSpeed(float speed) noexcept {
     m_movement->SetMaxSpeed(speed);
 }
 
-void Unit::ResetForces(bool x, bool y) noexcept {
-    if(x && y) m_movement->ResetForce();
-    else if(x) m_movement->ResetForceX();
-    else if(y) m_movement->ResetForceY();
+void Unit::MoveAlong(Movement::Direction dir) noexcept {
+    assert(m_movement);
+
+    using Move = Movement::Direction;
+    switch (dir) {
+        case Move::UP: [[fallthrough]];
+        case Move::DOWN: {
+            m_movement->Push(dir); 
+        } break;
+        case Move::LEFT: [[fallthrough]];
+        case Move::RIGHT: { 
+            m_movement->Move(dir);
+        } break;
+        default: assert(false && "Unreachable");
+    }
 }
 
-void Unit::MoveAlong(const cocos2d::Vec2& direction) noexcept {
-    return this->MoveAlong(direction.x, direction.y);
-}
-
-void Unit::MoveAlong(float x, float y) noexcept {
-    if (!helper::IsEqual(y, 0.f, 0.0001f)) {
-        m_movement->Push(x, y);
-    }
-    else {
-        m_movement->Move(x, y);
-    }
+void Unit::Stop(Movement::Axis axis) noexcept {
+    assert(m_movement);
+    m_movement->Stop(axis);
 }
 
 void Unit::Turn() noexcept {
@@ -111,52 +105,53 @@ void Unit::RecieveDamage(int damage) noexcept {
 }
 
 void Unit::Attack() {
-    if(m_weapons.front()->IsReady() && !this->IsDead()) {
-        auto projectilePosition = [this]() -> cocos2d::Rect {
-            const auto attackRange { m_weapons.front()->GetRange() };
+    assert(!IsDead());
+    assert(m_weapons.front()->IsReady());
 
-            auto position = this->getPosition();
-            if(m_side == Side::RIGHT) {
-                position.x += m_contentSize.width / 2.f;
-            }
-            else {
-                position.x -= m_contentSize.width / 2.f + attackRange;
-            }
-            // shift a little bit higher to avoid immediate collision with the ground
-            position.y += m_contentSize.height * 0.05f;
-            cocos2d::Rect attackedArea {
-                position,
-                cocos2d::Size{ attackRange, m_contentSize.height * 1.05f } // a little bigger than the designed size
-            };
-            return attackedArea;
+    auto projectilePosition = [this]() -> cocos2d::Rect {
+        const auto attackRange { m_weapons.front()->GetRange() };
+
+        auto position = getPosition();
+        if (m_side == Side::RIGHT) {
+            position.x += m_contentSize.width / 2.f;
+        }
+        else {
+            position.x -= m_contentSize.width / 2.f + attackRange;
+        }
+        // shift a little bit higher to avoid immediate collision with the ground
+        position.y += m_contentSize.height * 0.05f;
+        cocos2d::Rect attackedArea {
+            position,
+            cocos2d::Size{ attackRange, m_contentSize.height * 1.05f } // a little bigger than the designed size
         };
-        auto pushProjectile = [this](cocos2d::PhysicsBody* body){
-            body->setVelocity(this->getPhysicsBody()->getVelocity());
-        };
-        m_weapons.front()->LaunchAttack(
-            std::move(projectilePosition), 
-            std::move(pushProjectile)
-        );
-    }
+        return attackedArea;
+    };
+    auto pushProjectile = [this](cocos2d::PhysicsBody* body){
+        body->setVelocity(getPhysicsBody()->getVelocity());
+    };
+    m_weapons.front()->LaunchAttack(
+        std::move(projectilePosition), 
+        std::move(pushProjectile)
+    );
 }
 
 void Unit::UpdateWeapons(const float dt) noexcept {
-    if(!this->IsDead()) {
-        for(auto& weapon: m_weapons) {
-            if(weapon) {
-                weapon->UpdateState(dt);
-            }
+    assert(!IsDead());
+    
+    for (auto& weapon: m_weapons) {
+        if (weapon) {
+            weapon->UpdateState(dt);
         }
     }
 }
 
 void Unit::UpdatePosition(const float dt) noexcept {
-    if(!this->IsDead()) {
-        m_movement->Update(dt);
-    }
+    assert(!IsDead());
+    m_movement->Update();
 }
 
 void Unit::UpdateCurses(const float dt) noexcept {
+    assert(!IsDead());
     m_curses.Update(dt);
 }
 
@@ -166,14 +161,12 @@ bool Unit::IsOnGround() const noexcept {
     return helper::IsEqual(velocity.y, 0.f, EPS) && m_hasContactWithGround;
 }
 
-
 void Unit::AddPhysicsBody() {
     const auto body = cocos2d::PhysicsBody::createBox(
         m_physicsBodySize,
         cocos2d::PhysicsMaterial(1.f, 0.1f, 0.1f), 
         {0.f, floorf(m_physicsBodySize.height / 2.f)}
     );
-    // body->setMass(25.f);
     body->setDynamic(true);
     body->setGravityEnable(true);
     body->setRotationEnable(false);

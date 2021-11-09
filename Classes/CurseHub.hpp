@@ -7,7 +7,7 @@
 #include <array>
 #include <limits>
 
-namespace Curses {
+namespace curses {
     /**
      * The curses manager which belongs to unit. 
      * Help to manage curses applied to the unit.
@@ -36,19 +36,19 @@ namespace Curses {
         template<CurseClass type, class ...Args>
         void AddCurse(size_t trapId, Args&&... args) {
             using identity = typename get_curse<type>::identity;
-
-            for(size_t i = 0; i < MAX_SIZE; i++) {
-                if(!m_curses[i]) {
-                    m_curses[i] = std::make_unique<identity>( trapId, std::forward<Args>(args)...);
+            
+            for (auto& curse: m_curses) {
+                if (!curse) {
+                    curse = std::make_unique<identity>(trapId, std::forward<Args>(args)...);
                     break;
                 }
             }
         }
 
         void RemoveCurse(size_t id) noexcept {
-            for(size_t i = 0; i < MAX_SIZE; i++) {
-                if( m_curses[i] && m_curses[i]->GetId() == id ) {
-                    m_curses[i].reset();
+            for (auto& curse: m_curses) {
+                if (curse && curse->GetId() == id) {
+                    curse.reset();
                 }
             }
         }

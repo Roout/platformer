@@ -44,13 +44,15 @@ void Warrior::update(float dt) {
     // update components
     cocos2d::Node::update(dt);
     // custom updates
-    this->UpdateDebugLabel();
-    this->UpdateWeapons(dt);
-    this->UpdatePosition(dt); 
-    this->UpdateCurses(dt);
-    this->TryAttack();
-    this->UpdateState(dt);
-    this->UpdateAnimation(); 
+    UpdateDebugLabel();
+    if (!IsDead()) {
+        UpdateWeapons(dt);
+        UpdatePosition(dt); 
+        TryAttack();
+        UpdateCurses(dt);
+    }
+    UpdateState(dt);
+    UpdateAnimation(); 
 }
 
 /// Unique to warrior
@@ -151,22 +153,24 @@ void Warrior::UpdateState(const float dt) noexcept {
 }
 
 void Warrior::UpdatePosition(const float dt) noexcept {
+    assert(!IsDead());
+
     auto initiateAttack { 
         m_weapons[WeaponClass::MELEE]->IsAttacking() || 
         m_weapons[WeaponClass::MELEE]->IsPreparing() 
     };
-    if(m_weapons[WeaponClass::MELEE]->IsReloading()) {
+    if (m_weapons[WeaponClass::MELEE]->IsReloading()) {
         // stop
-        m_movement->ResetForce();
+        Stop(Movement::Axis::XY);
     }
-    else if(!initiateAttack) {
-        if(m_detectEnemy) { // update target
-            auto target = this->getParent()->getChildByName<Unit *>(core::EntityNames::PLAYER);
-            this->Pursue(target);
+    else if (!initiateAttack) {
+        if (m_detectEnemy) { // update target
+            auto target = getParent()->getChildByName<Unit *>(core::EntityNames::PLAYER);
+            Pursue(target);
         }
         // update
         m_navigator->Update(dt);
-        m_movement->Update(dt);
+        m_movement->Update();
     }
 }
 
@@ -196,7 +200,6 @@ void Warrior::AddPhysicsBody() {
     Unit::AddPhysicsBody();
     // change masks for physics body
     const auto body { this->getPhysicsBody() };
-    // body->setMass(25.f);
     body->setContactTestBitmask(Utils::CreateMask(core::CategoryBits::PLATFORM));
     body->setCategoryBitmask(Utils::CreateMask(core::CategoryBits::ENEMY));
     body->setCollisionBitmask(
@@ -247,13 +250,12 @@ void Warrior::AddWeapons() {
     const auto attackDuration { 0.15f };
     const auto preparationTime { m_animator->GetDuration(Utils::EnumCast(State::ATTACK)) - attackDuration };
     const auto reloadTime { 0.5f };
-    m_weapons[WeaponClass::MELEE] = new Axe(
+    m_weapons[WeaponClass::MELEE].reset(new Axe(
         damage, 
         range, 
         preparationTime,
         attackDuration,
-        reloadTime 
-    );
+        reloadTime));
 }
 
 } // namespace Enemies

@@ -56,8 +56,8 @@ void Spider::onExit() {
     cocos2d::Node::onExit();
 }
 
-void Spider::MoveAlong(float x, float y) noexcept {
-    m_movement->Move(x, y);
+void Spider::MoveAlong(Movement::Direction dir) noexcept {
+    m_movement->Move(dir);
 }
 
 
@@ -70,10 +70,10 @@ void Spider::CreateWebAt(const cocos2d::Vec2& start) {
 }
 
 void Spider::UpdateWeb() {
-    if(m_web) {
+    if (m_web) {
         m_web->clear();
         const auto shiftY { m_contentSize.height * 0.6f };
-        auto assMiddle = this->getPosition() + cocos2d::Vec2{ 0.f, shiftY}; 
+        auto assMiddle = getPosition() + cocos2d::Vec2{ 0.f, shiftY}; 
         m_web->drawLine(m_webStart, assMiddle, cocos2d::Color4F::WHITE);        
     }
 }
@@ -81,12 +81,15 @@ void Spider::UpdateWeb() {
 void Spider::update(float dt) {
     cocos2d::Node::update(dt);
     // custom updates
-    this->UpdateDebugLabel();
-    this->UpdatePosition(dt);
-    this->UpdateWeb(); 
-    this->UpdateCurses(dt);
-    this->UpdateState(dt);
-    this->UpdateAnimation(); 
+    UpdateDebugLabel();
+    // Spider's dead body still moves!!!
+    UpdatePosition(dt);
+    if (!IsDead()) {
+        UpdateCurses(dt);
+    }
+    UpdateWeb(); 
+    UpdateState(dt);
+    UpdateAnimation(); 
 };
 
 void Spider::OnEnemyIntrusion() {
@@ -107,9 +110,11 @@ void Spider::AttachNavigator(Path&& path) {
 
 void Spider::TryAttack() {
     // do nothing as it doens't attack
+    assert(false && "It shouldn't be called");
 };
 
-bool Spider::NeedAttack() const noexcept{
+bool Spider::NeedAttack() const noexcept {
+    assert(false && "It shouldn't be called");
     return false; // spider doesn't attack at least for now
 };
 
@@ -130,7 +135,7 @@ void Spider::UpdatePosition(const float dt) noexcept {
     if(!this->IsDead()) {
         m_navigator->Update(dt);
     }
-    m_movement->Update(dt);
+    m_movement->Update();
 };
 
 void Spider::UpdateAnimation() {
@@ -146,23 +151,23 @@ void Spider::UpdateAnimation() {
 
 void Spider::OnDeath() {
     // Interface
-    this->getChildByName("health")->removeFromParent();
+    getChildByName("health")->removeFromParent();
     // Physics
-    const auto body = this->getPhysicsBody();
+    const auto body = getPhysicsBody();
     const auto hitBoxTag { Utils::EnumCast(core::CategoryBits::HITBOX_SENSOR) };
     const auto hitBoxSensor { body->getShape(hitBoxTag) };
     body->setGravityEnable(true);
     hitBoxSensor->setContactTestBitmask(0); // don't cause any damage to player
     // Movement
-    m_movement->ResetForce(); // reset forces
-    m_movement->Push(0.f, -0.1f); // push down
+    m_movement->Stop(Movement::Axis::XY);
+    m_movement->Push(Movement::Direction::DOWN, 0.1f);
     // Animation
     m_animator->EndWith([this]() {
-        if(this->m_web) {
-            this->m_web->removeFromParent();
-            this->m_web = nullptr;
+        if (m_web) {
+            m_web->removeFromParent();
+            m_web = nullptr;
         }
-        this->runAction(cocos2d::RemoveSelf::create(true));
+        runAction(cocos2d::RemoveSelf::create(true));
     });
 };
 
@@ -177,7 +182,6 @@ void Spider::AddPhysicsBody() {
     // because in constructor offset is added to the shape!
     const auto yOffset { floorf(m_contentSize.height * 0.65f) };
     body->setPositionOffset({0.f, yOffset});
-    // body->setMass(25.f);
     body->setDynamic(true);
     body->setGravityEnable(false);
     body->setRotationEnable(false);

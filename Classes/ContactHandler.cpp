@@ -44,7 +44,7 @@ bool OnContactBegin(cocos2d::PhysicsContact& contact) {
     // i.e. basicaly it's unit and other collidable body
     if (isUnitSensor[BODY_A] || isUnitSensor[BODY_B]) {
         Unit * unit { static_cast<Unit*>(isUnitSensor[BODY_A]? nodes[BODY_A] : nodes[BODY_B]) };
-        unit->SetContactWithGround(true);
+        unit->EnableContactWithGround();
 
         return true;
     } 
@@ -92,7 +92,7 @@ bool OnContactBegin(cocos2d::PhysicsContact& contact) {
         const auto trapIndex { isTrap[BODY_A]? BODY_A: BODY_B };
 
         const auto unit { static_cast<Unit*>(nodes[trapIndex^1]) };
-        const auto trap { static_cast<Traps::Trap*>(nodes[trapIndex]) };
+        const auto trap { static_cast<traps::Trap*>(nodes[trapIndex]) };
         
         trap->CurseTarget(unit);
 
@@ -110,7 +110,7 @@ bool OnContactBegin(cocos2d::PhysicsContact& contact) {
         if (enemiesCount == 1) {
             const auto player { static_cast<Unit*>(nodes[playerIndex]) };
             const auto enemy { static_cast<Enemies::Bot*>(nodes[playerIndex^1]) };
-            player->AddCurse<Curses::CurseClass::DPS>(enemy->GetId(), Player::DAMAGE_ON_CONTACT, Curses::UNLIMITED);
+            player->AddCurse<curses::CurseClass::DPS>(enemy->GetId(), Player::DAMAGE_ON_CONTACT, curses::UNLIMITED);
         }
         return false;
     }
@@ -139,7 +139,7 @@ bool OnContactBegin(cocos2d::PhysicsContact& contact) {
         // damage target if possible
         if(isUnit[projectileIndex ^ 1]) {
             const auto unit { static_cast<Unit*>(nodes[projectileIndex ^ 1]) };
-            unit->AddCurse<Curses::CurseClass::INSTANT>(Curses::CurseHub::ignored, proj->GetDamage());
+            unit->AddCurse<curses::CurseClass::INSTANT>(curses::CurseHub::ignored, proj->GetDamage());
             proj->SetExplosionState(Projectile::State::HIT_PLAYER);
         } 
         else if(bodyMasks[projectileIndex ^ 1] == Utils::CreateMask(core::CategoryBits::PROPS)) {
@@ -193,7 +193,12 @@ bool OnContactSeparate(cocos2d::PhysicsContact& contact) {
                 helper::IsEqual(bodies[BODY_A]->getVelocity().y, 0.f, 0.000001f):
                 helper::IsEqual(bodies[BODY_B]->getVelocity().y, 0.f, 0.000001f)
         };
-        unit->SetContactWithGround(onGround);
+        if (onGround) {
+            unit->EnableContactWithGround();
+        }
+        else {
+            unit->DisableContactWithGround();
+        }
         return true;
     }
 
@@ -206,7 +211,7 @@ bool OnContactSeparate(cocos2d::PhysicsContact& contact) {
         const auto trapIndex { isTrap[BODY_A]? BODY_A: BODY_B };
 
         const auto unit { static_cast<Unit*>(nodes[trapIndex^1]) };
-        const auto trap { static_cast<Traps::Trap*>(nodes[trapIndex]) };
+        const auto trap { static_cast<traps::Trap*>(nodes[trapIndex]) };
         
         trap->RemoveCurse(unit);
 

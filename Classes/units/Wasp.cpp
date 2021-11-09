@@ -43,43 +43,44 @@ void Wasp::AddWeapons() {
     const auto attackDuration { 0.2f };
     const auto preparationTime { m_animator->GetDuration(Utils::EnumCast(State::ATTACK)) - attackDuration };
     const auto reloadTime { 0.6f };
-    m_weapons[WeaponClass::MELEE] = new Maw(
+    m_weapons[WeaponClass::MELEE].reset(new Maw(
         damage, 
         range, 
         preparationTime,
         attackDuration,
-        reloadTime 
-    );
+        reloadTime));
 }
 
 void Wasp::Attack() {
-    if(m_weapons[WeaponClass::MELEE]->IsReady() && !this->IsDead()) {
-        auto projectilePosition = [this]() -> cocos2d::Rect {
-            const auto attackRange { m_weapons[WeaponClass::MELEE]->GetRange() };
-            const cocos2d::Size stingSize { attackRange, attackRange / 4.f };
+    assert(!IsDead());
+    assert(m_weapons[WeaponClass::MELEE]->IsReady());
 
-            auto position = this->getPosition();
-            if (this->IsLookingLeft()) {
-                position.x -= m_hitBoxSize.width / 2.f + stingSize.width;
-            }
-            else {
-                position.x += m_hitBoxSize.width / 2.f;
-            }
-            position.y += m_hitBoxSize.height / 8.f;
+    auto projectilePosition = [this]() -> cocos2d::Rect {
+        const auto attackRange { m_weapons[WeaponClass::MELEE]->GetRange() };
+        const cocos2d::Size stingSize { attackRange, attackRange / 4.f };
 
-            return { position, stingSize };
-        };
-        auto pushProjectile = [](cocos2d::PhysicsBody* body) {
-            // body->setVelocity(this->getPhysicsBody()->getVelocity());
-        };
-        m_weapons[WeaponClass::MELEE]->LaunchAttack(
-            std::move(projectilePosition), 
-            std::move(pushProjectile)
-        );
-    }
+        auto position = getPosition();
+        if (IsLookingLeft()) {
+            position.x -= m_hitBoxSize.width / 2.f + stingSize.width;
+        }
+        else {
+            position.x += m_hitBoxSize.width / 2.f;
+        }
+        position.y += m_hitBoxSize.height / 8.f;
+
+        return { position, stingSize };
+    };
+    auto pushProjectile = [](cocos2d::PhysicsBody* body) {
+        // body->setVelocity(getPhysicsBody()->getVelocity());
+    };
+    m_weapons[WeaponClass::MELEE]->LaunchAttack(
+        std::move(projectilePosition), 
+        std::move(pushProjectile)
+    );
 }
 
 void Wasp::Pursue(Unit * target) noexcept {
+    assert(target);
     if (!this->IsDead() && target && !target->IsDead()) {
         m_navigator->VisitCustomPoint(
             target->getPosition() + cocos2d::Vec2{0.f, target->GetHitBox().height / 2.f}
@@ -88,41 +89,40 @@ void Wasp::Pursue(Unit * target) noexcept {
 }
 
 bool Wasp::NeedAttack() const noexcept {
-    bool attackIsReady {
-        !this->IsDead() && 
-        m_detectEnemy && 
-        m_weapons[WeaponClass::MELEE]->IsReady()
+    assert(!IsDead());
+    bool attackIsReady { m_detectEnemy 
+        && m_weapons[WeaponClass::MELEE]->IsReady()
     };
+    if (!attackIsReady) return false;
+    
     bool enemyIsClose = false;
-    if (attackIsReady) {
-        const auto target = this->getParent()->getChildByName<const Unit*>(core::EntityNames::PLAYER);
-        // use some simple algorithm to determine whether a player is close enough to the target
-        // to perform an attack
-        if(target && !target->IsDead()) {
-            // TODO: this is code replication!!!! (see above Wasp::Attack())
-            // calc position of the stinger:
-            const auto attackRange { m_weapons[WeaponClass::MELEE]->GetRange() };
-            const cocos2d::Size stingSize { attackRange, attackRange / 4.4f };
-            auto position = this->getPosition();
-            if (this->IsLookingLeft()) {
-                position.x -= m_hitBoxSize.width / 2.f + stingSize.width;
-            }
-            else {
-                position.x += m_hitBoxSize.width / 2.f;
-            }
-            position.y += m_hitBoxSize.height / 8.f;
-
-            const auto radius = m_weapons[WeaponClass::MELEE]->GetRange() * 0.75f;
-            const auto targetHitbox = target->GetHitBox();
-            const cocos2d::Rect lhs { 
-                target->getPosition() - cocos2d::Vec2{ targetHitbox.width / 2.f, 0.f },
-                targetHitbox
-            };
-            const cocos2d::Rect rhs { position, stingSize };
-            enemyIsClose = lhs.intersectsRect(rhs);
+    const auto target = this->getParent()->getChildByName<const Unit*>(core::EntityNames::PLAYER);
+    // use some simple algorithm to determine whether a player is close enough to the target
+    // to perform an attack
+    if (target && !target->IsDead()) {
+        // TODO: this is code replication!!!! (see above Wasp::Attack())
+        // calc position of the stinger:
+        const auto attackRange { m_weapons[WeaponClass::MELEE]->GetRange() };
+        const cocos2d::Size stingSize { attackRange, attackRange / 4.4f };
+        auto position = this->getPosition();
+        if (this->IsLookingLeft()) {
+            position.x -= m_hitBoxSize.width / 2.f + stingSize.width;
         }
+        else {
+            position.x += m_hitBoxSize.width / 2.f;
+        }
+        position.y += m_hitBoxSize.height / 8.f;
+
+        const auto radius = m_weapons[WeaponClass::MELEE]->GetRange() * 0.75f;
+        const auto targetHitbox = target->GetHitBox();
+        const cocos2d::Rect lhs { 
+            target->getPosition() - cocos2d::Vec2{ targetHitbox.width / 2.f, 0.f },
+            targetHitbox
+        };
+        const cocos2d::Rect rhs { position, stingSize };
+        enemyIsClose = lhs.intersectsRect(rhs);
     }
-    return attackIsReady && enemyIsClose;
+    return enemyIsClose;
 }
 
 void Wasp::AttachNavigator(Path&& path) {
@@ -131,8 +131,8 @@ void Wasp::AttachNavigator(Path&& path) {
     m_navigator->SetPrecision(15.f);
 }
 
-void Wasp::MoveAlong(float x, float y) noexcept {
-    m_movement->Move(x, y);
+void Wasp::MoveAlong(Movement::Direction dir) noexcept {
+    m_movement->Move(dir);
 }
 
 void Wasp::AddPhysicsBody() {
@@ -141,7 +141,6 @@ void Wasp::AddPhysicsBody() {
         cocos2d::PhysicsMaterial(1.f, 0.1f, 0.1f), 
         {0.f, floorf(m_physicsBodySize.height / 2.f)}
     );
-    // body->setMass(25.f);
     body->setDynamic(true);
     body->setGravityEnable(false);
     body->setRotationEnable(false);

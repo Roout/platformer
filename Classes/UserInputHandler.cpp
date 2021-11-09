@@ -11,6 +11,14 @@
 
 #include <algorithm> // std::find
 
+namespace {
+
+    inline bool HasSameSigh(int lhs, int rhs) noexcept {
+        return (lhs >= 0 && rhs >= 0) || (lhs < 0 && rhs < 0);
+    }
+
+} // namespace {
+
 UserInputHandler::Input UserInputHandler::Input::Create(WinKeyCode keyCode) noexcept {
     Input input;
     if (keyCode == WinKeyCode::KEY_LEFT_ARROW ||
@@ -111,6 +119,8 @@ void UserInputHandler::OnKeyPressed(
     WinKeyCode keyCode, 
     cocos2d::Event* event
 ) {
+    using Move = Movement::Direction;
+
     const auto lastInputCopy { m_lastInput };
     m_lastInput.Merge(Input::Create(keyCode));
 
@@ -130,47 +140,36 @@ void UserInputHandler::OnKeyPressed(
         m_lastInput.jumpCounter = 0;
     }
     
-    if ((m_lastInput.jump && m_player->IsOnGround()) || 
-        (m_lastInput.jump && m_lastInput.jumpCounter < MAX_JUMP_COUNT)
-    ) {
-        if (canBeControlled) {
-            m_player->MoveAlong(0.f, 1.f);
-            if (m_player->IsOnGround()) {
-                m_lastInput.jumpCounter = 1;
-            }
-            else {
-                // jump in the air - first jump or second - doesn't matter
-                m_lastInput.jumpCounter = MAX_JUMP_COUNT;
-            }
+    bool jumpFromGround { m_lastInput.jump && m_player->IsOnGround() };
+    bool jumpFromAir { m_lastInput.jump 
+        && m_lastInput.jumpCounter < MAX_JUMP_COUNT };
+
+    if (canBeControlled && (jumpFromGround || jumpFromAir)) {
+        m_player->MoveAlong(Move::UP);
+        if (m_player->IsOnGround()) {
+            m_lastInput.jumpCounter = 1;
+        }
+        else {
+            // jump in the air - first jump or second - doesn't matter
+            m_lastInput.jumpCounter = MAX_JUMP_COUNT;
         }
     }
 
-    if (m_lastInput.dx > 0 && canBeControlled) {
+    if (m_lastInput.dx && canBeControlled) {
+        bool goLeft { m_lastInput.dx < 0 };
+        bool goRight { m_lastInput.dx > 0 };
         // reset only dx!
         m_player->FinishSpecialAttack();
         // Don't reset if player is moving in the same direction 
         const auto xVel = m_player->getPhysicsBody()->getVelocity().x;
-        if(xVel < 0.f) {
-            // Player is moving in other direction
-            m_player->m_movement->ResetForceX();
+        if ((xVel < 0.f && goRight) || (xVel > 0.f && goLeft)) {
+            // Player is moving in different direction
+            m_player->Stop(Movement::Axis::X);
         }
-        // no need to reset the forceX!
-        m_player->MoveAlong(1.f, 0.f);
-        if (m_player->IsLookingLeft()) {
-            m_player->Turn();
-        }
-    }
-    else if (m_lastInput.dx < 0 && canBeControlled) {
-        // reset only dx!
-        m_player->FinishSpecialAttack();
-        // Don't reset if player is moving in the same direction 
-        const auto xVel = m_player->getPhysicsBody()->getVelocity().x;
-        if(xVel > 0.f) {
-            // Player is moving in other direction
-            m_player->m_movement->ResetForceX();
-        }
-        m_player->MoveAlong(-1.f, 0.f);
-        if (!m_player->IsLookingLeft()) {
+        m_player->MoveAlong(goLeft? Move::LEFT: Move::RIGHT);
+        if ((m_player->IsLookingLeft() && goRight)
+            || (!m_player->IsLookingLeft() && goLeft)) 
+        {
             m_player->Turn();
         }
     }
@@ -178,24 +177,17 @@ void UserInputHandler::OnKeyPressed(
     if (m_lastInput.dash) {
         m_player->InitiateDash();
     }
-    else if (m_lastInput.meleeAttack && canBeControlled) {
-        m_player->MeleeAttack();
+    else if (canBeControlled) {
+        if (m_lastInput.meleeAttack) {
+            m_player->MeleeAttack();
+        }
+        else if (m_lastInput.rangeAttack) {
+            m_player->RangeAttack();
+        }
+        else if (m_lastInput.specialAttack) {
+            m_player->StartSpecialAttack();
+        }
     }
-    else if (m_lastInput.rangeAttack && canBeControlled) {
-        m_player->RangeAttack();
-    }
-    else if (m_lastInput.specialAttack && canBeControlled) {
-        m_player->StartSpecialAttack();
-    }
-}
-
-static inline void Decrease(int& value) noexcept {
-    if(value > 0) value--;
-    else if(value < 0) value++;
-}
-
-static inline bool HasSameSigh(int lhs, int rhs) noexcept {
-    return (lhs >= 0 && rhs >= 0) || (lhs < 0 && rhs < 0);
 }
 
 void UserInputHandler::OnKeyRelease(
@@ -207,13 +199,18 @@ void UserInputHandler::OnKeyRelease(
     const bool dashed { m_player->m_currentState == Player::State::DASH };
 
     if (released.dx && HasSameSigh(released.dx, m_lastInput.dx)) {
-        Decrease(m_lastInput.dx);
-        // reset only dx!
+        if (m_lastInput.dx > 0) {
+            m_lastInput.dx--;
+        }
+        else if (m_lastInput.dx < 0) {
+            m_lastInput.dx++;
+        }
+
         if (dashed) {
             m_player->m_dash->ResetSavedBodyState();
         }
-        else if(!m_lastInput.dx) {
-            m_player->m_movement->ResetForceX();
+        else if (!m_lastInput.dx) {
+            m_player->Stop(Movement::Axis::X);
         }
     }
 

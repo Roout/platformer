@@ -2,12 +2,15 @@
 #define LEVEL_SCENE_HPP
 
 #include <memory>
+#include <limits>
 #include "cocos2d.h"
 #include "../TileMapParser.hpp"
 
 class LevelScene : public cocos2d::Scene {
 public:
-
+    static constexpr int EXIST_ON_RESTART_TAG { 
+        std::numeric_limits<int>::max()
+    };
 /// Constants which define jump height and time for PLAYER!
 /// NOTE! GRAVITY is fully based on player!
     // Defines how high can the body jump

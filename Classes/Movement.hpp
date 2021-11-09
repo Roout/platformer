@@ -14,57 +14,59 @@ namespace cocos2d {
  */
 class Movement final {
 public:
-    
+
+    enum class Direction : std::uint8_t {
+        UP, DOWN, LEFT, RIGHT
+    };
+
+    enum class Axis : std::uint8_t {
+        X, Y, XY
+    };
+
     Movement(cocos2d::PhysicsBody * const body
         , float gravity
         , float jumpHeight
     );
     
+    Movement(Movement const&) = delete;
+    Movement& operator= (Movement const&) = delete;
+
+    Movement(Movement&&) = delete;
+    Movement& operator= (Movement&&) = delete;
+
     ~Movement();
 
     /**
+     * TODO: add delta time to prevent different movement speed for differenrt FPS
+     * 
      * Each frame applies forces or impulses which are scheduled by Push/Move
-     * @param dt may be unused
      */
-    void Update(float dt) noexcept;
+    void Update() noexcept;
     
     /**
      *  Push the body with predefined impulses.
-     *  Impulses can be adjusted by setting coefficients: x & y. 
-     * 
-     *  @param x provide impulse horizontal direction 
-     * and coefficient (work as simple multiplier of impulse)
-     *  @param y provide impulse vertical direction 
-     * and coefficient (work as simple multiplier of impulse)
-     * 
-     * Expect: x, y = [-1.f, 1.f]
+     * @param scale is a positive coefficient 
+     *        which scaling the resulting impulse
      */
-    void Push(float x, float y) noexcept;
+    void Push(Direction dir, float scale = 1.0f) noexcept;
 
     /**
-     *  Move the body with predefined forces in 4 directions.
-     * Stop body if `x = 0.f, y = 0.f`.
-     *  Forces like impulses can also be adjusted by setting coefficients: x & y. 
-     * 
-     *  @param x provide force horizontal direction 
-     * and coefficient (work as simple multiplier of force)
-     *  @param y provide force vertical direction 
-     * and coefficient (work as simple multiplier of force)
-     * 
-     * Expect: x, y = [-1.f, 1.f]
+     *  Move the body with predefined forces in one of 4 directions.
+     * @param scale is a positive coefficient 
+     *        which scaling the resulting velocity
      */
-    void Move(float x, float y) noexcept;
+    void Move(Direction dir, float scale = 1.0f) noexcept;
 
-    void ResetForce() noexcept;
-
-    void ResetForceX() noexcept;
-
-    void ResetForceY() noexcept;
+    /**
+     * Stops the movement in the given direction 
+     * by reseting forces and velocity of the physic body
+     */
+    void Stop(Axis axis) noexcept;
 
     void SetMaxSpeed(float speed) noexcept;
 
     void SetJumpHeight(float height, float gravity) noexcept;
-    
+
 private:
     cocos2d::PhysicsBody * const m_body { nullptr };
 

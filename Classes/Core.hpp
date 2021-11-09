@@ -1,7 +1,7 @@
 #ifndef CORE_HPP
 #define CORE_HPP
 
-#include <string>
+#include <string_view>
 
 namespace core {
     /**
@@ -58,40 +58,10 @@ namespace core {
         const char* const WOLF          = "wolf";
         const char* const WASP          = "wasp";
         const char* const SPEARMAN      = "spear_man";
-        const char* const PLAYER        = "player";
+        const char* const PLAYER        = "mc";
     }
 
-    // TODO: add routing through the unordered_map
-    inline CategoryName CategoryFromString(const std::string& str) noexcept {
-        CategoryName category { core::CategoryName::UNDEFINED };
-
-        if(str == "platform" ) {
-            category = CategoryName::PLATFORM;
-        } 
-        else if(str == "border") {
-            category = CategoryName::BORDER;
-        } 
-        else if(str == "spikes") {
-            category = CategoryName::SPIKES;
-        } 
-        else if(str == "player") {
-            category = CategoryName::PLAYER;
-        } 
-        else if(str == "props") {
-            category = CategoryName::PROPS;
-        } 
-        else if(str == "enemy") {
-            category = CategoryName::ENEMY;
-        }
-        else if(str == "path") {
-            category = CategoryName::PATH;
-        }
-        else if(str == "influence") {
-            category = CategoryName::INFLUENCE;
-        }
-
-        return category;
-    }
+    CategoryName CategoryFromString(std::string_view str);
 
     enum class CategoryBits: int {
         PLAYER              = 0x0001,

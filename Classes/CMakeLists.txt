@@ -95,6 +95,7 @@ list(APPEND sources
     Props.cpp
     ParallaxBackground.cpp
     Weapon.cpp
+    Core.cpp
     HealthBar.cpp
     Curses.cpp
     CurseHub.cpp
