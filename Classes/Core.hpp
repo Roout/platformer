@@ -58,7 +58,7 @@ namespace core {
         const char* const WOLF          = "wolf";
         const char* const WASP          = "wasp";
         const char* const SPEARMAN      = "spear_man";
-        const char* const PLAYER        = "player";
+        const char* const PLAYER        = "mc";
     }
 
     CategoryName CategoryFromString(std::string_view str);

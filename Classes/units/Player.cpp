@@ -31,7 +31,7 @@ Player* Player::create(const cocos2d::Size& contentSize) {
 }
 
 Player::Player(const cocos2d::Size& contentSize) 
-    : Unit { "mc" }
+    : Unit { core::EntityNames::PLAYER }
 {
     m_contentSize = contentSize;
     m_physicsBodySize = cocos2d::Size { contentSize.width / 2.f, contentSize.height };
