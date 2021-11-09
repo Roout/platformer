@@ -8,6 +8,7 @@
 #include "units/FireCloud.hpp"
 
 #include <string>
+#include <cassert>
 
 using namespace std::literals;
 
@@ -18,10 +19,19 @@ using namespace std::literals;
  * - [ ] cleanup mess with z-order
  */
 
+namespace {
+    inline cocos2d::Node* GetMap() noexcept {
+        auto runningScene { cocos2d::Director::getInstance()->getRunningScene() };
+        assert(runningScene);
+        auto level = runningScene->getChildByName("Level");
+        assert(level);
+        auto map = level->getChildByName("Map");
+        return map;
+    }
+} // namespace {
+
 void Sword::OnAttack() {
-    const auto runningScene { cocos2d::Director::getInstance()->getRunningScene() };
-    const auto level = runningScene->getChildByName("Level");
-    const auto map = level->getChildByName("Map");
+    const auto map = ::GetMap();
 
     const auto proj = Projectile::create(this->GetDamage());
     const auto projectile = m_extractor();
@@ -45,9 +55,7 @@ void Sword::OnAttack() {
 }
 
 void GenericAttack::OnAttack() {
-    const auto runningScene { cocos2d::Director::getInstance()->getRunningScene() };
-    const auto level = runningScene->getChildByName("Level");
-    const auto map = level->getChildByName("Map");
+    const auto map = ::GetMap();
     
     const auto proj = Projectile::create(this->GetDamage());
     const auto projectile = m_extractor();
@@ -69,9 +77,7 @@ void GenericAttack::OnAttack() {
 }
 
 void Bow::OnAttack() {
-    const auto runningScene { cocos2d::Director::getInstance()->getRunningScene() };
-    const auto level = runningScene->getChildByName("Level");
-    const auto map = level->getChildByName("Map");
+    const auto map = ::GetMap();
     
     const auto proj = Projectile::create(this->GetDamage());
     const auto projectile = m_extractor();
@@ -107,9 +113,7 @@ void Bow::OnAttack() {
 }
 
 void Legs::OnAttack() {
-    const auto runningScene { cocos2d::Director::getInstance()->getRunningScene() };
-    const auto level = runningScene->getChildByName("Level");
-    const auto map = level->getChildByName("Map");
+    const auto map = ::GetMap();
 
     const auto proj = Projectile::create(this->GetDamage());
     map->addChild(proj, 100); 
@@ -149,9 +153,7 @@ void Legs::OnAttack() {
 }
 
 void PlayerFireball::OnAttack() {
-    const auto runningScene { cocos2d::Director::getInstance()->getRunningScene() };
-    const auto level = runningScene->getChildByName("Level");
-    const auto map = level->getChildByName("Map");
+    const auto map = ::GetMap();
     const auto scaleFactor { 0.2f };
     
     const auto proj = Projectile::create(this->GetDamage());
@@ -227,11 +229,7 @@ void BossFireball::UpdateState(const float dt) noexcept {
 }
 
 void BossFireball::OnAttack() {
-    const auto runningScene { cocos2d::Director::getInstance()->getRunningScene() };
-    const auto level = runningScene->getChildByName("Level");
-    if(!level) return;
-    const auto map = level->getChildByName("Map");
-    if(!map) return;
+    const auto map = ::GetMap();
     const auto boss = map->getChildByName<Unit*>(core::EntityNames::BOSS);
     if(!boss || boss->IsDead()) return;
 
@@ -285,9 +283,7 @@ void BossFireball::OnAttack() {
 }
 
 void BossChainSwing::OnAttack() {
-    const auto runningScene { cocos2d::Director::getInstance()->getRunningScene() };
-    const auto level = runningScene->getChildByName("Level");
-    const auto map = level->getChildByName("Map");
+    const auto map = ::GetMap();
 
     const auto proj = Projectile::create(this->GetDamage());
     const auto projectile = m_extractor();
@@ -334,9 +330,7 @@ void BossChainSwing::UpdateState(const float dt) noexcept {
 }
 
 void PlayerSpecial::OnAttack() {
-    const auto runningScene { cocos2d::Director::getInstance()->getRunningScene() };
-    const auto level = runningScene->getChildByName("Level");
-    const auto map = level->getChildByName("Map");
+    const auto map = ::GetMap();
     const auto scaleFactor { 0.17f };
     
     const auto proj = Projectile::create(this->GetDamage());
@@ -389,9 +383,7 @@ void PlayerSpecial::OnAttack() {
 }
 
 void SlimeShot::OnAttack() {
-    const auto runningScene { cocos2d::Director::getInstance()->getRunningScene() };
-    const auto level = runningScene->getChildByName("Level");
-    const auto map = level->getChildByName("Map");
+    const auto map = ::GetMap();
     const auto scaleFactor { 0.2f };
     
     const auto proj = Projectile::create(this->GetDamage());
@@ -445,9 +437,7 @@ void SlimeShot::OnAttack() {
 
 void BossFireCloud::OnAttack() {
     // TODO: generate a fire cloud
-    const auto runningScene { cocos2d::Director::getInstance()->getRunningScene() };
-    const auto level = runningScene->getChildByName("Level");
-    const auto map = level->getChildByName("Map");
+    const auto map = ::GetMap();
     const auto boss = map->getChildByName<Unit*>(core::EntityNames::BOSS);
 
     const auto form = m_extractor();
@@ -465,9 +455,7 @@ void BossFireCloud::OnAttack() {
 }
 
 void CloudFireball::OnAttack() {
-    const auto runningScene { cocos2d::Director::getInstance()->getRunningScene() };
-    const auto level = runningScene->getChildByName("Level");
-    const auto map = level->getChildByName("Map");
+    const auto map = ::GetMap();
     const auto scaleFactor { 0.2f };
     
     const auto proj = Projectile::create(this->GetDamage());
@@ -520,9 +508,7 @@ void CloudFireball::OnAttack() {
 }
 
 void Stake::OnAttack() {
-    const auto runningScene { cocos2d::Director::getInstance()->getRunningScene() };
-    const auto level = runningScene->getChildByName("Level");
-    const auto map = level->getChildByName("Map");
+    const auto map = ::GetMap();
     
     const auto proj = Projectile::create(this->GetDamage());
     const auto projectile = m_extractor();
@@ -570,9 +556,7 @@ StalactitePart::StalactitePart(
 {}
 
 void StalactitePart::OnAttack() {
-    const auto runningScene { cocos2d::Director::getInstance()->getRunningScene() };
-    const auto level = runningScene->getChildByName("Level");
-    const auto map = level->getChildByName("Map");
+    const auto map = ::GetMap();
 
     const auto proj = Projectile::create(this->GetDamage());
     auto name   = cocos2d::StringUtils::format("%s_%d_projectile", core::EntityNames::STALACTITE, m_index);
