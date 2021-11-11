@@ -78,20 +78,7 @@ void Stalactite::Attack() {
     assert(!IsDead());
     assert(m_weapons[WeaponClass::RANGE]->IsReady());
     
-    auto projectilePosition = [this]()->cocos2d::Rect {
-        const auto attackRange { m_weapons[WeaponClass::RANGE]->GetRange() };
-        const cocos2d::Size stalactite { m_contentSize / m_scale };
-        auto position = this->getPosition();
-        // shift y-axis to avoid collision with the ceiling
-        return { cocos2d::Vec2(position.x, position.y - stalactite.height * 0.05f) , stalactite};
-    };
-    auto pushProjectile = [this](cocos2d::PhysicsBody* body) {
-        body->setVelocity({ 0.f, -400.f });
-    };
-    m_weapons[WeaponClass::RANGE]->LaunchAttack(
-        std::move(projectilePosition), 
-        std::move(pushProjectile)
-    );
+    m_weapons[WeaponClass::RANGE]->LaunchAttack();
     m_alreadyAttacked = true;
 }
 
@@ -205,13 +192,22 @@ void Stalactite::AddWeapons() {
     const auto preparationTime { m_animator->GetDuration(Utils::EnumCast(State::PREPARE_ATTACK)) };
     const auto attackDuration { m_animator->GetDuration(Utils::EnumCast(State::ATTACK)) };
     const auto reloadTime { 0.3f };
+
+    auto genPos = [this]()->cocos2d::Rect {
+        auto attackRange { m_weapons[WeaponClass::RANGE]->GetRange() };
+        cocos2d::Size stalactite { m_contentSize / m_scale };
+        auto position = getPosition();
+        // shift y-axis to avoid collision with the ceiling
+        return { cocos2d::Vec2(position.x, position.y - stalactite.height * 0.05f) , stalactite};
+    };
+    auto genVel = [this](cocos2d::PhysicsBody* body) {
+        body->setVelocity({ 0.f, -400.f });
+    };
+
     m_weapons[WeaponClass::RANGE].reset(new StalactitePart(
-        damage, 
-        range, 
-        preparationTime,
-        attackDuration,
-        reloadTime,
-        m_index));
+        damage, range, preparationTime, attackDuration, reloadTime, m_index));
+    m_weapons[WeaponClass::RANGE]->AddPositionGenerator(std::move(genPos));
+    m_weapons[WeaponClass::RANGE]->AddVelocityGenerator(std::move(genVel));
 }
 
 

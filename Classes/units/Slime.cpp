@@ -198,21 +198,10 @@ void Slime::AddWeapons() {
     const auto preparationTime { duration * 0.6f }; /// TODO: update animation!
     const auto attackDuration { duration - preparationTime };
     const auto reloadTime { 0.5f };
-    m_weapons[WeaponClass::RANGE].reset(new SlimeShot(
-        damage, 
-        range, 
-        preparationTime,
-        attackDuration,
-        reloadTime));
-}
-
-void Slime::Attack() {
-    assert(!IsDead());
-    assert(m_weapons[WeaponClass::RANGE]->IsReady());
-
-    auto projectilePosition = [this]() -> cocos2d::Rect {
-        const auto attackRange { m_weapons[WeaponClass::RANGE]->GetRange() };
-        const cocos2d::Size waterballSize { attackRange, floorf(attackRange * 0.8f) };
+    
+    auto genPos = [this]() -> cocos2d::Rect {
+        auto attackRange { m_weapons[WeaponClass::RANGE]->GetRange() };
+        cocos2d::Size waterballSize { attackRange, floorf(attackRange * 0.8f) };
 
         auto position = getPosition();
         if (IsLookingLeft()) {
@@ -225,13 +214,21 @@ void Slime::Attack() {
 
         return { position, waterballSize };
     };
-    auto pushProjectile = [this](cocos2d::PhysicsBody* body) {
+    auto genVel = [this](cocos2d::PhysicsBody* body) {
         body->setVelocity({ IsLookingLeft()? -450.f: 450.f, 0.f });
     };
-    m_weapons[WeaponClass::RANGE]->LaunchAttack(
-        std::move(projectilePosition), 
-        std::move(pushProjectile)
-    );
+
+    m_weapons[WeaponClass::RANGE].reset(new SlimeShot(
+        damage, range, preparationTime, attackDuration, reloadTime));
+    m_weapons[WeaponClass::RANGE]->AddPositionGenerator(std::move(genPos));
+    m_weapons[WeaponClass::RANGE]->AddVelocityGenerator(std::move(genVel));
+}
+
+void Slime::Attack() {
+    assert(!IsDead());
+    assert(m_weapons[WeaponClass::RANGE]->IsReady());
+
+    m_weapons[WeaponClass::RANGE]->LaunchAttack();
 }
 
 }// namespace Enemies

@@ -356,12 +356,31 @@ void Player::AddWeapons() {
         const auto attackDuration { 0.5f * animDuration[0] };
         const auto preparationTime { animDuration[0] - attackDuration };
         const auto reloadTime { 0.f };
+
+        auto genPos = [this]() -> cocos2d::Rect {
+            auto attackRange { m_weapons.front()->GetRange() };
+
+            auto position = getPosition();
+            if (m_side == Side::RIGHT) {
+                position.x += m_contentSize.width / 2.f;
+            }
+            else {
+                position.x -= m_contentSize.width / 2.f + attackRange;
+            }
+            position.y += m_contentSize.height * 0.25f;
+            cocos2d::Rect attackedArea { position,
+                cocos2d::Size{ attackRange, m_contentSize.height * 0.5f }
+            };
+            return attackedArea;
+        };
+        auto genVel = [this](cocos2d::PhysicsBody* body) {
+            body->setVelocity(getPhysicsBody()->getVelocity());
+        };
+
         m_weapons[WeaponClass::MELEE].reset(new Sword(
-            damage, 
-            range, 
-            preparationTime,
-            attackDuration,
-            reloadTime));
+            damage, range, preparationTime, attackDuration, reloadTime));
+        m_weapons[WeaponClass::MELEE]->AddPositionGenerator(std::move(genPos));
+        m_weapons[WeaponClass::MELEE]->AddVelocityGenerator(std::move(genVel));
     }
     {
         const auto damage { 25.f };
@@ -369,12 +388,30 @@ void Player::AddWeapons() {
         const auto preparationTime { 0.f };
         const auto attackDuration { m_animator->GetDuration(Utils::EnumCast(State::RANGE_ATTACK))  };
         const auto reloadTime { 0.f };
+
+        auto genPos = [this]() -> cocos2d::Rect {
+            auto attackRange { m_weapons[WeaponClass::RANGE]->GetRange() };
+            cocos2d::Size fireballSize { attackRange, floorf(attackRange * 0.8f) };
+
+            auto position = getPosition();
+            if (IsLookingLeft()) {
+                position.x -= m_contentSize.width / 2.f ;
+            }
+            else {
+                position.x += m_contentSize.width / 2.f;
+            }
+            position.y += floorf(m_contentSize.height * 0.3f);
+
+            return { position, fireballSize };
+        };
+        auto genVel = [this](cocos2d::PhysicsBody* body) {
+            body->setVelocity({ IsLookingLeft()? -450.f: 450.f, 0.f });
+        };
+
         m_weapons[WeaponClass::RANGE].reset(new PlayerFireball(
-            damage, 
-            range, 
-            preparationTime,
-            attackDuration,
-            reloadTime));
+            damage, range, preparationTime, attackDuration, reloadTime));
+        m_weapons[WeaponClass::RANGE]->AddPositionGenerator(std::move(genPos));
+        m_weapons[WeaponClass::RANGE]->AddVelocityGenerator(std::move(genVel));
     }
     {
         const auto damage { 55.f };
@@ -383,12 +420,30 @@ void Player::AddWeapons() {
         const auto attackDuration { 0.75f * animDuration };
         const auto preparationTime { animDuration - attackDuration };
         const auto reloadTime { 0.f };
+
+        auto genPos = [this]() -> cocos2d::Rect {
+            auto attackRange { m_weapons[WeaponClass::SPECIAL]->GetRange() };
+            cocos2d::Size slashSize { attackRange * 1.8f, attackRange };
+
+            auto position = getPosition();
+            if (IsLookingLeft()) {
+                position.x -= m_contentSize.width / 2.f ;
+            }
+            else {
+                position.x += m_contentSize.width / 2.f;
+            }
+            position.y += floorf(m_contentSize.height * 0.1f);
+
+            return { position, slashSize };
+        };
+        auto genVel = [this](cocos2d::PhysicsBody* body) {
+            body->setVelocity({ IsLookingLeft()? -550.f: 550.f, 0.f });
+        };
+
         m_weapons[WeaponClass::SPECIAL].reset(new PlayerSpecial(
-            damage, 
-            range, 
-            preparationTime,
-            attackDuration,
-            reloadTime));
+            damage, range, preparationTime, attackDuration, reloadTime));
+        m_weapons[WeaponClass::SPECIAL]->AddPositionGenerator(std::move(genPos));
+        m_weapons[WeaponClass::SPECIAL]->AddVelocityGenerator(std::move(genVel));
     }
 };
 
@@ -415,31 +470,9 @@ void Player::RangeAttack() {
         && !IsDead()
         && m_currentState != State::DASH
     };
-    if (!canAttack) return;
-
-    auto projectilePosition = [this]() -> cocos2d::Rect {
-        const auto attackRange { m_weapons[WeaponClass::RANGE]->GetRange() };
-        const cocos2d::Size fireballSize { attackRange, floorf(attackRange * 0.8f) };
-
-        auto position = getPosition();
-        if (IsLookingLeft()) {
-            position.x -= m_contentSize.width / 2.f ;
-        }
-        else {
-            position.x += m_contentSize.width / 2.f;
-        }
-        position.y += floorf(m_contentSize.height * 0.3f);
-
-        return { position, fireballSize };
-    };
-    
-    auto pushProjectile = [this](cocos2d::PhysicsBody* body) {
-        body->setVelocity({ IsLookingLeft()? -450.f: 450.f, 0.f });
-    };
-    m_weapons[WeaponClass::RANGE]->LaunchAttack(
-        std::move(projectilePosition), 
-        std::move(pushProjectile)
-    );
+    if (canAttack) {
+        m_weapons[WeaponClass::RANGE]->LaunchAttack();
+    }
 }
 
 void Player::MeleeAttack() {
@@ -466,31 +499,10 @@ void Player::SpecialAttack() {
         && !IsDead()
         && m_currentState != State::DASH
     };
-    if (!canAttack) return;
+    if (canAttack) {
+        m_weapons[WeaponClass::SPECIAL]->LaunchAttack();
+    }
 
-    auto projectilePosition = [this]() -> cocos2d::Rect {
-        const auto attackRange { m_weapons[WeaponClass::SPECIAL]->GetRange() };
-        const cocos2d::Size slashSize { attackRange * 1.8f, attackRange };
-
-        auto position = getPosition();
-        if (IsLookingLeft()) {
-            position.x -= m_contentSize.width / 2.f ;
-        }
-        else {
-            position.x += m_contentSize.width / 2.f;
-        }
-        position.y += floorf(m_contentSize.height * 0.1f);
-
-        return { position, slashSize };
-    };
-    
-    auto pushProjectile = [this](cocos2d::PhysicsBody* body) {
-        body->setVelocity({ IsLookingLeft()? -550.f: 550.f, 0.f });
-    };
-    m_weapons[WeaponClass::SPECIAL]->LaunchAttack(
-        std::move(projectilePosition), 
-        std::move(pushProjectile)
-    );
 }
 
 void Player::StartSpecialAttack() {
@@ -553,30 +565,7 @@ void Player::FinishSpecialAttack() {
 
 void Player::Attack() {
     assert(!IsDead());
-    assert(m_weapons.front()->IsReady());
+    assert(m_weapons[WeaponClass::MELEE]->IsReady());
 
-    auto projectilePosition = [this]() -> cocos2d::Rect {
-        const auto attackRange { m_weapons.front()->GetRange() };
-
-        auto position = getPosition();
-        if (m_side == Side::RIGHT) {
-            position.x += m_contentSize.width / 2.f;
-        }
-        else {
-            position.x -= m_contentSize.width / 2.f + attackRange;
-        }
-        position.y += m_contentSize.height * 0.25f;
-        cocos2d::Rect attackedArea {
-            position,
-            cocos2d::Size{ attackRange, m_contentSize.height * 0.5f }
-        };
-        return attackedArea;
-    };
-    auto pushProjectile = [this](cocos2d::PhysicsBody* body){
-        body->setVelocity(getPhysicsBody()->getVelocity());
-    };
-    m_weapons.front()->LaunchAttack(
-        std::move(projectilePosition), 
-        std::move(pushProjectile)
-    );
+    m_weapons[WeaponClass::MELEE]->LaunchAttack();
 }

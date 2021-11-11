@@ -244,18 +244,47 @@ void Warrior::AddAnimator() {
     });
 }
 
+void Warrior::Attack() {
+    assert(!IsDead());
+    assert(m_weapons[WeaponClass::MELEE]);
+    assert(m_weapons[WeaponClass::MELEE]->IsReady());
+
+    m_weapons[WeaponClass::MELEE]->LaunchAttack();
+}
+
 void Warrior::AddWeapons() {
     const auto damage { 2.f };
     const auto range { 30.f };
     const auto attackDuration { 0.15f };
     const auto preparationTime { m_animator->GetDuration(Utils::EnumCast(State::ATTACK)) - attackDuration };
     const auto reloadTime { 0.5f };
+
+    auto genPos = [this]() -> cocos2d::Rect {
+        auto attackRange { m_weapons[WeaponClass::MELEE]->GetRange() };
+
+        auto position = getPosition();
+        if (m_side == Side::RIGHT) {
+            position.x += m_contentSize.width / 2.f;
+        }
+        else {
+            position.x -= m_contentSize.width / 2.f + attackRange;
+        }
+        // shift a little bit higher to avoid immediate collision with the ground
+        position.y += m_contentSize.height * 0.05f;
+        cocos2d::Rect attackedArea {
+            position,
+            cocos2d::Size{ attackRange, m_contentSize.height * 1.05f } // a little bigger than the designed size
+        };
+        return attackedArea;
+    };
+    auto genVel = [this](cocos2d::PhysicsBody* body) {
+        body->setVelocity(getPhysicsBody()->getVelocity());
+    };
+
     m_weapons[WeaponClass::MELEE].reset(new Axe(
-        damage, 
-        range, 
-        preparationTime,
-        attackDuration,
-        reloadTime));
+        damage, range, preparationTime, attackDuration, reloadTime));
+    m_weapons[WeaponClass::MELEE]->AddPositionGenerator(std::move(genPos));
+    m_weapons[WeaponClass::MELEE]->AddVelocityGenerator(std::move(genVel));
 }
 
 } // namespace Enemies

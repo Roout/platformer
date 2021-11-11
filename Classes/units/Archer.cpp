@@ -158,24 +158,13 @@ void Archer::AddWeapons() {
     const auto preparationTime { m_animator->GetDuration(Utils::EnumCast(State::ATTACK)) }; /// TODO: update animation!
     const auto attackDuration { 0.1f };
     const auto reloadTime { 0.5f };
-    m_weapons[WeaponClass::RANGE].reset(new Bow(
-        damage, 
-        range, 
-        preparationTime,
-        attackDuration,
-        reloadTime));
-}
+    
+    auto genPos = [this]()->cocos2d::Rect {
+        auto attackRange { m_weapons[WeaponClass::RANGE]->GetRange() };
+        cocos2d::Size arrowSize { attackRange, floorf(attackRange / 8.5f) };
 
-void Archer::Attack() {
-    assert(!IsDead());
-    assert(m_weapons[WeaponClass::RANGE]->IsReady());
-
-    auto projectilePosition = [this]()->cocos2d::Rect {
-        const auto attackRange { m_weapons[WeaponClass::RANGE]->GetRange() };
-        const cocos2d::Size arrowSize { attackRange, floorf(attackRange / 8.5f) };
-
-        auto position = this->getPosition();
-        if (this->IsLookingLeft()) {
+        auto position = getPosition();
+        if (IsLookingLeft()) {
             position.x -= m_contentSize.width / 2.f + arrowSize.width;
         }
         else {
@@ -183,15 +172,23 @@ void Archer::Attack() {
         }
         position.y += m_contentSize.height / 2.f;
 
-        return {position, arrowSize};
+        return { position, arrowSize };
     };
-    auto pushProjectile = [this](cocos2d::PhysicsBody* body) {
-        body->setVelocity({ this->IsLookingLeft()? -300.f: 300.f, 0.f });
+    auto genVel = [this](cocos2d::PhysicsBody* body) {
+        body->setVelocity({ IsLookingLeft()? -300.f: 300.f, 0.f });
     };
-    m_weapons[WeaponClass::RANGE]->LaunchAttack(
-        std::move(projectilePosition), 
-        std::move(pushProjectile)
-    );
+
+    m_weapons[WeaponClass::RANGE].reset(new Bow(
+        damage, range, preparationTime, attackDuration, reloadTime));
+    m_weapons[WeaponClass::RANGE]->AddPositionGenerator(std::move(genPos));
+    m_weapons[WeaponClass::RANGE]->AddVelocityGenerator(std::move(genVel));
+}
+
+void Archer::Attack() {
+    assert(!IsDead());
+    assert(m_weapons[WeaponClass::RANGE]->IsReady());
+
+    m_weapons[WeaponClass::RANGE]->LaunchAttack();
 }
 
 bool Archer::NeedAttack() const noexcept {

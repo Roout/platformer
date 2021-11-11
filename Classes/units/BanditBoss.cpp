@@ -92,57 +92,20 @@ void BanditBoss::OnEnemyLeave() {
 
 void BanditBoss::LaunchFireballs() {
     assert(m_weapons[FIREBALL_ATTACK]->IsReady() 
-        && !this->IsDead() 
-        && "You don't check condition beforehand"
-    );
-    auto projectilePosition = [this]() -> cocos2d::Rect {
-        const auto attackRange { m_weapons[FIREBALL_ATTACK]->GetRange() * 0.25f };
+        && !IsDead() 
+        && "You don't check condition beforehand");
 
-        auto position = this->getPosition();
-        if(m_side == Side::RIGHT) {
-            position.x += m_contentSize.width / 2.f;
-        }
-        else {
-            position.x -= m_contentSize.width / 2.f + attackRange;
-        }
-        // shift a little bit higher to avoid immediate collision with the ground
-        position.y += m_contentSize.height * 0.2f;
-        cocos2d::Rect attackedArea {
-            position,
-            cocos2d::Size{ m_weapons[FIREBALL_ATTACK]->GetRange() * 2.f, m_contentSize.height * 1.05f } // a little bigger than the designed size
-        };
-        return attackedArea;
-    };
-    auto pushProjectile = [this](cocos2d::PhysicsBody* body) {
-        body->setVelocity({ this->IsLookingLeft()? -400.f: 400.f, 0.f });
-    };
-    m_weapons[FIREBALL_ATTACK]->LaunchAttack(
-        std::move(projectilePosition), 
-        std::move(pushProjectile)
-    );
+    m_weapons[FIREBALL_ATTACK]->LaunchAttack();
 }
 
 void BanditBoss::LaunchFirecloud() {
     assert(m_weapons[FIRECLOUD_ATTACK]->IsReady() 
-        && !this->IsDead() 
+        && !IsDead() 
         && "You don't check condition beforehand"
     );
 
-    auto projectilePosition = [this]() -> cocos2d::Rect {
-        const auto attackRange { m_weapons[FIRECLOUD_ATTACK]->GetRange()};
-        auto position = this->getPosition();
-        position.y += m_contentSize.height;
-        return { position, cocos2d::Size{ attackRange, m_contentSize.height * 0.35f } };
-    };
-    auto pushProjectile = [](cocos2d::PhysicsBody* body) {
-        cocos2d::Vec2 impulse { 0.f, body->getMass() * 190.f };
-        body->applyImpulse(impulse);
-    };
     // start attack with weapon
-    m_weapons[FIRECLOUD_ATTACK]->LaunchAttack(
-        std::move(projectilePosition), 
-        std::move(pushProjectile)
-    );
+    m_weapons[FIRECLOUD_ATTACK]->LaunchAttack();
 }
 
 void BanditBoss::LaunchSweepAttack() {
@@ -150,29 +113,9 @@ void BanditBoss::LaunchSweepAttack() {
         && !IsDead() 
         && "You don't check condition beforehand"
     );
-    auto projectilePosition = [this]() -> cocos2d::Rect {
-        const auto attackRange { m_weapons[SWEEP_ATTACK]->GetRange()};
-        const cocos2d::Size area { attackRange, attackRange };
-
-        auto position = getPosition();
-        if (IsLookingLeft()) {
-            position.x -= m_contentSize.width / 2.f + area.width;
-        }
-        else {
-            position.x += m_contentSize.width / 2.f;
-        }
-        position.y -= m_contentSize.height / 3.f;
-
-        return { position, area };
-    };
-    auto pushProjectile = [this](cocos2d::PhysicsBody* body) {
-        body->setVelocity(getPhysicsBody()->getVelocity());
-    };
+    
     // create projectile - area where the chains aredealing damage during jump
-    m_weapons[SWEEP_ATTACK]->LaunchAttack(
-        std::move(projectilePosition), 
-        std::move(pushProjectile)
-    );
+    m_weapons[SWEEP_ATTACK]->LaunchAttack();
     // jump
     using Move = Movement::Direction;
     
@@ -284,29 +227,8 @@ void BanditBoss::LaunchBasicAttack() {
         && !this->IsDead() 
         && "You don't check condition beforehand"
     );
-    auto projectilePosition = [this]() -> cocos2d::Rect {
-        const auto attackRange { m_weapons[BASIC_ATTACK]->GetRange()};
-        const cocos2d::Size area { attackRange, attackRange / 4.f };
-
-        auto position = this->getPosition();
-        if (this->IsLookingLeft()) {
-            position.x -= m_contentSize.width / 2.f + area.width;
-        }
-        else {
-            position.x += m_contentSize.width / 2.f;
-        }
-        position.y += m_contentSize.height / 4.f;
-
-        return { position, area };
-    };
-    auto pushProjectile = [this](cocos2d::PhysicsBody* body) {
-        body->setVelocity(this->getPhysicsBody()->getVelocity());
-    };
     // create projectile - area where the chains are dealing damage
-    m_weapons[BASIC_ATTACK]->LaunchAttack(
-        std::move(projectilePosition), 
-        std::move(pushProjectile)
-    );
+    m_weapons[BASIC_ATTACK]->LaunchAttack();
 }
 
 /**
@@ -519,12 +441,33 @@ void BanditBoss::AddWeapons() {
         const auto attackDuration { 0.4f * animDuration };
         const auto preparationTime { animDuration - attackDuration };
         const auto reloadTime { 2.f };
+
+        auto genPos = [this]() -> cocos2d::Rect {
+            const auto attackRange { m_weapons[FIREBALL_ATTACK]->GetRange() * 0.25f };
+
+            auto position = getPosition();
+            if (m_side == Side::RIGHT) {
+                position.x += m_contentSize.width / 2.f;
+            }
+            else {
+                position.x -= m_contentSize.width / 2.f + attackRange;
+            }
+            // shift a little bit higher to avoid immediate collision with the ground
+            position.y += m_contentSize.height * 0.2f;
+            cocos2d::Rect attackedArea { position, cocos2d::Size { 
+                m_weapons[FIREBALL_ATTACK]->GetRange() * 2.f
+                , m_contentSize.height * 1.05f } // a little bigger than the designed size
+            };
+            return attackedArea;
+        };
+        auto genVel = [this](cocos2d::PhysicsBody* body) {
+            body->setVelocity({ IsLookingLeft()? -400.f: 400.f, 0.f });
+        };
+
         m_weapons[WeaponClass::FIREBALL_ATTACK].reset(new BossFireball(
-            damage, 
-            range, 
-            preparationTime,
-            attackDuration,
-            reloadTime));
+            damage, range, preparationTime, attackDuration, reloadTime));
+        m_weapons[WeaponClass::FIREBALL_ATTACK]->AddPositionGenerator(std::move(genPos));
+        m_weapons[WeaponClass::FIREBALL_ATTACK]->AddVelocityGenerator(std::move(genVel));
     }
     {
         const auto damage { 0.f }; // doesn't matter
@@ -533,12 +476,22 @@ void BanditBoss::AddWeapons() {
         const auto attackDuration { 0.4f * animDuration };
         const auto preparationTime { animDuration - attackDuration };
         const auto reloadTime { 5.f };
+
+        auto genPos = [this]() -> cocos2d::Rect {
+            auto attackRange { m_weapons[FIRECLOUD_ATTACK]->GetRange()};
+            auto position = getPosition();
+            position.y += m_contentSize.height;
+            return { position, cocos2d::Size{ attackRange, m_contentSize.height * 0.35f } };
+        };
+        auto genVel = [](cocos2d::PhysicsBody* body) {
+            cocos2d::Vec2 impulse { 0.f, body->getMass() * 190.f };
+            body->applyImpulse(impulse);
+        };
+
         m_weapons[WeaponClass::FIRECLOUD_ATTACK].reset(new BossFireCloud(
-            damage, 
-            range, 
-            preparationTime,
-            attackDuration,
-            reloadTime));
+            damage, range, preparationTime, attackDuration, reloadTime));
+        m_weapons[WeaponClass::FIRECLOUD_ATTACK]->AddPositionGenerator(std::move(genPos));
+        m_weapons[WeaponClass::FIRECLOUD_ATTACK]->AddVelocityGenerator(std::move(genVel));
     }
     {
         const auto damage { 30.f };
@@ -547,12 +500,30 @@ void BanditBoss::AddWeapons() {
         const auto attackDuration { 0.4f * animDuration };
         const auto preparationTime { animDuration - attackDuration };
         const auto reloadTime { 8.f };
+        
+        auto genPos = [this]() -> cocos2d::Rect {
+            auto attackRange { m_weapons[SWEEP_ATTACK]->GetRange()};
+            cocos2d::Size area { attackRange, attackRange };
+
+            auto position = getPosition();
+            if (IsLookingLeft()) {
+                position.x -= m_contentSize.width / 2.f + area.width;
+            }
+            else {
+                position.x += m_contentSize.width / 2.f;
+            }
+            position.y -= m_contentSize.height / 3.f;
+
+            return { position, area };
+        };
+        auto genVel = [this](cocos2d::PhysicsBody* body) {
+            body->setVelocity(getPhysicsBody()->getVelocity());
+        };
+        
         m_weapons[WeaponClass::SWEEP_ATTACK].reset(new BossChainSweep(
-            damage, 
-            range, 
-            preparationTime,
-            attackDuration,
-            reloadTime));
+            damage, range, preparationTime, attackDuration, reloadTime));
+        m_weapons[WeaponClass::SWEEP_ATTACK]->AddPositionGenerator(std::move(genPos));
+        m_weapons[WeaponClass::SWEEP_ATTACK]->AddVelocityGenerator(std::move(genVel));
     }
     {
         const auto damage { 15.f };
@@ -561,12 +532,34 @@ void BanditBoss::AddWeapons() {
         const auto attackDuration { 0.8f * animDuration };
         const auto preparationTime { animDuration - attackDuration };
         const auto reloadTime { 2.f };
+
+        auto genPos = [this]() -> cocos2d::Rect {
+            auto attackRange { m_weapons[BASIC_ATTACK]->GetRange()};
+            cocos2d::Size area { attackRange, attackRange / 4.f };
+
+            auto position = getPosition();
+            if (IsLookingLeft()) {
+                position.x -= m_contentSize.width / 2.f + area.width;
+            }
+            else {
+                position.x += m_contentSize.width / 2.f;
+            }
+            position.y += m_contentSize.height / 4.f;
+
+            return { position, area };
+        };
+        auto genVel = [this](cocos2d::PhysicsBody* body) {
+            body->setVelocity(getPhysicsBody()->getVelocity());
+        };
+
         m_weapons[WeaponClass::BASIC_ATTACK].reset(new BossChainSwing(
             damage, 
             range, 
             preparationTime,
             attackDuration,
             reloadTime));
+        m_weapons[WeaponClass::BASIC_ATTACK]->AddPositionGenerator(std::move(genPos));
+        m_weapons[WeaponClass::BASIC_ATTACK]->AddVelocityGenerator(std::move(genVel));
     }
 }
 

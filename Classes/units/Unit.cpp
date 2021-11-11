@@ -104,37 +104,6 @@ void Unit::RecieveDamage(int damage) noexcept {
     m_health -= damage;
 }
 
-void Unit::Attack() {
-    assert(!IsDead());
-    assert(m_weapons.front()->IsReady());
-
-    auto projectilePosition = [this]() -> cocos2d::Rect {
-        const auto attackRange { m_weapons.front()->GetRange() };
-
-        auto position = getPosition();
-        if (m_side == Side::RIGHT) {
-            position.x += m_contentSize.width / 2.f;
-        }
-        else {
-            position.x -= m_contentSize.width / 2.f + attackRange;
-        }
-        // shift a little bit higher to avoid immediate collision with the ground
-        position.y += m_contentSize.height * 0.05f;
-        cocos2d::Rect attackedArea {
-            position,
-            cocos2d::Size{ attackRange, m_contentSize.height * 1.05f } // a little bigger than the designed size
-        };
-        return attackedArea;
-    };
-    auto pushProjectile = [this](cocos2d::PhysicsBody* body){
-        body->setVelocity(getPhysicsBody()->getVelocity());
-    };
-    m_weapons.front()->LaunchAttack(
-        std::move(projectilePosition), 
-        std::move(pushProjectile)
-    );
-}
-
 void Unit::UpdateWeapons(const float dt) noexcept {
     assert(!IsDead());
     

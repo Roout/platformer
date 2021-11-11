@@ -14,13 +14,10 @@
  */
 class Weapon { 
 public:
-    // Lifecycle management 
+
+    using PositionGenerator = std::function<cocos2d::Rect()>;
+    using VelocityGenerator = std::function<void(cocos2d::PhysicsBody*)>;
     
-    Weapon(const Weapon&) = default;
-    Weapon& operator=(const Weapon&) = default;
-
-public:
-
     Weapon(
         float damage, 
         float range, 
@@ -36,6 +33,9 @@ public:
         m_durations[Utils::EnumCast(State::ATTACK)] = attackTime; 
         m_durations[Utils::EnumCast(State::RELOAD)] = reloadTime; 
     }
+
+    Weapon(const Weapon&) = default;
+    Weapon& operator=(const Weapon&) = default;
 
     virtual ~Weapon() = default;
 
@@ -77,23 +77,25 @@ public:
     /**
      * @param extractPosition A provided callback which extract the current
      * position from the player and generate an area where the projectile will be born. 
-     * 
-     * @param modifier The callable modificator object that push the body:
+     */
+    void AddPositionGenerator(PositionGenerator extractPosition) noexcept {
+        m_extractor = std::move(extractPosition);
+    }
+
+    /**
+     * @param modifier The callable modificator that push the body of projectile:
      * - setting velocity
      * - setting impulse
      * - setting force
-     * etc
-     */
-    void LaunchAttack (
-        std::function<cocos2d::Rect()>&& extractPosition,
-        std::function<void(cocos2d::PhysicsBody*)>&& modifier
-    ) noexcept {
-        if(this->IsReady()) {
+    */
+    void AddVelocityGenerator(VelocityGenerator modifier) noexcept {
+        m_modifier = std::move(modifier);
+    }
+
+    void LaunchAttack() noexcept {
+        if (this->IsReady()) {
             // go to preparation state
             this->NextState();
-            // save projectile properties
-            m_extractor = std::move(extractPosition);
-            m_modifier = std::move(modifier);
         }
     };
 

@@ -42,21 +42,10 @@ void Wolf::AddWeapons() {
     const auto attackDuration { 0.2f };
     const auto preparationTime { m_animator->GetDuration(Utils::EnumCast(State::ATTACK)) - attackDuration };
     const auto reloadTime { 0.4f };
-    m_weapons[WeaponClass::MELEE].reset(new Maw(
-        damage, 
-        range, 
-        preparationTime,
-        attackDuration,
-        reloadTime));
-}
 
-void Wolf::Attack() {
-    assert(!IsDead());
-    assert(m_weapons[WeaponClass::MELEE]->IsReady());
-
-    auto projectilePosition = [this]() -> cocos2d::Rect {
-        const auto attackRange { m_weapons[WeaponClass::MELEE]->GetRange() };
-        const cocos2d::Size mawSize { attackRange, attackRange * 2.f };
+    auto genPos = [this]() -> cocos2d::Rect {
+        auto attackRange { m_weapons[WeaponClass::MELEE]->GetRange() };
+        cocos2d::Size mawSize { attackRange, attackRange * 2.f };
 
         auto position = getPosition();
         if (IsLookingLeft()) {
@@ -69,13 +58,21 @@ void Wolf::Attack() {
 
         return { position, mawSize };
     };
-    auto pushProjectile = [this](cocos2d::PhysicsBody* body) {
+    auto genVel = [this](cocos2d::PhysicsBody* body) {
         body->setVelocity(getPhysicsBody()->getVelocity());
     };
-    m_weapons[WeaponClass::MELEE]->LaunchAttack(
-        std::move(projectilePosition), 
-        std::move(pushProjectile)
-    );
+
+    m_weapons[WeaponClass::MELEE].reset(new Maw(
+        damage, range, preparationTime, attackDuration, reloadTime));
+    m_weapons[WeaponClass::MELEE]->AddPositionGenerator(std::move(genPos));
+    m_weapons[WeaponClass::MELEE]->AddVelocityGenerator(std::move(genVel));
+}
+
+void Wolf::Attack() {
+    assert(!IsDead());
+    assert(m_weapons[WeaponClass::MELEE]->IsReady());
+
+    m_weapons[WeaponClass::MELEE]->LaunchAttack();
 }
 
 void Wolf::OnEnemyIntrusion() {

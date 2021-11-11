@@ -157,12 +157,33 @@ void BoulderPusher::AddWeapons() {
     const auto preparationTime { 0.4f };
     const auto attackDuration { m_animator->GetDuration(Utils::EnumCast(State::ATTACK)) - preparationTime };
     const auto reloadTime { 1.5f };
+
+    auto genPos = [this]() -> cocos2d::Rect {
+        auto radius { m_weapons[WeaponClass::RANGE]->GetRange() };
+        cocos2d::Size stoneSize { radius * 2.f, radius * 2.f };
+
+        auto position = getPosition();
+        if (IsLookingLeft()) {
+            position.x -= m_contentSize.width / 2.f + stoneSize.width;
+        }
+        else {
+            position.x += m_contentSize.width / 2.f;
+        }
+        return { position, stoneSize };
+    };
+    auto genVel = [this](cocos2d::PhysicsBody* body) {
+        cocos2d::Vec2 impulse { body->getMass() * 200.f, 0.f };
+        if (IsLookingLeft()) {
+            impulse.x *= -1.f;
+        }
+        body->applyImpulse(impulse);
+        body->setAngularVelocity(impulse.x > 0.f? -10.f: 10.f);
+    };
+
     m_weapons[WeaponClass::RANGE].reset(new Legs(
-        damage, 
-        range, 
-        preparationTime,
-        attackDuration,
-        reloadTime));
+        damage, range, preparationTime, attackDuration, reloadTime));
+    m_weapons[WeaponClass::RANGE]->AddPositionGenerator(std::move(genPos));
+    m_weapons[WeaponClass::RANGE]->AddVelocityGenerator(std::move(genVel));
 }
 
 bool BoulderPusher::NeedAttack() const noexcept {
@@ -173,31 +194,8 @@ bool BoulderPusher::NeedAttack() const noexcept {
 void BoulderPusher::Attack() {
     assert(!IsDead());
     assert(m_weapons[WeaponClass::RANGE]->IsReady());
-    auto projectilePosition = [this]() -> cocos2d::Rect {
-        const auto radius { m_weapons[WeaponClass::RANGE]->GetRange() };
-        const cocos2d::Size stoneSize { radius * 2.f, radius * 2.f };
 
-        auto position = this->getPosition();
-        if(this->IsLookingLeft()) {
-            position.x -= m_contentSize.width / 2.f + stoneSize.width;
-        }
-        else {
-            position.x += m_contentSize.width / 2.f;
-        }
-        return { position, stoneSize };
-    };
-    auto pushProjectile = [isLookingLeft = this->IsLookingLeft()](cocos2d::PhysicsBody* body) {
-        cocos2d::Vec2 impulse { body->getMass() * 200.f, 0.f };
-        if (isLookingLeft) {
-            impulse.x *= -1.f;
-        }
-        body->applyImpulse(impulse);
-        body->setAngularVelocity(impulse.x > 0.f? -10.f: 10.f);
-    };
-    m_weapons[WeaponClass::RANGE]->LaunchAttack(
-        std::move(projectilePosition), 
-        std::move(pushProjectile)
-    );
+    m_weapons[WeaponClass::RANGE]->LaunchAttack();
 }
 
 } // namespace Enemies

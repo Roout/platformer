@@ -177,23 +177,12 @@ void FireCloud::AddWeapons() {
     const auto preparationTime { 0.f }; 
     const auto attackDuration { 0.1f };
     const auto reloadTime { 0.1f };
-    m_weapons[WeaponClass::RANGE].reset(new CloudFireball(
-        damage, 
-        range, 
-        preparationTime,
-        attackDuration,
-        reloadTime));
-}
 
-void FireCloud::Attack() {
-    m_shells--;
-    if(m_shells <= 0) m_shellRenewTimer = FireCloud::MAX_SHELL_DELAY;
+    auto genPos = [this]()->cocos2d::Rect {
+        auto attackRange { m_weapons[WeaponClass::RANGE]->GetRange() };
+        cocos2d::Size fireballSize { attackRange, attackRange * 1.4f };
 
-    auto projectilePosition = [this]()->cocos2d::Rect {
-        const auto attackRange { m_weapons[WeaponClass::RANGE]->GetRange() };
-        const cocos2d::Size fireballSize { attackRange, attackRange * 1.4f };
-
-        auto position = this->getPosition();
+        auto position = getPosition();
         position.y -= m_contentSize.height * 0.1f;
         position.x = static_cast<float>(
             cocos2d::RandomHelper::random_int(
@@ -204,13 +193,21 @@ void FireCloud::Attack() {
 
         return { position, fireballSize };
     };
-    auto pushProjectile = [this](cocos2d::PhysicsBody* body) {
-        body->setVelocity({ this->IsLookingLeft()? -300.f: 300.f, -600.f });
+    auto genVel = [this](cocos2d::PhysicsBody* body) {
+        body->setVelocity({ IsLookingLeft()? -300.f: 300.f, -600.f });
     };
-    m_weapons[WeaponClass::RANGE]->LaunchAttack(
-        std::move(projectilePosition), 
-        std::move(pushProjectile)
-    );
+
+    m_weapons[WeaponClass::RANGE].reset(new CloudFireball(
+        damage, range, preparationTime, attackDuration, reloadTime));
+    m_weapons[WeaponClass::RANGE]->AddPositionGenerator(std::move(genPos));
+    m_weapons[WeaponClass::RANGE]->AddVelocityGenerator(std::move(genVel));
+}
+
+void FireCloud::Attack() {
+    if (--m_shells <= 0) {
+        m_shellRenewTimer = FireCloud::MAX_SHELL_DELAY;
+    }
+    m_weapons[WeaponClass::RANGE]->LaunchAttack();
 }
 
 bool FireCloud::NeedAttack() const noexcept {

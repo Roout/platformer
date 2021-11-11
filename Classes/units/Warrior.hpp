@@ -37,6 +37,8 @@ protected:
 
     void AddWeapons() override;
 
+    void Attack() override;
+
 /// Unique to warrior
 
     virtual void Pursue(Unit * target) noexcept;

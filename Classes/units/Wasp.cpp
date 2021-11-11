@@ -43,21 +43,10 @@ void Wasp::AddWeapons() {
     const auto attackDuration { 0.2f };
     const auto preparationTime { m_animator->GetDuration(Utils::EnumCast(State::ATTACK)) - attackDuration };
     const auto reloadTime { 0.6f };
-    m_weapons[WeaponClass::MELEE].reset(new Maw(
-        damage, 
-        range, 
-        preparationTime,
-        attackDuration,
-        reloadTime));
-}
 
-void Wasp::Attack() {
-    assert(!IsDead());
-    assert(m_weapons[WeaponClass::MELEE]->IsReady());
-
-    auto projectilePosition = [this]() -> cocos2d::Rect {
-        const auto attackRange { m_weapons[WeaponClass::MELEE]->GetRange() };
-        const cocos2d::Size stingSize { attackRange, attackRange / 4.f };
+    auto genPos = [this]() -> cocos2d::Rect {
+        auto attackRange { m_weapons[WeaponClass::MELEE]->GetRange() };
+        cocos2d::Size stingSize { attackRange, attackRange / 4.f };
 
         auto position = getPosition();
         if (IsLookingLeft()) {
@@ -70,13 +59,21 @@ void Wasp::Attack() {
 
         return { position, stingSize };
     };
-    auto pushProjectile = [](cocos2d::PhysicsBody* body) {
-        // body->setVelocity(getPhysicsBody()->getVelocity());
+    auto genVel = [this](cocos2d::PhysicsBody* body) {
+        body->setVelocity(getPhysicsBody()->getVelocity());
     };
-    m_weapons[WeaponClass::MELEE]->LaunchAttack(
-        std::move(projectilePosition), 
-        std::move(pushProjectile)
-    );
+
+    m_weapons[WeaponClass::MELEE].reset(new Sting(
+        damage, range, preparationTime, attackDuration, reloadTime));
+    m_weapons[WeaponClass::MELEE]->AddPositionGenerator(std::move(genPos));
+    m_weapons[WeaponClass::MELEE]->AddVelocityGenerator(std::move(genVel));
+}
+
+void Wasp::Attack() {
+    assert(!IsDead());
+    assert(m_weapons[WeaponClass::MELEE]->IsReady());
+
+    m_weapons[WeaponClass::MELEE]->LaunchAttack();
 }
 
 void Wasp::Pursue(Unit * target) noexcept {
