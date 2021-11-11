@@ -193,6 +193,8 @@ using Spear = GenericAttack;
 
 using Maw = GenericAttack;
 
+using Sting = GenericAttack;
+
 class PlayerFireball final : public Weapon {
 public:
     using Weapon::Weapon;
