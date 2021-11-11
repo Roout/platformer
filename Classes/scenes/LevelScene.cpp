@@ -173,11 +173,22 @@ void LevelScene::Restart() {
     // Tilemap:
     // - remove children exсept layers and objects.
     auto tileMap = getChildByName<cocos2d::FastTMXTiledMap*>("Map");
+    // NOTE:
+    // cannot directly invoke `child->removeFromParent();` because 
+    // it invalidates iterator by erase call inside the `removeFromParent` 
+    // function
+    std::vector<cocos2d::Node*> scheduledForRemove;
+    scheduledForRemove.reserve(tileMap->getChildrenCount());
     for (auto child: tileMap->getChildren()) {
         if (child->getTag() != EXIST_ON_RESTART_TAG) {
-            child->removeFromParent();
+            scheduledForRemove.push_back(child);
         }
     }
+    for (auto child: scheduledForRemove) {
+        child->removeFromParent();
+    }
+
+    // create objects again
     InitTileMapObjects(tileMap);
    
     // - reset position
