@@ -464,10 +464,11 @@ void BanditBoss::AddWeapons() {
             body->setVelocity({ IsLookingLeft()? -400.f: 400.f, 0.f });
         };
 
-        m_weapons[WeaponClass::FIREBALL_ATTACK].reset(new BossFireball(
+        auto& weapon = m_weapons[WeaponClass::FIREBALL_ATTACK];
+        weapon.reset(new BossFireball(
             damage, range, preparationTime, attackDuration, reloadTime));
-        m_weapons[WeaponClass::FIREBALL_ATTACK]->AddPositionGenerator(std::move(genPos));
-        m_weapons[WeaponClass::FIREBALL_ATTACK]->AddVelocityGenerator(std::move(genVel));
+        weapon->AddPositionGenerator(std::move(genPos));
+        weapon->AddVelocityGenerator(std::move(genVel));
     }
     {
         const auto damage { 0.f }; // doesn't matter
@@ -488,10 +489,11 @@ void BanditBoss::AddWeapons() {
             body->applyImpulse(impulse);
         };
 
-        m_weapons[WeaponClass::FIRECLOUD_ATTACK].reset(new BossFireCloud(
+        auto& weapon = m_weapons[WeaponClass::FIRECLOUD_ATTACK];
+        weapon.reset(new BossFireCloud(
             damage, range, preparationTime, attackDuration, reloadTime));
-        m_weapons[WeaponClass::FIRECLOUD_ATTACK]->AddPositionGenerator(std::move(genPos));
-        m_weapons[WeaponClass::FIRECLOUD_ATTACK]->AddVelocityGenerator(std::move(genVel));
+        weapon->AddPositionGenerator(std::move(genPos));
+        weapon->AddVelocityGenerator(std::move(genVel));
     }
     {
         const auto damage { 30.f };
@@ -520,10 +522,11 @@ void BanditBoss::AddWeapons() {
             body->setVelocity(getPhysicsBody()->getVelocity());
         };
         
-        m_weapons[WeaponClass::SWEEP_ATTACK].reset(new BossChainSweep(
+        auto& weapon = m_weapons[WeaponClass::SWEEP_ATTACK];
+        weapon.reset(new BossChainSweep(
             damage, range, preparationTime, attackDuration, reloadTime));
-        m_weapons[WeaponClass::SWEEP_ATTACK]->AddPositionGenerator(std::move(genPos));
-        m_weapons[WeaponClass::SWEEP_ATTACK]->AddVelocityGenerator(std::move(genVel));
+        weapon->AddPositionGenerator(std::move(genPos));
+        weapon->AddVelocityGenerator(std::move(genVel));
     }
     {
         const auto damage { 15.f };
@@ -552,14 +555,11 @@ void BanditBoss::AddWeapons() {
             body->setVelocity(getPhysicsBody()->getVelocity());
         };
 
-        m_weapons[WeaponClass::BASIC_ATTACK].reset(new BossChainSwing(
-            damage, 
-            range, 
-            preparationTime,
-            attackDuration,
-            reloadTime));
-        m_weapons[WeaponClass::BASIC_ATTACK]->AddPositionGenerator(std::move(genPos));
-        m_weapons[WeaponClass::BASIC_ATTACK]->AddVelocityGenerator(std::move(genVel));
+        auto& weapon = m_weapons[WeaponClass::BASIC_ATTACK];
+        weapon.reset(new BossChainSwing(
+            damage, range, preparationTime, attackDuration, reloadTime));
+        weapon->AddPositionGenerator(std::move(genPos));
+        weapon->AddVelocityGenerator(std::move(genVel));
     }
 }
 

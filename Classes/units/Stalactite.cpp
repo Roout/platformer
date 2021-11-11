@@ -204,10 +204,11 @@ void Stalactite::AddWeapons() {
         body->setVelocity({ 0.f, -400.f });
     };
 
-    m_weapons[WeaponClass::RANGE].reset(new StalactitePart(
+    auto& weapon = m_weapons[WeaponClass::RANGE];
+    weapon.reset(new StalactitePart(
         damage, range, preparationTime, attackDuration, reloadTime, m_index));
-    m_weapons[WeaponClass::RANGE]->AddPositionGenerator(std::move(genPos));
-    m_weapons[WeaponClass::RANGE]->AddVelocityGenerator(std::move(genVel));
+    weapon->AddPositionGenerator(std::move(genPos));
+    weapon->AddVelocityGenerator(std::move(genVel));
 }
 
 

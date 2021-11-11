@@ -63,10 +63,11 @@ void Wasp::AddWeapons() {
         body->setVelocity(getPhysicsBody()->getVelocity());
     };
 
-    m_weapons[WeaponClass::MELEE].reset(new Sting(
+    auto& weapon = m_weapons[WeaponClass::MELEE];
+    weapon.reset(new Sting(
         damage, range, preparationTime, attackDuration, reloadTime));
-    m_weapons[WeaponClass::MELEE]->AddPositionGenerator(std::move(genPos));
-    m_weapons[WeaponClass::MELEE]->AddVelocityGenerator(std::move(genVel));
+    weapon->AddPositionGenerator(std::move(genPos));
+    weapon->AddVelocityGenerator(std::move(genVel));
 }
 
 void Wasp::Attack() {

@@ -218,10 +218,11 @@ void Slime::AddWeapons() {
         body->setVelocity({ IsLookingLeft()? -450.f: 450.f, 0.f });
     };
 
-    m_weapons[WeaponClass::RANGE].reset(new SlimeShot(
+    auto& weapon = m_weapons[WeaponClass::RANGE];
+    weapon.reset(new SlimeShot(
         damage, range, preparationTime, attackDuration, reloadTime));
-    m_weapons[WeaponClass::RANGE]->AddPositionGenerator(std::move(genPos));
-    m_weapons[WeaponClass::RANGE]->AddVelocityGenerator(std::move(genVel));
+    weapon->AddPositionGenerator(std::move(genPos));
+    weapon->AddVelocityGenerator(std::move(genVel));
 }
 
 void Slime::Attack() {

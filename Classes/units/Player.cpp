@@ -377,10 +377,11 @@ void Player::AddWeapons() {
             body->setVelocity(getPhysicsBody()->getVelocity());
         };
 
-        m_weapons[WeaponClass::MELEE].reset(new Sword(
+        auto& weapon = m_weapons[WeaponClass::MELEE];
+        weapon.reset(new Sword(
             damage, range, preparationTime, attackDuration, reloadTime));
-        m_weapons[WeaponClass::MELEE]->AddPositionGenerator(std::move(genPos));
-        m_weapons[WeaponClass::MELEE]->AddVelocityGenerator(std::move(genVel));
+        weapon->AddPositionGenerator(std::move(genPos));
+        weapon->AddVelocityGenerator(std::move(genVel));
     }
     {
         const auto damage { 25.f };
@@ -408,10 +409,11 @@ void Player::AddWeapons() {
             body->setVelocity({ IsLookingLeft()? -450.f: 450.f, 0.f });
         };
 
-        m_weapons[WeaponClass::RANGE].reset(new PlayerFireball(
+        auto& weapon = m_weapons[WeaponClass::RANGE];
+        weapon.reset(new PlayerFireball(
             damage, range, preparationTime, attackDuration, reloadTime));
-        m_weapons[WeaponClass::RANGE]->AddPositionGenerator(std::move(genPos));
-        m_weapons[WeaponClass::RANGE]->AddVelocityGenerator(std::move(genVel));
+        weapon->AddPositionGenerator(std::move(genPos));
+        weapon->AddVelocityGenerator(std::move(genVel));
     }
     {
         const auto damage { 55.f };
@@ -440,10 +442,11 @@ void Player::AddWeapons() {
             body->setVelocity({ IsLookingLeft()? -550.f: 550.f, 0.f });
         };
 
-        m_weapons[WeaponClass::SPECIAL].reset(new PlayerSpecial(
+        auto& weapon = m_weapons[WeaponClass::SPECIAL];
+        weapon.reset(new PlayerSpecial(
             damage, range, preparationTime, attackDuration, reloadTime));
-        m_weapons[WeaponClass::SPECIAL]->AddPositionGenerator(std::move(genPos));
-        m_weapons[WeaponClass::SPECIAL]->AddVelocityGenerator(std::move(genVel));
+        weapon->AddPositionGenerator(std::move(genPos));
+        weapon->AddVelocityGenerator(std::move(genVel));
     }
 };
 

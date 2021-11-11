@@ -60,10 +60,11 @@ void Spearman::AddWeapons() {
         body->setVelocity(getPhysicsBody()->getVelocity());
     };
 
-    m_weapons[WeaponClass::MELEE].reset(new Spear(
+    auto& weapon = m_weapons[WeaponClass::MELEE];
+    weapon.reset(new Spear(
         damage, range, preparationTime, attackDuration, reloadTime));
-    m_weapons[WeaponClass::MELEE]->AddPositionGenerator(std::move(genPos));
-    m_weapons[WeaponClass::MELEE]->AddVelocityGenerator(std::move(genVel));
+    weapon->AddPositionGenerator(std::move(genPos));
+    weapon->AddVelocityGenerator(std::move(genVel));
 }
 
 void Spearman::Attack() {

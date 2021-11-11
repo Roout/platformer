@@ -281,10 +281,11 @@ void Warrior::AddWeapons() {
         body->setVelocity(getPhysicsBody()->getVelocity());
     };
 
-    m_weapons[WeaponClass::MELEE].reset(new Axe(
+    auto& weapon = m_weapons[WeaponClass::MELEE];
+    weapon.reset(new Axe(
         damage, range, preparationTime, attackDuration, reloadTime));
-    m_weapons[WeaponClass::MELEE]->AddPositionGenerator(std::move(genPos));
-    m_weapons[WeaponClass::MELEE]->AddVelocityGenerator(std::move(genVel));
+    weapon->AddPositionGenerator(std::move(genPos));
+    weapon->AddVelocityGenerator(std::move(genVel));
 }
 
 } // namespace Enemies

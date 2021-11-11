@@ -62,10 +62,11 @@ void Wolf::AddWeapons() {
         body->setVelocity(getPhysicsBody()->getVelocity());
     };
 
-    m_weapons[WeaponClass::MELEE].reset(new Maw(
+    auto& weapon = m_weapons[WeaponClass::MELEE];
+    weapon.reset(new Maw(
         damage, range, preparationTime, attackDuration, reloadTime));
-    m_weapons[WeaponClass::MELEE]->AddPositionGenerator(std::move(genPos));
-    m_weapons[WeaponClass::MELEE]->AddVelocityGenerator(std::move(genVel));
+    weapon->AddPositionGenerator(std::move(genPos));
+    weapon->AddVelocityGenerator(std::move(genVel));
 }
 
 void Wolf::Attack() {
@@ -93,7 +94,7 @@ bool Wolf::NeedAttack() const noexcept {
         m_weapons[WeaponClass::MELEE]->IsReady()
     };
     bool enemyIsClose = false;
-    if (attackIsReady) {
+    if (!attackIsReady) {
         const auto target = getParent()->getChildByName<const Unit*>(core::EntityNames::PLAYER);
         // use some simple algorithm to determine whether a player is close enough to the target
         // to perform an attack

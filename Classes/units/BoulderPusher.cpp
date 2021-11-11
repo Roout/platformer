@@ -180,10 +180,11 @@ void BoulderPusher::AddWeapons() {
         body->setAngularVelocity(impulse.x > 0.f? -10.f: 10.f);
     };
 
-    m_weapons[WeaponClass::RANGE].reset(new Legs(
+    auto& weapon = m_weapons[WeaponClass::RANGE];
+    weapon.reset(new Legs(
         damage, range, preparationTime, attackDuration, reloadTime));
-    m_weapons[WeaponClass::RANGE]->AddPositionGenerator(std::move(genPos));
-    m_weapons[WeaponClass::RANGE]->AddVelocityGenerator(std::move(genVel));
+    weapon->AddPositionGenerator(std::move(genPos));
+    weapon->AddVelocityGenerator(std::move(genVel));
 }
 
 bool BoulderPusher::NeedAttack() const noexcept {
