@@ -133,7 +133,6 @@ foreach(schema ${json_schemas})
         COMMAND py ARGS ${CMAKE_CURRENT_SOURCE_DIR}/external/scripts/gen.py
             -i "${json_schema_path}/${schema}" -o "${generated_sources_path}/${src}"
         DEPENDS "${json_schema_path}/${schema}"
-                "${generated_sources_path}/${src}"
                 "external/scripts/gen.py"
     )
     list(APPEND json_models "configs/${src}")
