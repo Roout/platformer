@@ -6,3 +6,5 @@ cocos2d/
 !Resources/
 Resources/*
 !Resources/screenshots/
+Classes/configs/*
+!Resources/configuration/
