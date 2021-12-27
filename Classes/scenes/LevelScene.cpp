@@ -28,6 +28,8 @@
 #include "../ContactHandler.hpp"
 #include "../ParallaxBackground.hpp"
 
+#include "../configs/JsonUnits.hpp"
+
 #include <unordered_map>
 #include <functional>
 
@@ -51,10 +53,12 @@ void EnumerateDepth(cocos2d::Node *root, std::function<void(cocos2d::Node*)> mod
 
 } // namespace {
 
-LevelScene::LevelScene(int id) : 
-    m_id{ id } 
+LevelScene::LevelScene(int id) 
+    : m_id { id } 
 {
 }
+
+LevelScene::~LevelScene() = default;
 
 cocos2d::Scene* LevelScene::createRootScene(int id) {
     const auto root = cocos2d::Scene::createWithPhysics();
@@ -105,6 +109,17 @@ bool LevelScene::init() {
     auto tileMap { cocos2d::FastTMXTiledMap::create(m_tmxFile) };
     tileMap->setName("Map");
     addChild(tileMap);
+
+    // load 
+    std::string json = cocos2d::FileUtils::getInstance()->getStringFromFile("configuration/units.json");
+    if (json.empty()) {
+        return false;
+    }
+
+    m_units = std::make_unique<json_models::Units>();
+    rapidjson::Document doc;
+    doc.Parse(json.c_str());
+    json_models::FromJson(doc["units"], *m_units);
 
     // add parallax background
     auto back = Background::create(tileMap->getContentSize());
@@ -365,7 +380,7 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                         pathIdByUnitId.emplace(form.m_id, form.m_pathId);
                     } break;
                     case core::EnemyClass::ARCHER: {
-                        const auto archer { Enemies::Archer::create(form.m_id, contentSize) };
+                        const auto archer { Enemies::Archer::create(form.m_id, contentSize, &m_units->archer) };
                         archer->setName(core::EntityNames::ARCHER);
                         archer->setPosition(form.m_rect.origin + cocos2d::Size{ contentSize.width / 2.f, contentSize.height });
                         map->addChild(archer, zOrder);
