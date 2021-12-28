@@ -14,24 +14,32 @@
 
 #include "../scenes/DeathScreen.hpp"
 
+#include "../configs/JsonUnits.hpp"
+
 #include <unordered_map>
 #include <algorithm>
 #include <cassert>
 #include <cmath>
 
-Player* Player::create(const cocos2d::Size& contentSize) {
-    auto pRet { new (std::nothrow) Player(contentSize) };
-    if( pRet && pRet->init()) {
+Player* Player::create(const cocos2d::Size& contentSize
+    , const json_models::Player *model) 
+{
+    auto pRet { new (std::nothrow) Player(contentSize, model) };
+    if (pRet && pRet->init()) {
         pRet->autorelease();
-    } else {
+    } 
+    else {
         delete pRet;
         pRet = nullptr;
     }
     return pRet;
 }
 
-Player::Player(const cocos2d::Size& contentSize) 
+Player::Player(const cocos2d::Size& contentSize
+    , const json_models::Player *model
+) 
     : Unit { core::EntityNames::PLAYER }
+    , m_model { model }
 {
     m_contentSize = contentSize;
     m_physicsBodySize = cocos2d::Size { contentSize.width / 2.f, contentSize.height };
@@ -44,11 +52,14 @@ bool Player::init() {
     }    
     m_follower = std::make_unique<SmoothFollower>(this);
     m_inputHandler = std::make_unique<UserInputHandler>(this);
-    m_movement->SetMaxSpeed(MAX_SPEED);
+    m_movement->SetMaxSpeed(m_model->maxSpeed);
     
+    m_health = m_model->health;
     // add dash component
-    m_dash = Dash::create(DASH_COOLDOWN, MAX_SPEED, DASH_SPEED);
-    this->addComponent(m_dash);
+    m_dash = Dash::create(m_model->weapons.dash.cooldown
+        , m_model->maxSpeed
+        , m_model->weapons.dash.velocity[0]);
+    addComponent(m_dash);
     // =====
     return true;
 }
@@ -100,13 +111,13 @@ void Player::AddAnimator() {
         { Utils::EnumCast(State::SPECIAL_PHASE_2), GetStateName(State::SPECIAL_PHASE_2) },
         { Utils::EnumCast(State::SPECIAL_PHASE_3), GetStateName(State::SPECIAL_PHASE_3) }
     });
-    this->addChild(m_animator);
+    addChild(m_animator);
 }
 
 void Player::AddPhysicsBody() {
     Unit::AddPhysicsBody();
     
-    const auto body { this->getPhysicsBody() };
+    const auto body { getPhysicsBody() };
     body->setCategoryBitmask(Utils::CreateMask(core::CategoryBits::PLAYER));
     body->setContactTestBitmask(Utils::CreateMask(core::CategoryBits::PLATFORM));
     body->setCollisionBitmask(
@@ -140,7 +151,7 @@ void Player::setPosition(const cocos2d::Vec2& position) {
 }
 
 void Player::UpdatePosition(const float dt) noexcept {
-    if(!this->IsDead()) {
+    if (!IsDead()) {
         m_movement->Update();
         m_follower->UpdateMapPosition(dt);
     }
@@ -152,7 +163,7 @@ void Player::MoveAlong(Movement::Direction dir) noexcept {
     if (dir == Move::UP || dir == Move::DOWN) {
         // need to be called earlier because forces will be reseted 
         // and method @IsOnGround will fail
-        const auto body { this->getPhysicsBody() };
+        const auto body { getPhysicsBody() };
         bool moveAlongY = !helper::IsEqual(body->getVelocity().y, 0.f, 0.001f);
         if (moveAlongY) {
             m_hasContactWithGround = false;
@@ -199,10 +210,10 @@ void Player::update(float dt) {
 
 void Player::UpdateDebugLabel() noexcept {
     using Debug = settings::DebugMode;
-    const auto state = this->getChildByName<cocos2d::Label*>("state");
+    const auto state = getChildByName<cocos2d::Label*>("state");
     bool isEnabled = Debug::GetInstance().IsEnabled(Debug::OptionKind::kState);
     if (state && isEnabled) {
-        state->setString(this->GetStateName(m_currentState));
+        state->setString(GetStateName(m_currentState));
     }
     else if (state && !isEnabled) {
         state->setString("");
@@ -222,28 +233,28 @@ void Player::UpdateAnimation() {
         State::SPECIAL_PHASE_1,
         State::SPECIAL_PHASE_3
     };
-    if(m_currentState != m_previousState) {
+    if (m_currentState != m_previousState) {
         int repeatTimes { dragonBones::Animator::INFINITY_LOOP };
         if (std::find(oneTimers.cbegin(), oneTimers.cend(), m_currentState) != oneTimers.cend()) {
             repeatTimes = 1;
         }
         (void) m_animator->Play(Utils::EnumCast(m_currentState), repeatTimes);
-        if(this->IsDead()) {
-            this->OnDeath();
+        if (IsDead()) {
+            OnDeath();
         }
     }
 }
 
 void Player::OnDeath() {
     // remove physics body
-    this->removeComponent(this->getPhysicsBody());
-    this->getChildByName("health")->removeFromParent();
-    m_animator->EndWith([this](){
+    removeComponent(getPhysicsBody());
+    getChildByName("health")->removeFromParent();
+    m_animator->EndWith([this]() {
         // create a death screen
         cocos2d::EventCustom event(DeathScreen::EVENT_NAME);
-        this->getEventDispatcher()->dispatchEvent(&event);
+        getEventDispatcher()->dispatchEvent(&event);
         // remove player from screen
-        this->runAction(cocos2d::RemoveSelf::create(true));
+        runAction(cocos2d::RemoveSelf::create(true));
     });
 };
 
@@ -255,79 +266,79 @@ void Player::UpdateState(const float dt) noexcept {
         State::MELEE_ATTACK_2, 
         State::MELEE_ATTACK_3
     };
-    const auto velocity { this->IsDead()? cocos2d::Vec2{ 0.f, 0.f } : this->getPhysicsBody()->getVelocity() };
+    const auto velocity { IsDead()? cocos2d::Vec2{ 0.f, 0.f } : getPhysicsBody()->getVelocity() };
     static constexpr float EPS { 0.001f };
 
     // check whether we're out of level bounds
     const cocos2d::Rect boundary {
-        this->getParent()->getPosition() - m_contentSize,
-        this->getParent()->getContentSize() + m_contentSize * 2.f 
+        getParent()->getPosition() - m_contentSize,
+        getParent()->getContentSize() + m_contentSize * 2.f 
     };
     const cocos2d::Rect player {
-        this->getParent()->getPosition() + this->getPosition(),
+        getParent()->getPosition() + getPosition(),
         m_contentSize
     };
 
-    if(m_finishSpecialAttack) {
-        this->OnSpecialAttackEnd();
+    if (m_finishSpecialAttack) {
+        OnSpecialAttackEnd();
         assert(!m_finishSpecialAttack && "Isn't consumed");
     }
 
-    if(!player.intersectsRect(boundary)) { 
+    if (!player.intersectsRect(boundary)) { 
         // out of level boundaries
         m_currentState = State::DEAD;
         m_health = 0;
     }
-    else if(m_health <= 0) {
+    else if (m_health <= 0) {
         m_currentState = State::DEAD;
     }
-    else if(m_dash->IsRunning()) {
+    else if (m_dash->IsRunning()) {
         m_currentState = State::DASH;
     }
-    else if(m_weapons[WeaponClass::RANGE]->IsPreparing()) {
+    else if (m_weapons[WeaponClass::RANGE]->IsPreparing()) {
         m_currentState = State::PREPARE_RANGE_ATTACK;
     }
-    else if(m_weapons[WeaponClass::RANGE]->IsAttacking()) {
+    else if (m_weapons[WeaponClass::RANGE]->IsAttacking()) {
         m_currentState = State::RANGE_ATTACK;
     }
-    else if(m_weapons[WeaponClass::MELEE]->IsPreparing()) {
-        if(std::find(basicSwordAttacks.cbegin(), basicSwordAttacks.cend(), m_currentState) == basicSwordAttacks.cend()) {
+    else if (m_weapons[WeaponClass::MELEE]->IsPreparing()) {
+        if (std::find(basicSwordAttacks.cbegin(), basicSwordAttacks.cend(), m_currentState) == basicSwordAttacks.cend()) {
             m_currentState = basicSwordAttacks[cocos2d::RandomHelper::random_int(0, 2)];
         }
     }
-    else if(m_weapons[WeaponClass::MELEE]->IsAttacking()) {
+    else if (m_weapons[WeaponClass::MELEE]->IsAttacking()) {
         // TODO: no need to update anything
         // m_currentState = State::MELEE_ATTACK;
     }
-    else if(m_weapons[WeaponClass::SPECIAL]->IsPreparing()) {
+    else if (m_weapons[WeaponClass::SPECIAL]->IsPreparing()) {
         m_currentState = State::SPECIAL_PHASE_3;
     }
-    else if(m_weapons[WeaponClass::SPECIAL]->IsAttacking()) {
+    else if (m_weapons[WeaponClass::SPECIAL]->IsAttacking()) {
         m_currentState = State::SPECIAL_PHASE_3;
     }
-    else if(m_scheduleSpecialAttack) {
+    else if (m_scheduleSpecialAttack) {
         m_currentState = State::SPECIAL_PHASE_1;
         // consume scheduled attack
         m_scheduleSpecialAttack = false;
     }
-    else if(m_currentState == State::SPECIAL_PHASE_1) {
+    else if (m_currentState == State::SPECIAL_PHASE_1) {
         // switch to State::SPECIAL_PHASE_2
         // if animation is completed 
         // TODO: try checking whether an animation is ongoing or not
-        if(!m_animator->IsPlaying()) {
+        if (!m_animator->IsPlaying()) {
             m_currentState = State::SPECIAL_PHASE_2;
         }
     }
-    else if(m_currentState == State::SPECIAL_PHASE_2) {
+    else if (m_currentState == State::SPECIAL_PHASE_2) {
         // do nothing as player is charging a special attack
         // it can be aborted if 
         // - [x] player moved
         // - [x] release button 
     }
-    else if(!this->IsOnGround()) {
+    else if (!IsOnGround()) {
         m_currentState = State::JUMP;
     } 
-    else if(helper::IsEqual(velocity.x, 0.f, EPS)) {
+    else if (helper::IsEqual(velocity.x, 0.f, EPS)) {
         m_currentState = State::IDLE;
     } 
     else {
@@ -338,9 +349,7 @@ void Player::UpdateState(const float dt) noexcept {
 void Player::AddWeapons() {
     // create weapon (TODO: it should be read from config)
     {
-        const float EPS { 0.001f };
-        const auto damage { 25.f };
-        const auto range { 80.f };
+        const float EPS { 0.001f };      
         // the duration of each type of simple attack MUST BE same
         const float animDuration[3] = {
             m_animator->GetDuration(Utils::EnumCast(State::MELEE_ATTACK_1)),
@@ -355,51 +364,116 @@ void Player::AddWeapons() {
         
         const auto attackDuration { 0.5f * animDuration[0] };
         const auto preparationTime { animDuration[0] - attackDuration };
-        const auto reloadTime { 0.f };
-        m_weapons[WeaponClass::MELEE].reset(new Sword(
-            damage, 
-            range, 
-            preparationTime,
-            attackDuration,
-            reloadTime));
+
+        auto genPos = [this]() -> cocos2d::Rect {
+            auto attackRange { m_weapons.front()->GetRange() };
+
+            auto position = getPosition();
+            if (m_side == Side::RIGHT) {
+                position.x += m_contentSize.width / 2.f;
+            }
+            else {
+                position.x -= m_contentSize.width / 2.f + attackRange;
+            }
+            position.y += m_contentSize.height * 0.25f;
+            cocos2d::Rect attackedArea { position,
+                cocos2d::Size{ attackRange, m_contentSize.height * 0.5f }
+            };
+            return attackedArea;
+        };
+        auto genVel = [this](cocos2d::PhysicsBody* body) {
+            body->setVelocity(getPhysicsBody()->getVelocity());
+        };
+
+        const auto& sword = m_model->weapons.sword;
+        auto& weapon = m_weapons[WeaponClass::MELEE];
+        weapon.reset(new Sword(sword.damage
+            , sword.range
+            , preparationTime
+            , attackDuration
+            , sword.cooldown));
+        weapon->AddPositionGenerator(std::move(genPos));
+        weapon->AddVelocityGenerator(std::move(genVel));
     }
     {
-        const auto damage { 25.f };
-        const auto range { 110.f };
         const auto preparationTime { 0.f };
         const auto attackDuration { m_animator->GetDuration(Utils::EnumCast(State::RANGE_ATTACK))  };
-        const auto reloadTime { 0.f };
-        m_weapons[WeaponClass::RANGE].reset(new PlayerFireball(
-            damage, 
-            range, 
-            preparationTime,
-            attackDuration,
-            reloadTime));
+
+        auto genPos = [this]() -> cocos2d::Rect {
+            auto attackRange { m_weapons[WeaponClass::RANGE]->GetRange() };
+            cocos2d::Size fireballSize { attackRange, floorf(attackRange * 0.8f) };
+
+            auto position = getPosition();
+            if (IsLookingLeft()) {
+                position.x -= m_contentSize.width / 2.f ;
+            }
+            else {
+                position.x += m_contentSize.width / 2.f;
+            }
+            position.y += floorf(m_contentSize.height * 0.3f);
+
+            return { position, fireballSize };
+        };
+        auto genVel = [this](cocos2d::PhysicsBody* body) {
+            const auto& velocity = m_model->weapons.spell.projectile.velocity;
+            body->setVelocity({ IsLookingLeft()? -velocity[0]: velocity[0], velocity[1] });
+        };
+
+        const auto& spell = m_model->weapons.spell;
+        auto& weapon = m_weapons[WeaponClass::RANGE];
+        weapon.reset(new PlayerFireball(spell.projectile.damage
+            , spell.range
+            , preparationTime
+            , attackDuration
+            , spell.cooldown));
+        weapon->AddPositionGenerator(std::move(genPos));
+        weapon->AddVelocityGenerator(std::move(genVel));
     }
     {
-        const auto damage { 55.f };
-        const auto range { 180.f };
         const auto animDuration = m_animator->GetDuration(Utils::EnumCast(State::SPECIAL_PHASE_3));
         const auto attackDuration { 0.75f * animDuration };
         const auto preparationTime { animDuration - attackDuration };
-        const auto reloadTime { 0.f };
-        m_weapons[WeaponClass::SPECIAL].reset(new PlayerSpecial(
-            damage, 
-            range, 
-            preparationTime,
-            attackDuration,
-            reloadTime));
+
+        auto genPos = [this]() -> cocos2d::Rect {
+            auto attackRange { m_weapons[WeaponClass::SPECIAL]->GetRange() };
+            cocos2d::Size slashSize { attackRange * 1.8f, attackRange };
+
+            auto position = getPosition();
+            if (IsLookingLeft()) {
+                position.x -= m_contentSize.width / 2.f ;
+            }
+            else {
+                position.x += m_contentSize.width / 2.f;
+            }
+            position.y += floorf(m_contentSize.height * 0.1f);
+
+            return { position, slashSize };
+        };
+        auto genVel = [this](cocos2d::PhysicsBody* body) {
+            const auto& velocity = m_model->weapons.special.projectile.velocity; 
+            body->setVelocity({ IsLookingLeft()? -velocity[0]: velocity[0], velocity[1] });
+        };
+
+        const auto& special = m_model->weapons.special;
+        auto& weapon = m_weapons[WeaponClass::SPECIAL];
+        weapon.reset(new PlayerSpecial(special.projectile.damage
+            , special.range
+            , preparationTime
+            , attackDuration
+            , special.cooldown));
+        weapon->AddPositionGenerator(std::move(genPos));
+        weapon->AddVelocityGenerator(std::move(genVel));
     }
 };
 
 void Player::InitiateDash() {
-    const float duration { m_animator->GetDuration(Utils::EnumCast(State::DASH)) };
-    const bool canDash = !m_dash->IsOnCooldown() 
+    float duration { m_animator->GetDuration(Utils::EnumCast(State::DASH)) };
+    bool canDash = !m_dash->IsOnCooldown() 
         && std::none_of(m_weapons.cbegin(), m_weapons.cend(), [](const std::unique_ptr<Weapon>& weapon) {
             return weapon && (weapon->IsPreparing() || weapon->IsAttacking());
     });
 
-    if(canDash) {
+    if (canDash) {
         m_dash->Initiate(duration);
     }
 }
@@ -415,31 +489,9 @@ void Player::RangeAttack() {
         && !IsDead()
         && m_currentState != State::DASH
     };
-    if (!canAttack) return;
-
-    auto projectilePosition = [this]() -> cocos2d::Rect {
-        const auto attackRange { m_weapons[WeaponClass::RANGE]->GetRange() };
-        const cocos2d::Size fireballSize { attackRange, floorf(attackRange * 0.8f) };
-
-        auto position = getPosition();
-        if (IsLookingLeft()) {
-            position.x -= m_contentSize.width / 2.f ;
-        }
-        else {
-            position.x += m_contentSize.width / 2.f;
-        }
-        position.y += floorf(m_contentSize.height * 0.3f);
-
-        return { position, fireballSize };
-    };
-    
-    auto pushProjectile = [this](cocos2d::PhysicsBody* body) {
-        body->setVelocity({ IsLookingLeft()? -450.f: 450.f, 0.f });
-    };
-    m_weapons[WeaponClass::RANGE]->LaunchAttack(
-        std::move(projectilePosition), 
-        std::move(pushProjectile)
-    );
+    if (canAttack) {
+        m_weapons[WeaponClass::RANGE]->LaunchAttack();
+    }
 }
 
 void Player::MeleeAttack() {
@@ -466,31 +518,10 @@ void Player::SpecialAttack() {
         && !IsDead()
         && m_currentState != State::DASH
     };
-    if (!canAttack) return;
+    if (canAttack) {
+        m_weapons[WeaponClass::SPECIAL]->LaunchAttack();
+    }
 
-    auto projectilePosition = [this]() -> cocos2d::Rect {
-        const auto attackRange { m_weapons[WeaponClass::SPECIAL]->GetRange() };
-        const cocos2d::Size slashSize { attackRange * 1.8f, attackRange };
-
-        auto position = getPosition();
-        if (IsLookingLeft()) {
-            position.x -= m_contentSize.width / 2.f ;
-        }
-        else {
-            position.x += m_contentSize.width / 2.f;
-        }
-        position.y += floorf(m_contentSize.height * 0.1f);
-
-        return { position, slashSize };
-    };
-    
-    auto pushProjectile = [this](cocos2d::PhysicsBody* body) {
-        body->setVelocity({ IsLookingLeft()? -550.f: 550.f, 0.f });
-    };
-    m_weapons[WeaponClass::SPECIAL]->LaunchAttack(
-        std::move(projectilePosition), 
-        std::move(pushProjectile)
-    );
 }
 
 void Player::StartSpecialAttack() {
@@ -507,7 +538,7 @@ void Player::StartSpecialAttack() {
         m_weapons[WeaponClass::SPECIAL]->IsPreparing()
     };
 
-    if(!usingMelee 
+    if (!usingMelee 
         && !usingRange 
         && !usingSpecial 
         && m_currentState != State::DEAD 
@@ -522,7 +553,7 @@ void Player::OnSpecialAttackEnd() {
     m_finishSpecialAttack = false;
     m_scheduleSpecialAttack = false; 
 
-    switch(m_currentState) {
+    switch (m_currentState) {
         case State::SPECIAL_PHASE_1: {
             // cancel attack
             m_currentState = State::IDLE;
@@ -530,7 +561,7 @@ void Player::OnSpecialAttackEnd() {
         case State::SPECIAL_PHASE_2: { // this is phase when player is charging sword attack
             // interrupt charging
             // invoke special weapon attack!
-            this->SpecialAttack();
+            SpecialAttack();
             // switch to phase 3
             m_currentState = State::SPECIAL_PHASE_3;
         } break;
@@ -553,30 +584,7 @@ void Player::FinishSpecialAttack() {
 
 void Player::Attack() {
     assert(!IsDead());
-    assert(m_weapons.front()->IsReady());
+    assert(m_weapons[WeaponClass::MELEE]->IsReady());
 
-    auto projectilePosition = [this]() -> cocos2d::Rect {
-        const auto attackRange { m_weapons.front()->GetRange() };
-
-        auto position = getPosition();
-        if (m_side == Side::RIGHT) {
-            position.x += m_contentSize.width / 2.f;
-        }
-        else {
-            position.x -= m_contentSize.width / 2.f + attackRange;
-        }
-        position.y += m_contentSize.height * 0.25f;
-        cocos2d::Rect attackedArea {
-            position,
-            cocos2d::Size{ attackRange, m_contentSize.height * 0.5f }
-        };
-        return attackedArea;
-    };
-    auto pushProjectile = [this](cocos2d::PhysicsBody* body){
-        body->setVelocity(getPhysicsBody()->getVelocity());
-    };
-    m_weapons.front()->LaunchAttack(
-        std::move(projectilePosition), 
-        std::move(pushProjectile)
-    );
+    m_weapons[WeaponClass::MELEE]->LaunchAttack();
 }

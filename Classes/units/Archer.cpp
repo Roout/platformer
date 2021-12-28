@@ -5,14 +5,18 @@
 #include "../DragonBonesAnimator.hpp"
 #include "../Weapon.hpp"
 #include "../Movement.hpp"
+#include "../configs/JsonUnits.hpp"
 
 #include "cocos2d.h"
 
 namespace Enemies {
 
-Archer* Archer::create(size_t id, const cocos2d::Size& contentSize) {
-    auto pRet { new (std::nothrow) Archer(id, contentSize) };
-    if( pRet && pRet->init()) {
+Archer* Archer::create(size_t id
+    , const cocos2d::Size& contentSize
+    , const json_models::Archer * model) 
+{
+    auto pRet { new (std::nothrow) Archer(id, contentSize, model) };
+    if (pRet && pRet->init()) {
         pRet->autorelease();
     } 
     else {
@@ -22,12 +26,17 @@ Archer* Archer::create(size_t id, const cocos2d::Size& contentSize) {
     return pRet;
 }
 
-Archer::Archer(size_t id, const cocos2d::Size& contentSize)
+Archer::Archer(size_t id
+    , const cocos2d::Size& contentSize
+    , const json_models::Archer * model
+)
     : Bot{ id, core::EntityNames::ARCHER }
+    , m_model { model }
 {
     m_contentSize = contentSize;
     m_physicsBodySize = cocos2d::Size { contentSize.width * 0.875f, contentSize.height };
     m_hitBoxSize = m_physicsBodySize;
+    m_health = m_model->health;
 }
 
 bool Archer::init() {
@@ -62,13 +71,13 @@ void Archer::OnEnemyLeave() {
 void Archer::UpdateState(const float dt) noexcept {
     m_previousState = m_currentState;
 
-    if(m_health <= 0) {
+    if (m_health <= 0) {
         m_currentState = State::DEAD;
     }
-    else if(m_weapons[WeaponClass::RANGE]->IsPreparing()) {
+    else if (m_weapons[WeaponClass::RANGE]->IsPreparing()) {
         m_currentState = State::PREPARE_ATTACK;
     }
-    else if(m_weapons[WeaponClass::RANGE]->IsAttacking()) {
+    else if (m_weapons[WeaponClass::RANGE]->IsAttacking()) {
         m_currentState = State::ATTACK;
     }
     else {
@@ -77,7 +86,7 @@ void Archer::UpdateState(const float dt) noexcept {
 }
 
 void Archer::UpdateAnimation() {
-    if(m_currentState != m_previousState) {
+    if (m_currentState != m_previousState) {
         auto isOneTimeAttack { 
             m_currentState == State::PREPARE_ATTACK || 
             m_currentState == State::ATTACK || 
@@ -85,24 +94,24 @@ void Archer::UpdateAnimation() {
         };
         auto repeatTimes { isOneTimeAttack ? 1 : dragonBones::Animator::INFINITY_LOOP };
         (void) m_animator->Play(Utils::EnumCast(m_currentState), repeatTimes);
-        if(this->IsDead()) {
-            this->OnDeath();
+        if (IsDead()) {
+            OnDeath();
         }
     }
 }
 
 void Archer::OnDeath() {
-    this->removeComponent(this->getPhysicsBody());
-    this->getChildByName("health")->removeFromParent();
+    removeComponent(getPhysicsBody());
+    getChildByName("health")->removeFromParent();
     m_animator->EndWith([this](){
-        this->runAction(cocos2d::RemoveSelf::create(true));
+        runAction(cocos2d::RemoveSelf::create(true));
     });
 }
 
 void Archer::AddPhysicsBody() {
     Unit::AddPhysicsBody();
     // change masks for physics body
-    const auto body { this->getPhysicsBody() };
+    const auto body { getPhysicsBody() };
     body->setCategoryBitmask(Utils::CreateMask(core::CategoryBits::ENEMY));
     body->setContactTestBitmask(Utils::CreateMask(core::CategoryBits::PLATFORM));
     body->setCollisionBitmask(
@@ -151,31 +160,21 @@ void Archer::AddAnimator() {
 }
 
 void Archer::AddWeapons() {
-    const auto damage { 5.f };
-    const auto range { 50.f };
+    const auto& bow = m_model->weapons.bow;
+    float damage { bow.projectile.damage };
+    float range { bow.range };
     // TODO: Here a strange mess of durations needed to be fixed
     // The projectile need to be created only when the attack-animation ends
-    const auto preparationTime { m_animator->GetDuration(Utils::EnumCast(State::ATTACK)) }; /// TODO: update animation!
-    const auto attackDuration { 0.1f };
-    const auto reloadTime { 0.5f };
-    m_weapons[WeaponClass::RANGE].reset(new Bow(
-        damage, 
-        range, 
-        preparationTime,
-        attackDuration,
-        reloadTime));
-}
+    float preparationTime { m_animator->GetDuration(Utils::EnumCast(State::ATTACK)) }; /// TODO: update animation!
+    float attackDuration { 0.1f };
+    float reloadTime { bow.cooldown };
+    
+    auto genPos = [this]()->cocos2d::Rect {
+        float attackRange { m_weapons[WeaponClass::RANGE]->GetRange() };
+        cocos2d::Size arrowSize { attackRange, floorf(attackRange / 8.5f) };
 
-void Archer::Attack() {
-    assert(!IsDead());
-    assert(m_weapons[WeaponClass::RANGE]->IsReady());
-
-    auto projectilePosition = [this]()->cocos2d::Rect {
-        const auto attackRange { m_weapons[WeaponClass::RANGE]->GetRange() };
-        const cocos2d::Size arrowSize { attackRange, floorf(attackRange / 8.5f) };
-
-        auto position = this->getPosition();
-        if (this->IsLookingLeft()) {
+        auto position = getPosition();
+        if (IsLookingLeft()) {
             position.x -= m_contentSize.width / 2.f + arrowSize.width;
         }
         else {
@@ -183,15 +182,25 @@ void Archer::Attack() {
         }
         position.y += m_contentSize.height / 2.f;
 
-        return {position, arrowSize};
+        return { position, arrowSize };
     };
-    auto pushProjectile = [this](cocos2d::PhysicsBody* body) {
-        body->setVelocity({ this->IsLookingLeft()? -300.f: 300.f, 0.f });
+    auto genVel = [this](cocos2d::PhysicsBody* body) {
+        const auto& velocity = m_model->weapons.bow.projectile.velocity;
+        body->setVelocity({ IsLookingLeft()? -velocity[0]: velocity[0], velocity[1] });
     };
-    m_weapons[WeaponClass::RANGE]->LaunchAttack(
-        std::move(projectilePosition), 
-        std::move(pushProjectile)
-    );
+
+    auto& weapon = m_weapons[WeaponClass::RANGE];
+    weapon.reset(new Bow(
+        damage, range, preparationTime, attackDuration, reloadTime));
+    weapon->AddPositionGenerator(std::move(genPos));
+    weapon->AddVelocityGenerator(std::move(genVel));
+}
+
+void Archer::Attack() {
+    assert(!IsDead());
+    assert(m_weapons[WeaponClass::RANGE]->IsReady());
+
+    m_weapons[WeaponClass::RANGE]->LaunchAttack();
 }
 
 bool Archer::NeedAttack() const noexcept {

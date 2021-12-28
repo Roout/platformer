@@ -8,19 +8,23 @@
 #include "../DragonBonesAnimator.hpp"
 #include "../Weapon.hpp"
 
+#include "../configs/JsonUnits.hpp"
+
 namespace Enemies {
 
 Stalactite* Stalactite::create(
     size_t id
     , const cocos2d::Size& contentSize
     , float scale
+    , const json_models::UnitsStalactite *model
 ) {
     auto pRet = new (std::nothrow) Stalactite(id
         , contentSize
         , scale
         , cocos2d::RandomHelper::random_int(1, 4)
+        , model
     );
-    if(pRet && pRet->init()) {
+    if (pRet && pRet->init()) {
         pRet->autorelease();
     }
     else {
@@ -31,11 +35,13 @@ Stalactite* Stalactite::create(
 }
 
 bool Stalactite::init() {
-    if(!Bot::init()) {
+    if (!Bot::init()) {
         return false;
     }
-    this->getChildByName("health")->removeFromParent();
-    this->getChildByName("state")->removeFromParent();
+    getChildByName("health")->removeFromParent();
+    getChildByName("state")->removeFromParent();
+
+    m_health = m_model->health;
     return true;
 }
 
@@ -64,10 +70,12 @@ Stalactite::Stalactite(
     , const cocos2d::Size& contentSize
     , float scale
     , size_t index
+    , const json_models::UnitsStalactite *model
 ) 
     : Bot { id, std::string(core::EntityNames::STALACTITE) + "_" +  std::to_string(index) }
     , m_scale { scale }
     , m_index { index }
+    , m_model { model }
 {
     m_contentSize = contentSize;
     m_physicsBodySize = cocos2d::Size { contentSize.width, contentSize.height };
@@ -78,20 +86,7 @@ void Stalactite::Attack() {
     assert(!IsDead());
     assert(m_weapons[WeaponClass::RANGE]->IsReady());
     
-    auto projectilePosition = [this]()->cocos2d::Rect {
-        const auto attackRange { m_weapons[WeaponClass::RANGE]->GetRange() };
-        const cocos2d::Size stalactite { m_contentSize / m_scale };
-        auto position = this->getPosition();
-        // shift y-axis to avoid collision with the ceiling
-        return { cocos2d::Vec2(position.x, position.y - stalactite.height * 0.05f) , stalactite};
-    };
-    auto pushProjectile = [this](cocos2d::PhysicsBody* body) {
-        body->setVelocity({ 0.f, -400.f });
-    };
-    m_weapons[WeaponClass::RANGE]->LaunchAttack(
-        std::move(projectilePosition), 
-        std::move(pushProjectile)
-    );
+    m_weapons[WeaponClass::RANGE]->LaunchAttack();
     m_alreadyAttacked = true;
 }
 
@@ -113,31 +108,31 @@ bool Stalactite::NeedAttack() const noexcept {
 void Stalactite::UpdateState(const float dt) noexcept {
     m_previousState = m_currentState;
 
-    if(m_health <= 0) {
+    if (m_health <= 0) {
         m_currentState = State::DEAD;
     }
-    else if(m_weapons[WeaponClass::RANGE]->IsPreparing()) {
+    else if (m_weapons[WeaponClass::RANGE]->IsPreparing()) {
         m_currentState = State::PREPARE_ATTACK;
     }
-    else if(m_weapons[WeaponClass::RANGE]->IsAttacking()) {
+    else if (m_weapons[WeaponClass::RANGE]->IsAttacking()) {
         m_currentState = State::ATTACK;
     }
-    else if(m_currentState != State::ATTACK) {
+    else if (m_currentState != State::ATTACK) {
         m_currentState = State::IDLE;
     }
 }
 
 void Stalactite::UpdateAnimation() {
-    if(m_currentState != m_previousState) {
+    if (m_currentState != m_previousState) {
         auto isLooped { m_currentState == State::IDLE };
         auto repeatTimes { isLooped ? dragonBones::Animator::INFINITY_LOOP : 1 };
         (void) m_animator->Play(Utils::EnumCast(m_currentState), repeatTimes);
-        if(this->IsDead()) {
-            this->OnDeath();
+        if (IsDead()) {
+            OnDeath();
         }
-        else if(m_currentState == State::ATTACK) {
+        else if (m_currentState == State::ATTACK) {
             // remove physics body
-            this->removeComponent(this->getPhysicsBody());
+            removeComponent(getPhysicsBody());
         }
     }
 }
@@ -145,10 +140,10 @@ void Stalactite::UpdateAnimation() {
 void Stalactite::OnDeath() {
     // Just remove physics body. 
     // The base of stalactite will still be visible!
-    this->removeComponent(this->getPhysicsBody());
-    // this->getChildByName("health")->removeFromParent();
-    m_animator->EndWith([this](){
-        this->runAction(cocos2d::RemoveSelf::create(true));
+    removeComponent(getPhysicsBody());
+    // getChildByName("health")->removeFromParent();
+    m_animator->EndWith([this]() {
+        runAction(cocos2d::RemoveSelf::create(true));
     });
 }
 
@@ -179,7 +174,7 @@ void Stalactite::AddPhysicsBody() {
     body->setCollisionBitmask(Utils::CreateMask(core::CategoryBits::BOUNDARY));
     body->addShape(hitBoxShape, false);
     
-    this->addComponent(body);
+    addComponent(body);
 }
 
 void Stalactite::AddAnimator() {
@@ -187,7 +182,7 @@ void Stalactite::AddAnimator() {
     std::string name = m_dragonBonesName;
     std::string prefix = "stalactites/" + m_dragonBonesName + "/" + m_dragonBonesName;
     m_animator = dragonBones::Animator::create(std::move(prefix), std::move(name));
-    this->addChild(m_animator);
+    addChild(m_animator);
     m_animator->setScale(m_scale); 
     m_animator->InitializeAnimations({
         std::make_pair(Utils::EnumCast(State::IDLE), GetStateName(State::IDLE)),
@@ -198,20 +193,34 @@ void Stalactite::AddAnimator() {
 }
 
 void Stalactite::AddWeapons() {
-    const auto damage { 30.f };
     const auto range { m_contentSize.height };
     // TODO: Here a strange mess of durations needed to be fixed
     // The projectile need to be created only when the attack-animation ends
     const auto preparationTime { m_animator->GetDuration(Utils::EnumCast(State::PREPARE_ATTACK)) };
     const auto attackDuration { m_animator->GetDuration(Utils::EnumCast(State::ATTACK)) };
-    const auto reloadTime { 0.3f };
-    m_weapons[WeaponClass::RANGE].reset(new StalactitePart(
-        damage, 
-        range, 
-        preparationTime,
-        attackDuration,
-        reloadTime,
-        m_index));
+
+    auto genPos = [this]()->cocos2d::Rect {
+        auto attackRange { m_weapons[WeaponClass::RANGE]->GetRange() };
+        cocos2d::Size stalactite { m_contentSize / m_scale };
+        auto position = getPosition();
+        // shift y-axis to avoid collision with the ceiling
+        return { cocos2d::Vec2(position.x, position.y - stalactite.height * 0.05f) , stalactite};
+    };
+    auto genVel = [this](cocos2d::PhysicsBody* body) {
+        const auto& velocity = m_model->weapons.stalactite.velocity;
+        body->setVelocity({ velocity[0], -velocity[1] });
+    };
+
+    const auto& stalactite = m_model->weapons.stalactite;
+    auto& weapon = m_weapons[WeaponClass::RANGE];
+    weapon.reset(new StalactitePart(stalactite.damage
+        , range
+        , preparationTime
+        , attackDuration
+        , stalactite.cooldown
+        , m_index));
+    weapon->AddPositionGenerator(std::move(genPos));
+    weapon->AddVelocityGenerator(std::move(genVel));
 }
 
 

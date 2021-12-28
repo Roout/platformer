@@ -6,12 +6,17 @@
 #include "../Movement.hpp"
 #include "../Influence.hpp"
 
+#include "../configs/JsonUnits.hpp"
+
 #include <memory>
 
 namespace Enemies {
 
-Wasp* Wasp::Wasp::create(size_t id, const cocos2d::Size& contentSize) {
-    auto pRet { new (std::nothrow) Wasp(id, core::EntityNames::WASP, contentSize) };
+Wasp* Wasp::Wasp::create(size_t id
+    , const cocos2d::Size& contentSize
+    , const json_models::Wasp *model) 
+{
+    auto pRet { new (std::nothrow) Wasp(id, contentSize, model) };
     if (pRet && pRet->init()) {
         pRet->autorelease();
     } 
@@ -26,38 +31,29 @@ bool Wasp::init() {
     if (!Warrior::init()) {
         return false; 
     }
-    m_movement->SetMaxSpeed(35.f);
+    m_health = m_model->health;
+    m_movement->SetMaxSpeed(m_model->idleSpeed);
     return true;
 }
 
-Wasp::Wasp(size_t id, const char * name, const cocos2d::Size& contentSize)
-    : Warrior{ id, name, contentSize }
+Wasp::Wasp(size_t id
+    , const cocos2d::Size& contentSize
+    , const json_models::Wasp *model
+)
+    : Warrior{ id, core::EntityNames::WASP, contentSize }
+    , m_model { model }
 {
     m_physicsBodySize = cocos2d::Size { m_contentSize.width * 0.5f,  m_contentSize.height * 0.8f};
     m_hitBoxSize = cocos2d::Size { m_contentSize.width * 0.6f, m_contentSize.height * 0.9f };
 }
 
 void Wasp::AddWeapons() {
-    const auto damage { 10.f };
-    const auto range { 15.f };
     const auto attackDuration { 0.2f };
     const auto preparationTime { m_animator->GetDuration(Utils::EnumCast(State::ATTACK)) - attackDuration };
-    const auto reloadTime { 0.6f };
-    m_weapons[WeaponClass::MELEE].reset(new Maw(
-        damage, 
-        range, 
-        preparationTime,
-        attackDuration,
-        reloadTime));
-}
 
-void Wasp::Attack() {
-    assert(!IsDead());
-    assert(m_weapons[WeaponClass::MELEE]->IsReady());
-
-    auto projectilePosition = [this]() -> cocos2d::Rect {
-        const auto attackRange { m_weapons[WeaponClass::MELEE]->GetRange() };
-        const cocos2d::Size stingSize { attackRange, attackRange / 4.f };
+    auto genPos = [this]() -> cocos2d::Rect {
+        auto attackRange { m_weapons[WeaponClass::MELEE]->GetRange() };
+        cocos2d::Size stingSize { attackRange, attackRange / 4.f };
 
         auto position = getPosition();
         if (IsLookingLeft()) {
@@ -70,18 +66,31 @@ void Wasp::Attack() {
 
         return { position, stingSize };
     };
-    auto pushProjectile = [](cocos2d::PhysicsBody* body) {
-        // body->setVelocity(getPhysicsBody()->getVelocity());
+    auto genVel = [this](cocos2d::PhysicsBody* body) {
+        body->setVelocity(getPhysicsBody()->getVelocity());
     };
-    m_weapons[WeaponClass::MELEE]->LaunchAttack(
-        std::move(projectilePosition), 
-        std::move(pushProjectile)
-    );
+
+    const auto& sting = m_model->weapons.sting;
+    auto& weapon = m_weapons[WeaponClass::MELEE];
+    weapon.reset(new Sting(sting.damage
+        , sting.range
+        , preparationTime
+        , attackDuration
+        , sting.cooldown));
+    weapon->AddPositionGenerator(std::move(genPos));
+    weapon->AddVelocityGenerator(std::move(genVel));
+}
+
+void Wasp::Attack() {
+    assert(!IsDead());
+    assert(m_weapons[WeaponClass::MELEE]->IsReady());
+
+    m_weapons[WeaponClass::MELEE]->LaunchAttack();
 }
 
 void Wasp::Pursue(Unit * target) noexcept {
     assert(target);
-    if (!this->IsDead() && target && !target->IsDead()) {
+    if (!IsDead() && target && !target->IsDead()) {
         m_navigator->VisitCustomPoint(
             target->getPosition() + cocos2d::Vec2{0.f, target->GetHitBox().height / 2.f}
         );
@@ -93,10 +102,12 @@ bool Wasp::NeedAttack() const noexcept {
     bool attackIsReady { m_detectEnemy 
         && m_weapons[WeaponClass::MELEE]->IsReady()
     };
-    if (!attackIsReady) return false;
+    if (!attackIsReady) {
+        return false;
+    }
     
     bool enemyIsClose = false;
-    const auto target = this->getParent()->getChildByName<const Unit*>(core::EntityNames::PLAYER);
+    const auto target = getParent()->getChildByName<const Unit*>(core::EntityNames::PLAYER);
     // use some simple algorithm to determine whether a player is close enough to the target
     // to perform an attack
     if (target && !target->IsDead()) {
@@ -104,8 +115,8 @@ bool Wasp::NeedAttack() const noexcept {
         // calc position of the stinger:
         const auto attackRange { m_weapons[WeaponClass::MELEE]->GetRange() };
         const cocos2d::Size stingSize { attackRange, attackRange / 4.4f };
-        auto position = this->getPosition();
-        if (this->IsLookingLeft()) {
+        auto position = getPosition();
+        if (IsLookingLeft()) {
             position.x -= m_hitBoxSize.width / 2.f + stingSize.width;
         }
         else {
@@ -168,17 +179,17 @@ void Wasp::AddPhysicsBody() {
     );
     body->addShape(hitBoxShape, false);
     
-    this->addComponent(body);
+    addComponent(body);
 }
 
 void Wasp::OnEnemyIntrusion() {
     Warrior::OnEnemyIntrusion();
-    m_movement->SetMaxSpeed(70.f);
+    m_movement->SetMaxSpeed(m_model->alertSpeed);
 }
 
 void Wasp::OnEnemyLeave() {
     Warrior::OnEnemyLeave();
-    m_movement->SetMaxSpeed(35.f);
+    m_movement->SetMaxSpeed(m_model->idleSpeed);
 }
 
 } // namespace Enemies

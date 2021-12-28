@@ -1,7 +1,7 @@
 #include "LevelScene.hpp"
 #include "Interface.hpp"
 
-#include "../units/Warrior.hpp"
+#include "../units/AxWarrior.hpp"
 #include "../units/Slime.hpp"
 #include "../units/Archer.hpp"
 #include "../units/Cannon.hpp"
@@ -28,6 +28,8 @@
 #include "../ContactHandler.hpp"
 #include "../ParallaxBackground.hpp"
 
+#include "../configs/JsonUnits.hpp"
+
 #include <unordered_map>
 #include <functional>
 
@@ -51,10 +53,12 @@ void EnumerateDepth(cocos2d::Node *root, std::function<void(cocos2d::Node*)> mod
 
 } // namespace {
 
-LevelScene::LevelScene(int id) : 
-    m_id{ id } 
+LevelScene::LevelScene(int id) 
+    : m_id { id } 
 {
 }
+
+LevelScene::~LevelScene() = default;
 
 cocos2d::Scene* LevelScene::createRootScene(int id) {
     const auto root = cocos2d::Scene::createWithPhysics();
@@ -106,6 +110,18 @@ bool LevelScene::init() {
     tileMap->setName("Map");
     addChild(tileMap);
 
+    // load 
+    auto fileUtils = cocos2d::FileUtils::getInstance();
+    std::string json = fileUtils->getStringFromFile("configuration/units.json");
+    if (json.empty()) {
+        return false;
+    }
+
+    m_units = std::make_unique<json_models::Units>();
+    rapidjson::Document doc;
+    doc.Parse(json.c_str());
+    json_models::FromJson(doc["units"], *m_units);
+
     // add parallax background
     auto back = Background::create(tileMap->getContentSize());
     tileMap->addChild(back, -1);
@@ -129,12 +145,12 @@ void LevelScene::onEnter() {
     const auto shapeContactListener = cocos2d::EventListenerPhysicsContact::create();
     shapeContactListener->onContactBegin = contact::OnContactBegin;
     shapeContactListener->onContactSeparate = contact::OnContactSeparate;
-    this->getEventDispatcher()->addEventListenerWithSceneGraphPriority(shapeContactListener, this);
+    getEventDispatcher()->addEventListenerWithSceneGraphPriority(shapeContactListener, this);
 }
 
 void LevelScene::onExit() {
     cocos2d::Node::onExit();
-    this->getEventDispatcher()->removeAllEventListeners();
+    getEventDispatcher()->removeAllEventListeners();
 }
 
 void LevelScene::pause() {
@@ -173,11 +189,22 @@ void LevelScene::Restart() {
     // Tilemap:
     // - remove children exсept layers and objects.
     auto tileMap = getChildByName<cocos2d::FastTMXTiledMap*>("Map");
+    // NOTE:
+    // cannot directly invoke `child->removeFromParent();` because 
+    // it invalidates iterator by erase call inside the `removeFromParent` 
+    // function
+    std::vector<cocos2d::Node*> scheduledForRemove;
+    scheduledForRemove.reserve(tileMap->getChildrenCount());
     for (auto child: tileMap->getChildren()) {
         if (child->getTag() != EXIST_ON_RESTART_TAG) {
-            child->removeFromParent();
+            scheduledForRemove.push_back(child);
         }
     }
+    for (auto child: scheduledForRemove) {
+        child->removeFromParent();
+    }
+
+    // create objects again
     InitTileMapObjects(tileMap);
    
     // - reset position
@@ -241,7 +268,7 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
         for(const auto& form: parsedForms) {
             if(form.m_type == core::CategoryName::PLAYER) {
                 const auto contentSize = form.m_rect.size * form.m_scale;
-                const auto hero { Player::create(contentSize) };
+                const auto hero { Player::create(contentSize, &m_units->player) };
                 hero->setName(core::EntityNames::PLAYER);
                 hero->setPosition( form.m_rect.origin + cocos2d::Size{ contentSize.width / 2.f, contentSize.height } );
                 map->addChild(hero, PLAYER_ZORDER);
@@ -306,7 +333,9 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                 const auto contentSize = form.m_rect.size * form.m_scale;
                 switch(Utils::EnumCast<core::EnemyClass>(form.m_subType)) {
                     case core::EnemyClass::WARRIOR: {
-                        const auto warrior { Enemies::Warrior::create(form.m_id, contentSize) };
+                        const auto warrior { Enemies::AxWarrior::create(form.m_id
+                            , contentSize
+                            , &m_units->axWarrior) };
                         warrior->setName(core::EntityNames::WARRIOR);
                         warrior->setPosition(form.m_rect.origin + cocos2d::Size{ contentSize.width / 2.f, contentSize.height });
                         map->addChild(warrior, zOrder);
@@ -315,14 +344,17 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                     } break;
                     case core::EnemyClass::BOSS: {
                         bossId = form.m_id;
-                        boss = Enemies::BanditBoss::create(form.m_id, contentSize);
+                        boss = Enemies::BanditBoss::create(bossId
+                            , contentSize
+                            , &m_units->banditBoss
+                            , &m_units->firecloud);
                         boss->setName(core::EntityNames::BOSS);
                         boss->setPosition(form.m_rect.origin + cocos2d::Size{ contentSize.width / 2.f, contentSize.height });
                         map->addChild(boss, zOrder);
-                        pathIdByUnitId.emplace(form.m_id, form.m_pathId);
+                        pathIdByUnitId.emplace(bossId, form.m_pathId);
                     } break;
                     case core::EnemyClass::SLIME: {
-                        const auto slime { Enemies::Slime::create(form.m_id, contentSize) };
+                        const auto slime { Enemies::Slime::create(form.m_id, contentSize, &m_units->slime) };
                         slime->setName(core::EntityNames::SLIME);
                         slime->setPosition(form.m_rect.origin + cocos2d::Size{ contentSize.width / 2.f, contentSize.height });
                         map->addChild(slime, zOrder);
@@ -330,7 +362,7 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                         pathIdByUnitId.emplace(form.m_id, form.m_pathId);
                     } break;
                     case core::EnemyClass::SPEARMAN: {
-                        const auto spearman { Enemies::Spearman::create(form.m_id, contentSize) };
+                        const auto spearman { Enemies::Spearman::create(form.m_id, contentSize, &m_units->spearman) };
                         spearman->setName(core::EntityNames::SPEARMAN);
                         spearman->setPosition(form.m_rect.origin + cocos2d::Size{ contentSize.width / 2.f, contentSize.height });
                         map->addChild(spearman, zOrder);
@@ -338,7 +370,7 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                         pathIdByUnitId.emplace(form.m_id, form.m_pathId);
                     } break;
                     case core::EnemyClass::WOLF: {
-                        const auto wolf { Enemies::Wolf::create(form.m_id, contentSize) };
+                        const auto wolf { Enemies::Wolf::create(form.m_id, contentSize, &m_units->wolf) };
                         wolf->setName(core::EntityNames::WOLF);
                         wolf->setPosition(form.m_rect.origin + cocos2d::Size{ contentSize.width / 2.f, contentSize.height });
                         map->addChild(wolf, PLAYER_ZORDER + 1);
@@ -346,7 +378,7 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                         pathIdByUnitId.emplace(form.m_id, form.m_pathId);
                     } break;
                     case core::EnemyClass::WASP: {
-                        const auto wasp { Enemies::Wasp::create(form.m_id, contentSize) };
+                        const auto wasp { Enemies::Wasp::create(form.m_id, contentSize, &m_units->wasp) };
                         wasp->setName(core::EntityNames::WASP);
                         wasp->setPosition(form.m_rect.origin + cocos2d::Size{ contentSize.width / 2.f, contentSize.height });
                         map->addChild(wasp, PLAYER_ZORDER + 1);
@@ -354,14 +386,14 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                         pathIdByUnitId.emplace(form.m_id, form.m_pathId);
                     } break;
                     case core::EnemyClass::ARCHER: {
-                        const auto archer { Enemies::Archer::create(form.m_id, contentSize) };
+                        const auto archer { Enemies::Archer::create(form.m_id, contentSize, &m_units->archer) };
                         archer->setName(core::EntityNames::ARCHER);
                         archer->setPosition(form.m_rect.origin + cocos2d::Size{ contentSize.width / 2.f, contentSize.height });
                         map->addChild(archer, zOrder);
                         archers.emplace(form.m_id, archer);
                     } break;
                     case core::EnemyClass::CANNON: {
-                        const auto cannon { Enemies::Cannon::create(form.m_id, contentSize, form.m_scale) };
+                        const auto cannon { Enemies::Cannon::create(form.m_id, contentSize, form.m_scale, &m_units->cannon) };
                         if(form.m_flipX) cannon->Turn();
                         cannon->setName(core::EntityNames::CANNON);
                         cannon->setPosition(form.m_rect.origin + cocos2d::Size{ contentSize.width / 2.f, contentSize.height });
@@ -369,21 +401,24 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                         cannons.emplace(form.m_id, cannon);
                     } break;
                     case core::EnemyClass::STALACTITE: {
-                        const auto stalactite { Enemies::Stalactite::create(form.m_id, contentSize, form.m_scale) };
+                        const auto stalactite { Enemies::Stalactite::create(form.m_id
+                            , contentSize
+                            , form.m_scale
+                            , &m_units->stalactite) };
                         stalactite->setName(core::EntityNames::STALACTITE);
                         stalactite->setPosition(form.m_rect.origin + cocos2d::Size{ contentSize.width / 2.f, contentSize.height });
                         map->addChild(stalactite, zOrder);
                         stalactites.emplace(form.m_id, stalactite);
                     } break;
                     case core::EnemyClass::BOULDER_PUSHER: {
-                        const auto boulderPusher { Enemies::BoulderPusher::create(form.m_id, contentSize) };
+                        const auto boulderPusher { Enemies::BoulderPusher::create(form.m_id, contentSize, &m_units->boulderPusher) };
                         boulderPusher->setName(core::EntityNames::BOULDER_PUSHER);
                         boulderPusher->setPosition(form.m_rect.origin + cocos2d::Size{ contentSize.width / 2.f, contentSize.height });
                         map->addChild(boulderPusher, zOrder);
                         boulderPushers.emplace(form.m_id, boulderPusher);
                     } break;
                     case core::EnemyClass::SPIDER: {
-                        const auto spider { Enemies::Spider::create(form.m_id, contentSize) };
+                        const auto spider { Enemies::Spider::create(form.m_id, contentSize, &m_units->spider) };
                         spider->setName(core::EntityNames::SPIDER);
                         spider->setPosition(form.m_rect.origin + cocos2d::Size{ contentSize.width / 2.f, contentSize.height });
                         map->addChild(spider, zOrder);

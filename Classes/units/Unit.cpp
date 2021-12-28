@@ -23,14 +23,18 @@ bool Unit::init() {
     if (!cocos2d::Node::init() ) {
         return false;
     }
-    this->scheduleUpdate();
+    // At this moment content size should be initialized
+    assert(!cocos2d::Vec2{ m_contentSize }.fuzzyEquals({0.f, 0.f}, 0.01f));
 
-    this->AddAnimator();
-    this->AddPhysicsBody();
-    const auto body { this->getPhysicsBody() };
-    m_movement = std::make_unique<Movement>(body, LevelScene::GRAVITY, LevelScene::JUMP_HEIGHT);
-    this->AddWeapons();
-    this->setContentSize(m_contentSize);
+    scheduleUpdate();
+
+    AddAnimator();
+    AddPhysicsBody();
+    setContentSize(m_contentSize); // must be called after `AddPhysicsBody`
+    m_movement = std::make_unique<Movement>(getPhysicsBody()
+        , LevelScene::GRAVITY
+        , LevelScene::JUMP_HEIGHT);
+    AddWeapons();
 
     /// TODO: move somewhere
     static constexpr float healthBarShift { 5.f };
@@ -38,13 +42,13 @@ bool Unit::init() {
     const auto shiftY { m_contentSize.height };
     bar->setName("health");
     bar->setPosition(-m_contentSize.width / 2.f, shiftY + healthBarShift);
-    this->addChild(bar);
+    addChild(bar);
 
     // add state lable:
     const auto state = cocos2d::Label::createWithTTF("", "fonts/arial.ttf", 15);
     state->setName("state");
     state->setPosition(0.f, bar->getPositionY() + bar->getContentSize().height + 8.f);
-    this->addChild(state);    
+    addChild(state);    
     return true;
 }
 
@@ -90,49 +94,18 @@ void Unit::Turn() noexcept {
 }
 
 void Unit::LookAt(const cocos2d::Vec2& point) noexcept {
-    bool targetIsOnLeft { point.x < this->getPosition().x };
+    bool targetIsOnLeft { point.x < getPosition().x };
     bool needTurnAround {
-        ( targetIsOnLeft && !this->IsLookingLeft() ) ||
-        ( !targetIsOnLeft && this->IsLookingLeft() )
+        ( targetIsOnLeft && !IsLookingLeft() ) ||
+        ( !targetIsOnLeft && IsLookingLeft() )
     };
     if(needTurnAround) {
-        this->Turn();
+        Turn();
     }
 }
 
 void Unit::RecieveDamage(int damage) noexcept {
     m_health -= damage;
-}
-
-void Unit::Attack() {
-    assert(!IsDead());
-    assert(m_weapons.front()->IsReady());
-
-    auto projectilePosition = [this]() -> cocos2d::Rect {
-        const auto attackRange { m_weapons.front()->GetRange() };
-
-        auto position = getPosition();
-        if (m_side == Side::RIGHT) {
-            position.x += m_contentSize.width / 2.f;
-        }
-        else {
-            position.x -= m_contentSize.width / 2.f + attackRange;
-        }
-        // shift a little bit higher to avoid immediate collision with the ground
-        position.y += m_contentSize.height * 0.05f;
-        cocos2d::Rect attackedArea {
-            position,
-            cocos2d::Size{ attackRange, m_contentSize.height * 1.05f } // a little bigger than the designed size
-        };
-        return attackedArea;
-    };
-    auto pushProjectile = [this](cocos2d::PhysicsBody* body){
-        body->setVelocity(getPhysicsBody()->getVelocity());
-    };
-    m_weapons.front()->LaunchAttack(
-        std::move(projectilePosition), 
-        std::move(pushProjectile)
-    );
 }
 
 void Unit::UpdateWeapons(const float dt) noexcept {
@@ -156,7 +129,7 @@ void Unit::UpdateCurses(const float dt) noexcept {
 }
 
 bool Unit::IsOnGround() const noexcept {
-    const auto velocity { this->getPhysicsBody()->getVelocity() };
+    const auto velocity { getPhysicsBody()->getVelocity() };
     constexpr float EPS { 0.000001f };  
     return helper::IsEqual(velocity.y, 0.f, EPS) && m_hasContactWithGround;
 }
@@ -189,14 +162,14 @@ void Unit::AddPhysicsBody() {
     hitBoxShape->setTag(Utils::CreateMask(core::CategoryBits::HITBOX_SENSOR));
     body->addShape(hitBoxShape, false);
     
-    this->addComponent(body);
+    addComponent(body);
 }
 
 void Unit::AddAnimator() {
     std::string chachedArmatureName = m_dragonBonesName;
     std::string prefix = m_dragonBonesName;
     m_animator = dragonBones::Animator::create(std::move(prefix), std::move(chachedArmatureName));
-    this->addChild(m_animator);
+    addChild(m_animator);
     m_animator->setScale(0.1f); // TODO: introduce multi-resolution scaling
 }
 

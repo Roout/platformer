@@ -1,0 +1,289 @@
+{
+  "units": {
+    
+    "archer" : {
+      "health" : 100,
+      "dragonbones": "archer",
+      "weapons": {
+        "bow": {
+          "description": "fire arrows, wtf?",
+          "type": "range",
+          "range": 50.0,
+          "cooldown": 0.5,
+          "projectile": {
+            "type": "arrow",
+            "velocity": [300.0, 0.0],
+            "damage": 5.0,
+            "lifetime": 3.0
+          }
+        }
+      }
+    },
+    
+    "bandit_boss": {
+      "health": 500,
+      "dragonbones": "boss",
+      "jump_height": 80.0,
+      "default_speed": 190.0,
+      "enhanced_speed": 280.0,    
+      "weapons": {
+        "dash": {
+          "description": "extremly fast move forward",
+          "cooldown": 13.0, 
+          "velocity": [600.0, 0.0]
+        },
+        "firebook": {
+          "description": "throws fire from his chains into the enemy",
+          "type": "range",
+          "range": 60.0,
+          "cooldown": 2.0, 
+          "projectile": {
+            "type": "fireball",
+            "velocity": [400.0, 0.0],
+            "damage": 15.0,
+            "lifetime": 5.0
+          }
+        },
+        "firecloud": {
+          "description": "summon firecloud which will attack with fireballs from the air",
+          "range": 130.0,
+          "cooldown": 5.0, 
+          "impulse": [0.0, 190.0]
+        },
+        "chain_sweep": {
+          "description": "jump and sweep his chains over the enemy once",
+          "type": "range",
+          "range": 100.0,
+          "cooldown": 8.0, 
+          "projectile": {
+            "type": "chain",
+            "damage": 30.0,
+            "lifetime": 0.15
+          }
+        },
+        "chain_swing": {
+          "description": "stops and swing chains trice",
+          "type": "range",
+          "range": 140.0,
+          "cooldown": 2.0, 
+          "projectile": {
+            "type": "chain",
+            "damage": 15.0,
+            "lifetime": 0.15
+          }
+        }
+      }
+    },
+    
+    "boulder_pusher" : {
+      "health" : 100,
+      "dragonbones": "old_man",
+      "weapons": {
+        "legs": {
+          "description": "throws a boulder from the above",
+          "type": "melee",
+          "range": 18.0,
+          "cooldown": 1.5,
+          "projectile": {
+            "type": "boulder",
+            "impulse" : [ 200.0, 0.0 ],
+            "angular": [ 10.0, 0.0 ],
+            "damage": 5.0,
+            "lifetime": 5.0
+          }
+        }
+      }
+    },
+    
+    "cannon" : {
+      "health" : 250,
+      "dragonbones": "cannon",
+      "weapons": {
+        "cannon": {
+          "description": "fire stakes",
+          "type": "range",
+          "range": 50.0,
+          "cooldown": 0.3,
+          "projectile": {
+            "type": "stake",
+            "velocity" : [ 450.0, 0.0 ],
+            "damage": 15.0,
+            "lifetime": 5.0
+          }
+        }
+      }
+    },
+    
+    "firecloud" : {
+      "health": 10000,
+      "dragonbones": "cloud",
+      "shell_refill_cooldown": 0.7,
+      "shell_refill_count": 4,
+      "lifetime": 4.0,  
+      "max_speed": 100.0,
+      
+      "weapons": {
+        "fireball": {
+          "description": "throws fireballs from the cloud",
+          "type": "range",
+          "range": 115.0,
+          "cooldown": 0.1,
+          "projectile": {
+            "type": "fireball",
+            "velocity" : [ 300.0, 600.0 ],
+            "damage": 15.0,
+            "lifetime": 3.0
+          }
+        }
+      }
+    },
+    
+    "player": {
+      "health" : 100,
+      "dragonbones": "mc",
+      "max_speed": 200.0,
+      "weapons": {
+        "sword": {
+          "description": "simple attack with sword: upper, middle, lower",
+          "type": "melee",
+          "range": 80.0,
+          "cooldown": 0.0,
+          "damage": 25.0
+        },
+        "spell": {
+          "description": "throws fireball",
+          "type": "range",
+          "range": 110.0,
+          "cooldown": 0.0,
+          "projectile": {
+            "type": "fireball",
+            "velocity" : [ 450.0, 0.0 ],
+            "damage": 25.0,
+            "lifetime": 4.0
+          }
+        },
+        "special": {
+          "description": "sword attack produces and throw an arc of fire",
+          "type": "range",
+          "range": 180.0,
+          "cooldown": 0.0,
+          "projectile": {
+            "type": "fireslash",
+            "velocity" : [ 550.0, 0.0 ],
+            "damage": 55.0,
+            "lifetime": 4.0
+          }
+        },
+        "dash": {
+          "description": "extremly fast move forward",
+          "cooldown": 0.7, 
+          "velocity": [600.0, 0.0]
+        }
+      }
+    },
+  
+    "slime": {
+      "health" : 100,
+      "dragonbones": "slime",
+      "max_speed": 80.0,
+      "weapons": {
+        "spell": {
+          "description": "throws waterball",
+          "type": "range",
+          "range": 120.0,
+          "cooldown": 0.5,
+          "projectile": {
+            "type": "waterball",
+            "velocity" : [ 450.0, 0.0 ],
+            "damage": 25.0,
+            "lifetime": 4.0
+          }
+        }
+      }
+    },
+    
+    "spearman": {
+      "health" : 100,
+      "dragonbones": "spear_man",
+      "max_speed": 75.0,
+      "weapons": {
+        "spear": {
+          "description": "attack with spear",
+          "type": "melee",
+          "range": 50.0,
+          "cooldown": 1.4,
+          "damage": 10.0
+        }
+      }
+    },
+    
+    "spider": {
+      "health" : 100,
+      "dragonbones": "spider",
+      "linewidth": 25.0,
+      "idle_speed": 60.0,
+      "alert_speed": 100.0
+    },
+    
+    "stalactite": {
+      "health" : 100,
+      "dragonbones": "stalactite",
+      "weapons": {
+        "stalactite": {
+          "description": "part of the stalactite breaks off and falls on enemies",
+          "type": "range",
+          "cooldown": 0.3,
+          "damage": 30.0,
+          "velocity": [ 0.0, 400.0 ]
+        }
+      }
+    },
+  
+    "ax_warrior": {
+      "health" : 100,
+      "dragonbones": "warrior",
+      "max_speed": 80.0,
+      "weapons": {
+        "axe": {
+          "description": "axe attack",
+          "type": "melee",
+          "range": 30.0,
+          "cooldown": 0.5,
+          "damage": 15.0
+        }
+      }
+    },
+    
+    "wasp": {
+      "health" : 100,
+      "dragonbones": "wasp",
+      "idle_speed": 35.0,
+      "alert_speed": 70.0,
+      "weapons": {
+        "sting": {
+          "description": "sting enemy",
+          "type": "melee",
+          "range": 15.0,
+          "cooldown": 0.6,
+          "damage": 10.0
+        }
+      }
+    },
+    
+    "wolf": {
+      "health" : 100,
+      "dragonbones": "wolf",
+      "idle_speed": 100.0,
+      "alert_speed": 200.0,
+      "weapons": {
+        "maw": {
+          "description": "bite an enemy",
+          "type": "melee",
+          "range": 10.0,
+          "cooldown": 0.4,
+          "damage": 20.0
+        }
+      }
+    }
+  }
+}

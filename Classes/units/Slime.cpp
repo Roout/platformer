@@ -5,13 +5,18 @@
 #include "../Core.hpp"
 #include "../Movement.hpp"
 
+#include "../configs/JsonUnits.hpp"
+
 #include <memory>
 
 namespace Enemies {
 
 
-Slime* Slime::create(size_t id, const cocos2d::Size& contentSize) {
-    auto pRet { new (std::nothrow) Slime(id, core::EntityNames::SLIME, contentSize) };
+Slime* Slime::create(size_t id
+    , const cocos2d::Size& contentSize
+    , const json_models::Slime *slime) 
+{
+    auto pRet { new (std::nothrow) Slime(id, contentSize, slime) };
     if (pRet && pRet->init()) {
         pRet->autorelease();
     } 
@@ -26,12 +31,17 @@ bool Slime::init() {
     if (!Bot::init()) {
         return false; 
     }
-    m_movement->SetMaxSpeed(80.f);
+    m_movement->SetMaxSpeed(m_slime->maxSpeed);
+    m_health = m_slime->health;
     return true;
 }
 
-Slime::Slime(size_t id, const char * name, const cocos2d::Size& contentSize)
-    : Bot{ id, name }
+Slime::Slime(size_t id
+    , const cocos2d::Size& contentSize
+    , const json_models::Slime *slime
+)
+    : Bot { id, core::EntityNames::SLIME }
+    , m_slime { slime }
 {
     m_contentSize = contentSize;
     m_physicsBodySize = contentSize;
@@ -56,11 +66,11 @@ void Slime::update(float dt) {
 void Slime::AttachNavigator(Path&& path) {
     // process a default paths waypoints to avoid jumping:
     // align them with own Y-axis position
-    for(auto& point: path.m_waypoints) {
-        point.y = this->getPosition().y;
+    for (auto& point: path.m_waypoints) {
+        point.y = getPosition().y;
     }
     m_navigator = std::make_unique<Navigator>(this, std::move(path));
-    this->Patrol();
+    Patrol();
 }
 
 void Slime::OnEnemyIntrusion() {
@@ -69,7 +79,7 @@ void Slime::OnEnemyIntrusion() {
 
 void Slime::OnEnemyLeave() {
     m_detectEnemy = false;
-    this->Patrol();
+    Patrol();
 }
 
 void Slime::Patrol() noexcept {
@@ -79,19 +89,19 @@ void Slime::Patrol() noexcept {
 void Slime::UpdateState(const float dt) noexcept {
     m_previousState = m_currentState;
 
-    if(m_health <= 0) {
+    if (m_health <= 0) {
         m_currentState = State::DEAD;
     }
-    else if(m_weapons[WeaponClass::RANGE]->IsPreparing()) {
+    else if (m_weapons[WeaponClass::RANGE]->IsPreparing()) {
         /// TODO: fix this approach which leads to misundestanding
         /// This force to continue the animation which was played before 
         /// Needed to choose the time when the projectile will be created
         m_currentState = State::ATTACK;
     }
-    else if(m_weapons[WeaponClass::RANGE]->IsAttacking()) {
+    else if (m_weapons[WeaponClass::RANGE]->IsAttacking()) {
         m_currentState = State::ATTACK;
     }
-    else if(m_weapons[WeaponClass::RANGE]->IsReloading()) {
+    else if (m_weapons[WeaponClass::RANGE]->IsReloading()) {
         m_currentState = State::IDLE;
     }
     else {
@@ -112,7 +122,7 @@ void Slime::UpdatePosition(const float dt) noexcept {
 }
 
 void Slime::UpdateAnimation() {
-    if(m_currentState != m_previousState) {
+    if (m_currentState != m_previousState) {
         const auto isOneTimeAttack { 
             m_currentState == State::PREPARE_ATTACK ||
             m_currentState == State::ATTACK || 
@@ -120,24 +130,24 @@ void Slime::UpdateAnimation() {
         };
         const auto repeatTimes { isOneTimeAttack ? 1 : dragonBones::Animator::INFINITY_LOOP };
         (void) m_animator->Play(Utils::EnumCast(m_currentState), repeatTimes);
-        if(this->IsDead()) {
-            this->OnDeath();
+        if (IsDead()) {
+            OnDeath();
         }
     }
 }
 
 void Slime::OnDeath() {
-    this->removeComponent(this->getPhysicsBody());
-    this->getChildByName("health")->removeFromParent();
+    removeComponent(getPhysicsBody());
+    getChildByName("health")->removeFromParent();
     m_animator->EndWith([this]() {
-        this->runAction(cocos2d::RemoveSelf::create(true));
+        runAction(cocos2d::RemoveSelf::create(true));
     });
 }
 
 void Slime::AddPhysicsBody() {
     Unit::AddPhysicsBody();
     // change masks for physics body
-    const auto body { this->getPhysicsBody() };
+    const auto body { getPhysicsBody() };
     body->setContactTestBitmask(Utils::CreateMask(core::CategoryBits::PLATFORM));
     body->setCategoryBitmask(Utils::CreateMask(core::CategoryBits::ENEMY));
     body->setCollisionBitmask(
@@ -192,27 +202,14 @@ void Slime::AddAnimator() {
 // =============  WEAPON STUFF ================== //
 
 void Slime::AddWeapons() {
-    const auto damage { 15.f };
-    const auto range { 120.f };
+    
     const auto duration { m_animator->GetDuration(Utils::EnumCast(State::ATTACK)) };
     const auto preparationTime { duration * 0.6f }; /// TODO: update animation!
     const auto attackDuration { duration - preparationTime };
-    const auto reloadTime { 0.5f };
-    m_weapons[WeaponClass::RANGE].reset(new SlimeShot(
-        damage, 
-        range, 
-        preparationTime,
-        attackDuration,
-        reloadTime));
-}
-
-void Slime::Attack() {
-    assert(!IsDead());
-    assert(m_weapons[WeaponClass::RANGE]->IsReady());
-
-    auto projectilePosition = [this]() -> cocos2d::Rect {
-        const auto attackRange { m_weapons[WeaponClass::RANGE]->GetRange() };
-        const cocos2d::Size waterballSize { attackRange, floorf(attackRange * 0.8f) };
+    
+    auto genPos = [this]() -> cocos2d::Rect {
+        auto attackRange { m_weapons[WeaponClass::RANGE]->GetRange() };
+        cocos2d::Size waterballSize { attackRange, floorf(attackRange * 0.8f) };
 
         auto position = getPosition();
         if (IsLookingLeft()) {
@@ -225,13 +222,27 @@ void Slime::Attack() {
 
         return { position, waterballSize };
     };
-    auto pushProjectile = [this](cocos2d::PhysicsBody* body) {
-        body->setVelocity({ IsLookingLeft()? -450.f: 450.f, 0.f });
+    auto genVel = [this](cocos2d::PhysicsBody* body) {
+        const auto& velocity = m_slime->weapons.spell.projectile.velocity;
+        body->setVelocity({ IsLookingLeft()? -velocity[0]: velocity[0], velocity[1] });
     };
-    m_weapons[WeaponClass::RANGE]->LaunchAttack(
-        std::move(projectilePosition), 
-        std::move(pushProjectile)
-    );
+
+    const auto& spell = m_slime->weapons.spell;
+    auto& weapon = m_weapons[WeaponClass::RANGE];
+    weapon.reset(new SlimeShot(spell.projectile.damage
+        , spell.range
+        , preparationTime
+        , attackDuration
+        , spell.cooldown));
+    weapon->AddPositionGenerator(std::move(genPos));
+    weapon->AddVelocityGenerator(std::move(genVel));
+}
+
+void Slime::Attack() {
+    assert(!IsDead());
+    assert(m_weapons[WeaponClass::RANGE]->IsReady());
+
+    m_weapons[WeaponClass::RANGE]->LaunchAttack();
 }
 
 }// namespace Enemies

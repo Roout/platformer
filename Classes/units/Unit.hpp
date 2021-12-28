@@ -31,7 +31,7 @@ public:
     /**
      * This function initiate an attack. 
      */
-    virtual void Attack();
+    virtual void Attack() {};
 
     // Some esoteric attempts to check
     [[nodiscard]] bool IsOnGround() const noexcept;

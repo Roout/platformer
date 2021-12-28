@@ -14,11 +14,13 @@ Now works only on windows.
 ## Tools
 
 1. [Dragon Bones](https://github.com/Roout/adp-dragon-bones)
-2. [Cocos2dx v4.0 engine](https://github.com/cocos2d/cocos2d-x) + tools needed by this engine (Python, etc)
+2. [Cocos2dx v4.0 engine](https://github.com/cocos2d/cocos2d-x) + tools needed by this engine (Python2, etc)
 3. CMake 3.16 or higher
 4. MSVC compiler with c++17 or higher
 5. [Tiled 1.2](https://www.mapeditor.org/)
 6. [Texture Packer](https://www.codeandweb.com/texturepacker)
+7. Python 3
+8. [Jtoc](https://github.com/Roout/jtoc) - custom tool for generating cpp classes from JSON schemas
 
 ## Progress
 
@@ -80,5 +82,5 @@ You can see more here: [Youtube link](https://youtu.be/i9K5rqW_JoM)
 
 ## Credits
 
-[Andrew Sadovnikov](https://itch.io/profile/andrwood) - graphics/animations  
 [Sergei Nevstruev](https://github.com/Roout) - programming
+[Andrew Sadovnikov](https://itch.io/profile/andrwood) - graphics/animations  
