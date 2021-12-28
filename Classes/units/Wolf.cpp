@@ -5,12 +5,17 @@
 #include "../Core.hpp"
 #include "../Movement.hpp"
 
+#include "../configs/JsonUnits.hpp"
+
 #include <memory>
 
 namespace Enemies {
 
-Wolf* Wolf::create(size_t id, const cocos2d::Size& contentSize) {
-    auto pRet { new (std::nothrow) Wolf(id, core::EntityNames::WOLF, contentSize) };
+Wolf* Wolf::create(size_t id
+    , const cocos2d::Size& contentSize
+    , const json_models::Wolf *model
+) {
+    auto pRet { new (std::nothrow) Wolf(id, contentSize, model) };
     if (pRet && pRet->init()) {
         pRet->autorelease();
     } 
@@ -25,23 +30,28 @@ bool Wolf::init() {
     if (!Warrior::init() ) {
         return false; 
     }
-    m_movement->SetMaxSpeed(PATROL_SPEED);
+    m_movement->SetMaxSpeed(m_model->idleSpeed);
     return true;
 }
 
-Wolf::Wolf(size_t id, const char * name, const cocos2d::Size& contentSize)
-    : Warrior{ id, name, contentSize }
+Wolf::Wolf(size_t id
+    , const cocos2d::Size& contentSize
+    , const json_models::Wolf *model
+)
+    : Warrior{ id, core::EntityNames::WOLF, contentSize }
+    , m_model { model }
 {
+    assert(model);
     m_physicsBodySize = cocos2d::Size { m_contentSize.width * 0.9f,  m_contentSize.height };
     m_hitBoxSize = m_physicsBodySize;
+    m_health = m_model->health;
 }
 
 void Wolf::AddWeapons() {
-    const auto damage { 20.f };
-    const auto range { 10.f };
+    const auto& maw = m_model->weapons.maw;
+
     const auto attackDuration { 0.2f };
     const auto preparationTime { m_animator->GetDuration(Utils::EnumCast(State::ATTACK)) - attackDuration };
-    const auto reloadTime { 0.4f };
 
     auto genPos = [this]() -> cocos2d::Rect {
         auto attackRange { m_weapons[WeaponClass::MELEE]->GetRange() };
@@ -63,8 +73,11 @@ void Wolf::AddWeapons() {
     };
 
     auto& weapon = m_weapons[WeaponClass::MELEE];
-    weapon.reset(new Maw(
-        damage, range, preparationTime, attackDuration, reloadTime));
+    weapon.reset(new Maw(maw.damage
+        , maw.range
+        , preparationTime
+        , attackDuration
+        , maw.cooldown));
     weapon->AddPositionGenerator(std::move(genPos));
     weapon->AddVelocityGenerator(std::move(genVel));
 }
@@ -78,12 +91,12 @@ void Wolf::Attack() {
 
 void Wolf::OnEnemyIntrusion() {
     Warrior::OnEnemyIntrusion();
-    m_movement->SetMaxSpeed(PURSUE_SPEED);
+    m_movement->SetMaxSpeed(m_model->alertSpeed);
 }
 
 void Wolf::OnEnemyLeave() {
     Warrior::OnEnemyLeave();
-    m_movement->SetMaxSpeed(PATROL_SPEED);
+    m_movement->SetMaxSpeed(m_model->idleSpeed);
 }
 
 bool Wolf::NeedAttack() const noexcept {
