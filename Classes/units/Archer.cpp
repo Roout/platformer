@@ -36,6 +36,7 @@ Archer::Archer(size_t id
     m_contentSize = contentSize;
     m_physicsBodySize = cocos2d::Size { contentSize.width * 0.875f, contentSize.height };
     m_hitBoxSize = m_physicsBodySize;
+    m_health = m_model->health;
 }
 
 bool Archer::init() {
