@@ -33,9 +33,10 @@ namespace Enemies {
 
 BanditBoss* BanditBoss::create(size_t id
     , const cocos2d::Size& contentSize 
-    , const json_models::BanditBoss *model) 
+    , const json_models::BanditBoss *boss
+    , const json_models::UnitsFirecloud *cloud) 
 {
-    auto pRet { new (std::nothrow) BanditBoss(id, contentSize, model) };
+    auto pRet { new (std::nothrow) BanditBoss(id, contentSize, boss, cloud) };
     if (pRet && pRet->init()) {
         pRet->autorelease();
     } 
@@ -48,16 +49,19 @@ BanditBoss* BanditBoss::create(size_t id
 
 BanditBoss::BanditBoss(size_t id
     , const cocos2d::Size& contentSize
-    , const json_models::BanditBoss *model
+    , const json_models::BanditBoss *boss
+    , const json_models::UnitsFirecloud *cloud
 )
     : Bot{ id, core::EntityNames::BOSS }
-    , m_model { model }
+    , m_boss { boss }
+    , m_cloud { cloud }
 {
-    assert(model);
+    assert(boss);
+    assert(cloud);
     m_contentSize = contentSize;
     m_physicsBodySize = cocos2d::Size { contentSize.width * 0.75f, contentSize.height };
     m_hitBoxSize = m_physicsBodySize;
-    m_health = m_model->health;
+    m_health = m_boss->health;
 }
 
 
@@ -68,12 +72,12 @@ bool BanditBoss::init() {
     // Defines how high can the body jump
     // Note, in formula: G = -H / (2*t*t), G and t are already defined base on player
     // so changing `jumpHeight` will just tweak the result
-    m_movement->SetJumpHeight(m_model->jumpHeight, LevelScene::GRAVITY);
-    m_movement->SetMaxSpeed(m_model->defaultSpeed);
+    m_movement->SetJumpHeight(m_boss->jumpHeight, LevelScene::GRAVITY);
+    m_movement->SetMaxSpeed(m_boss->defaultSpeed);
 
-    const auto& dash = m_model->weapons.dash;
+    const auto& dash = m_boss->weapons.dash;
     m_dash = Dash::create(dash.cooldown
-        , m_model->defaultSpeed
+        , m_boss->defaultSpeed
         , dash.velocity[0]);
     addComponent(m_dash);
     
@@ -165,7 +169,7 @@ bool BanditBoss::CanLaunchFirecloud() const noexcept {
     if (player 
         && !player->IsDead()
         && m_weapons[FIRECLOUD_ATTACK]->IsReady()
-        && m_health <= m_model->health / 2
+        && m_health <= m_boss->health / 2
     ) {
         return true;
     }
@@ -216,7 +220,7 @@ bool BanditBoss::CanLaunchDash() const noexcept {
 
     if (canDash) {
         // health <= 50%? only after [finishing fire cloud call]
-        bool needDash = (m_health <= m_model->health / 2 
+        bool needDash = (m_health <= m_boss->health / 2 
             && m_previousState == State::FIRECLOUD_ATTACK 
             && m_currentState != m_previousState
         );
@@ -224,10 +228,10 @@ bool BanditBoss::CanLaunchDash() const noexcept {
         float bossX = getPositionX();
         float playerX = player->getPositionX();
         float duration { m_animator->GetDuration(Utils::EnumCast(State::DASH)) };
-        float dashDistance = duration * m_model->weapons.dash.velocity[0];
+        float dashDistance = duration * m_boss->weapons.dash.velocity[0];
         // health > 50%? player is quite far from the boss
-        needDash = needDash || (m_health > m_model->health / 2
-            && m_health <= static_cast<int>(m_model->health * 0.8f)
+        needDash = needDash || (m_health > m_boss->health / 2
+            && m_health <= static_cast<int>(m_boss->health * 0.8f)
             && std::fabs(bossX - playerX) >= dashDistance * 0.75f // slice down the distance of the dash
         );
         return needDash;
@@ -359,12 +363,12 @@ void BanditBoss::UpdateState(const float dt) noexcept {
     else if (helper::IsEqual(velocity.x, 0.f, EPS)) {
         m_currentState = State::IDLE;
     }
-    else if (m_health > m_model->health / 2) {
-        m_movement->SetMaxSpeed(m_model->defaultSpeed);
+    else if (m_health > m_boss->health / 2) {
+        m_movement->SetMaxSpeed(m_boss->defaultSpeed);
         m_currentState = State::BASIC_WALK;
     }
     else {
-        m_movement->SetMaxSpeed(m_model->enhancedSpeed);
+        m_movement->SetMaxSpeed(m_boss->enhancedSpeed);
         m_currentState = State::WALK;
     }
 }
@@ -447,7 +451,7 @@ void BanditBoss::AddAnimator() {
 
 void BanditBoss::AddWeapons() {
     {
-        const auto& firebook = m_model->weapons.firebook;
+        const auto& firebook = m_boss->weapons.firebook;
         float animDuration = m_animator->GetDuration(Utils::EnumCast(State::FIREBALL_ATTACK));
         float attackDuration { 0.4f * animDuration };
         float preparationTime { animDuration - attackDuration };
@@ -471,7 +475,7 @@ void BanditBoss::AddWeapons() {
             return attackedArea;
         };
         auto genVel = [this](cocos2d::PhysicsBody* body) {
-            float xSpeed = m_model->weapons.firebook.projectile.velocity[0];
+            float xSpeed = m_boss->weapons.firebook.projectile.velocity[0];
             body->setVelocity({ IsLookingLeft()? -xSpeed: xSpeed, 0.f });
         };
 
@@ -485,7 +489,7 @@ void BanditBoss::AddWeapons() {
         weapon->AddVelocityGenerator(std::move(genVel));
     }
     {
-        const auto& firecloud = m_model->weapons.firecloud;
+        const auto& firecloud = m_boss->weapons.firecloud;
         float animDuration = m_animator->GetDuration(Utils::EnumCast(State::FIRECLOUD_ATTACK));
         float attackDuration { 0.4f * animDuration };
         float preparationTime { animDuration - attackDuration };
@@ -502,13 +506,17 @@ void BanditBoss::AddWeapons() {
         };
 
         auto& weapon = m_weapons[WeaponClass::FIRECLOUD_ATTACK];
-        weapon.reset(new BossFireCloud(
-            0.f, firecloud.range, preparationTime, attackDuration, firecloud.cooldown));
+        weapon.reset(new BossFireCloud(0.f
+            , firecloud.range
+            , preparationTime
+            , attackDuration
+            , firecloud.cooldown
+            , m_cloud));
         weapon->AddPositionGenerator(std::move(genPos));
         weapon->AddVelocityGenerator(std::move(genVel));
     }
     {
-        const auto& chainSweeper = m_model->weapons.chainSweep;
+        const auto& chainSweeper = m_boss->weapons.chainSweep;
         float animDuration = m_animator->GetDuration(Utils::EnumCast(State::SWEEP_ATTACK));
         float attackDuration { 0.4f * animDuration };
         float preparationTime { animDuration - attackDuration };
@@ -542,7 +550,7 @@ void BanditBoss::AddWeapons() {
         weapon->AddVelocityGenerator(std::move(genVel));
     }
     {
-        const auto& chainSwing = m_model->weapons.chainSwing;
+        const auto& chainSwing = m_boss->weapons.chainSwing;
         float animDuration = m_animator->GetDuration(Utils::EnumCast(State::BASIC_ATTACK));
         float attackDuration { 0.8f * animDuration };
         float preparationTime { animDuration - attackDuration };

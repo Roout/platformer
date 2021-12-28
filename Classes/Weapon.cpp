@@ -7,6 +7,8 @@
 #include "units/Unit.hpp"
 #include "units/FireCloud.hpp"
 
+#include "configs/JsonUnits.hpp"
+
 #include <string>
 #include <cassert>
 
@@ -435,6 +437,17 @@ void SlimeShot::OnAttack() {
     map->addChild(proj, 101); 
 }
 
+BossFireCloud::BossFireCloud(float damage, 
+    float range, 
+    float preparationTime, 
+    float attackTime, 
+    float reloadTime,
+    const json_models::UnitsFirecloud *model
+)
+    : Weapon(damage, range, preparationTime, attackTime, reloadTime)
+    , m_model { model }
+{}
+
 void BossFireCloud::OnAttack() {
     // TODO: generate a fire cloud
     const auto map = ::GetMap();
@@ -443,8 +456,10 @@ void BossFireCloud::OnAttack() {
     const auto form = m_extractor();
     
     // size_t id, const cocos2d::Size& contentSize
-    auto cloud = Enemies::FireCloud::create(1, form.size);
-    if (!boss->IsLookingLeft()) cloud->Turn();
+    auto cloud = Enemies::FireCloud::create(1, form.size, m_model);
+    if (!boss->IsLookingLeft()) {
+        cloud->Turn();
+    }
 
     // push body up
     auto body = cloud->getPhysicsBody();
