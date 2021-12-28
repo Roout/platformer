@@ -352,7 +352,7 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                         pathIdByUnitId.emplace(bossId, form.m_pathId);
                     } break;
                     case core::EnemyClass::SLIME: {
-                        const auto slime { Enemies::Slime::create(form.m_id, contentSize) };
+                        const auto slime { Enemies::Slime::create(form.m_id, contentSize, &m_units->slime) };
                         slime->setName(core::EntityNames::SLIME);
                         slime->setPosition(form.m_rect.origin + cocos2d::Size{ contentSize.width / 2.f, contentSize.height });
                         map->addChild(slime, zOrder);
