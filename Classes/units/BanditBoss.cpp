@@ -11,6 +11,8 @@
 
 #include "../scenes/LevelScene.hpp"
 
+#include "../configs/JsonUnits.hpp"
+
 #include "cocos2d.h"
 
 namespace {
@@ -29,8 +31,11 @@ inline bool IsBusy(const std::unique_ptr<Weapon>& weapon) noexcept {
 namespace Enemies {
 
 
-BanditBoss* BanditBoss::create(size_t id, const cocos2d::Size& contentSize ) {
-    auto pRet { new (std::nothrow) BanditBoss(id, core::EntityNames::BOSS, contentSize) };
+BanditBoss* BanditBoss::create(size_t id
+    , const cocos2d::Size& contentSize 
+    , const json_models::BanditBoss *model) 
+{
+    auto pRet { new (std::nothrow) BanditBoss(id, contentSize, model) };
     if (pRet && pRet->init()) {
         pRet->autorelease();
     } 
@@ -41,13 +46,18 @@ BanditBoss* BanditBoss::create(size_t id, const cocos2d::Size& contentSize ) {
     return pRet;
 }
 
-BanditBoss::BanditBoss(size_t id, const char* dragonBonesName, const cocos2d::Size& contentSize)
-    : Bot{ id, dragonBonesName }
+BanditBoss::BanditBoss(size_t id
+    , const cocos2d::Size& contentSize
+    , const json_models::BanditBoss *model
+)
+    : Bot{ id, core::EntityNames::BOSS }
+    , m_model { model }
 {
+    assert(model);
     m_contentSize = contentSize;
     m_physicsBodySize = cocos2d::Size { contentSize.width * 0.75f, contentSize.height };
     m_hitBoxSize = m_physicsBodySize;
-    m_health = MAX_HEALTH;
+    m_health = m_model->health;
 }
 
 
@@ -55,11 +65,17 @@ bool BanditBoss::init() {
     if (!Bot::init()) {
         return false; 
     }
-    m_movement->SetJumpHeight(JUMP_HEIGHT, LevelScene::GRAVITY);
-    m_movement->SetMaxSpeed(BASIC_WALK_SPEED);
+    // Defines how high can the body jump
+    // Note, in formula: G = -H / (2*t*t), G and t are already defined base on player
+    // so changing `jumpHeight` will just tweak the result
+    m_movement->SetJumpHeight(m_model->jumpHeight, LevelScene::GRAVITY);
+    m_movement->SetMaxSpeed(m_model->defaultSpeed);
 
-    m_dash = Dash::create(DASH_COOLDOWN, BASIC_WALK_SPEED, DASH_SPEED);
-    this->addComponent(m_dash);
+    const auto& dash = m_model->weapons.dash;
+    m_dash = Dash::create(dash.cooldown
+        , m_model->defaultSpeed
+        , dash.velocity[0]);
+    addComponent(m_dash);
     
     return true;
 }
@@ -131,8 +147,8 @@ void BanditBoss::LaunchDash() {
 
 // FIREBALLS
 bool BanditBoss::CanLaunchFireballs() const noexcept {
-    const auto player = this->getParent()->getChildByName<Unit*>(core::EntityNames::PLAYER);
-    if(player 
+    const auto player = getParent()->getChildByName<Unit*>(core::EntityNames::PLAYER);
+    if (player 
         && !player->IsDead()
         && m_weapons[FIREBALL_ATTACK]->IsReady()
         && m_detectEnemy
@@ -145,11 +161,11 @@ bool BanditBoss::CanLaunchFireballs() const noexcept {
 
 // FIRECLOUD
 bool BanditBoss::CanLaunchFirecloud() const noexcept {
-    const auto player = this->getParent()->getChildByName<Unit*>(core::EntityNames::PLAYER);
-    if(player 
+    const auto player = getParent()->getChildByName<Unit*>(core::EntityNames::PLAYER);
+    if (player 
         && !player->IsDead()
         && m_weapons[FIRECLOUD_ATTACK]->IsReady()
-        && this->m_health <= MAX_HEALTH / 2
+        && m_health <= m_model->health / 2
     ) {
         return true;
     }
@@ -159,21 +175,18 @@ bool BanditBoss::CanLaunchFirecloud() const noexcept {
 
 // JUMP + CHAINS
 bool BanditBoss::CanLaunchSweepAttack() const noexcept {
-    const auto player = this->getParent()->getChildByName<Unit*>(core::EntityNames::PLAYER);
-    if(player 
+    const auto player = getParent()->getChildByName<Unit*>(core::EntityNames::PLAYER);
+    if (player 
         && !player->IsDead()
         && m_weapons[SWEEP_ATTACK]->IsReady()
-        && this->IsOnGround() // can't jump in the air
+        && IsOnGround() // can't jump in the air
     ) {
         cocos2d::Size aggroSize { m_contentSize.height * 2.f, m_contentSize.height };
         const cocos2d::Rect left { 
-            this->getPosition() - cocos2d::Size {aggroSize.width, 0.f}, 
+           getPosition() - cocos2d::Size {aggroSize.width, 0.f}, 
             aggroSize
         };
-        const cocos2d::Rect right { 
-            this->getPosition(), 
-            aggroSize
-        };
+        const cocos2d::Rect right { getPosition(), aggroSize };
 
         const auto playerSize { player->getContentSize() };
         const cocos2d::Rect boundingBox {
@@ -196,25 +209,25 @@ bool BanditBoss::CanLaunchSweepAttack() const noexcept {
  * 5. No other attacks performed
  */
 bool BanditBoss::CanLaunchDash() const noexcept {
-    const float duration { m_animator->GetDuration(Utils::EnumCast(State::DASH)) };
     bool canDash = !m_dash->IsOnCooldown() 
         && std::none_of(m_weapons.cbegin(), m_weapons.cend(), [](const std::unique_ptr<Weapon>& weapon) {
             return (weapon && IsBusy(weapon));
     });
 
-    if(canDash) {
+    if (canDash) {
         // health <= 50%? only after [finishing fire cloud call]
-        bool needDash = (m_health <= MAX_HEALTH / 2 
+        bool needDash = (m_health <= m_model->health / 2 
             && m_previousState == State::FIRECLOUD_ATTACK 
             && m_currentState != m_previousState
         );
-        const auto bossX = this->getPositionX();
-        const auto player = this->getParent()->getChildByName<Unit*>(core::EntityNames::PLAYER);
-        const auto playerX = player->getPositionX();
-        const auto dashDistance = duration * DASH_SPEED;
+        auto player = getParent()->getChildByName<Unit*>(core::EntityNames::PLAYER);
+        float bossX = getPositionX();
+        float playerX = player->getPositionX();
+        float duration { m_animator->GetDuration(Utils::EnumCast(State::DASH)) };
+        float dashDistance = duration * m_model->weapons.dash.velocity[0];
         // health > 50%? player is quite far from the boss
-        needDash = needDash || (m_health > MAX_HEALTH / 2
-            && m_health <= static_cast<int>(MAX_HEALTH * 0.8f)
+        needDash = needDash || (m_health > m_model->health / 2
+            && m_health <= static_cast<int>(m_model->health * 0.8f)
             && std::fabs(bossX - playerX) >= dashDistance * 0.75f // slice down the distance of the dash
         );
         return needDash;
@@ -224,7 +237,7 @@ bool BanditBoss::CanLaunchDash() const noexcept {
 
 void BanditBoss::LaunchBasicAttack() {
     assert(m_weapons[BASIC_ATTACK]->IsReady() 
-        && !this->IsDead() 
+        && !IsDead() 
         && "You don't check condition beforehand"
     );
     // create projectile - area where the chains are dealing damage
@@ -240,12 +253,12 @@ void BanditBoss::LaunchBasicAttack() {
  * 4. No other attacks performed
  */
 bool BanditBoss::CanLaunchBasicAttack() const noexcept {
-    const auto player = this->getParent()->getChildByName<Unit*>(core::EntityNames::PLAYER);
-    assert(player && !this->IsDead() && "Expected to be called only satisfying those conditions");
-    if(m_weapons[BASIC_ATTACK]->IsReady()) {
+    const auto player =getParent()->getChildByName<Unit*>(core::EntityNames::PLAYER);
+    assert(player && !IsDead() && "Expected to be called only satisfying those conditions");
+    if (m_weapons[BASIC_ATTACK]->IsReady()) {
         const auto attackRange { m_weapons[BASIC_ATTACK]->GetRange()};
         const cocos2d::Rect aggroArea { 
-            this->getPosition() - cocos2d::Vec2 { attackRange + m_contentSize.width / 2.f, 0.f }, 
+           getPosition() - cocos2d::Vec2 { attackRange + m_contentSize.width / 2.f, 0.f }, 
             cocos2d::Size { 2 * attackRange + m_contentSize.width, m_contentSize.height } // aggro area size
         };
         const auto playerSize { player->getContentSize() };
@@ -262,58 +275,58 @@ bool BanditBoss::CanLaunchBasicAttack() const noexcept {
 
 void BanditBoss::TryAttack() {
     assert(!IsDead());
-    const auto target = this->getParent()->getChildByName<Unit*>(core::EntityNames::PLAYER);
+    const auto target = getParent()->getChildByName<Unit*>(core::EntityNames::PLAYER);
     const auto canBeInterrupted = (m_currentState == State::WALK 
         || m_currentState == State::IDLE
         || m_currentState == State::BASIC_WALK
     );
     if (target && canBeInterrupted) {
-        if (this->CanLaunchDash()) {
-            this->LookAt(target->getPosition());
+        if (CanLaunchDash()) {
+           LookAt(target->getPosition());
             Stop(Movement::Axis::XY);
-            this->LaunchDash();
+           LaunchDash();
         }
-        else if (this->CanLaunchSweepAttack()) {
+        else if (CanLaunchSweepAttack()) {
             // if player is in range and SWEEP can be performed -> perform jump attack
-            this->LookAt(target->getPosition());
+           LookAt(target->getPosition());
             Stop(Movement::Axis::XY);
-            this->LaunchSweepAttack();
+           LaunchSweepAttack();
         }
-        else if (this->CanLaunchBasicAttack()) {
+        else if (CanLaunchBasicAttack()) {
             // if player is in range and SWING can be performed -> invoke basic attack
-            this->LookAt(target->getPosition());
+           LookAt(target->getPosition());
             Stop(Movement::Axis::XY);
-            this->LaunchBasicAttack();
+           LaunchBasicAttack();
         }
-        else if (this->CanLaunchFireballs()) {
+        else if (CanLaunchFireballs()) {
             // fireballs
-            this->LookAt(target->getPosition());
+           LookAt(target->getPosition());
             Stop(Movement::Axis::XY);
-            this->LaunchFireballs();
+           LaunchFireballs();
         }
-        else if (this->CanLaunchFirecloud()) {
-            this->LookAt(target->getPosition());
+        else if (CanLaunchFirecloud()) {
+           LookAt(target->getPosition());
             Stop(Movement::Axis::XY);
-            this->LaunchFirecloud();
+           LaunchFirecloud();
         }
         else if (m_detectEnemy) {
             const auto player = target;
             bool playerIsNear { false };
             if (!player->IsDead()) {
-                const auto bossX = this->getPositionX();
+                const auto bossX =getPositionX();
                 const auto playerX = player->getPositionX();
                 playerIsNear = std::fabs(bossX - playerX) <= m_contentSize.width / 2.f;
             }
 
             /// Move towards player:
             if (!playerIsNear) {
-                this->LookAt(target->getPosition());
+               LookAt(target->getPosition());
                 using Move = Movement::Direction;
                 MoveAlong(IsLookingLeft()? Move::LEFT: Move::RIGHT);
             }
         }
         else {
-            this->LookAt(target->getPosition());
+           LookAt(target->getPosition());
             Stop(Movement::Axis::XY);
         }
     }
@@ -322,68 +335,67 @@ void BanditBoss::TryAttack() {
 void BanditBoss::UpdateState(const float dt) noexcept {
     m_previousState = m_currentState;
 
-    const auto velocity { this->IsDead()? cocos2d::Vec2{ 0.f, 0.f } : this->getPhysicsBody()->getVelocity() };
+    const auto velocity { IsDead()? cocos2d::Vec2{ 0.f, 0.f } : getPhysicsBody()->getVelocity() };
     static constexpr float EPS { 0.001f };
 
-    if(m_health <= 0) {
+    if (m_health <= 0) {
         m_currentState = State::DEAD;
     } 
-    else if(IsBusy(m_weapons[WeaponClass::FIREBALL_ATTACK])) {
+    else if (IsBusy(m_weapons[WeaponClass::FIREBALL_ATTACK])) {
         m_currentState = State::FIREBALL_ATTACK;
     }
-    else if(IsBusy(m_weapons[WeaponClass::FIRECLOUD_ATTACK])) {
+    else if (IsBusy(m_weapons[WeaponClass::FIRECLOUD_ATTACK])) {
         m_currentState = State::FIRECLOUD_ATTACK;
     }
-    else if(IsBusy(m_weapons[WeaponClass::SWEEP_ATTACK])) {
+    else if (IsBusy(m_weapons[WeaponClass::SWEEP_ATTACK])) {
         m_currentState = State::SWEEP_ATTACK;
     }
-    else if(IsBusy(m_weapons[WeaponClass::BASIC_ATTACK])) {
+    else if (IsBusy(m_weapons[WeaponClass::BASIC_ATTACK])) {
         m_currentState = State::BASIC_ATTACK;
     }
-    else if(m_dash->IsRunning()) {
+    else if (m_dash->IsRunning()) {
         m_currentState = State::DASH;
     }
-    else if(helper::IsEqual(velocity.x, 0.f, EPS)) {
+    else if (helper::IsEqual(velocity.x, 0.f, EPS)) {
         m_currentState = State::IDLE;
     }
-    else if(m_health > MAX_HEALTH / 2) {
-        m_movement->SetMaxSpeed(BASIC_WALK_SPEED);
+    else if (m_health > m_model->health / 2) {
+        m_movement->SetMaxSpeed(m_model->defaultSpeed);
         m_currentState = State::BASIC_WALK;
     }
     else {
-        m_movement->SetMaxSpeed(WALK_SPEED);
+        m_movement->SetMaxSpeed(m_model->enhancedSpeed);
         m_currentState = State::WALK;
     }
-
 }
 
 void BanditBoss::UpdateAnimation() {
-    if(m_currentState != m_previousState) {
-        const auto isInfinity { 
+    if (m_currentState != m_previousState) {
+        bool isInfinity { 
             m_currentState == State::IDLE 
             || m_currentState == State::WALK 
             || m_currentState == State::BASIC_WALK 
         };
         const auto repeatTimes { isInfinity ? dragonBones::Animator::INFINITY_LOOP: 1 };
         (void) m_animator->Play(Utils::EnumCast(m_currentState), repeatTimes);
-        if(this->IsDead()) {
-            this->OnDeath();
+        if (IsDead()) {
+           OnDeath();
         }
     }
 }
 
 void BanditBoss::OnDeath() {
-    this->removeComponent(this->getPhysicsBody());
-    this->getChildByName("health")->removeFromParent();
+    removeComponent(getPhysicsBody());
+    getChildByName("health")->removeFromParent();
     m_animator->EndWith([this]() {
-        this->runAction(cocos2d::RemoveSelf::create(true));
+       runAction(cocos2d::RemoveSelf::create(true));
     });
 }
 
 void BanditBoss::AddPhysicsBody() {
     Unit::AddPhysicsBody();
     // change masks for physics body
-    const auto body { this->getPhysicsBody() };
+    const auto body { getPhysicsBody() };
     body->setContactTestBitmask(Utils::CreateMask(core::CategoryBits::PLATFORM));
     body->setCategoryBitmask(Utils::CreateMask(core::CategoryBits::ENEMY));
     body->setCollisionBitmask(
@@ -430,17 +442,15 @@ void BanditBoss::AddAnimator() {
         std::make_pair(Utils::EnumCast(State::DEAD),                GetStateName(State::DEAD))
     };
     m_animator->InitializeAnimations(animations);
-    this->addChild(m_animator);
+    addChild(m_animator);
 }
 
 void BanditBoss::AddWeapons() {
     {
-        const auto damage { 15.f };
-        const auto range { 60.f };
-        const auto animDuration = m_animator->GetDuration(Utils::EnumCast(State::FIREBALL_ATTACK));
-        const auto attackDuration { 0.4f * animDuration };
-        const auto preparationTime { animDuration - attackDuration };
-        const auto reloadTime { 2.f };
+        const auto& firebook = m_model->weapons.firebook;
+        float animDuration = m_animator->GetDuration(Utils::EnumCast(State::FIREBALL_ATTACK));
+        float attackDuration { 0.4f * animDuration };
+        float preparationTime { animDuration - attackDuration };
 
         auto genPos = [this]() -> cocos2d::Rect {
             const auto attackRange { m_weapons[FIREBALL_ATTACK]->GetRange() * 0.25f };
@@ -461,22 +471,24 @@ void BanditBoss::AddWeapons() {
             return attackedArea;
         };
         auto genVel = [this](cocos2d::PhysicsBody* body) {
-            body->setVelocity({ IsLookingLeft()? -400.f: 400.f, 0.f });
+            float xSpeed = m_model->weapons.firebook.projectile.velocity[0];
+            body->setVelocity({ IsLookingLeft()? -xSpeed: xSpeed, 0.f });
         };
 
         auto& weapon = m_weapons[WeaponClass::FIREBALL_ATTACK];
-        weapon.reset(new BossFireball(
-            damage, range, preparationTime, attackDuration, reloadTime));
+        weapon.reset(new BossFireball(firebook.projectile.damage
+            , firebook.range
+            , preparationTime
+            , attackDuration
+            , firebook.cooldown));
         weapon->AddPositionGenerator(std::move(genPos));
         weapon->AddVelocityGenerator(std::move(genVel));
     }
     {
-        const auto damage { 0.f }; // doesn't matter
-        const auto range { 130.f }; 
-        const auto animDuration = m_animator->GetDuration(Utils::EnumCast(State::FIRECLOUD_ATTACK));
-        const auto attackDuration { 0.4f * animDuration };
-        const auto preparationTime { animDuration - attackDuration };
-        const auto reloadTime { 5.f };
+        const auto& firecloud = m_model->weapons.firecloud;
+        float animDuration = m_animator->GetDuration(Utils::EnumCast(State::FIRECLOUD_ATTACK));
+        float attackDuration { 0.4f * animDuration };
+        float preparationTime { animDuration - attackDuration };
 
         auto genPos = [this]() -> cocos2d::Rect {
             auto attackRange { m_weapons[FIRECLOUD_ATTACK]->GetRange()};
@@ -484,24 +496,22 @@ void BanditBoss::AddWeapons() {
             position.y += m_contentSize.height;
             return { position, cocos2d::Size{ attackRange, m_contentSize.height * 0.35f } };
         };
-        auto genVel = [](cocos2d::PhysicsBody* body) {
-            cocos2d::Vec2 impulse { 0.f, body->getMass() * 190.f };
+        auto genVel = [dx = firecloud.impulse[0], dy = firecloud.impulse[1]](cocos2d::PhysicsBody* body) {
+            cocos2d::Vec2 impulse { dx, body->getMass() * dy };
             body->applyImpulse(impulse);
         };
 
         auto& weapon = m_weapons[WeaponClass::FIRECLOUD_ATTACK];
         weapon.reset(new BossFireCloud(
-            damage, range, preparationTime, attackDuration, reloadTime));
+            0.f, firecloud.range, preparationTime, attackDuration, firecloud.cooldown));
         weapon->AddPositionGenerator(std::move(genPos));
         weapon->AddVelocityGenerator(std::move(genVel));
     }
     {
-        const auto damage { 30.f };
-        const auto range { 100.f }; 
-        const auto animDuration = m_animator->GetDuration(Utils::EnumCast(State::SWEEP_ATTACK));
-        const auto attackDuration { 0.4f * animDuration };
-        const auto preparationTime { animDuration - attackDuration };
-        const auto reloadTime { 8.f };
+        const auto& chainSweeper = m_model->weapons.chainSweep;
+        float animDuration = m_animator->GetDuration(Utils::EnumCast(State::SWEEP_ATTACK));
+        float attackDuration { 0.4f * animDuration };
+        float preparationTime { animDuration - attackDuration };
         
         auto genPos = [this]() -> cocos2d::Rect {
             auto attackRange { m_weapons[SWEEP_ATTACK]->GetRange()};
@@ -523,18 +533,19 @@ void BanditBoss::AddWeapons() {
         };
         
         auto& weapon = m_weapons[WeaponClass::SWEEP_ATTACK];
-        weapon.reset(new BossChainSweep(
-            damage, range, preparationTime, attackDuration, reloadTime));
+        weapon.reset(new BossChainSweep(chainSweeper.projectile.damage
+            , chainSweeper.range
+            , preparationTime
+            , attackDuration
+            , chainSweeper.cooldown));
         weapon->AddPositionGenerator(std::move(genPos));
         weapon->AddVelocityGenerator(std::move(genVel));
     }
     {
-        const auto damage { 15.f };
-        const auto range { 140.f }; 
-        const auto animDuration = m_animator->GetDuration(Utils::EnumCast(State::BASIC_ATTACK));
-        const auto attackDuration { 0.8f * animDuration };
-        const auto preparationTime { animDuration - attackDuration };
-        const auto reloadTime { 2.f };
+        const auto& chainSwing = m_model->weapons.chainSwing;
+        float animDuration = m_animator->GetDuration(Utils::EnumCast(State::BASIC_ATTACK));
+        float attackDuration { 0.8f * animDuration };
+        float preparationTime { animDuration - attackDuration };
 
         auto genPos = [this]() -> cocos2d::Rect {
             auto attackRange { m_weapons[BASIC_ATTACK]->GetRange()};
@@ -556,8 +567,11 @@ void BanditBoss::AddWeapons() {
         };
 
         auto& weapon = m_weapons[WeaponClass::BASIC_ATTACK];
-        weapon.reset(new BossChainSwing(
-            damage, range, preparationTime, attackDuration, reloadTime));
+        weapon.reset(new BossChainSwing(chainSwing.projectile.damage
+            , chainSwing.range
+            , preparationTime
+            , attackDuration
+            , chainSwing.cooldown));
         weapon->AddPositionGenerator(std::move(genPos));
         weapon->AddVelocityGenerator(std::move(genVel));
     }

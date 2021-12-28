@@ -111,7 +111,8 @@ bool LevelScene::init() {
     addChild(tileMap);
 
     // load 
-    std::string json = cocos2d::FileUtils::getInstance()->getStringFromFile("configuration/units.json");
+    auto fileUtils = cocos2d::FileUtils::getInstance();
+    std::string json = fileUtils->getStringFromFile("configuration/units.json");
     if (json.empty()) {
         return false;
     }
@@ -144,12 +145,12 @@ void LevelScene::onEnter() {
     const auto shapeContactListener = cocos2d::EventListenerPhysicsContact::create();
     shapeContactListener->onContactBegin = contact::OnContactBegin;
     shapeContactListener->onContactSeparate = contact::OnContactSeparate;
-    this->getEventDispatcher()->addEventListenerWithSceneGraphPriority(shapeContactListener, this);
+    getEventDispatcher()->addEventListenerWithSceneGraphPriority(shapeContactListener, this);
 }
 
 void LevelScene::onExit() {
     cocos2d::Node::onExit();
-    this->getEventDispatcher()->removeAllEventListeners();
+    getEventDispatcher()->removeAllEventListeners();
 }
 
 void LevelScene::pause() {
@@ -341,11 +342,11 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                     } break;
                     case core::EnemyClass::BOSS: {
                         bossId = form.m_id;
-                        boss = Enemies::BanditBoss::create(form.m_id, contentSize);
+                        boss = Enemies::BanditBoss::create(bossId, contentSize, &m_units->banditBoss);
                         boss->setName(core::EntityNames::BOSS);
                         boss->setPosition(form.m_rect.origin + cocos2d::Size{ contentSize.width / 2.f, contentSize.height });
                         map->addChild(boss, zOrder);
-                        pathIdByUnitId.emplace(form.m_id, form.m_pathId);
+                        pathIdByUnitId.emplace(bossId, form.m_pathId);
                     } break;
                     case core::EnemyClass::SLIME: {
                         const auto slime { Enemies::Slime::create(form.m_id, contentSize) };
