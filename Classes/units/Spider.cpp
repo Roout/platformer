@@ -6,13 +6,18 @@
 #include "../Weapon.hpp"
 #include "../Movement.hpp"
 
+#include "../configs/JsonUnits.hpp"
+
 #include <cmath>
 
 namespace Enemies {
 
-Spider* Spider::create(size_t id, const cocos2d::Size& contentSize) {
-    auto pRet { new (std::nothrow) Spider(id, core::EntityNames::SPIDER, contentSize) };
-    if( pRet && pRet->init()) {
+Spider* Spider::create(size_t id
+    , const cocos2d::Size& contentSize
+    , const json_models::Spider *model) 
+{
+    auto pRet { new (std::nothrow) Spider(id, contentSize, model) };
+    if (pRet && pRet->init()) {
         pRet->autorelease();
     } 
     else {
@@ -22,8 +27,12 @@ Spider* Spider::create(size_t id, const cocos2d::Size& contentSize) {
     return pRet;
 }
 
-Spider::Spider(size_t id, const char* dragonBonesName, const cocos2d::Size& contentSize)
-    : Bot{ id, dragonBonesName }
+Spider::Spider(size_t id
+    , const cocos2d::Size& contentSize
+    , const json_models::Spider *model
+)
+    : Bot { id, core::EntityNames::SPIDER }
+    , m_model { model }
 {
     m_contentSize = contentSize;
     m_physicsBodySize = cocos2d::Size{ contentSize.width * 0.89f, contentSize.height * 0.77f };
@@ -37,13 +46,14 @@ Spider::Spider(size_t id, const char* dragonBonesName, const cocos2d::Size& cont
 }
 
 bool Spider::init() {
-    if(!Bot::init()) {
+    if (!Bot::init()) {
         return false; 
     }
-    m_movement->SetMaxSpeed(60.f);
+    m_health = m_model->health;
+    m_movement->SetMaxSpeed(m_model->idleSpeed);
     // override content size because the body is with offset and smaller than the 
     // graph content
-    this->setContentSize(m_contentSize);
+    setContentSize(m_contentSize);
     return true;
 };
 
@@ -63,10 +73,8 @@ void Spider::MoveAlong(Movement::Direction dir) noexcept {
 
 void Spider::CreateWebAt(const cocos2d::Vec2& start) {
     m_webStart = start;
-    
-    constexpr float lineWidth { 25.f }; 
-    m_web = cocos2d::DrawNode::create(lineWidth);
-    this->getParent()->addChild(m_web, this->getLocalZOrder() - 1);
+    m_web = cocos2d::DrawNode::create(m_model->linewidth);
+    getParent()->addChild(m_web, getLocalZOrder() - 1);
 }
 
 void Spider::UpdateWeb() {
@@ -94,12 +102,12 @@ void Spider::update(float dt) {
 
 void Spider::OnEnemyIntrusion() {
     m_detectEnemy = true;
-    m_movement->SetMaxSpeed(100.f);
+    m_movement->SetMaxSpeed(m_model->alertSpeed);
 };
 
 void Spider::OnEnemyLeave() {
     m_detectEnemy = false;
-    m_movement->SetMaxSpeed(60.f);
+    m_movement->SetMaxSpeed(m_model->idleSpeed);
 };
 
 /// Unique to warrior
@@ -110,11 +118,11 @@ void Spider::AttachNavigator(Path&& path) {
 
 void Spider::TryAttack() {
     // do nothing as it doens't attack
-    assert(false && "It shouldn't be called");
+    assert(false && "Cannot attack!");
 };
 
 bool Spider::NeedAttack() const noexcept {
-    assert(false && "It shouldn't be called");
+    assert(false && "Cannot attack!");
     return false; // spider doesn't attack at least for now
 };
 
@@ -132,19 +140,19 @@ void Spider::UpdateState(const float dt) noexcept {
 };
 
 void Spider::UpdatePosition(const float dt) noexcept {
-    if(!this->IsDead()) {
+    if (!IsDead()) {
         m_navigator->Update(dt);
     }
     m_movement->Update();
 };
 
 void Spider::UpdateAnimation() {
-    if(m_currentState != m_previousState) {
+    if (m_currentState != m_previousState) {
         const auto isOneTimeAttack { m_currentState == State::DEAD };
         const auto repeatTimes { isOneTimeAttack ? 1 : dragonBones::Animator::INFINITY_LOOP };
         (void) m_animator->Play(Utils::EnumCast(m_currentState), repeatTimes);
-        if(this->IsDead()) {
-            this->OnDeath();
+        if (IsDead()) {
+            OnDeath();
         }
     }
 };
@@ -208,7 +216,7 @@ void Spider::AddPhysicsBody() {
         )
     );
     body->addShape(hitBoxShape, false);
-    this->addComponent(body);
+    addComponent(body);
 };
 
 void Spider::AddAnimator() {

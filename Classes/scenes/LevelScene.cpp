@@ -413,7 +413,7 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                         boulderPushers.emplace(form.m_id, boulderPusher);
                     } break;
                     case core::EnemyClass::SPIDER: {
-                        const auto spider { Enemies::Spider::create(form.m_id, contentSize) };
+                        const auto spider { Enemies::Spider::create(form.m_id, contentSize, &m_units->spider) };
                         spider->setName(core::EntityNames::SPIDER);
                         spider->setPosition(form.m_rect.origin + cocos2d::Size{ contentSize.width / 2.f, contentSize.height });
                         map->addChild(spider, zOrder);
