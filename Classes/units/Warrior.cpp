@@ -11,19 +11,10 @@
 
 namespace Enemies {
 
-Warrior* Warrior::create(size_t id, const cocos2d::Size& contentSize ) {
-    auto pRet { new (std::nothrow) Warrior(id, core::EntityNames::WARRIOR, contentSize) };
-    if (pRet && pRet->init()) {
-        pRet->autorelease();
-    } 
-    else {
-        delete pRet;
-        pRet = nullptr;
-    }
-    return pRet;
-}
-
-Warrior::Warrior(size_t id, const char* dragonBonesName, const cocos2d::Size& contentSize)
+Warrior::Warrior(size_t id
+    , const char* dragonBonesName
+    , const cocos2d::Size& contentSize
+)
     : Bot{ id, dragonBonesName }
 {
     m_contentSize = contentSize;
@@ -59,15 +50,15 @@ void Warrior::update(float dt) {
 void Warrior::AttachNavigator(Path&& path) {
     // process a default paths waypoints to avoid jumping:
     // align them with own Y-axis position
-    for(auto& point: path.m_waypoints) {
-        point.y = this->getPosition().y;
+    for (auto& point: path.m_waypoints) {
+        point.y = getPosition().y;
     }
     m_navigator = std::make_unique<Navigator>(this, std::move(path));
-    this->Patrol();
+    Patrol();
 }
 
 void Warrior::Pursue(Unit * target) noexcept {
-    if(!this->IsDead() && target && !target->IsDead()) {
+    if(!IsDead() && target && !target->IsDead()) {
         const auto shift { floorf(
             target->GetHitBox().width / 2.f // shift to bottom left\right corner
             + m_weapons[WeaponClass::MELEE]->GetRange() / 2.f // shift by weapon length (not 1.0f to be able to reach the target by attack!)
@@ -80,8 +71,8 @@ void Warrior::Pursue(Unit * target) noexcept {
         };
         // choose the closest target in out influence field!
         const float xDistances[2] = {
-            fabs(xTargets[0] - this->getPositionX()),
-            fabs(xTargets[1] - this->getPositionX())
+            fabs(xTargets[0] - getPositionX()),
+            fabs(xTargets[1] - getPositionX())
         };
         const float xShift { floorf(m_physicsBodySize.width * 0.4f) };
         // -xShift for left-bottom corner of this unit 
@@ -97,14 +88,14 @@ void Warrior::Pursue(Unit * target) noexcept {
         // find the closest point from the ones where unit won't fall down
         int choosenIndex { -1 };
         float xDistance { xDistances[0] };
-        for(int i = 0; i < 2; i++) {
-            if(acceptable[i] && xDistances[i] <= xDistance) {
+        for (int i = 0; i < 2; i++) {
+            if (acceptable[i] && xDistances[i] <= xDistance) {
                 choosenIndex = i;
                 xDistance = xDistances[i];
             }
         }
-        auto destination = this->getPosition();
-        if(choosenIndex != -1) { // every target lead to falling down or other shit
+        auto destination = getPosition();
+        if (choosenIndex != -1) { // every target lead to falling down or other shit
             destination.x = xTargets[choosenIndex];
         }
         // move to target along X-axis;
@@ -120,31 +111,31 @@ void Warrior::Patrol() noexcept {
 /// Bot interface
 void Warrior::OnEnemyIntrusion() {
     m_detectEnemy = true;
-    auto target = this->getParent()->getChildByName<Unit *>(core::EntityNames::PLAYER);
-    this->Pursue(target);
+    auto target = getParent()->getChildByName<Unit *>(core::EntityNames::PLAYER);
+    Pursue(target);
 }
 
 void Warrior::OnEnemyLeave() {
     m_detectEnemy = false;
-    this->Patrol();
+    Patrol();
 }
 
 void Warrior::UpdateState(const float dt) noexcept {
     m_previousState = m_currentState;
 
-    if( m_health <= 0 ) {
+    if (m_health <= 0) {
         m_currentState = State::DEAD;
     } 
-    else if( m_weapons[WeaponClass::MELEE]->IsPreparing() ) {
+    else if (m_weapons[WeaponClass::MELEE]->IsPreparing()) {
         m_currentState = State::ATTACK;
     }
-    else if( m_weapons[WeaponClass::MELEE]->IsAttacking() ) {
+    else if (m_weapons[WeaponClass::MELEE]->IsAttacking()) {
         m_currentState = State::ATTACK;
     }
-    else if( m_weapons[WeaponClass::MELEE]->IsReloading() ) {
+    else if (m_weapons[WeaponClass::MELEE]->IsReloading()) {
         m_currentState = State::IDLE;
     }
-    else if( m_detectEnemy ) {
+    else if (m_detectEnemy) {
         m_currentState = State::PURSUIT;
     }
     else {
@@ -175,31 +166,31 @@ void Warrior::UpdatePosition(const float dt) noexcept {
 }
 
 void Warrior::UpdateAnimation() {
-    if(m_currentState != m_previousState) {
+    if (m_currentState != m_previousState) {
         const auto isOneTimeAttack { 
             m_currentState == State::ATTACK || 
             m_currentState == State::DEAD
         };
         const auto repeatTimes { isOneTimeAttack ? 1 : dragonBones::Animator::INFINITY_LOOP };
         (void) m_animator->Play(Utils::EnumCast(m_currentState), repeatTimes);
-        if(this->IsDead()) {
-            this->OnDeath();
+        if (IsDead()) {
+            OnDeath();
         }
     }
 }
 
 void Warrior::OnDeath() {
-    this->removeComponent(this->getPhysicsBody());
-    this->getChildByName("health")->removeFromParent();
+    removeComponent(getPhysicsBody());
+    getChildByName("health")->removeFromParent();
     m_animator->EndWith([this](){
-        this->runAction(cocos2d::RemoveSelf::create(true));
+        runAction(cocos2d::RemoveSelf::create(true));
     });
 }
 
 void Warrior::AddPhysicsBody() {
     Unit::AddPhysicsBody();
     // change masks for physics body
-    const auto body { this->getPhysicsBody() };
+    const auto body { getPhysicsBody() };
     body->setContactTestBitmask(Utils::CreateMask(core::CategoryBits::PLATFORM));
     body->setCategoryBitmask(Utils::CreateMask(core::CategoryBits::ENEMY));
     body->setCollisionBitmask(
@@ -242,50 +233,6 @@ void Warrior::AddAnimator() {
         std::make_pair(Utils::EnumCast(State::PATROL),  GetStateName(State::PATROL)),
         std::make_pair(Utils::EnumCast(State::DEAD),    GetStateName(State::DEAD))
     });
-}
-
-void Warrior::Attack() {
-    assert(!IsDead());
-    assert(m_weapons[WeaponClass::MELEE]);
-    assert(m_weapons[WeaponClass::MELEE]->IsReady());
-
-    m_weapons[WeaponClass::MELEE]->LaunchAttack();
-}
-
-void Warrior::AddWeapons() {
-    const auto damage { 2.f };
-    const auto range { 30.f };
-    const auto attackDuration { 0.15f };
-    const auto preparationTime { m_animator->GetDuration(Utils::EnumCast(State::ATTACK)) - attackDuration };
-    const auto reloadTime { 0.5f };
-
-    auto genPos = [this]() -> cocos2d::Rect {
-        auto attackRange { m_weapons[WeaponClass::MELEE]->GetRange() };
-
-        auto position = getPosition();
-        if (m_side == Side::RIGHT) {
-            position.x += m_contentSize.width / 2.f;
-        }
-        else {
-            position.x -= m_contentSize.width / 2.f + attackRange;
-        }
-        // shift a little bit higher to avoid immediate collision with the ground
-        position.y += m_contentSize.height * 0.05f;
-        cocos2d::Rect attackedArea {
-            position,
-            cocos2d::Size{ attackRange, m_contentSize.height * 1.05f } // a little bigger than the designed size
-        };
-        return attackedArea;
-    };
-    auto genVel = [this](cocos2d::PhysicsBody* body) {
-        body->setVelocity(getPhysicsBody()->getVelocity());
-    };
-
-    auto& weapon = m_weapons[WeaponClass::MELEE];
-    weapon.reset(new Axe(
-        damage, range, preparationTime, attackDuration, reloadTime));
-    weapon->AddPositionGenerator(std::move(genPos));
-    weapon->AddVelocityGenerator(std::move(genVel));
 }
 
 } // namespace Enemies

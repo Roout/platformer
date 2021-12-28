@@ -20,9 +20,10 @@ list(APPEND headers
     units/Unit.hpp
     units/Player.hpp
     units/Bot.hpp
+    units/Warrior.hpp
+    units/AxWarrior.hpp
     units/Wolf.hpp
     units/Wasp.hpp
-    units/Warrior.hpp
     units/Slime.hpp
     units/Archer.hpp
     units/BoulderPusher.hpp
@@ -70,9 +71,10 @@ list(APPEND sources
     units/Unit.cpp
     units/Player.cpp
     units/Bot.cpp
+    units/Warrior.cpp
     units/Wolf.cpp
     units/Wasp.cpp
-    units/Warrior.cpp
+    units/AxWarrior.cpp
     units/Slime.cpp
     units/Archer.cpp
     units/Cannon.cpp

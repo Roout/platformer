@@ -1,7 +1,7 @@
 #include "LevelScene.hpp"
 #include "Interface.hpp"
 
-#include "../units/Warrior.hpp"
+#include "../units/AxWarrior.hpp"
 #include "../units/Slime.hpp"
 #include "../units/Archer.hpp"
 #include "../units/Cannon.hpp"
@@ -333,7 +333,9 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                 const auto contentSize = form.m_rect.size * form.m_scale;
                 switch(Utils::EnumCast<core::EnemyClass>(form.m_subType)) {
                     case core::EnemyClass::WARRIOR: {
-                        const auto warrior { Enemies::Warrior::create(form.m_id, contentSize) };
+                        const auto warrior { Enemies::AxWarrior::create(form.m_id
+                            , contentSize
+                            , &m_units->axWarrior) };
                         warrior->setName(core::EntityNames::WARRIOR);
                         warrior->setPosition(form.m_rect.origin + cocos2d::Size{ contentSize.width / 2.f, contentSize.height });
                         map->addChild(warrior, zOrder);

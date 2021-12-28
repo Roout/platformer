@@ -1,5 +1,5 @@
-#ifndef WARRIOR_HPP
-#define WARRIOR_HPP
+#ifndef ENEMIES_WARRIOR_HPP
+#define ENEMIES_WARRIOR_HPP
 
 #include <memory>
 
@@ -34,11 +34,7 @@ protected:
     enum WeaponClass { MELEE };
 
     Warrior(size_t id, const char* dragonBonesName, const cocos2d::Size& contentSize);
-
-    void AddWeapons() override;
-
-    void Attack() override;
-
+    
 /// Unique to warrior
 
     virtual void Pursue(Unit * target) noexcept;
@@ -63,8 +59,9 @@ private:
 /// Properties
 protected:
     std::unique_ptr<Navigator> m_navigator { nullptr };
+
 };
 
 } // namespace Enemies
 
-#endif // WARRIOR_HPP
+#endif // ENEMIES_WARRIOR_HPP
