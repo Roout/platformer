@@ -376,7 +376,7 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                         pathIdByUnitId.emplace(form.m_id, form.m_pathId);
                     } break;
                     case core::EnemyClass::WASP: {
-                        const auto wasp { Enemies::Wasp::create(form.m_id, contentSize) };
+                        const auto wasp { Enemies::Wasp::create(form.m_id, contentSize, &m_units->wasp) };
                         wasp->setName(core::EntityNames::WASP);
                         wasp->setPosition(form.m_rect.origin + cocos2d::Size{ contentSize.width / 2.f, contentSize.height });
                         map->addChild(wasp, PLAYER_ZORDER + 1);
