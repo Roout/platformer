@@ -6,13 +6,18 @@
 #include "../Weapon.hpp"
 #include "../Movement.hpp"
 
+#include "../configs/JsonUnits.hpp"
+
 #include "cocos2d.h"
 
 namespace Enemies {
 
-BoulderPusher* BoulderPusher::create(size_t id, const cocos2d::Size& contentSize) {
-    auto pRet { new (std::nothrow) BoulderPusher(id, contentSize) };
-    if( pRet && pRet->init()) {
+BoulderPusher* BoulderPusher::create(size_t id
+    , const cocos2d::Size& contentSize
+    , const json_models::BoulderPusher *model
+) {
+    auto pRet { new (std::nothrow) BoulderPusher(id, contentSize, model) };
+    if (pRet && pRet->init()) {
         pRet->autorelease();
     } 
     else {
@@ -22,12 +27,18 @@ BoulderPusher* BoulderPusher::create(size_t id, const cocos2d::Size& contentSize
     return pRet;
 }
 
-BoulderPusher::BoulderPusher(size_t id, const cocos2d::Size& contentSize)
+BoulderPusher::BoulderPusher(size_t id
+    , const cocos2d::Size& contentSize
+    , const json_models::BoulderPusher *model
+)
     : Bot{ id, core::EntityNames::BOULDER_PUSHER }
+    , m_model { model }
 {
+    assert(model);
     m_contentSize = contentSize;
     m_physicsBodySize = cocos2d::Size{ contentSize.width * 0.75f, contentSize.height };
     m_hitBoxSize = m_physicsBodySize;
+    m_health = m_model->health;
 }
 
 bool BoulderPusher::init() {
@@ -38,7 +49,7 @@ bool BoulderPusher::init() {
 }
 
 void BoulderPusher::update(float dt) {
-     // update components
+    // update components
     cocos2d::Node::update(dt);
     // custom updates
     UpdateDebugLabel();
@@ -62,13 +73,13 @@ void BoulderPusher::OnEnemyLeave() {
 void BoulderPusher::UpdateState(const float dt) noexcept {
     m_previousState = m_currentState;
 
-    if(m_health <= 0) {
+    if (m_health <= 0) {
         m_currentState = State::DEAD;
     }
-    else if(m_weapons[WeaponClass::RANGE]->IsPreparing()) {
+    else if (m_weapons[WeaponClass::RANGE]->IsPreparing()) {
         m_currentState = State::PREPARE_ATTACK;
     }
-    else if(m_weapons[WeaponClass::RANGE]->IsAttacking()) {
+    else if (m_weapons[WeaponClass::RANGE]->IsAttacking()) {
         m_currentState = State::ATTACK;
     }
     else {
@@ -77,31 +88,31 @@ void BoulderPusher::UpdateState(const float dt) noexcept {
 }
 
 void BoulderPusher::UpdateAnimation() {
-    if(m_currentState != m_previousState) {
+    if (m_currentState != m_previousState) {
         auto isOneTimeAttack { 
             m_currentState == State::ATTACK || 
             m_currentState == State::DEAD
         };
         auto repeatTimes { isOneTimeAttack ? 1 : dragonBones::Animator::INFINITY_LOOP };
         (void) m_animator->Play(Utils::EnumCast(m_currentState), repeatTimes);
-        if(this->IsDead()) {
-            this->OnDeath();
+        if (IsDead()) {
+            OnDeath();
         }
     }
 }
 
 void BoulderPusher::OnDeath() {
-    this->removeComponent(this->getPhysicsBody());
-    this->getChildByName("health")->removeFromParent();
-    m_animator->EndWith([this](){
-        this->runAction(cocos2d::RemoveSelf::create(true));
+    removeComponent(getPhysicsBody());
+    getChildByName("health")->removeFromParent();
+    m_animator->EndWith([this]() {
+        runAction(cocos2d::RemoveSelf::create(true));
     });
 }
 
 void BoulderPusher::AddPhysicsBody() {
     Unit::AddPhysicsBody();
     // change masks for physics body
-    const auto body { this->getPhysicsBody() };
+    const auto body { getPhysicsBody() };
     body->setCategoryBitmask(Utils::CreateMask(core::CategoryBits::ENEMY));
     body->setContactTestBitmask(Utils::CreateMask(core::CategoryBits::PLATFORM));
     body->setCollisionBitmask(
@@ -150,13 +161,11 @@ void BoulderPusher::AddAnimator() {
 }
 
 void BoulderPusher::AddWeapons() {
-    const auto damage { 5.f };
-    const auto range { 18.f };
+    const auto& legs = m_model->weapons.legs;
     // TODO: Here a strange mess of durations needed to be fixed
     // The projectile need to be created only when the attack-animation ends
     const auto preparationTime { 0.4f };
     const auto attackDuration { m_animator->GetDuration(Utils::EnumCast(State::ATTACK)) - preparationTime };
-    const auto reloadTime { 1.5f };
 
     auto genPos = [this]() -> cocos2d::Rect {
         auto radius { m_weapons[WeaponClass::RANGE]->GetRange() };
@@ -172,17 +181,21 @@ void BoulderPusher::AddWeapons() {
         return { position, stoneSize };
     };
     auto genVel = [this](cocos2d::PhysicsBody* body) {
-        cocos2d::Vec2 impulse { body->getMass() * 200.f, 0.f };
+        const auto& legs = m_model->weapons.legs;
+        cocos2d::Vec2 impulse { body->getMass() * legs.projectile.impulse[0], 0.f };
         if (IsLookingLeft()) {
             impulse.x *= -1.f;
         }
         body->applyImpulse(impulse);
-        body->setAngularVelocity(impulse.x > 0.f? -10.f: 10.f);
+        body->setAngularVelocity(impulse.x > 0.f? -legs.projectile.angular[0]: legs.projectile.angular[0]);
     };
 
     auto& weapon = m_weapons[WeaponClass::RANGE];
-    weapon.reset(new Legs(
-        damage, range, preparationTime, attackDuration, reloadTime));
+    weapon.reset(new Legs(legs.projectile.damage
+        , legs.range
+        , preparationTime
+        , attackDuration
+        , legs.cooldown));
     weapon->AddPositionGenerator(std::move(genPos));
     weapon->AddVelocityGenerator(std::move(genVel));
 }
