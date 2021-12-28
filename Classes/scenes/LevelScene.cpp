@@ -399,7 +399,10 @@ void LevelScene::InitTileMapObjects(cocos2d::FastTMXTiledMap * map) {
                         cannons.emplace(form.m_id, cannon);
                     } break;
                     case core::EnemyClass::STALACTITE: {
-                        const auto stalactite { Enemies::Stalactite::create(form.m_id, contentSize, form.m_scale) };
+                        const auto stalactite { Enemies::Stalactite::create(form.m_id
+                            , contentSize
+                            , form.m_scale
+                            , &m_units->stalactite) };
                         stalactite->setName(core::EntityNames::STALACTITE);
                         stalactite->setPosition(form.m_rect.origin + cocos2d::Size{ contentSize.width / 2.f, contentSize.height });
                         map->addChild(stalactite, zOrder);
