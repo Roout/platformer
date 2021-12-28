@@ -5,12 +5,17 @@
 #include "../Core.hpp"
 #include "../Movement.hpp"
 
+#include "../configs/JsonUnits.hpp"
+
 #include <memory>
 
 namespace Enemies {
 
-Spearman* Spearman::Spearman::create(size_t id, const cocos2d::Size& contentSize) {
-    auto pRet { new (std::nothrow) Spearman(id, core::EntityNames::SPEARMAN, contentSize) };
+Spearman* Spearman::Spearman::create(size_t id
+    , const cocos2d::Size& contentSize
+    , const json_models::Spearman *spearman) 
+{
+    auto pRet { new (std::nothrow) Spearman(id, contentSize, spearman) };
     if (pRet && pRet->init()) {
         pRet->autorelease();
     } 
@@ -25,21 +30,24 @@ bool Spearman::init() {
     if (!Warrior::init() ) {
         return false; 
     }
-    m_movement->SetMaxSpeed(75.f);
+    m_movement->SetMaxSpeed(m_spearman->maxSpeed);
+    m_health = m_spearman->health;
     return true;
 }
 
-Spearman::Spearman(size_t id, const char * name, const cocos2d::Size& contentSize)
-    : Warrior{ id, name, contentSize }
+Spearman::Spearman(size_t id
+    , const cocos2d::Size& contentSize
+    , const json_models::Spearman *spearman
+)
+    : Warrior{ id, core::EntityNames::SPEARMAN, contentSize }
+    , m_spearman { spearman }
 {
+    assert(spearman);
 }
 
 void Spearman::AddWeapons() {
-    const auto damage { 10.f };
-    const auto range { 50.f };
     const auto attackDuration { 0.2f };
     const auto preparationTime { m_animator->GetDuration(Utils::EnumCast(State::ATTACK)) - attackDuration };
-    const auto reloadTime { 1.4f };
     
     auto genPos = [this]() -> cocos2d::Rect {
         auto attackRange { m_weapons[WeaponClass::MELEE]->GetRange() };
@@ -60,9 +68,13 @@ void Spearman::AddWeapons() {
         body->setVelocity(getPhysicsBody()->getVelocity());
     };
 
+    const auto& spear = m_spearman->weapons.spear;
     auto& weapon = m_weapons[WeaponClass::MELEE];
-    weapon.reset(new Spear(
-        damage, range, preparationTime, attackDuration, reloadTime));
+    weapon.reset(new Spear(spear.damage
+        , spear.range
+        , preparationTime
+        , attackDuration
+        , spear.cooldown));
     weapon->AddPositionGenerator(std::move(genPos));
     weapon->AddVelocityGenerator(std::move(genVel));
 }
