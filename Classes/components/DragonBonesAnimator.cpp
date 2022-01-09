@@ -3,7 +3,6 @@
 
 #include "DragonBonesAnimator.hpp"
 #include "Utils.hpp"
-#include "SizeDeducer.hpp"
 
 namespace dragonBones {
 

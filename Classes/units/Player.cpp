@@ -5,7 +5,6 @@
 #include "PhysicsHelper.hpp"
 #include "Utils.hpp"
 #include "Core.hpp"
-#include "SizeDeducer.hpp"
 #include "Settings.hpp"
 
 #include "components/Weapon.hpp"
