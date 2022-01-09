@@ -1,14 +1,13 @@
 #include "Bot.hpp"
 #include "Player.hpp"
-
-#include "Influence.hpp"
 #include "PhysicsHelper.hpp"
-#include "SizeDeducer.hpp"
-#include "Weapon.hpp"
-#include "DragonBonesAnimator.hpp"
 #include "Core.hpp"
-#include "Movement.hpp"
 #include "Settings.hpp"
+
+#include "components/Influence.hpp"
+#include "components/Weapon.hpp"
+#include "components/DragonBonesAnimator.hpp"
+#include "components/Movement.hpp"
 
 #include <memory>
 #include <limits>

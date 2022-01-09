@@ -1,10 +1,10 @@
 #include "FireCloud.hpp"
 #include "Player.hpp"
-
 #include "Core.hpp"
-#include "DragonBonesAnimator.hpp"
-#include "Weapon.hpp"
-#include "Movement.hpp"
+
+#include "components/DragonBonesAnimator.hpp"
+#include "components/Weapon.hpp"
+#include "components/Movement.hpp"
 
 #include "configs/JsonUnits.hpp"
 

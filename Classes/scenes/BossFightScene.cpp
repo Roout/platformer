@@ -1,8 +1,8 @@
 #include "BossFightScene.hpp"
 #include "Interface.hpp"
 
-#include "ParallaxBackground.hpp"
-#include "Movement.hpp"
+#include "components/ParallaxBackground.hpp"
+#include "components/Movement.hpp"
 
 BossFightScene::BossFightScene(int id) 
     : LevelScene {id}

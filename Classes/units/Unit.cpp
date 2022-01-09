@@ -1,13 +1,12 @@
 #include "Unit.hpp"
-
-#include "SizeDeducer.hpp"
 #include "PhysicsHelper.hpp" 
 #include "Utils.hpp"
-#include "HealthBar.hpp"
-#include "Weapon.hpp"
 #include "Core.hpp"
-#include "DragonBonesAnimator.hpp"
-#include "Movement.hpp"
+
+#include "components/HealthBar.hpp"
+#include "components/Weapon.hpp"
+#include "components/DragonBonesAnimator.hpp"
+#include "components/Movement.hpp"
 
 #include "scenes/LevelScene.hpp"
 

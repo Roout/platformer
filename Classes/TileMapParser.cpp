@@ -3,7 +3,7 @@
 #include "Utils.hpp"
 #include "TileMapHelper.hpp"
 #include "PhysicsHelper.hpp"
-#include "Props.hpp"
+#include "components/Props.hpp"
 
 #include <string_view>
 #include <charconv> // std::from_chars

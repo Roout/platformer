@@ -34,31 +34,31 @@ list(APPEND headers
     units/BanditBoss.hpp
     units/Stalactite.hpp
     
-    ContactHandler.hpp
-    Influence.hpp
-    Path.hpp
-    Navigator.hpp
-    Movement.hpp
-    DragonBonesAnimator.hpp
+    components/Influence.hpp
+    components/Path.hpp
+    components/Navigator.hpp
+    components/Movement.hpp
+    components/DragonBonesAnimator.hpp
+    components/Props.hpp
+    components/ParallaxBackground.hpp
+    components/Weapon.hpp
+    components/Projectile.hpp
+    components/Platform.hpp
+    components/HealthBar.hpp
+    components/Traps.hpp
+    components/Curses.hpp
+    components/CurseHub.hpp
+    components/Dash.hpp	
+    
     UserInputHandler.hpp
+    ContactHandler.hpp
     TileMapParser.hpp
     TileMapHelper.hpp
-    Props.hpp
-    ParallaxBackground.hpp
-    Weapon.hpp
     Core.hpp
     Utils.hpp
-    Projectile.hpp
-    Platform.hpp
-    SizeDeducer.hpp
     SmoothFollower.hpp
-    HealthBar.hpp
-    Traps.hpp
     PhysicsHelper.hpp
-    Curses.hpp
-    CurseHub.hpp
     EasyTimer.hpp
-    Dash.hpp	
 )
 
 list(APPEND sources
@@ -85,24 +85,25 @@ list(APPEND sources
     units/Spider.cpp
     units/Spearman.cpp
 
+    components/Influence.cpp
+    components/Navigator.cpp
+    components/DragonBonesAnimator.cpp
+    components/Movement.cpp
+    components/Props.cpp
+    components/ParallaxBackground.cpp
+    components/Weapon.cpp
+    components/HealthBar.cpp
+    components/Curses.cpp
+    components/CurseHub.cpp
+    components/Projectile.cpp
+    components/Dash.cpp
+
     ContactHandler.cpp
-    Influence.cpp
-    Navigator.cpp
-    DragonBonesAnimator.cpp
-    Movement.cpp
     SmoothFollower.cpp
     UserInputHandler.cpp
     TileMapParser.cpp
     TileMapHelper.cpp
-    Props.cpp
-    ParallaxBackground.cpp
-    Weapon.cpp
     Core.cpp
-    HealthBar.cpp
-    Curses.cpp
-    CurseHub.cpp
-    Projectile.cpp
-    Dash.cpp
 )
 
 # generate all required C++ header files from the JSON configuration files

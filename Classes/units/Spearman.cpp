@@ -1,9 +1,9 @@
 #include "Spearman.hpp"
-
-#include "Weapon.hpp"
-#include "DragonBonesAnimator.hpp"
 #include "Core.hpp"
-#include "Movement.hpp"
+
+#include "components/Movement.hpp"
+#include "components/Weapon.hpp"
+#include "components/DragonBonesAnimator.hpp"
 
 #include "configs/JsonUnits.hpp"
 

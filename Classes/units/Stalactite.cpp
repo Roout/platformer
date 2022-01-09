@@ -1,14 +1,14 @@
 #include "Stalactite.hpp"
 #include "Player.hpp"
+#include "Core.hpp"
+
+#include "components/DragonBonesAnimator.hpp"
+#include "components/Weapon.hpp"
+
+#include "configs/JsonUnits.hpp"
 
 #include "cocos2d.h"
 #include <string>
-
-#include "Core.hpp"
-#include "DragonBonesAnimator.hpp"
-#include "Weapon.hpp"
-
-#include "configs/JsonUnits.hpp"
 
 namespace Enemies {
 

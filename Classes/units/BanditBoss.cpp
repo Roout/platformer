@@ -1,13 +1,13 @@
 #include "BanditBoss.hpp"
 #include "Player.hpp"
-
 #include "Core.hpp"
-#include "DragonBonesAnimator.hpp"
-#include "Weapon.hpp"
-#include "Influence.hpp"
-#include "Movement.hpp"
-#include "Dash.hpp"
 #include "PhysicsHelper.hpp"
+
+#include "components/DragonBonesAnimator.hpp"
+#include "components/Weapon.hpp"
+#include "components/Influence.hpp"
+#include "components/Movement.hpp"
+#include "components/Dash.hpp"
 
 #include "scenes/LevelScene.hpp"
 #include "configs/JsonUnits.hpp"

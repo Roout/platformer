@@ -14,19 +14,18 @@
 #include "units/Wasp.hpp"
 #include "units/Player.hpp"
 
-#include "Platform.hpp"
-#include "Props.hpp"
-#include "Traps.hpp"
-#include "Settings.hpp"
+#include "components/Platform.hpp"
+#include "components/Props.hpp"
+#include "components/Traps.hpp"
+#include "components/ParallaxBackground.hpp"
+#include "components/Path.hpp"
 
+#include "Settings.hpp"
 #include "PhysicsHelper.hpp"
 #include "UserInputHandler.hpp"
 #include "Utils.hpp"
-#include "SizeDeducer.hpp"
 #include "TileMapParser.hpp"
-#include "Path.hpp"
 #include "ContactHandler.hpp"
-#include "ParallaxBackground.hpp"
 
 #include "configs/JsonUnits.hpp"
 

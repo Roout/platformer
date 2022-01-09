@@ -1,10 +1,10 @@
 #include "Wasp.hpp"
-
-#include "Weapon.hpp"
-#include "DragonBonesAnimator.hpp"
 #include "Core.hpp"
-#include "Movement.hpp"
-#include "Influence.hpp"
+
+#include "components/Weapon.hpp"
+#include "components/DragonBonesAnimator.hpp"
+#include "components/Movement.hpp"
+#include "components/Influence.hpp"
 
 #include "configs/JsonUnits.hpp"
 

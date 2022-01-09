@@ -1,9 +1,10 @@
 #include "UserInputHandler.hpp"
-#include "DragonBonesAnimator.hpp"
 #include "PhysicsHelper.hpp"
-#include "Movement.hpp"
-#include "Dash.hpp"
 #include "Utils.hpp"
+
+#include "components/DragonBonesAnimator.hpp"
+#include "components/Movement.hpp"
+#include "components/Dash.hpp"
 
 #include "units/Player.hpp"
 

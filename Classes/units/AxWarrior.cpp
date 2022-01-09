@@ -1,10 +1,10 @@
 #include "AxWarrior.hpp"
-
-#include "Weapon.hpp"
-#include "Influence.hpp"
-#include "Movement.hpp"
 #include "Core.hpp"
-#include "DragonBonesAnimator.hpp"
+
+#include "components/Weapon.hpp"
+#include "components/Influence.hpp"
+#include "components/Movement.hpp"
+#include "components/DragonBonesAnimator.hpp"
 
 #include "configs/JsonUnits.hpp"
 
