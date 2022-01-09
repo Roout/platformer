@@ -55,7 +55,9 @@ void Wolf::AddWeapons() {
 
     auto genPos = [this]() -> cocos2d::Rect {
         auto attackRange { m_weapons[WeaponClass::MELEE]->GetRange() };
-        cocos2d::Size mawSize { attackRange, attackRange * 2.f };
+        // make maw larger because it's too small and it's not 
+        // enough to cut down a few percents for Warrior::Pursue algorighm 
+        cocos2d::Size mawSize { attackRange * 1.5f, attackRange * 2.f };
 
         auto position = getPosition();
         if (IsLookingLeft()) {
@@ -106,27 +108,32 @@ bool Wolf::NeedAttack() const noexcept {
         m_detectEnemy && 
         m_weapons[WeaponClass::MELEE]->IsReady()
     };
-    bool enemyIsClose = false;
     if (!attackIsReady) {
-        const auto target = getParent()->getChildByName<const Unit*>(core::EntityNames::PLAYER);
-        // use some simple algorithm to determine whether a player is close enough to the target
-        // to perform an attack
-        if(target && !target->IsDead()) {
-            // calc position of the maw:
-            const auto radius = m_weapons[WeaponClass::MELEE]->GetRange() * 0.75f;
-            const auto targetHitbox = target->GetHitBox();
-            const cocos2d::Rect lhs { 
-                target->getPosition() - cocos2d::Vec2{ targetHitbox.width / 2.f, 0.f },
-                targetHitbox
-            };
-            const cocos2d::Rect rhs { // check attack in both directions
-                getPosition() - cocos2d::Vec2 { m_contentSize.width / 2.f + radius, -m_hitBoxSize.height / 3.f },
-                cocos2d::Size { m_contentSize.width + 2.f * radius, 0.f }
-            };
-            enemyIsClose = lhs.intersectsRect(rhs);
-        }
+        return false;
     }
-    return attackIsReady && enemyIsClose;
+
+    bool enemyIsClose = false;
+    const auto target = getParent()->getChildByName<const Unit*>(core::EntityNames::PLAYER);
+    // use some simple algorithm to determine whether a player is close enough to the target
+    // to perform an attack
+    if (target && !target->IsDead()) {
+        // calc position of the maw:
+        const auto radius = m_weapons[WeaponClass::MELEE]->GetRange();
+        const auto targetHitbox = target->GetHitBox();
+        const cocos2d::Rect lhs { 
+            target->getPosition() - cocos2d::Vec2{ targetHitbox.width / 2.f, 0.f },
+            targetHitbox
+        };
+        const cocos2d::Rect rhs { // check attack in both directions
+            getPosition() - cocos2d::Vec2 { m_contentSize.width / 2.f + radius, -m_contentSize.height / 3.f },
+            cocos2d::Size { m_contentSize.width + 2.f * radius, 2.f * radius }
+        };
+        enemyIsClose = lhs.intersectsRect(rhs);
+    }
+    if (enemyIsClose) {
+        cocos2d::log("wolf: attack!");
+    }
+    return enemyIsClose;
 }
 
 } // namespace Enemies
