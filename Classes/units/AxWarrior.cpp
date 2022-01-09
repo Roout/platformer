@@ -1,12 +1,12 @@
 #include "AxWarrior.hpp"
 
-#include "../Weapon.hpp"
-#include "../Influence.hpp"
-#include "../Movement.hpp"
-#include "../Core.hpp"
-#include "../DragonBonesAnimator.hpp"
+#include "Weapon.hpp"
+#include "Influence.hpp"
+#include "Movement.hpp"
+#include "Core.hpp"
+#include "DragonBonesAnimator.hpp"
 
-#include "../configs/JsonUnits.hpp"
+#include "configs/JsonUnits.hpp"
 
 namespace Enemies {
 

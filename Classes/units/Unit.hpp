@@ -1,8 +1,8 @@
 #ifndef UNIT_HPP
 #define UNIT_HPP
 
-#include "../CurseHub.hpp"
-#include "../Movement.hpp"
+#include "CurseHub.hpp"
+#include "Movement.hpp"
 
 #include <memory>
 #include <array>

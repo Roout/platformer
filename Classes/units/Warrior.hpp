@@ -3,8 +3,8 @@
 
 #include <memory>
 
-#include "../Navigator.hpp"
-#include "../Path.hpp"
+#include "Navigator.hpp"
+#include "Path.hpp"
 
 #include "Bot.hpp"
 

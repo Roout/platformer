@@ -1,12 +1,12 @@
 #include "Cannon.hpp"
 #include "Player.hpp"
 
-#include "../Core.hpp"
-#include "../DragonBonesAnimator.hpp"
-#include "../Weapon.hpp"
-#include "../Movement.hpp"
+#include "Core.hpp"
+#include "DragonBonesAnimator.hpp"
+#include "Weapon.hpp"
+#include "Movement.hpp"
 
-#include "../configs/JsonUnits.hpp"
+#include "configs/JsonUnits.hpp"
 
 #include "cocos2d.h"
 

@@ -1,20 +1,19 @@
 #include "Player.hpp"
 
-#include "../SmoothFollower.hpp"
-#include "../UserInputHandler.hpp"
-#include "../PhysicsHelper.hpp"
-#include "../Utils.hpp"
-#include "../Core.hpp"
-#include "../SizeDeducer.hpp"
-#include "../Weapon.hpp"
-#include "../DragonBonesAnimator.hpp"
-#include "../Movement.hpp"
-#include "../Dash.hpp"
-#include "../Settings.hpp"
+#include "SmoothFollower.hpp"
+#include "UserInputHandler.hpp"
+#include "PhysicsHelper.hpp"
+#include "Utils.hpp"
+#include "Core.hpp"
+#include "SizeDeducer.hpp"
+#include "Weapon.hpp"
+#include "DragonBonesAnimator.hpp"
+#include "Movement.hpp"
+#include "Dash.hpp"
+#include "Settings.hpp"
 
-#include "../scenes/DeathScreen.hpp"
-
-#include "../configs/JsonUnits.hpp"
+#include "scenes/DeathScreen.hpp"
+#include "configs/JsonUnits.hpp"
 
 #include <unordered_map>
 #include <algorithm>

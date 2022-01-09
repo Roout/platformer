@@ -1,17 +1,16 @@
 #include "BanditBoss.hpp"
 #include "Player.hpp"
 
-#include "../Core.hpp"
-#include "../DragonBonesAnimator.hpp"
-#include "../Weapon.hpp"
-#include "../Influence.hpp"
-#include "../Movement.hpp"
-#include "../Dash.hpp"
-#include "../PhysicsHelper.hpp"
+#include "Core.hpp"
+#include "DragonBonesAnimator.hpp"
+#include "Weapon.hpp"
+#include "Influence.hpp"
+#include "Movement.hpp"
+#include "Dash.hpp"
+#include "PhysicsHelper.hpp"
 
-#include "../scenes/LevelScene.hpp"
-
-#include "../configs/JsonUnits.hpp"
+#include "scenes/LevelScene.hpp"
+#include "configs/JsonUnits.hpp"
 
 #include "cocos2d.h"
 

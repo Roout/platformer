@@ -1,9 +1,9 @@
 #include "DebugScreen.hpp"
 #include "ui/CocosGUI.h"
 
-#include "../units/Player.hpp"
-#include "../Core.hpp"
-#include "../Settings.hpp"
+#include "units/Player.hpp"
+#include "Core.hpp"
+#include "Settings.hpp"
 
 #include <array>
 

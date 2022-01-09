@@ -4,11 +4,11 @@
 #include "cocos2d.h"
 #include <string>
 
-#include "../Core.hpp"
-#include "../DragonBonesAnimator.hpp"
-#include "../Weapon.hpp"
+#include "Core.hpp"
+#include "DragonBonesAnimator.hpp"
+#include "Weapon.hpp"
 
-#include "../configs/JsonUnits.hpp"
+#include "configs/JsonUnits.hpp"
 
 namespace Enemies {
 

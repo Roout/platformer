@@ -172,8 +172,7 @@ target_include_directories(${This}
     # to add a header from the dragon_bones library you need to specify `dragon_bones/...` manually
     PUBLIC ${DRAGONBONES_ROOT_PATH}/.. 
     PUBLIC ${COCOS2DX_ROOT_PATH}/cocos/audio/include/
-    PUBLIC units/
-    PUBLIC configs/
+    PUBLIC ./
 )
 
 set_target_properties(${This} 
