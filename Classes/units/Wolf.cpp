@@ -130,9 +130,6 @@ bool Wolf::NeedAttack() const noexcept {
         };
         enemyIsClose = lhs.intersectsRect(rhs);
     }
-    if (enemyIsClose) {
-        cocos2d::log("wolf: attack!");
-    }
     return enemyIsClose;
 }
 
